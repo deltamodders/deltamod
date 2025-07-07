@@ -16,6 +16,11 @@ function hash(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
 }
 
+function asyncTimeout(amount) {
+    return new Promise((resolve,reject) => {
+        setTimeout(resolve, amount);
+    })
+}
 function setSharedVar(name, value) {
     sharedVariables[name] = value;
     return true;
@@ -126,8 +131,6 @@ function createWindow() {
      * args[0] is an Array containing the mod UIDs to apply.
     */
     ipcMain.handle('patchAndRun', async (event, args) => {
-        win.webContents.executeJavaScript('closeAudio();'); // Clear the viewport
-        win.hide();
         var pathname = Paths.readKVS('deltarunePath');
         if (!pathname) {
             dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
@@ -140,10 +143,14 @@ function createWindow() {
 
         copyRecursiveSync(pathname, tempPath);
 
+        await asyncTimeout(1000);
+        win.hide();
+        win.webContents.executeJavaScript('closeAudio();'); // Clear the viewport
+
         exec(`"${tempPath}/DELTARUNE.exe"`, {cwd: tempPath}, (error, stdout, stderr) => {
             fs.rmdirSync(tempPath, { recursive: true, force: true });
             win.show();
-            win.webContents.executeJavaScript('openAudio();');
+            win.webContents.executeJavaScript('openAudio(); page(\'main\');');
         });
     });
     

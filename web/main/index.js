@@ -54,3 +54,10 @@ function createMod(modName, modDescription, priority, modUID) {
         document.getElementById('modlist').appendChild(tr);
     }
 })();
+
+function patchAndRun() {
+    window.electronAPI.invoke('patchAndRun',[[]]);
+    page('patching');
+}
+
+window.currentPageStack.patchAndRun = patchAndRun;
