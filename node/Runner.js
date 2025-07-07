@@ -10,9 +10,15 @@ const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 
 let win; // Main window
+let sharedVariables = {}; // shared vars with renderer
 
 function hash(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
+}
+
+function setSharedVar(name, value) {
+    sharedVariables[name] = value;
+    return true;
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -54,6 +60,13 @@ function createWindow() {
 
     ses.protocol.handle('deltapack', async (request) => {
         const url = new URL(request.url);
+        // security
+        var combined = url.hostname+url.pathname;
+        if (combined.includes('..')) {
+            setSharedVar('error', 'Unsecure request');
+            win.loadURL('deltapack://web/errorWrt/index.html');
+            return new Response("bad");
+        }
         const filePath = paths.resolve(__dirname, '..', url.hostname + url.pathname);
 
         console.log('Resolved deltapack request to ' + filePath);
@@ -63,7 +76,6 @@ function createWindow() {
                 'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
                 'Content-Length': data.length,
                 'Cache-Control': 'no-cache'
-
             }
         });
     });
@@ -100,6 +112,14 @@ function createWindow() {
         return modlist;
     });
 
+    /*
+     * fetchSharedVariable
+     * Fetches a variable in the shared vars object
+     * args[0] is the name of the variable.
+    */
+    ipcMain.handle('fetchSharedVariable', async (event, args) => {
+        return sharedVariables[args[0]];
+    });
     /*
      * patchAndRun
      * Patches the Deltarune install and runs the game.

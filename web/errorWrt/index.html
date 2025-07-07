@@ -12,7 +12,7 @@
         <img src="funne.gif" alt="" width="300">
         </div>
         <div>
-            <h2>An error occurred</h2>
+            <h2>A fatal error occurred:</h2>
             <p><i>Unknown error</i></p>
         </div>
     </div>
@@ -49,7 +49,7 @@
 </style>
 <script>
     (async () => {
-        var error = await window.electronAPI.fetchError();
+        var error = await window.electronAPI.invoke('fetchSharedVariable',['error']);
         if (error) {
             document.querySelector("p > i").innerText = error;
         }
