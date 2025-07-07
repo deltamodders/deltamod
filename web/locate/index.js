@@ -8,9 +8,8 @@ async function locateDelta() {
 function id() {
     console.log(document.getElementById('dpath').value.replaceAll('\\', '/'));
     window.electronAPI.invoke("importDelta", [document.getElementById('dpath').value.replaceAll('\\', '/')]);
-    page('setupGit');
 }
 
-window.____id = id;
+window.currentPageStack.id = id;
 
-window.__locateDelta = locateDelta;
+window.currentPageStack.locateDelta = locateDelta;

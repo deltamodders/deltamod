@@ -1,6 +1,7 @@
 var audio = new Audio();
 
 async function page(name) {
+    window.currentPageStack = {};
     var purifiedHTML =  await fetch('./' + name + '/index.html').then(response => response.text());
     var runScripts = false;
     var changeAudio = false;

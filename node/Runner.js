@@ -56,6 +56,7 @@ function createWindow() {
         const url = new URL(request.url);
         const filePath = paths.resolve(__dirname, '..', url.hostname + url.pathname);
 
+        console.log('Resolved deltapack request to ' + filePath);
         const data = await fs.promises.readFile(filePath);
         return new Response(data, {
             headers: {
@@ -87,7 +88,6 @@ function createWindow() {
             preload: Paths.file('web', 'preload.js'),
         }
     });
-    console.log('deltapack://' + Paths.file('web', 'index.html'));
     win.loadURL('deltapack://web/index.html');
 
     /*
@@ -200,7 +200,7 @@ function createWindow() {
             if (isValid) {
                 return path;
             } else {
-                dialog.showErrorBox('Invalid Deltarune Install', `The selected folder is not a valid Deltarune install. Look out for a folder that contains the DELTARUNE.exe file.`);
+                dialog.showErrorBox('This folder doesn\'t contain a valid Deltarune install', `The selected folder is not a valid Deltarune install.`);
                 return null;
             }
         }
@@ -214,7 +214,6 @@ function createWindow() {
     */
     ipcMain.handle('importDelta', async (event, args) => {
         if (!args || !args.length) {
-            dialog.showErrorBox('Invalid Path', 'The provided path is invalid.');
             return false;
         }
 
@@ -224,7 +223,7 @@ function createWindow() {
         // Check if the path is valid
         console.log(`Importing Deltarune install from ${path1} to ${path2}`);
         if (!fs.existsSync(path1)) {
-            dialog.showErrorBox('Invalid Path', 'The provided path does not exist.');
+            dialog.showErrorBox('Invalid folder', 'The provided folder path is invalid.');
             return false;
         }
 
@@ -250,7 +249,7 @@ function createWindow() {
             });
             return true;
         } catch (err) {
-            dialog.showErrorBox('Import Failed', `Failed to import Deltarune install: ${err.message}`);
+            dialog.showErrorBox('Import failed', `Failed to import Deltarune install: ${err.message}`);
             return false;
         }
     });
