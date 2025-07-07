@@ -9,10 +9,9 @@
 <body>
     <div class="win">
         <div class="organizer">
-        <img src="funne.gif" alt="" width="300">
+        <img src="dog.jpg" alt="" width="300">
         </div>
         <div>
-            <h2>A fatal error occurred:</h2>
             <p><i>Unknown error</i></p>
         </div>
     </div>
@@ -54,5 +53,11 @@
             document.querySelector("p > i").innerText = error;
         }
     })();
+
+    var a = new Audio('dogcheck.mp3');
+    a.loop = true;
+    a.play().catch((e) => {
+        console.error("Audio playback failed:", e);
+    });
 </script>
 </html>

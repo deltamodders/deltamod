@@ -56,8 +56,8 @@ function createMod(modName, modDescription, priority, modUID) {
 })();
 
 function patchAndRun() {
-    window.electronAPI.invoke('patchAndRun',[[]]);
     page('patching');
+    window.electronAPI.invoke('patchAndRun',[[]]);
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;

@@ -12,6 +12,8 @@ const Modstore = require('./Modstore.js');
 let win; // Main window
 let sharedVariables = {}; // shared vars with renderer
 
+
+
 function hash(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
 }
@@ -68,7 +70,7 @@ function createWindow() {
         // security
         var combined = url.hostname+url.pathname;
         if (combined.includes('..')) {
-            setSharedVar('error', 'Unsecure request');
+            setSharedVar('error', 'Unsecure request made to deltapack.');
             win.loadURL('deltapack://web/errorWrt/index.html');
             return new Response("bad");
         }
@@ -160,6 +162,13 @@ function createWindow() {
     */
     ipcMain.handle('loadedDeltarune', async (event, name) => {
         var pathname = Paths.readKVS('deltarunePath');
+        if (!Paths.readKVS('loadedDeltarune')) {
+            Paths.setKVS('deltarunePath', null);
+            return {
+                loaded: false
+            };
+        }
+
         if (!pathname) {
             return {
                 loaded: false
@@ -254,6 +263,11 @@ function createWindow() {
             return false;
         }
 
+        var gameEdition = 'demo';
+        if (fs.existsSync(`${path1}/chapter4_windows/data.win`)) {
+            gameEdition = 'full';
+        }
+
         if (!fs.existsSync(path2)) {
             fs.mkdirSync(path2, { recursive: true });
         }
@@ -270,6 +284,7 @@ function createWindow() {
             }).then(() => {
                 Paths.setKVS('loadedDeltarune', true);
                 Paths.setKVS('deltarunePath', path2);
+                Paths.setKVS('deltaruneEdition', gameEdition);
                 Paths.kvsFlush();
                 app.relaunch();
                 app.exit();
