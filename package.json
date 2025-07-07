@@ -1,0 +1,15 @@
+{
+  "name": "deltamod",
+  "version": "1.0.0",
+  "description": "Deltarune mod manager",
+  "main": "node/Runner.js",
+  "scripts": {
+    "test": "electron ."
+  },
+  "author": "GhinoRhino",
+  "license": "EUPL-1.2",
+  "dependencies": {
+    "electron": "^37.1.0",
+    "mime-types": "^3.0.1"
+  }
+}
