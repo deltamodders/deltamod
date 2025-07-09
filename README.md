@@ -15,4 +15,4 @@ If you don't know how to do that, then the DevTools may be just putting you at a
 
 All external libraries are property of their respective owners.
 This project is in no way affiliated with Deltarune, Fangamer, Toby Fox or Materia Collective.
-Our software is licensed under the EUPL (revision 1.2). You can read the license [here](./LICENSE.pdf).
+Our software is licensed under the EUPL (revision 1.2). You can read the license [here](./LICENSE.txt).
