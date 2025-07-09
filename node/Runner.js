@@ -3,16 +3,40 @@ const Paths = require('./Paths.js');
 const fs = require('fs');
 const paths = require('path');
 const mime = require('mime-types');
-const { pathToFileURL } = require('url')
-const { getSystemFile, getSystemFolder } = require('./System.js');
+const { pathToFileURL } = require('url');
+const { startGamePatch } = require('./GamePatching.js');
+const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex } = require('./System.js');
 const crypto = require('crypto');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
+const GamePatching = require('./GamePatching.js');
+const { error } = require('console');
 
 let win; // Main window
 let sharedVariables = {}; // shared vars with renderer
 
+function errorWin(err) {
+    setSharedVar('error', err.toString());
+    win.loadURL('deltapack://web/errorWrt/index.html');
+}
 
+process.on('uncaughtException', (err) => {
+    if (win) {
+        setSharedVar('error', err.toString());
+        win.loadURL('deltapack://web/errorWrt/index.html');
+    }
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    if (win) {
+        setSharedVar('error', reason.toString());
+        win.loadURL('deltapack://web/errorWrt/index.html');
+    }
+});
+
+function isNaN(value) {
+    return typeof value === 'number' && !Number.isNaN(value);
+}
 
 function hash(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
@@ -62,6 +86,15 @@ function showError(errorCode) {
 }
 
 function createWindow() {
+    // lets check if we need to change part
+    var partOverride = getSystemFile('_sysindex',true);
+    if (fs.existsSync(partOverride)) {
+        var overrideData = fs.readFileSync(partOverride, 'utf8');
+        setSystemIndex(overrideData);
+    }
+    else {
+        console.log('No system index override found, using default index.');
+    }
     const partition = 'persist:deltamod'; // Use a persistent partition for session storage
     const ses = session.fromPartition(partition);
 
@@ -109,6 +142,37 @@ function createWindow() {
     });
     win.loadURL('deltapack://web/index.html');
 
+    // A collection of IPC handlers for handling of sysindexes.
+    ipcMain.handle('getSystemIndex', async (event, args) => {
+        var partOverride = getSystemFile('_sysindex',true);
+        if (fs.existsSync(partOverride)) {
+            var overrideData = fs.readFileSync(partOverride, 'utf8');
+            return overrideData;
+        }
+        else {
+            console.log('No system index override found, using default index.');
+            return 0;
+        }
+    });
+    ipcMain.handle('getMaxExistingIndex', async (event, args) => {
+        var systemFiles = fs.readdirSync(paths.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
+        var maxIndex = 0;
+        systemFiles.forEach((file) => {
+            var index = file.split('-')[1];
+
+            if (index === 'unique') return;
+
+            if (index) {
+                maxIndex = Math.max(maxIndex, parseInt(index));
+            }
+        });
+        return maxIndex;
+    });
+    ipcMain.handle('changeSystemIndex', async (event, args) => {
+        fs.writeFileSync(getSystemFile('_sysindex',true), args[0]);
+        app.relaunch();
+        app.exit();
+    });
     /*
      * getModList
      * Returns the list of mods from the KVS.
@@ -133,27 +197,34 @@ function createWindow() {
      * args[0] is an Array containing the mod UIDs to apply.
     */
     ipcMain.handle('patchAndRun', async (event, args) => {
-        var pathname = Paths.readKVS('deltarunePath');
-        if (!pathname) {
-            dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
+        try {
+            var pathname = Paths.readKVS('deltarunePath');
+            if (!pathname) {
+                dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
+                return false;
+            }
+
+            // make a copy
+            var tempPath = getSystemFolder('temp_' + hash(Date.now() + '-' + Math.random()), false);
+            fs.mkdirSync(tempPath, { recursive: true });
+
+            copyRecursiveSync(pathname, tempPath);
+
+            await GamePatching.startGamePatch(tempPath, getPacketDatabase(), args[0]);
+
+            win.hide();
+            win.webContents.executeJavaScript('closeAudio();'); // Clear the viewport
+
+            exec(`"${tempPath}/DELTARUNE.exe"`, {cwd: tempPath}, (error, stdout, stderr) => {
+                fs.rmdirSync(tempPath, { recursive: true, force: true });
+                win.show();
+                win.webContents.executeJavaScript('openAudio(); page(\'main\');');
+            });
+        }
+        catch (err) {
+            errorWin('Coudn\'t patch and run Deltarune: ' + err.toString());
             return false;
         }
-
-        // make a copy
-        var tempPath = getSystemFolder('temp_' + hash(Date.now() + '-' + Math.random()));
-        fs.mkdirSync(tempPath, { recursive: true });
-
-        copyRecursiveSync(pathname, tempPath);
-
-        await asyncTimeout(1000);
-        win.hide();
-        win.webContents.executeJavaScript('closeAudio();'); // Clear the viewport
-
-        exec(`"${tempPath}/DELTARUNE.exe"`, {cwd: tempPath}, (error, stdout, stderr) => {
-            fs.rmdirSync(tempPath, { recursive: true, force: true });
-            win.show();
-            win.webContents.executeJavaScript('openAudio(); page(\'main\');');
-        });
     });
     
     /*
@@ -161,30 +232,36 @@ function createWindow() {
      * Returns true if the file has been set.
     */
     ipcMain.handle('loadedDeltarune', async (event, name) => {
-        var pathname = Paths.readKVS('deltarunePath');
-        if (!Paths.readKVS('loadedDeltarune')) {
-            Paths.setKVS('deltarunePath', null);
-            return {
-                loaded: false
-            };
-        }
+        try {
+            var pathname = Paths.readKVS('deltarunePath');
+            if (!Paths.readKVS('loadedDeltarune')) {
+                Paths.setKVS('deltarunePath', null);
+                return {
+                    loaded: false
+                };
+            }
 
-        if (!pathname) {
-            return {
-                loaded: false
-            };
-        }
+            if (!pathname) {
+                return {
+                    loaded: false
+                };
+            }
 
-        if (!fs.existsSync(pathname)) {
-            Paths.setKVS('loadedDeltarune', false);
-            Paths.setKVS('deltarunePath', null);
-            return {
-                loaded: false
-            };
-        }
+            if (!fs.existsSync(pathname)) {
+                Paths.setKVS('loadedDeltarune', false);
+                Paths.setKVS('deltarunePath', null);
+                return {
+                    loaded: false
+                };
+            }
 
-        return {
-            loaded: pathname
+            return {
+                loaded: pathname
+            }
+        }
+        catch (err) {
+            errorWin(err.toString());
+            return null;
         }
     });
 
@@ -254,7 +331,7 @@ function createWindow() {
         }
 
         var path1 = args[0];
-        var path2 = getSystemFolder('deltaruneInstall');
+        var path2 = getSystemFolder('deltaruneInstall',false);
 
         // Check if the path is valid
         console.log(`Importing Deltarune install from ${path1} to ${path2}`);
@@ -292,6 +369,7 @@ function createWindow() {
             return true;
         } catch (err) {
             dialog.showErrorBox('Import failed', `Failed to import Deltarune install: ${err.message}`);
+            errorWin('Failed to import Deltarune install: ' + err.toString());
             return false;
         }
     });

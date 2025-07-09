@@ -52,12 +52,39 @@ function createMod(modName, modDescription, priority, modUID) {
         td.style.textAlign = 'center';
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
+
+        document.getElementById('par').innerHTML = 'Run without patches';
     }
+
+    var sysindex = await window.electronAPI.invoke('getSystemIndex', []);
+    var maxindex = await window.electronAPI.invoke('getMaxExistingIndex', []);
+
+    console.log(`System index: ${sysindex}, Max index: ${maxindex}`);
+
+    var i = -1;
+    while (i < maxindex) {
+        i++;
+        var option = document.createElement('option');
+        option.value = i;
+        if (i === sysindex) {
+            option.selected = true;
+        }
+        option.innerHTML = `Install ${i + 1}`;
+        document.getElementById('installs').appendChild(option);
+    }
+    var newOption = document.createElement('option');
+    newOption.value = parseInt(maxindex) + 1;
+    newOption.innerHTML = '<i>New...</i>';
+    document.getElementById('installs').appendChild(newOption);
 })();
 
+function loadInst(index) {
+    window.electronAPI.invoke('changeSystemIndex', [index]);
+}
 function patchAndRun() {
     page('patching');
     window.electronAPI.invoke('patchAndRun',[[]]);
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
+window.currentPageStack.loadInst = loadInst;

@@ -1,4 +1,7 @@
 <div style="overflow: hidden;">
+    <select name="installs" id="installs" onchange="window.currentPageStack.loadInst(this.value)">
+
+    </select>
     <h1>Patch menu</h1>
     <div style="overflow-y: scroll; height: 550px; overflow-x: hidden;">
         <table style="width: 100%; max-height: 200px; overflow-y: scroll;" id="modtable">
@@ -20,7 +23,7 @@
         </table>
     </div>
     <div class="buttons">
-        <button class="hbiggest" onclick="window.currentPageStack.patchAndRun()">Patch and run</button>
+        <button class="hbiggest" onclick="window.currentPageStack.patchAndRun()" id="par">Patch and run</button>
         <div class="array">
             <button>Add</button>
             <button>Tools</button>
@@ -51,6 +54,17 @@
 
     tr {
         height: 100%;
+    }
+
+    select {
+        font-family: "Pixel", sans-serif;
+        font-size: 10px;
+        color: white;
+        background-color: rgb(15, 15, 15);
+        border: 1px solid rgb(66, 66, 66);
+        padding: 5px;
+        width: 100%;
+        margin-bottom: 10px;
     }
 
     .checkmod {

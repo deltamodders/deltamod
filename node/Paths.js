@@ -2,7 +2,7 @@ const path = require('path');
 const app = require('electron').app;
 const fs = require('fs');
 let kvs = {};
-const { getSystemFile, getSystemFolder } = require('./System.js');
+const { getSystemFile, getSystemFolder, healthCheck } = require('./System.js');
 const { get } = require('http');
 const crypto = require('crypto');
 
@@ -15,7 +15,8 @@ function hash(str) {
 }
 
 function retrieve() {
-    var pathname = getSystemFile('store.json');
+    healthCheck();
+    var pathname = getSystemFile('store.json', false);
     if (!fs.existsSync(pathname)) {
         console.log('Creating blank store');
         fs.writeFileSync(pathname, '{}');
@@ -33,7 +34,7 @@ function retrieve() {
 }
 
 function kvsFlush() {
-    var pathname = getSystemFile('store.json');
+    var pathname = getSystemFile('store.json', false);
     fs.writeFileSync(pathname, JSON.stringify(kvs, null, 2) + '##' + hash(JSON.stringify(kvs, null, 2)));
     console.log('Flushed store to sys1.json');
     return true;
@@ -41,7 +42,7 @@ function kvsFlush() {
 
 function kvsWipe() {
     kvs = {};
-    var pathname = getSystemFile('store.json');
+    var pathname = getSystemFile('store.json', false);
     fs.writeFileSync(pathname, '{}##' + hash('{}'));
     console.log('Wiped store');
     return true;

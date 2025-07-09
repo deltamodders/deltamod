@@ -4,12 +4,12 @@ const system = require('./System');
 const fs = require('fs');
 
 function modList() {
-    var mods = fs.readdirSync(system.getSystemFolder('pkg.db'));
+    var mods = fs.readdirSync(system.getPacketDatabase());
     var modList = [];
 
     mods.forEach((mod) => {
         try {
-            var modPath = path.join(system.getSystemFolder('pkg.db'), mod);
+            var modPath = path.join(system.getPacketDatabase(), mod);
             var modInfo = JSON.parse(fs.readFileSync(path.join(modPath, '_deltamodInfo.json'), 'utf8'));
 
             modList.push({
@@ -28,8 +28,8 @@ function modList() {
     return modList;
 }
 
-if (!fs.existsSync(system.getSystemFolder('pkg.db'))) {
-    fs.mkdirSync(system.getSystemFolder('pkg.db'), { recursive: true });
+if (!fs.existsSync(system.getPacketDatabase())) {
+    fs.mkdirSync(system.getPacketDatabase(), { recursive: true });
 }
 
 module.exports = {

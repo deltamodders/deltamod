@@ -2,19 +2,48 @@ const fs = require('fs');
 const app = require('electron').app;
 const path = require('path');
 
-function getSystemFile(fileid) {
-    return path.join(app.getPath('userData'), 'deltamod_system', fileid);
+let systemIndex = "0";
+
+function healthCheck() {
+    if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + systemIndex))) {
+        fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-' + systemIndex), { recursive: true });
+        console.log('Created deltamod_system folder in userData');
+    }
+
+    if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-unique'))) {
+        fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-unique'), { recursive: true });
+        console.log('Created deltamod_system-unique folder in userData');
+    }
+
+    if (!fs.existsSync(getPacketDatabase())) {
+        fs.mkdirSync(path.join(app.getPath('userData'), 'pkg.db'), { recursive: true });
+        console.log('Created pkg.db in userData');
+    }
 }
 
-function getSystemFolder(folderid) {
-    return path.join(app.getPath('userData'), 'deltamod_system', folderid);
+function setSystemIndex(index) {
+    systemIndex = index;
+    console.log(`System index set to ${systemIndex}`);
 }
 
-if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system'))) {
-    fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system'), { recursive: true });
-    console.log('Created deltamod_system folder in userData');
+function getSystemFile(fileid, unique) {
+    return path.join(app.getPath('userData'), 'deltamod_system-' + (unique ? "unique" : systemIndex), fileid);
 }
+
+function getSystemFolder(folderid, unique) {
+    return path.join(app.getPath('userData'), 'deltamod_system-' + (unique ? "unique" : systemIndex), folderid);
+}
+
+function getPacketDatabase() {
+    return path.join(app.getPath('userData'), 'pkg.db');
+}
+
+healthCheck();
+
 module.exports = {
     getSystemFile: getSystemFile,
-    getSystemFolder: getSystemFolder
+    getSystemFolder: getSystemFolder,
+    getPacketDatabase: getPacketDatabase,
+    setSystemIndex: setSystemIndex,
+    healthCheck: healthCheck,
 };
