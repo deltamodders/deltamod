@@ -3,7 +3,7 @@
 
 #define MyAppName "Deltamod"
 #define MyAppVersion "1.0"
-#define MyAppPublisher "GhinoRhino Private Developer"
+#define MyAppPublisher "GhinoRhino"
 #define MyAppURL "https://deltamodteam.github.io/"
 #define MyAppExeName "Deltamod.exe"
 #define MyAppAssocName MyAppName + " File"

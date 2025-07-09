@@ -87,8 +87,11 @@ function loadInst(index) {
 })();
 
 function patchAndRun() {
+    var allChecks = Array.from(document.querySelectorAll('input[type="checkbox"]')).filter(cb => cb.id.startsWith('modcheck-'));
+    var selectedMods = allChecks.filter(cb => cb.checked).map(cb => cb.id.replace('modcheck-', ''));
+    console.log('Selected mods:', selectedMods);
     page('patching');
-    window.electronAPI.invoke('patchAndRun',[[]]);
+    window.electronAPI.invoke('patchAndRun',[selectedMods]);
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
