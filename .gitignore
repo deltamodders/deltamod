@@ -2,3 +2,5 @@ node_modules/
 appdata.lnk
 web/setupGit/.vscode/settings.json
 web/locate/.vscode/settings.json
+/dist
+/inno/output

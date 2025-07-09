@@ -4,13 +4,33 @@
   "description": "Deltarune mod manager",
   "main": "node/Runner.js",
   "scripts": {
-    "test": "electron ."
+    "test": "electron .",
+    "build-windows": "electron-builder --win zip nsis"
+  },
+  "build": {
+    "productName": "Deltamod",
+    "artifactName": "deltamod.${ext}",
+    "asar": false,
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "license": "LICENSE.txt"
+    },
+    "appId": "com.gamebanana.ghinorhino.deltamod",
+    "win": {
+      "target": "zip nsis"
+    }
   },
   "author": "GhinoRhino",
   "license": "EUPL-1.2",
+  "devDependencies": {
+    "electron": "^25.3.0",
+    "electron-builder": "^26.0.12"
+  },
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",
-    "electron": "^37.1.0",
+    
     "mime-types": "^3.0.1"
   }
 }

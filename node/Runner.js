@@ -87,9 +87,14 @@ function showError(errorCode) {
 
 function createWindow() {
     // lets check if we need to change part
+    var threrror = "";
     var partOverride = getSystemFile('_sysindex',true);
     if (fs.existsSync(partOverride)) {
         var overrideData = fs.readFileSync(partOverride, 'utf8');
+        if (parseInt(overrideData) < 0) {
+            console.error('The specified installation of Deltarune is invalid.');
+            threrror = 'The specified installation of Deltarune is invalid.';
+        }
         setSystemIndex(overrideData);
     }
     else {
@@ -142,6 +147,21 @@ function createWindow() {
     });
     win.loadURL('deltapack://web/index.html');
 
+    /*
+     * fetchSharedVariable
+     * Fetches a variable in the shared vars object
+     * args[0] is the name of the variable.
+    */
+    ipcMain.handle('fetchSharedVariable', async (event, args) => {
+        return sharedVariables[args[0]];
+    });
+
+    if (threrror !== "") {
+        setSharedVar('error', threrror);
+        win.loadURL('deltapack://web/errorWrt/index.html');
+        return;
+    }
+
     // A collection of IPC handlers for handling of sysindexes.
     ipcMain.handle('getSystemIndex', async (event, args) => {
         var partOverride = getSystemFile('_sysindex',true);
@@ -183,14 +203,6 @@ function createWindow() {
         return modlist;
     });
 
-    /*
-     * fetchSharedVariable
-     * Fetches a variable in the shared vars object
-     * args[0] is the name of the variable.
-    */
-    ipcMain.handle('fetchSharedVariable', async (event, args) => {
-        return sharedVariables[args[0]];
-    });
     /*
      * patchAndRun
      * Patches the Deltarune install and runs the game.

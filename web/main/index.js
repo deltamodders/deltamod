@@ -37,6 +37,10 @@ function createMod(modName, modDescription, priority, modUID) {
     return tr;
 }
 
+function loadInst(index) {
+    window.electronAPI.invoke('changeSystemIndex', [""+index])
+}
+
 (async () => {
     var modList = await window.electronAPI.invoke('getModList', []);
 
@@ -76,15 +80,15 @@ function createMod(modName, modDescription, priority, modUID) {
     newOption.value = parseInt(maxindex) + 1;
     newOption.innerHTML = '<i>New...</i>';
     document.getElementById('installs').appendChild(newOption);
+    document.getElementById('installs').value = sysindex;
+    document.getElementById('installs').addEventListener('change', (e) => {
+        loadInst(parseInt(e.target.value));
+    });
 })();
 
-function loadInst(index) {
-    window.electronAPI.invoke('changeSystemIndex', [index]);
-}
 function patchAndRun() {
     page('patching');
     window.electronAPI.invoke('patchAndRun',[[]]);
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
-window.currentPageStack.loadInst = loadInst;
