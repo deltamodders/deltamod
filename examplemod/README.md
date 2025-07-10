@@ -17,10 +17,6 @@ There should be 3 files (1 optional) dedicated to mod metadata and patching data
         "description": "Lorem ipsum",
         "author": ["Mod Developer 1", "Mod Developer 2"],
         "demoMod": true
-    },
-    "dependencies": {
-        "required": [ "UID HERE" ],
-        "recommended": [ "UID HERE" ]
     }
 }
 ```
