@@ -7,19 +7,8 @@
         "author": ["Mod Developer 1", "Mod Developer 2"],
         "demoMod": true
     },
-    "patching": {
-        "xdeltaPatchesDataPath": "./xdeltaPatchesRoot",
-        "overridesDataPath": "./overridesRoot",
-        "watercoolerPatches": [
-            { "chapter": 1, "data": "./watercooler/allChaptersPatchRoot" },
-            { "chapter": 2, "data": "./watercooler/allChaptersPatchRoot" },
-            { "chapter": 3, "data": "./watercooler/allChaptersPatchRoot" },
-            { "chapter": 4, "data": "./watercooler/allChaptersPatchRoot" },
-            { "chapter": "launcher", "data": "./watercooler/launcherPatches" }
-        ]
-    },
     "dependencies": {
-        "required": [ "gamebanana.author.name" ],
-        "recommended": [ "gamebanana.something.something" ]
+        "required": [ "UID HERE" ],
+        "recommended": [ "UID HERE" ]
     }
 }
