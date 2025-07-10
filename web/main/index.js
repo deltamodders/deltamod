@@ -52,7 +52,7 @@ function loadInst(index) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 3;
-        td.innerHTML = 'No mods found! Import them or add them via GameBanana to begin.';
+        td.innerHTML = 'No compatible mods found.';
         td.style.textAlign = 'center';
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);

@@ -86,6 +86,8 @@ function showError(errorCode) {
 }
 
 function createWindow() {
+    app.setAsDefaultProtocolClient('deltamod' + (process.env.DELTAMOD_ENV === 'dev' ? '-dev' : ''));
+
     // lets check if we need to change part
     var threrror = "";
     var partOverride = getSystemFile('_sysindex',true);
@@ -199,7 +201,11 @@ function createWindow() {
     ipcMain.handle('getModList', async (event, args) => {
         var modlist = Modstore.modList();
 
-        return modlist;
+        var edition = Paths.readKVS('deltaruneEdition');
+
+        return modlist.filter((mod) => {
+            return (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
+        });
     });
 
     /*

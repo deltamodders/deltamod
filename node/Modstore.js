@@ -12,11 +12,24 @@ function modList() {
             var modPath = path.join(system.getPacketDatabase(), mod);
             var modInfo = JSON.parse(fs.readFileSync(path.join(modPath, '_deltamodInfo.json'), 'utf8'));
 
+            if (
+                !modInfo ||
+                !modInfo.metadata ||
+                typeof modInfo.metadata.name !== 'string' ||
+                typeof modInfo.metadata.description !== 'string' ||
+                typeof modInfo.metadata.uniqueId === 'undefined' ||
+                typeof modInfo.metadata.demoMod === 'undefined'
+            ) {
+                throw new Error(`Missing required fields in _deltamodInfo.json for mod: ${mod}`);
+            }
+
             modList.push({
                 name: modInfo.metadata.name,
                 description: modInfo.metadata.description,
                 priority: 1,
                 uid: modInfo.metadata.uniqueId,
+                demo: modInfo.metadata.demoMod,
+                dependencies: modInfo.dependencies || [],
             });
         }
         catch (e) {
