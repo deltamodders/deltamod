@@ -32,5 +32,6 @@ This is an example on how a `_deltamodInfo.json` should be structured. Deltamod 
 <patch type="xdelta" patch="./example.xdelta" to="./chapter3_windows/data.win" />
 <patch type="override" patch="./example.win" to="./chapter4_windows/data.win" />
 ```
+
 This is an example on how a `modding.xml` should be correctly structured. There are currently 2 types of patch: xdelta (which inputs the file through GM3P in order to patch the requested file) and override (which simply replaces the file.)<br /><br />
 Every patch tag has three necessary fields: `patch`, `to` and `type`. If there are any missing/invalid fields, the program will delete the mod from its database and notify the user that the modpack is corrupted.
