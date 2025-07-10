@@ -22,8 +22,9 @@ module.exports = {
         var objects = [];
         for (const mod of dbMods) {
             var meta = JSON.parse(fs.readFileSync(`${dbPath}/${mod}/_deltamodInfo.json`, 'utf8'));
-            if (enableMods.includes(meta.metadata.uniqueId)) {
-                console.log(`Applying mod: ${meta.metadata.uniqueId}`);
+            var dmc = JSON.parse(fs.readFileSync(`${dbPath}/${mod}/__deltaID.json`, 'utf8'));
+            if (enableMods.includes(dmc.uniqueId)) {
+                console.log(`Applying mod: ${dmc.uniqueId}`);
                 var xml = fs.readFileSync(`${dbPath}/${mod}/modding.xml`, 'utf8');
                 var parser = new DOMParser();
                 var xmlDoc = parser.parseFromString(xml, 'text/xml');

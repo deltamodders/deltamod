@@ -63,7 +63,12 @@
         }
     });
 
+    function randomFloatInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
     var a = new Audio('dogcheck.mp3');
+    a.playbackRate = randomFloatInRange(0.9, 1.2);
     a.play().catch((e) => {
         console.error("Audio playback failed:", e);
     });

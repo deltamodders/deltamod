@@ -11,13 +11,23 @@ function modList() {
         try {
             var modPath = path.join(system.getPacketDatabase(), mod);
             var modInfo = JSON.parse(fs.readFileSync(path.join(modPath, '_deltamodInfo.json'), 'utf8'));
+            
+            try {
+                var deltamodExclusive = JSON.parse(fs.readFileSync(path.join(modPath, '__deltaID.json'), 'utf8'));
+            }
+            catch (e) {
+                console.log('generating unique uid for mod:', mod);
+                deltamodExclusive = {
+                    uniqueId: system.generateUniqueId(),
+                };
+                fs.writeFileSync(path.join(modPath, '__deltaID.json'), JSON.stringify(deltamodExclusive, null, 2), 'utf8');
+            }
 
             if (
                 !modInfo ||
                 !modInfo.metadata ||
                 typeof modInfo.metadata.name !== 'string' ||
                 typeof modInfo.metadata.description !== 'string' ||
-                typeof modInfo.metadata.uniqueId === 'undefined' ||
                 typeof modInfo.metadata.demoMod === 'undefined'
             ) {
                 throw new Error(`Missing required fields in _deltamodInfo.json for mod: ${mod}`);
@@ -27,7 +37,7 @@ function modList() {
                 name: modInfo.metadata.name,
                 description: modInfo.metadata.description,
                 priority: 1,
-                uid: modInfo.metadata.uniqueId,
+                uid: deltamodExclusive.uniqueId,
                 demo: modInfo.metadata.demoMod,
                 dependencies: modInfo.dependencies || [],
             });

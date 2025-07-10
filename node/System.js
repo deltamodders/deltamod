@@ -4,6 +4,19 @@ const path = require('path');
 
 let systemIndex = "0";
 
+function randomString(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
+function generateUniqueId() {
+    return "deltamod_" + randomString(16) + "_" + Date.now() + "_" + require('../package.json').version;
+}
+
 function healthCheck() {
     if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + systemIndex))) {
         fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-' + systemIndex), { recursive: true });
@@ -46,4 +59,5 @@ module.exports = {
     getPacketDatabase: getPacketDatabase,
     setSystemIndex: setSystemIndex,
     healthCheck: healthCheck,
+    generateUniqueId: generateUniqueId,
 };
