@@ -114,7 +114,6 @@ function createWindow() {
         }
         const filePath = paths.resolve(__dirname, '..', url.hostname + url.pathname);
 
-        console.log('Resolved deltapack request to ' + filePath);
         const data = await fs.promises.readFile(filePath);
         return new Response(data, {
             headers: {
@@ -222,7 +221,9 @@ function createWindow() {
 
             copyRecursiveSync(pathname, tempPath);
 
-            await GamePatching.startGamePatch(tempPath, getPacketDatabase(), args[0]);
+            var log = await GamePatching.startGamePatch(tempPath, getPacketDatabase(), args[0]);
+
+            console.log('Patching log: ', log);
 
             win.hide();
             win.webContents.executeJavaScript('closeAudio();'); // Clear the viewport
