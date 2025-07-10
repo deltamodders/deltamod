@@ -149,6 +149,24 @@ function createWindow() {
     win.loadURL('deltapack://web/index.html');
 
     /*
+     * writeToDesktop
+     * Writes a file to the desktop.
+     * args[0] is the content of the file.
+     * args[1] is the name of the file.
+    */
+    ipcMain.handle('writeToDesktop', async (event, args) => {
+        try {
+            const desktopPath = app.getPath('desktop');
+            const filePath = paths.join(desktopPath, args[1]);
+            await fs.promises.writeFile(filePath, args[0], 'utf8');
+            console.log(`File written to desktop: ${filePath}`);
+        }
+        catch (err) {
+            console.error('Error writing to desktop:', err);
+        }
+    });
+
+    /*
      * fetchSharedVariable
      * Fetches a variable in the shared vars object
      * args[0] is the name of the variable.

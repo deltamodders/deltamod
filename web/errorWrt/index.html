@@ -48,6 +48,7 @@
 
     (async() => {
         error = await window.electronAPI.invoke('fetchSharedVariable',['error']);
+        await window.electronAPI.invoke('writeToDesktop',[error, "DELTAMOD_ERROR_" + Date.now() + ".txt"]);
     })();
 
     document.addEventListener('keydown', async function(e) {
@@ -63,9 +64,11 @@
     });
 
     var a = new Audio('dogcheck.mp3');
-    a.loop = true;
     a.play().catch((e) => {
         console.error("Audio playback failed:", e);
+    });
+    a.addEventListener('ended', () => {
+        window.close();
     });
 </script>
 </html>
