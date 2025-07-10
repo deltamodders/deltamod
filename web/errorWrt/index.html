@@ -9,10 +9,7 @@
 <body>
     <div class="win">
         <div class="organizer">
-        <img src="dog.jpg" alt="" width="300">
-        </div>
-        <div>
-            <p><i>Unknown error</i></p>
+        <img src="animated.webp" alt="" width="100">
         </div>
     </div>
 </body>
@@ -47,12 +44,23 @@
     }
 </style>
 <script>
-    (async () => {
-        var error = await window.electronAPI.invoke('fetchSharedVariable',['error']);
-        if (error) {
-            document.querySelector("p > i").innerText = error;
-        }
+    let error;
+
+    (async() => {
+        error = await window.electronAPI.invoke('fetchSharedVariable',['error']);
     })();
+
+    document.addEventListener('keydown', async function(e) {
+        if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+            if (error) {
+                try {
+                    await navigator.clipboard.writeText(error);
+                } catch (err) {
+                    console.error("Failed to copy error to clipboard:", err);
+                }
+            }
+        }
+    });
 
     var a = new Audio('dogcheck.mp3');
     a.loop = true;
