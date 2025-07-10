@@ -8,7 +8,7 @@
         "demoMod": true
     },
     "dependencies": {
-        "required": [ "gamebanana.author.name" ],
-        "recommended": [ "gamebanana.something.something" ]
+        "required": [ "UID HERE" ],
+        "recommended": [ "UID HERE" ]
     }
 }

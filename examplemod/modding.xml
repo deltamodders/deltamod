@@ -1,5 +1,3 @@
-<deltamod>
-    <patch type="xdelta" patch="./example.xdelta" to="./chapter3_windows/data.win" />
-    <patch type="override" patch="./example.win" to="./chapter4_windows/data.win" />
-    <patch type="watercooler" scriptPaths="./watercooler" />
-</deltamod>
+<patch type="xdelta" patch="./example.xdelta" to="./chapter3_windows/data.win" />
+<patch type="override" patch="./example.win" to="./chapter4_windows/data.win" />
+<!-- NOTE: The deltamod -->
