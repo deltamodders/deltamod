@@ -5,7 +5,7 @@
   "main": "node/Runner.js",
   "scripts": {
     "test": "electron .",
-    "build-windows": "electron-builder --win zip nsis"
+    "build-windows": "electron-builder --win"
   },
   "build": {
     "productName": "Deltamod",
@@ -19,17 +19,17 @@
     },
     "appId": "com.gamebanana.ghinorhino.deltamod",
     "win": {
-      "target": "zip nsis"
+      "target": "zip"
     }
   },
   "author": "GhinoRhino",
   "license": "EUPL-1.2",
   "devDependencies": {
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "electron": "^37.2.0"
   },
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",
-    "electron": "^37.2.0",
     "mime-types": "^3.0.1",
     "xmldom": "^0.6.0"
   }
