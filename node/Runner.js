@@ -80,12 +80,25 @@ function copyRecursiveSync(src, dest) {
     }
 }
 
+if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient('deltamod', process.execPath, [paths.resolve(process.argv[1])])
+    }
+} else {
+    app.setAsDefaultProtocolClient('deltamod')
+}
+
+
 function showError(errorCode) {
     let errorMessage = '';
     dialog.showErrorBox('Error', `An error occurred: ${errorCode}`);
 }
 
 function createWindow() {
+    if (!Paths.readUniqueFlag('setup')) {
+        Paths.writeUniqueFlag('setup', 'true');
+        Paths.writeUniqueFlag('audio', 'true');
+    }
     app.setAsDefaultProtocolClient('deltamod' + (process.env.DELTAMOD_ENV === 'dev' ? '-dev' : ''));
 
     // lets check if we need to change part
@@ -148,6 +161,10 @@ function createWindow() {
     });
     win.loadURL('deltapack://web/index.html');
 
+    ipcMain.handle('log', (event, args) => {
+        console.log(...args);
+    });
+
     /*
      * writeToDesktop
      * Writes a file to the desktop.
@@ -164,6 +181,25 @@ function createWindow() {
         catch (err) {
             console.error('Error writing to desktop:', err);
         }
+    });
+
+    /* 
+     * getUniqueFlag
+     * Returns the value of a unique flag.
+     * args[0] is the name of the flag.
+    */
+    ipcMain.handle('getUniqueFlag', async (event, args) => {
+        return Paths.readUniqueFlag(args[0].toUpperCase());
+    });
+
+    /*
+     * setUniqueFlag
+     * Sets a unique flag.
+     * args[0] is the name of the flag.
+     * args[1] is the value of the flag.
+    */
+    ipcMain.handle('setUniqueFlag', async (event, args) => {
+        Paths.writeUniqueFlag(args[0].toUpperCase(), args[1]);
     });
 
     /*

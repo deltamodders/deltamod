@@ -1,5 +1,9 @@
 var audio = new Audio();
 
+console.log = function(...arguments) {
+    window.electronAPI.invoke('log', [arguments.join(' ')]);
+}
+
 async function page(name) {
     window.currentPageStack = {};
     var purifiedHTML =  await fetch('./' + name + '/index.html').then(response => response.text());
@@ -17,9 +21,12 @@ async function page(name) {
             audio.src = './' + audioSrc[1];
             audio.loop = true;
             audio.volume = 0.7;
-            audio.play().catch(error => {
+            if ((await window.electronAPI.invoke('getUniqueFlag', ['audio']))) {
+                audio.play().catch(error => {
 
-            });
+                });
+            }
+
             changeAudio = true;
         }
         purifiedHTML = purifiedHTML.replace(/AUDIO\[(.*?)\]/g, '');

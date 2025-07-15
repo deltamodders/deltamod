@@ -1,0 +1,37 @@
+async function addCheckboxOption(name, description, flagid) {
+    const table = document.querySelector('table');
+    const tr = document.createElement('tr');
+
+    const tdLabel = document.createElement('td');
+    const span = document.createElement('span');
+    span.textContent = name;
+    tdLabel.appendChild(span);
+
+    tdLabel.appendChild(document.createElement('br'));
+
+    const small = document.createElement('small');
+    small.className = 'calibri';
+    small.textContent = description;
+    tdLabel.appendChild(small);
+
+    const tdInput = document.createElement('td');
+    tdInput.className = 'input';
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = 'FLAG-' + flagid.toUpperCase();
+    input.checked = await window.electronAPI.invoke('getUniqueFlag', [flagid]);
+    input.addEventListener('change', async (e) => {
+        await window.electronAPI.invoke('setUniqueFlag', [flagid, e.target.checked]);
+    });
+    tdInput.appendChild(input);
+
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdInput);
+
+    table.appendChild(tr);
+}
+
+(async() => {
+    addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background. The dogcheck will still have music.', 'audio');
+})();

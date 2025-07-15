@@ -40,6 +40,21 @@ function kvsFlush() {
     return true;
 }
 
+function writeUniqueFlag(name, val) {
+    var pathname = getSystemFile('FLAG-' + name.toUpperCase(), true);
+    if (val) {
+        fs.writeFileSync(pathname, "");
+    } else {
+        if (fs.existsSync(pathname)) {
+            fs.unlinkSync(pathname);
+        }
+    }
+}
+
+function readUniqueFlag(name) {
+    return fs.existsSync(getSystemFile('FLAG-' + name.toUpperCase(), true));
+}
+
 function kvsWipe() {
     kvs = {};
     var pathname = getSystemFile('store.json', false);
@@ -63,5 +78,7 @@ module.exports = {
     kvsFlush,
     setKVS,
     kvsWipe,
+    writeUniqueFlag,
+    readUniqueFlag,
     retrieve,
 };
