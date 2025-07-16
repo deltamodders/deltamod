@@ -37,6 +37,10 @@ module.exports = {
                         case "xdelta":
                             var patchFile = pathing.join(dbPath, mod, element.getAttribute("patch"));
                             var toFile = pathing.join(gamePath, element.getAttribute("to"));
+                            if (!fs.existsSync(toFile)) {
+                                returnedObj.patched = false;
+                                returnedObj.log += `File ${toFile} does not exist, cannot apply patch.\n`;
+                            }
                             console.log(`Applying xdelta patch from ${patchFile} to ${toFile}`);
                             try {
                                 var bufferPatch = Buffer.from(fs.readFileSync(patchFile));
@@ -53,6 +57,10 @@ module.exports = {
                         case "override":
                             var patchFile = pathing.join(dbPath, mod, element.getAttribute("patch"));
                             var toFile = pathing.join(gamePath, element.getAttribute("to"));
+                            if (!fs.existsSync(toFile)) {
+                                returnedObj.patched = false;
+                                returnedObj.log += `File ${toFile} does not exist, cannot override.\n`;
+                            }
                             console.log(`Applying xdelta patch from ${patchFile} to ${toFile}`);
                             try {
                                 fs.rmSync(toFile, { force: true, recursive: true });

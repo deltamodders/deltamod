@@ -283,6 +283,9 @@ function createWindow() {
 
             var log = await GamePatching.startGamePatch(tempPath, getPacketDatabase(), args[0]);
 
+            if (!log.patched) {
+                dialog.showErrorBox('Patching failed', 'Please check the log for more details.\n' + log.log + '\nThe game will run, but it may not work as expected.');
+            }
             console.log('Patching log: ', log);
 
             win.hide();
