@@ -1,0 +1,69 @@
+name: Update MassModPatcher from Release (PR-based)
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  update-massmodpatcher:
+    if: github.event.issue.title == 'Update GM3P' && github.event.issue.user.login == 'ghinorhino'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Git user
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Create update branch
+        run: |
+          export BRANCH_NAME=update-massmodpatcher-$(date +%s)
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          git checkout -b "$BRANCH_NAME"
+
+      - name: Remove old MassModPatcher
+        run: rm -rf tools/MassModPatcher
+
+      - name: Get latest release zipball URL
+        id: get_release
+        run: |
+          release_url=$(curl -s https://api.github.com/repos/techy804/MassModPatcher/releases/latest | jq -r .zipball_url)
+          echo "release_url=$release_url" >> $GITHUB_OUTPUT
+
+      - name: Download and extract latest release
+        run: |
+          mkdir -p tools
+          curl -L "${{ steps.get_release.outputs.release_url }}" -o release.zip
+          unzip release.zip
+          extracted_dir=$(unzip -Z -1 release.zip | head -1 | cut -d/ -f1)
+          mv "$extracted_dir" tools/MassModPatcher
+          rm release.zip
+
+      - name: Commit changes
+        run: |
+          git add tools/MassModPatcher
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Update MassModPatcher to latest release"
+
+      - name: Push branch
+        run: git push --set-upstream origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "Update MassModPatcher to latest release" \
+            --body "This PR updates tools/MassModPatcher to the latest release of [MassModPatcher](https://github.com/techy804/MassModPatcher)."
