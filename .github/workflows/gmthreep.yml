@@ -1,4 +1,4 @@
-name: Update MassModPatcher from Release (PR-based)
+name: Update GM3P submodule
 
 on:
   issues:
@@ -8,25 +8,21 @@ jobs:
   update-massmodpatcher:
     if: github.event.issue.title == 'Update GM3P' && github.event.issue.user.login == 'ghinorhino'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
-      - name: Checkout main branch
+      - name: Checkout main branch using PAT
         uses: actions/checkout@v4
         with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
 
       - name: Set up Git user
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "ghinorhino-bot"
+          git config user.email "ghinorhino@users.noreply.github.com"
 
-      - name: Create update branch
+      - name: Create new update branch
         run: |
-          export BRANCH_NAME=update-massmodpatcher-$(date +%s)
+          BRANCH_NAME=update-massmodpatcher-$(date +%s)
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           git checkout -b "$BRANCH_NAME"
 
@@ -54,16 +50,18 @@ jobs:
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "Update MassModPatcher to latest release"
 
-      - name: Push branch
+      - name: Push branch using PAT
         run: git push --set-upstream origin "$BRANCH_NAME"
-
-      - name: Create Pull Request
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: Create Pull Request using PAT
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
           gh pr create \
             --repo "$GITHUB_REPOSITORY" \
             --base main \
             --head "$BRANCH_NAME" \
             --title "Update MassModPatcher to latest release" \
-            --body "This PR updates tools/MassModPatcher to the latest release of [MassModPatcher](https://github.com/techy804/MassModPatcher)."
+            --body "This PR updates tools/MassModPatcher to the latest [MassModPatcher release](https://github.com/techy804/MassModPatcher/releases/latest)."
