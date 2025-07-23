@@ -111,6 +111,7 @@ function createWindow() {
             threrror = 'The specified installation of Deltarune is invalid.';
         }
         setSystemIndex(overrideData);
+        fs.rmSync(partOverride, {force: true, recursive: true});
     }
     else {
         console.log('No system index override found, using default index.');
@@ -234,6 +235,13 @@ function createWindow() {
         var maxIndex = 0;
         systemFiles.forEach((file) => {
             var index = file.split('-')[1];
+            var contents = fs.readdirSync(paths.join(app.getPath('userData'), file));
+            if (!contents.includes('deltaruneInstall') && index != 'unique') {
+                fs.rmdirSync(paths.join(app.getPath('userData'), file), { recursive: true });
+                console.log(`Removed empty directory: ${file}`);
+                return; // Skip empty directories
+            }
+            
 
             if (index === 'unique') return;
 
