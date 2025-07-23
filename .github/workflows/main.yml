@@ -1,0 +1,40 @@
+name: Update MassModPatcher from Release (by ghinorhino)
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  update-massmodpatcher:
+    if: github.event.issue.title == 'Update GM3P' && github.event.issue.user.login == 'ghinorhino'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Remove existing MassModPatcher folder
+        run: rm -rf tools/MassModPatcher
+
+      - name: Get latest release zipball URL
+        id: get_release
+        run: |
+          release_url=$(curl -s https://api.github.com/repos/techy804/MassModPatcher/releases/latest | jq -r .zipball_url)
+          echo "release_url=$release_url" >> $GITHUB_OUTPUT
+
+      - name: Download and extract latest release
+        run: |
+          mkdir -p tools
+          curl -L "${{ steps.get_release.outputs.release_url }}" -o release.zip
+          unzip release.zip
+          extracted_dir=$(unzip -Z -1 release.zip | head -1 | cut -d/ -f1)
+          mv "$extracted_dir" tools/MassModPatcher
+          rm release.zip
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add tools/MassModPatcher
+          git diff --cached --quiet || git commit -m "Chore: Update GM3P"
+          git push || echo "Nothing to push"
