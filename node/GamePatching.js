@@ -15,10 +15,6 @@ module.exports = {
             log: ""
         };
 
-        console.log("Game Path:", gamePath);
-        console.log("Database Path:", dbPath);
-        console.log("Enabled Mods:", enableMods);
-
         var objects = [];
         for (const mod of dbMods) {
             var meta = JSON.parse(fs.readFileSync(`${dbPath}/${mod}/_deltamodInfo.json`, 'utf8'));
@@ -30,54 +26,41 @@ module.exports = {
                 var xmlDoc = parser.parseFromString(xml, 'text/xml');
 
                 var patches = xmlDoc.getElementsByTagName("patch");
-                
+                console.log("Patches found:", patches.length);
                 for (let i = 0; i < patches.length; i++) {
-                    const element = patches[i];
-                    switch (element.getAttribute("type")) {
-                        case "xdelta":
-                            var patchFile = pathing.join(dbPath, mod, element.getAttribute("patch"));
-                            var toFile = pathing.join(gamePath, element.getAttribute("to"));
-                            if (!fs.existsSync(toFile)) {
-                                returnedObj.patched = false;
-                                returnedObj.log += `File ${toFile} does not exist, cannot apply patch.\n`;
-                            }
-                            console.log(`Applying xdelta patch from ${patchFile} to ${toFile}`);
-                            try {
-                                var bufferPatch = Buffer.from(fs.readFileSync(patchFile));
-                                var bufferTo = Buffer.from(fs.readFileSync(toFile));
-                                var patchedBuffer = encodeSync(bufferTo, bufferPatch);
-
-                                fs.writeFileSync(toFile, patchedBuffer);
-                                console.log(`Patched ${toFile} successfully.`);
-                            } catch (error) {
-                                returnedObj.patched = false;
-                                returnedObj.log += `Failed to apply xdelta patch: ${error.message}\n`;
-                            }
-                            break;
-                        case "override":
-                            var patchFile = pathing.join(dbPath, mod, element.getAttribute("patch"));
-                            var toFile = pathing.join(gamePath, element.getAttribute("to"));
-                            if (!fs.existsSync(toFile)) {
-                                returnedObj.patched = false;
-                                returnedObj.log += `File ${toFile} does not exist, cannot override.\n`;
-                            }
-                            console.log(`Applying xdelta patch from ${patchFile} to ${toFile}`);
-                            try {
-                                fs.rmSync(toFile, { force: true, recursive: true });
-                                fs.copyFileSync(patchFile, toFile);
-                                console.log(`Overrode ${toFile} successfully.`);
-                            } catch (error) {
-                                returnedObj.patched = false;
-                                returnedObj.log += `Failed to apply xdelta patch: ${error.message}\n`;
-                            }
-                            break;
-                        default:
-                            returnedObj.patched = false;
-                            returnedObj.log += `Unknown patch type: ${element.getAttribute("type")}\n`;
-                            break;
-                    }
+                    var patch = patches[i];
+                    objects.push({
+                        type: patch.getAttribute("type"),
+                        patch: patch.getAttribute("patch"),
+                        to: patch.getAttribute("to"),
+                        modPath: `${dbPath}\\${mod}`,
+                    });
                 }
+                
             }
+        }
+
+        console.log("Patches to apply:", objects);
+
+        var xdeltas = objects.filter(obj => obj.type === "xdelta");
+        var files = objects.filter(obj => obj.type === "override");
+
+        for (const xd of xdeltas) {
+            // insert xdelta patching here
+        }
+
+        for (const file of files) {
+            var from = pathing.join(file.modPath, file.patch);
+            var to = pathing.join(gamePath, file.to);
+
+            if (!fs.existsSync(from)) {
+                returnedObj.patched = false;
+                returnedObj.log += `File not found: ${from}\n`;
+                continue;
+            }
+
+            fs.rmSync(to, {force: true, recursive: true});
+            fs.copyFileSync(from, to);
         }
 
         await timeoutPromise(1000); // Delay needed (TODO fix)
