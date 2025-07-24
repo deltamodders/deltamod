@@ -1,4 +1,5 @@
 var audio = new Audio();
+var currentAudio = "";
 
 console.log = function(...arguments) {
     window.electronAPI.invoke('log', [arguments.join(' ')]);
@@ -15,7 +16,8 @@ async function page(name) {
     }
     if (purifiedHTML.includes('AUDIO[')) {
         var audioSrc = purifiedHTML.match(/AUDIO\[(.*?)\]/);
-        if (audioSrc && audioSrc[1]) {
+        if (audioSrc && audioSrc[1] && audioSrc[1] !== currentAudio) {
+            currentAudio = audioSrc[1];
             audio.pause();
             audio.currentTime = 0;
             audio.src = './' + audioSrc[1];

@@ -124,7 +124,6 @@ function createWindow() {
             threrror = 'The specified installation of Deltarune is invalid.';
         }
         setSystemIndex(overrideData);
-        fs.rmSync(partOverride, {force: true, recursive: true});
     }
     else {
         console.log('No system index override found, using default index.');
@@ -203,6 +202,7 @@ function createWindow() {
                 devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
                 nodeIntegration: true,
                 partition: partition,
+                preload: Paths.file('web', 'download_deltarune/preload.js'),
             }
         });
         modal.loadURL('deltapack://web/download_deltarune/index.html');
@@ -225,7 +225,9 @@ function createWindow() {
             fileName: "deltarune_demo.zip",
             directory: app.getPath('downloads'),
             onProgress: function (percentage, chunk, remainingSize) {
-                console.log("% ", percentage);
+                modal.webContents.send('progress', {
+                    percentage: percentage
+                });
             },
         });
 
@@ -331,12 +333,14 @@ function createWindow() {
     ipcMain.handle('getMaxExistingIndex', async (event, args) => {
         var systemFiles = fs.readdirSync(paths.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
         var maxIndex = 0;
+        var invalidInstalls = [];
         systemFiles.forEach((file) => {
             var index = file.split('-')[1];
             var contents = fs.readdirSync(paths.join(app.getPath('userData'), file));
             if (!contents.includes('deltaruneInstall') && index != 'unique') {
                 fs.rmdirSync(paths.join(app.getPath('userData'), file), { recursive: true });
                 console.log(`Removed empty directory: ${file}`);
+                invalidInstalls.push(index);
                 return; // Skip empty directories
             }
             
@@ -347,7 +351,7 @@ function createWindow() {
                 maxIndex = Math.max(maxIndex, parseInt(index));
             }
         });
-        return maxIndex;
+        return [maxIndex, invalidInstalls];
     });
     ipcMain.handle('changeSystemIndex', async (event, args) => {
         fs.writeFileSync(getSystemFile('_sysindex',true), args[0]);

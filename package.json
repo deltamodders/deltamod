@@ -7,21 +7,6 @@
     "test": "electron .",
     "build-windows": "electron-builder --win"
   },
-  "build": {
-    "productName": "Deltamod",
-    "artifactName": "deltamod.${ext}",
-    "asar": false,
-    "nsis": {
-      "oneClick": false,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true,
-      "license": "LICENSE.txt"
-    },
-    "appId": "com.gamebanana.ghinorhino.deltamod",
-    "win": {
-      "target": "zip"
-    }
-  },
   "author": "GhinoRhino",
   "license": "EUPL-1.2",
   "devDependencies": {

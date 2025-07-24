@@ -63,10 +63,10 @@ function loadInst(index) {
     var sysindex = await window.electronAPI.invoke('getSystemIndex', []);
     var maxindex = await window.electronAPI.invoke('getMaxExistingIndex', []);
 
-    console.log(`System index: ${sysindex}, Max index: ${maxindex}`);
+    console.log(`System index: ${sysindex}, Max index: ${maxindex[0]}`);
 
     var i = -1;
-    while (i < maxindex) {
+    while (i < maxindex[0]) {
         i++;
         var option = document.createElement('option');
         option.value = i;
@@ -74,10 +74,14 @@ function loadInst(index) {
             option.selected = true;
         }
         option.innerHTML = `Install ${i + 1}`;
+        if (maxindex[1].includes(i)) {
+            option.disabled = true;
+            option.innerHTML += ' <i>(Invalid)</i>';
+        }
         document.getElementById('installs').appendChild(option);
     }
     var newOption = document.createElement('option');
-    newOption.value = parseInt(maxindex) + 1;
+    newOption.value = parseInt(maxindex[0]) + 1;
     newOption.innerHTML = '<i>New...</i>';
     document.getElementById('installs').appendChild(newOption);
     document.getElementById('installs').value = sysindex;
