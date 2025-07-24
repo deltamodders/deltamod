@@ -25,12 +25,16 @@
   "author": "GhinoRhino",
   "license": "EUPL-1.2",
   "devDependencies": {
-    "electron-builder": "^26.0.12",
-    "electron": "^37.2.0"
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
   },
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",
+    "axios": "^1.11.0",
     "mime-types": "^3.0.1",
-    "xmldom": "^0.6.0"
+    "node-html-parser": "^7.0.1",
+    "nodejs-file-downloader": "^4.13.0",
+    "xmldom": "^0.6.0",
+    "zip-lib": "^1.1.2"
   }
 }

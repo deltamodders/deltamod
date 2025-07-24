@@ -10,6 +10,12 @@ function id() {
     window.electronAPI.invoke("importDelta", [document.getElementById('dpath').value.replaceAll('\\', '/')]);
 }
 
+function downloadDelta() {
+    window.electronAPI.invoke("downloadDelta", []);
+}
+
 window.currentPageStack.id = id;
 
 window.currentPageStack.locateDelta = locateDelta;
+
+window.currentPageStack.downloadDelta = downloadDelta;

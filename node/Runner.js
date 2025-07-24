@@ -3,7 +3,9 @@ const Paths = require('./Paths.js');
 const fs = require('fs');
 const paths = require('path');
 const mime = require('mime-types');
+const zl = require("zip-lib");
 const { pathToFileURL } = require('url');
+const {Downloader} = require("nodejs-file-downloader");
 const { startGamePatch } = require('./GamePatching.js');
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex } = require('./System.js');
 const crypto = require('crypto');
@@ -11,6 +13,17 @@ const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const GamePatching = require('./GamePatching.js');
 const { error } = require('console');
+const { default: axios } = require('axios');
+
+let itch;
+let canLoadItch = false;
+try {
+    itch = require('./ItchKeys.js');
+    canLoadItch = true;
+}
+catch (e) {
+    console.error('Itch.io CSRF keys not found, downloading Deltarune demo will not work.');
+}
 
 let win; // Main window
 let sharedVariables = {}; // shared vars with renderer
@@ -164,6 +177,91 @@ function createWindow() {
 
     ipcMain.handle('log', (event, args) => {
         console.log(...args);
+    });
+
+    /*
+        * downloadDelta
+        * Downloads the latest version of the Deltarune demo.
+        * The host is itch.io, and Deltamod uses its API to download the game.
+    */
+    ipcMain.handle('downloadDelta', async (event, args) => {
+        if (!canLoadItch) {
+            dialog.showErrorBox('itch.io download not available', 'Deltamod cannot download the Deltarune demo because the needed authentication file is not available.');
+            return;
+        }
+
+        var modal = new BrowserWindow({
+            width: 600,
+            height: 200,
+            resizable: false,
+            maximizable: false,
+            minimizable: false,
+            fullscreenable: false,
+            modal: true,
+            parent: win,
+            webPreferences: {
+                devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
+                nodeIntegration: true,
+                partition: partition,
+            }
+        });
+        modal.loadURL('deltapack://web/download_deltarune/index.html');
+        modal.setMenuBarVisibility(false);
+
+        var token = await itch.csrf();
+        console.log('Got token from itch: ' + token);
+        var api = await axios.post('https://tobyfox.itch.io/deltarune/file/12206581?source=view_game&as_props=1&after_download_lightbox=true', "csrf_token=" + token);
+
+        var deltaruneUrl = api.data.url;
+
+        var zipPath = paths.join(app.getPath('downloads'), 'deltarune_demo.zip');
+
+        if (fs.existsSync(zipPath)) {
+            fs.unlinkSync(zipPath);
+        }
+
+        const downloader = new Downloader({
+            url: deltaruneUrl,
+            fileName: "deltarune_demo.zip",
+            directory: app.getPath('downloads'),
+            onProgress: function (percentage, chunk, remainingSize) {
+                console.log("% ", percentage);
+            },
+        });
+
+        try {
+            await downloader.download();
+            console.log('Download completed successfully');
+
+            var extractPath = getSystemFolder('deltaruneInstall', false);
+
+            if (!fs.existsSync(extractPath)) {
+                fs.mkdirSync(extractPath, { recursive: true });
+            }
+
+            await zl.extract(zipPath, extractPath);
+
+            fs.unlinkSync(zipPath);
+            
+            dialog.showMessageBox(win, {
+                type: 'info',
+                title: 'Import Successful',
+                message: 'Deltarune install downloaded and imported successfully.',
+                buttons: ['OK']
+            }).then(() => {
+                Paths.setKVS('loadedDeltarune', true);
+                Paths.setKVS('deltarunePath', extractPath);
+                Paths.setKVS('deltaruneEdition', "demo");
+                Paths.kvsFlush();
+                app.relaunch();
+                app.exit();
+            });
+        }
+        catch (error) {
+            console.error('Download failed:', error);
+            dialog.showErrorBox('Download Failed', 'An error occurred while downloading the Deltarune demo. Please try again later.');
+            modal.close();
+        }
     });
 
     /*
