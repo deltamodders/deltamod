@@ -2,9 +2,27 @@ const {encodeSync, decodeSync} = require('@chainsafe/xdelta3-node');
 const fs = require('fs');
 const pathing = require('path');
 const {DOMParser} = require('@xmldom/xmldom');
+const { dialog } = require('electron');
 
 function timeoutPromise(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function detectConflicts(files) {
+    var array = [];
+    files.forEach((file, index) => {
+        if (!array.filter(x => x[0]).includes(file.to)) {
+            array.push([file, 0, ""]);
+        }
+        else {
+            var conflictIndex = array.findIndex(x => x[0] === file.to);
+            if (conflictIndex !== -1) {
+                array[conflictIndex][1]++;
+                array[conflictIndex][2] += `, ${file.modName}`;
+            }
+        }
+    });
+    return { found: array.length > 0, conflicts: array };
 }
 
 module.exports = {
@@ -22,21 +40,22 @@ module.exports = {
             if (enableMods.includes(dmc.uniqueId)) {
                 console.log(`Applying mod: ${dmc.uniqueId}`);
                 var xml = fs.readFileSync(`${dbPath}/${mod}/modding.xml`, 'utf8');
-                var parser = new DOMParser();
-                var xmlDoc = parser.parseFromString(xml, 'text/xml');
-
-                var patches = xmlDoc.getElementsByTagName("patch");
-                console.log("Patches found:", patches.length);
-                for (let i = 0; i < patches.length; i++) {
-                    var patch = patches[i];
-                    objects.push({
-                        type: patch.getAttribute("type"),
-                        patch: patch.getAttribute("patch"),
-                        to: patch.getAttribute("to"),
-                        modPath: `${dbPath}\\${mod}`,
-                    });
+        
+                xml.split('\n').forEach(line => {
+                    var parser = new DOMParser();
+                    var xmlDoc = parser.parseFromString(line, 'text/xml');
+                    var patches = xmlDoc.getElementsByTagName("patch");
+                    for (let i = 0; i < patches.length; i++) {
+                        var patch = patches[i];
+                        objects.push({
+                            type: patch.getAttribute("type"),
+                            patch: patch.getAttribute("patch"),
+                            to: patch.getAttribute("to"),
+                            modPath: `${dbPath}\\${mod}`,
+                            modName: meta.metadata.name
+                        });
                 }
-                
+                });
             }
         }
 
@@ -44,6 +63,23 @@ module.exports = {
 
         var xdeltas = objects.filter(obj => obj.type === "xdelta");
         var files = objects.filter(obj => obj.type === "override");
+        var combined = [...xdeltas, ...files];
+
+        var conflicts = detectConflicts(combined);
+        console.log("Detected conflicts:", combined);
+        console.log("Conflicts detected:", conflicts);
+        if (conflicts.found) {
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'Conflict Detected',
+                message: 'These mods are conflicting with each other:\n' +
+                    conflicts.conflicts.map(conflict => conflict.map(c => c.modName).join(', ')).join('\n'),
+                buttons: ['OK']
+            });
+            returnedObj.patched = false;
+            returnedObj.log += "Conflicts detected in file overrides.\n";
+            return returnedObj;
+        }
 
         for (const xd of xdeltas) {
             // insert xdelta patching here

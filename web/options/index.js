@@ -32,6 +32,39 @@ async function addCheckboxOption(name, description, flagid) {
     table.appendChild(tr);
 }
 
+
+async function addButton(name, description, click, buttonText) {
+    const table = document.querySelector('table');
+    const tr = document.createElement('tr');
+
+    const tdLabel = document.createElement('td');
+    const span = document.createElement('span');
+    span.textContent = name;
+    tdLabel.appendChild(span);
+
+    tdLabel.appendChild(document.createElement('br'));
+
+    const small = document.createElement('small');
+    small.className = 'calibri';
+    small.textContent = description;
+    tdLabel.appendChild(small);
+
+    const tdInput = document.createElement('td');
+
+    const button = document.createElement('button');
+    button.textContent = buttonText;
+    button.addEventListener('click', click);
+    tdInput.appendChild(button);
+
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdInput);
+
+    table.appendChild(tr);
+}
+
 (async() => {
     addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background. The dogcheck will still have music.', 'audio');
+    addButton('Open mod folder', 'Open the folder where mods are stored.', async () => {
+        await window.electronAPI.invoke('openSysFolder', ['mods']);
+    }, 'Open');
 })();

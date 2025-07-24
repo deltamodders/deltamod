@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, session, net } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell } = require('electron');
 const Paths = require('./Paths.js');
 const fs = require('fs');
 const paths = require('path');
@@ -176,6 +176,65 @@ function createWindow() {
 
     ipcMain.handle('log', (event, args) => {
         console.log(...args);
+    });
+
+    /*
+     * importMod
+     * Imports a mod from a zip file.
+    */
+    ipcMain.handle('importMod', async (event, args) => {
+        dialog.showOpenDialog(win, {
+            properties: ['openFile'],
+            filters: [
+                { name: 'Mod Archives', extensions: ['zip'] }
+            ]
+        }).then(async (result) => {
+            var filePath = result.filePaths[0];
+            if (!filePath) {
+                return;
+            }
+            var modPath = paths.join(app.getPath('userData'), 'pkg.db', 'mod-' + Date.now() + '-' + Math.random());
+
+            fs.mkdirSync(modPath, { recursive: true });
+
+            try {
+                await zl.extract(filePath, modPath);
+                fs.unlinkSync(filePath); // Remove the zip file after extraction
+
+                // Check if the mod has a manifest
+                var manifestPath = paths.join(modPath, '_deltamodInfo.json');
+                if (fs.existsSync(manifestPath)) {
+                    // all good
+                    dialog.showMessageBox(win, {
+                        type: 'info',
+                        title: 'Import Successful',
+                        message: 'Mod imported successfully.',
+                        buttons: ['OK']
+                    }).then(() => {
+                        app.relaunch();
+                        app.exit();
+                        process.exit();
+                    });
+                } else {
+                    throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
+                }
+            } catch (err) {
+                console.error('Error importing mod:', err);
+            }
+        });
+    });
+
+    /*
+     * openSysFolder
+     * Opens the specified system folder.
+     * args[0] is the name of the folder to open.
+    */
+    ipcMain.handle('openSysFolder', async (event, args) => {
+        var folder = args[0];
+        switch (folder) {
+            case 'mods':
+                shell.openExternal(paths.join(app.getPath('userData'), 'pkg.db'));
+        }
     });
 
     /*
