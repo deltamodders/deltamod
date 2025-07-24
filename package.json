@@ -19,7 +19,7 @@
     "mime-types": "^3.0.1",
     "node-html-parser": "^7.0.1",
     "nodejs-file-downloader": "^4.13.0",
-    "xmldom": "^0.6.0",
+    "xml-js": "^1.6.11",
     "zip-lib": "^1.1.2"
   }
 }

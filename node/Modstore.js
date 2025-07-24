@@ -2,6 +2,9 @@ const Paths = require('./Paths');
 const path = require('path');
 const system = require('./System');
 const fs = require('fs');
+const os = require('os');
+
+const computerName = os.hostname();
 
 function modList() {
     var mods = fs.readdirSync(system.getPacketDatabase());
@@ -11,17 +14,18 @@ function modList() {
         try {
             var modPath = path.join(system.getPacketDatabase(), mod);
             var modInfo = JSON.parse(fs.readFileSync(path.join(modPath, '_deltamodInfo.json'), 'utf8'));
+            var uniqueidSet = new Set();
             
-            try {
-                var deltamodExclusive = JSON.parse(fs.readFileSync(path.join(modPath, '__deltaID.json'), 'utf8'));
+            if (fs.existsSync(path.join(modPath, '__deltaID.json'))) {
+                fs.rmSync(path.join(modPath, '__deltaID.json'));
             }
-            catch (e) {
-                console.log('generating unique uid for mod:', mod);
-                deltamodExclusive = {
-                    uniqueId: system.generateUniqueId(),
-                };
-                fs.writeFileSync(path.join(modPath, '__deltaID.json'), JSON.stringify(deltamodExclusive, null, 2), 'utf8');
-            }
+
+            console.log('generating unique uid for mod:', mod);
+            deltamodExclusive = {
+                uniqueId: system.generateUniqueId(),
+                validFor: computerName,
+            };
+            fs.writeFileSync(path.join(modPath, '__deltaID.json'), JSON.stringify(deltamodExclusive, null, 2), 'utf8');
 
             if (
                 !modInfo ||

@@ -1,7 +1,7 @@
 const {encodeSync, decodeSync} = require('@chainsafe/xdelta3-node');
 const fs = require('fs');
 const pathing = require('path');
-const {DOMParser} = require('@xmldom/xmldom');
+var convert = require('xml-js');
 const { dialog } = require('electron');
 
 function timeoutPromise(ms) {
@@ -9,20 +9,29 @@ function timeoutPromise(ms) {
 }
 
 function detectConflicts(files) {
-    var array = [];
-    files.forEach((file, index) => {
-        if (!array.filter(x => x[0]).includes(file.to)) {
-            array.push([file, 0, ""]);
+    let conflicts = [];
+    let seen = {};
+
+    for (const file of files) {
+        if (!seen[file.to]) {
+            seen[file.to] = [];
         }
-        else {
-            var conflictIndex = array.findIndex(x => x[0] === file.to);
-            if (conflictIndex !== -1) {
-                array[conflictIndex][1]++;
-                array[conflictIndex][2] += `, ${file.modName}`;
-            }
+        seen[file.to].push(file.modName);
+    }
+
+    for (const key in seen) {
+        // Only consider as conflict if more than one unique mod is trying to patch the same file
+        const uniqueMods = [...new Set(seen[key])];
+        if (uniqueMods.length > 1) {
+            conflicts.push(uniqueMods);
         }
-    });
-    return { found: array.length > 0, conflicts: array };
+    }
+
+    if (conflicts.length > 0) {
+        return { found: true, conflicts };
+    } else {
+        return { found: false, conflicts: [] };
+    }
 }
 
 module.exports = {
@@ -40,7 +49,22 @@ module.exports = {
             if (enableMods.includes(dmc.uniqueId)) {
                 console.log(`Applying mod: ${dmc.uniqueId}`);
                 var xml = fs.readFileSync(`${dbPath}/${mod}/modding.xml`, 'utf8');
-        
+                var json = convert.xml2json(xml, {compact: false, spaces: 4});
+                var jsonObj = JSON.parse(json);
+
+                console.log(jsonObj);
+
+                jsonObj.elements.forEach(patch => {
+                    console.log(`Found patch: ${patch.attributes.patch} of type ${patch.attributes.type}`);
+                    objects.push({
+                        type: patch.attributes.type,
+                        patch: patch.attributes.patch,
+                        to: patch.attributes.to,
+                        modPath: `${dbPath}/${mod}`,
+                        modName: meta.metadata.name
+                    });
+                });
+                /*
                 xml.split('\n').forEach(line => {
                     var parser = new DOMParser();
                     var xmlDoc = parser.parseFromString(line, 'text/xml');
@@ -56,6 +80,7 @@ module.exports = {
                         });
                 }
                 });
+                */
             }
         }
 
@@ -66,14 +91,12 @@ module.exports = {
         var combined = [...xdeltas, ...files];
 
         var conflicts = detectConflicts(combined);
-        console.log("Detected conflicts:", combined);
-        console.log("Conflicts detected:", conflicts);
         if (conflicts.found) {
             dialog.showMessageBoxSync({
                 type: 'error',
                 title: 'Conflict Detected',
                 message: 'These mods are conflicting with each other:\n' +
-                    conflicts.conflicts.map(conflict => conflict.map(c => c.modName).join(', ')).join('\n'),
+                    conflicts.conflicts.join(','),
                 buttons: ['OK']
             });
             returnedObj.patched = false;
@@ -88,6 +111,8 @@ module.exports = {
         for (const file of files) {
             var from = pathing.join(file.modPath, file.patch);
             var to = pathing.join(gamePath, file.to);
+
+            console.log(`Copying file from ${from} to ${to}`);
 
             if (!fs.existsSync(from)) {
                 returnedObj.patched = false;

@@ -453,7 +453,9 @@ function createWindow() {
             var log = await GamePatching.startGamePatch(tempPath, getPacketDatabase(), args[0]);
 
             if (!log.patched) {
-                dialog.showErrorBox('Patching failed', 'Please check the log for more details.\n' + log.log + '\nThe game will run, but it may not work as expected.');
+                dialog.showErrorBox('Patching failed', 'Please check the log for more details.\n\n' + log.log + '\n\nPlease resolve the issues and try again.');
+                win.webContents.executeJavaScript('openAudio(); page(\'main\');');
+                return false;
             }
             console.log('Patching log: ', log);
 
