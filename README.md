@@ -1,6 +1,8 @@
 # Deltamod
 Deltamod is an easy to use Deltamod mod patcher built in Electron and other languages (packaged in CLI tools).
 
+[![](https://gamebanana.com/wips/embeddables/94135?type=large)](https://gamebanana.com/wips/94135)
+
 ## How to compile (advanced)
 <p align="center">
   <img width="200" alt="nodejs-1-logo-png-transparent" src="https://github.com/user-attachments/assets/a5b53f84-074a-4218-9578-c8fa4cf34683" />
