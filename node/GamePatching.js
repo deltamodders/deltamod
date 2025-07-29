@@ -109,6 +109,7 @@ module.exports = {
             // insert xdelta patching here
 
             //TODO: make sure this works
+            ChildProcess.execFileSync(file: /** */,["clear"]);
             ChildProcess.execFileSync(file: /*insert path to the GM3P executable here*/, ["massPatch", gamePath, "GM", xdeltas.length, "\"" + xdeltas.modPath + "\""]);
             ChildProcess.execFileSync(file: /*insert path to the GM3P executable here*/, ["compare", xdeltas.length, "true", "true"]);
             ChildProcess.execFileSync(file: /*insert path to the GM3P executable here*/, ["result", modName, "true"]);
