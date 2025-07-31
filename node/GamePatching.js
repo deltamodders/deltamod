@@ -105,15 +105,15 @@ module.exports = {
             return returnedObj;
         }
 
-        for (const xd of xdeltas) {
+        if (xdeltas.length >= 1) {
             // insert xdelta patching here
 
             //TODO: make sure this works
-            ChildProcess.execFileSync(file: /** */,["clear"]);
-            ChildProcess.execFileSync(file: /*insert path to the GM3P executable here*/, ["massPatch", gamePath, "GM", xdeltas.length, "\"" + xdeltas.modPath + "\""]);
+            ChildProcess.execFileSync(file: /*insert path to the GM3P executable here*/, ["clear"]);
+            ChildProcess.execFileSync(file: /*insert path to the GM3P executable here*/, ["massPatch", gamePath, "GM", xdeltas.length, "\"" + xdeltas.map(z => z.modPath) + "\""]);
             ChildProcess.execFileSync(file: /*insert path to the GM3P executable here*/, ["compare", xdeltas.length, "true", "true"]);
             ChildProcess.execFileSync(file: /*insert path to the GM3P executable here*/, ["result", modName, "true"]);
-            fs.copyFileSync("*insert path to the GM3P folder here*/output/xDeltaCombiner/1/data.win", to);
+            fs.copyFileSync("*insert path to the GM3P folder here*/result/"+ modName +"/data.win", to);
         }
 
         for (const file of files) {
