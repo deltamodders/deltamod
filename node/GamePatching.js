@@ -113,7 +113,7 @@ module.exports = {
             // Helper to promisify exec
             function execPromise(command) {
                 return new Promise((resolve, reject) => {
-                    exec(command, (error, stdout, stderr) => {
+                    exec(command, {maxBuffer: 1024 * 16384}, (error, stdout, stderr) => {
                         if (error) {
                             reject(stderr || error);
                         } else {
@@ -124,12 +124,14 @@ module.exports = {
             }
 
             try {
-                
-                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " massPatch " + gamePath + " GM " + xdeltas.length + " \",," + xdeltas.map(z => z.modPath).join(',') + "\"");
+
+                console.log((xdeltas.map(z => z.modPath).join(',')).replace('/', '\\') + '\n');
+                console.log(pathing.join(gamePath, xdeltas[0].to));
+                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " massPatch " + pathing.join(gamePath, xdeltas[0]?.to) + " GM " + xdeltas.length + " \",," + (xdeltas.map(z => pathing.join(z.modPath, z.patch)).join(',')).replace('/','\\') + "\"");
                 await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " compare " + xdeltas.length + " true true");
                 // Use the first modName for result (or adapt as needed)
                 const modName = xdeltas[0]?.modName || "result";
-                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " result " + modName + " true");
+                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " result \"" + modName + "\" true");
                 const to = pathing.join(gamePath, xdeltas[0]?.to || "data.win");
                 fs.copyFileSync(pathing.join(__dirname, "../gm3p/result/", modName, "data.win"), to);
                 await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " clear");
