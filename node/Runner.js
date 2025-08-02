@@ -331,15 +331,19 @@ function createWindow() {
      * args[0] is the content of the file.
      * args[1] is the name of the file.
     */
-    ipcMain.handle('writeToDesktop', async (event, args) => {
+    ipcMain.handle('writeToDocuments', async (event, args) => {
         try {
-            const desktopPath = app.getPath('desktop');
-            const filePath = paths.join(desktopPath, args[1]);
+            const desktopPath = app.getPath('documents');
+            if (!fs.existsSync(paths.join(desktopPath, 'deltamod')))
+            {
+                fs.mkdirSync(desktopPath + "/deltamod");
+            }
+            const filePath = paths.join(desktopPath, 'deltamod', args[1]);
             await fs.promises.writeFile(filePath, args[0], 'utf8');
-            console.log(`File written to desktop: ${filePath}`);
+            console.log(`File written to documents: ${filePath}`);
         }
         catch (err) {
-            console.error('Error writing to desktop:', err);
+            console.error('Error writing to documents:', err);
         }
     });
 

@@ -124,14 +124,15 @@ module.exports = {
             }
 
             try {
-                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " clear");
-                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " massPatch " + gamePath + " GM " + xdeltas.length + " \"" + xdeltas.map(z => z.modPath).join(',') + "\"");
+                
+                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " massPatch " + gamePath + " GM " + xdeltas.length + " \",," + xdeltas.map(z => z.modPath).join(',') + "\"");
                 await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " compare " + xdeltas.length + " true true");
                 // Use the first modName for result (or adapt as needed)
                 const modName = xdeltas[0]?.modName || "result";
                 await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " result " + modName + " true");
                 const to = pathing.join(gamePath, xdeltas[0]?.to || "data.win");
                 fs.copyFileSync(pathing.join(__dirname, "../gm3p/result/", modName, "data.win"), to);
+                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " clear");
             } catch (err) {
                 returnedObj.patched = false;
                 returnedObj.log += `Error during xdelta patching: ${err}\n`;
