@@ -127,14 +127,18 @@ module.exports = {
 
                 console.log((xdeltas.map(z => z.modPath).join(',')).replace('/', '\\') + '\n');
                 console.log(pathing.join(gamePath, xdeltas[0].to));
+                if (fs.existsSync(pathing.join(__dirname, "../gm3p/output/xDeltaCombiner")))
+                {
+                    await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " clear");
+                }
                 await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " massPatch " + pathing.join(gamePath, xdeltas[0]?.to) + " GM " + xdeltas.length + " \",," + (xdeltas.map(z => pathing.join(z.modPath, z.patch)).join(',')).replace('/','\\') + "\"");
                 await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " compare " + xdeltas.length + " true true");
                 // Use the first modName for result (or adapt as needed)
                 const modName = xdeltas[0]?.modName || "result";
                 await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " result \"" + modName + "\" true");
                 const to = pathing.join(gamePath, xdeltas[0]?.to || "data.win");
-                fs.copyFileSync(pathing.join(__dirname, "../gm3p/result/", modName, "data.win"), to);
-                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " clear");
+                fs.rmSync(to, { force: true, recursive: true });
+                fs.copyFileSync(pathing.join(__dirname, "../gm3p/output/result/", modName, "0/data.win"), to);
             } catch (err) {
                 returnedObj.patched = false;
                 returnedObj.log += `Error during xdelta patching: ${err}\n`;
