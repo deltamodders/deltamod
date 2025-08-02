@@ -4,6 +4,7 @@ const pathing = require('path');
 var convert = require('xml-js');
 const { dialog } = require('electron');
 const { ChildProcess } = require('child_process');
+const { exec } = require('child_process');
 
 function timeoutPromise(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -109,11 +110,32 @@ module.exports = {
             // insert xdelta patching here
 
             //TODO: make sure this works
-            ChildProcess.execFileSync("/*insert path to the GM3P executable here*/", ["clear"]);
-            ChildProcess.execFileSync("/*insert path to the GM3P executable here*/", ["massPatch", gamePath, "GM", xdeltas.length, "\"" + xdeltas.map(z => z.modPath) + "\""]);
-            ChildProcess.execFileSync("/*insert path to the GM3P executable here*/", ["compare", xdeltas.length, "true", "true"]);
-            ChildProcess.execFileSync("/*insert path to the GM3P executable here*/", ["result", modName, "true"]);
-            fs.copyFileSync("*insert path to the GM3P folder here*/result/"+ modName +"/data.win", to);
+            // Helper to promisify exec
+            function execPromise(command) {
+                return new Promise((resolve, reject) => {
+                    exec(command, (error, stdout, stderr) => {
+                        if (error) {
+                            reject(stderr || error);
+                        } else {
+                            resolve(stdout);
+                        }
+                    });
+                });
+            }
+
+            try {
+                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " clear");
+                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " massPatch " + gamePath + " GM " + xdeltas.length + " \"" + xdeltas.map(z => z.modPath).join(',') + "\"");
+                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " compare " + xdeltas.length + " true true");
+                // Use the first modName for result (or adapt as needed)
+                const modName = xdeltas[0]?.modName || "result";
+                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " result " + modName + " true");
+                const to = pathing.join(gamePath, xdeltas[0]?.to || "data.win");
+                fs.copyFileSync(pathing.join(__dirname, "../gm3p/result/", modName, "data.win"), to);
+            } catch (err) {
+                returnedObj.patched = false;
+                returnedObj.log += `Error during xdelta patching: ${err}\n`;
+            }
         }
 
         for (const file of files) {
