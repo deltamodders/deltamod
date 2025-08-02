@@ -186,7 +186,7 @@ function createWindow() {
         dialog.showOpenDialog(win, {
             properties: ['openFile'],
             filters: [
-                { name: 'Mod Archives and Mod Patches', extensions: ['zip','xdelta','csx','win'] }
+                { name: 'Mod Archives', extensions: ['zip'] }
             ]
         }).then(async (result) => {
             var filePath = result.filePaths[0];
