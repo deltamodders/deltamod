@@ -1,7 +1,24 @@
 <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
     <div style="text-align: center;">
-        <img src="./patching/kaardDial.png" alt="" srcset="">
-        <p>Rouxls Kaard is patching your game..!</p>
+        <img src="./patching/BattatMike.webp" alt="" srcset="" class="mike">
+        <p>Patching Deltarune...</p>
+        <small>Mike will take a bit to patch the game... just wait a bit!</small>
     </div>
 </div>
+<style>
+    small {
+        color: #888;
+        font-size: 0.8em;
+        font-family: "Calibri", sans-serif;
+    }
+    @keyframes scale {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    .mike {
+        width: 200px;
+        animation: scale 2s infinite;
+    }
+</style>
 AUDIO[kaard.mp3]
