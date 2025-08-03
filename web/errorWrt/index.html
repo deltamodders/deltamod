@@ -48,7 +48,7 @@
 
     (async() => {
         error = await window.electronAPI.invoke('fetchSharedVariable',['error']);
-        await window.electronAPI.invoke('writeToDesktop',[error, "DELTAMOD_ERROR_" + Date.now() + ".txt"]);
+        await window.electronAPI.invoke('writeToDocuments',[error, "DELTAMOD_ERROR_" + Date.now() + ".txt"]);
     })();
 
     document.addEventListener('keydown', async function(e) {
