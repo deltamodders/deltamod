@@ -1,11 +1,13 @@
 var audio = new Audio();
 var currentAudio = "";
+var themeIndex = 1;
 
 console.log = function(...arguments) {
     window.electronAPI.invoke('log', [arguments.join(' ')]);
 }
 
 async function page(name) {
+    document.getElementsByClassName('viewport')[0].style.backgroundImage = 'url(./commons/bg' + themeIndex + '.gif)';
     window.currentPageStack = {};
     var purifiedHTML =  await fetch('./' + name + '/index.html').then(response => response.text());
     var runScripts = false;
@@ -20,7 +22,12 @@ async function page(name) {
             currentAudio = audioSrc[1];
             audio.pause();
             audio.currentTime = 0;
-            audio.src = './' + audioSrc[1];
+            if (audioSrc[1] == 'mainTheme.mp3') {
+                audio.src = './mainTheme' + themeIndex + '.mp3';
+            }
+            else {
+                audio.src = './' + audioSrc[1];
+            }
             audio.loop = true;
             audio.volume = 0.7;
             if ((await window.electronAPI.invoke('getUniqueFlag', ['audio']))) {
