@@ -384,15 +384,15 @@ function createWindow() {
                 fs.mkdirSync(extractPath, { recursive: true });
             }
 
-            await zl.extract(zipPath, dest);
+            await zl.extract(zipPath, extractPath);
 
             // normalize: move contents from the true mod root to `dest` if wrapped
-            const realRoot = findModRoot(dest);
-            if (realRoot && realRoot !== dest && realRoot.startsWith(dest)) {
+            const realRoot = findModRoot(extractPath);
+            if (realRoot && realRoot !== extractPath && realRoot.startsWith(extractPath)) {
                 const items = fs.readdirSync(realRoot);
                 for (const name of items) {
                     const from = paths.join(realRoot, name);
-                    const to   = paths.join(dest, name);
+                    const to   = paths.join(extractPath, name);
                     try { fs.renameSync(from, to); }
                     catch {
                         // cross-device or conflicts → fallback to copy
@@ -430,6 +430,7 @@ function createWindow() {
             console.error('Download failed:', error);
             dialog.showErrorBox('Download Failed', 'An error occurred while downloading the Deltarune demo. Please try again later.');
             modal.close();
+            errorWin('Download failed: ' + error.toString());
         }
     });
 

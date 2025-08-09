@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const { dialog } = require('electron');
 const { execFile } = require('child_process');
+const { timeoutPromise } = require('./Utils.js');
 const convert = require('xml-js');
 
 const GM3P_EXE = path.join(__dirname, '../gm3p/GM3P.exe');
@@ -303,12 +304,6 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
 
     clog('Collected:', xdeltas.length, 'xdelta(s),', overrides.length, 'override(s)');
 
-    if (xdeltas.length === 0 && overrides.length === 0) {
-        ret.log = log.concat('No actions for selected mods.').join('\n');
-        clog('[END] Nothing to do');
-        return ret;
-    }
-
     // Group xdeltas by absolute target `to` and back them up
     const groups = new Map(); // targetAbs -> [patchAbs]
     for (const x of xdeltas) {
@@ -422,6 +417,9 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
     ret.patched = true;
     ret.log = log.concat('Patched via GM3P + overrides.').join('\n');
     clog('== startGamePatch DONE ==');
+
+    await timeoutPromise(1000); // Needed for UI to work properly.
+
     return ret;
 }
 
