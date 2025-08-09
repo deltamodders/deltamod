@@ -3,7 +3,16 @@ Deltamod is an easy to use Deltamod mod patcher built in Electron and other lang
 
 [![](https://gamebanana.com/wips/embeddables/94135?type=large)](https://gamebanana.com/wips/94135)
 
-## How to compile (advanced)
+# How to compile (advanced)
+## External requirements
+### `GM3P` (by techy804)
+To use Deltamod from source, you must download the latest GM3P release.<br />
+1) Download the latest build of GM3P from your preferred provider (GameJolt, GitHub...)
+2) Unzip GM3P in a folder.
+3) In the Deltamod root folder, create a new folder named `gm3p`.
+4) Move everything from the unzip location of GM3P to this folder.
+
+## Run Deltamod
 <p align="center">
   <img width="200" alt="nodejs-1-logo-png-transparent" src="https://github.com/user-attachments/assets/a5b53f84-074a-4218-9578-c8fa4cf34683" />
 </p>
