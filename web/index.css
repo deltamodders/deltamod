@@ -27,7 +27,6 @@ body {
     overflow-y: hidden;
     padding: 20px;
     box-sizing: border-box;
-    background-image: url('./commons/bg.gif');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
