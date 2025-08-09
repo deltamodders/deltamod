@@ -1,168 +1,464 @@
-const {encodeSync, decodeSync} = require('@chainsafe/xdelta3-node');
+// Hello Ghino! this is the new GamePatching module, I hope you like it!
+// I also modified a bit of Runner.js and Modstore.js to support the new features.
+// Everything new will be marked with [Zork's PATCH] so you can easily find it.
+// ------------------------------------------------------------------
+// Exports:
+//   - startGamePatch(gamePath, dbPath, enableMods)
+//   - restoreOriginalsIfAny(gamePath)
+// What’s new here:
+//   - Now reads all the zip file when importing mods, even if it has a wrapper folder inside (for example, mod.zip has a "Mod" folder).
+//   - Group xdelta patches by their target `to` and run GM3P once per target, using GM3P new Multi Chapter support.
+//   - Backups to *.original + restore helper, this was to avoid doing a temp deltarune install every time, overbloating.
+//   - Uses execFile (no shell) with big buffers
+//   - **Verbose console logging with timestamps** for each step, this was for me to discover what was going on with the patching.
+//   - Detects file conflicts for external file overrides (data.win is merged by GM3P) and shows a dialog with the list of conflicting mods.
+//   - Restores original files if they exist (with *.original suffix) in the gamePath root or one level deep.
+
 const fs = require('fs');
-const pathing = require('path');
-var convert = require('xml-js');
+const path = require('path');
 const { dialog } = require('electron');
-const { ChildProcess } = require('child_process');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
+const convert = require('xml-js');
 
-function timeoutPromise(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+const GM3P_EXE = path.join(__dirname, '../gm3p/GM3P.exe');
+const BACKUP_SUFFIX = '.original';
+
+// ----------------------------- logger ---------------------------------------
+const t0 = process.hrtime.bigint();
+const ms = () => Number(process.hrtime.bigint() - t0) / 1e6;
+function clog(...args) {
+    console.log(`[GamePatching +${ms().toFixed(1)}ms]`, ...args);
+}
+function trunc(s, n = 4000) {
+    if (!s) return '';
+    s = String(s);
+    return s.length > n ? s.slice(0, n) + '... [truncated]' : s;
 }
 
-function detectConflicts(files) {
-    let conflicts = [];
-    let seen = {};
+// ----------------------------- helpers --------------------------------------
 
-    for (const file of files) {
-        if (!seen[file.to]) {
-            seen[file.to] = [];
-        }
-        seen[file.to].push(file.modName);
-    }
+function run(file, args, opts = {}) {
+    const _opts = {
+        windowsHide: true,
+        maxBuffer: 64 * 1024 * 1024, // 64MB to be safe
+        timeout: 10 * 60 * 1000,     // 10 minutes hard cap (avoid infinite hangs)
+        ...opts
+    };
+    clog('RUN:', file, JSON.stringify(args));
+    const tStart = ms();
+    return new Promise((resolve, reject) => {
+        execFile(file, args, _opts, (err, stdout, stderr) => {
+            const dt = (ms() - tStart).toFixed(1);
+            if (stdout) clog('stdout:', trunc(stdout));
+            if (stderr) clog('stderr:', trunc(stderr));
+            if (err) {
+                clog(`RUN ERROR after ${dt}ms`);
+                return reject(new Error((stderr || '') + (stdout || '') || err.message));
+            }
+            clog(`RUN OK in ${dt}ms`);
+            resolve({ stdout, stderr });
+        });
+    });
+}
 
-    for (const key in seen) {
-        // Only consider as conflict if more than one unique mod is trying to patch the same file
-        const uniqueMods = [...new Set(seen[key])];
-        if (uniqueMods.length > 1) {
-            conflicts.push(uniqueMods);
-        }
-    }
+function copyOver(src, dst) {
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    fs.copyFileSync(src, dst);
+}
 
-    if (conflicts.length > 0) {
-        return { found: true, conflicts };
-    } else {
-        return { found: false, conflicts: [] };
+function ensureBackup(targetAbs) {
+    if (!targetAbs) return;
+    const backup = targetAbs + BACKUP_SUFFIX;
+    if (fs.existsSync(targetAbs) && !fs.existsSync(backup)) {
+        const sz = safeStat(targetAbs)?.size ?? 0;
+        clog('Backup →', backup, `(size ${sz} bytes)`);
+        copyOver(targetAbs, backup);
     }
 }
 
-module.exports = {
-    startGamePatch: async (gamePath, dbPath, enableMods) => {
-        var dbMods = fs.readdirSync(dbPath);
-        var returnedObj = {
-            patched: true,
-            log: ""
-        };
-
-        var objects = [];
-        for (const mod of dbMods) {
-            var meta = JSON.parse(fs.readFileSync(`${dbPath}/${mod}/_deltamodInfo.json`, 'utf8'));
-            var dmc = JSON.parse(fs.readFileSync(`${dbPath}/${mod}/__deltaID.json`, 'utf8'));
-            if (enableMods.includes(dmc.uniqueId)) {
-                console.log(`Applying mod: ${dmc.uniqueId}`);
-                var xml = fs.readFileSync(`${dbPath}/${mod}/modding.xml`, 'utf8');
-                var json = convert.xml2json(xml, {compact: false, spaces: 4});
-                var jsonObj = JSON.parse(json);
-
-                console.log(jsonObj);
-
-                jsonObj.elements.forEach(patch => {
-                    console.log(`Found patch: ${patch.attributes.patch} of type ${patch.attributes.type}`);
-                    objects.push({
-                        type: patch.attributes.type,
-                        patch: patch.attributes.patch,
-                        to: patch.attributes.to,
-                        modPath: `${dbPath}/${mod}`,
-                        modName: meta.metadata.name
-                    });
-                });
-                /*
-                xml.split('\n').forEach(line => {
-                    var parser = new DOMParser();
-                    var xmlDoc = parser.parseFromString(line, 'text/xml');
-                    var patches = xmlDoc.getElementsByTagName("patch");
-                    for (let i = 0; i < patches.length; i++) {
-                        var patch = patches[i];
-                        objects.push({
-                            type: patch.getAttribute("type"),
-                            patch: patch.getAttribute("patch"),
-                            to: patch.getAttribute("to"),
-                            modPath: `${dbPath}\\${mod}`,
-                            modName: meta.metadata.name
-                        });
-                }
-                });
-                */
-            }
+function restoreIfBackup(targetAbs) {
+    const backup = targetAbs + BACKUP_SUFFIX;
+    if (fs.existsSync(backup)) {
+        clog('Restore from backup:', backup);
+        try { fs.rmSync(targetAbs, { force: true }); } catch {}
+        copyOver(backup, targetAbs);
+        try { fs.rmSync(backup, { force: true }); } catch {}
+        return true;
+    }
+    return false;
+}
+// find the first file named `name` anywhere under `root`
+function findFirstByName(root, name) {
+    const stack = [root];
+    const needle = name.toLowerCase();
+    while (stack.length) {
+        const dir = stack.pop();
+        let ents;
+        try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
+        for (const e of ents) {
+            const full = path.join(dir, e.name);
+            if (e.isFile() && e.name.toLowerCase() === needle) return full;
+            if (e.isDirectory()) stack.push(full);
         }
+    }
+    return null;
+}
 
-        console.log("Patches to apply:", objects);
+// find the directory that looks like the "mod root"
+function findModRoot(root) {
+    // prefer directory that has BOTH modding.xml and _deltamodInfo.json
+    const stack = [root];
+    let fallback = null;
+    while (stack.length) {
+        const dir = stack.pop();
+        const hasXml = fs.existsSync(path.join(dir, 'modding.xml'));
+        const hasInfo= fs.existsSync(path.join(dir, '_deltamodInfo.json'));
+        if (hasXml) return dir;
+        if (!fallback && (hasXml || hasInfo)) fallback = dir;
+        let ents;
+        try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
+        for (const e of ents) if (e.isDirectory()) stack.push(path.join(dir, e.name));
+    }
+    return fallback || root;
+}
 
-        var xdeltas = objects.filter(obj => obj.type === "xdelta");
-        var files = objects.filter(obj => obj.type === "override");
-        var combined = [...xdeltas, ...files];
+function resolveAbsTarget(gamePath, toTarget) {
+    if (!toTarget || toTarget === '.') toTarget = 'data.win';
+    const cleaned = String(toTarget).replace(/^[.][/\\]/, '');
+    const abs = path.isAbsolute(cleaned) ? path.normalize(cleaned) : path.join(gamePath, cleaned);
+    return abs;
+}
 
-        var conflicts = detectConflicts(combined);
-        if (conflicts.found) {
-            dialog.showMessageBoxSync({
-                type: 'error',
-                title: 'Conflict Detected',
-                message: 'These mods are conflicting with each other:\n' +
-                    conflicts.conflicts.join(','),
-                buttons: ['OK']
-            });
-            returnedObj.patched = false;
-            returnedObj.log += "Conflicts detected in file overrides.\n";
-            return returnedObj;
-        }
+// Recursive walk for xml-js ({compact:false})
+function walkElements(node, out = []) {
+    if (!node || typeof node !== 'object') return out;
+    if (Array.isArray(node)) { for (const n of node) walkElements(n, out); return out; }
+    if (node.type === 'element' || node.name) out.push(node);
+    if (node.elements && Array.isArray(node.elements)) {
+        for (const ch of node.elements) walkElements(ch, out);
+    }
+    return out;
+}
 
-        if (xdeltas.length >= 1) {
-            // insert xdelta patching here
+// Pick first existing attribute name
+function pickAttr(attrs, ...keys) {
+    for (const k of keys) {
+        if (attrs && attrs[k] != null && attrs[k] !== '') return attrs[k];
+    }
+    return undefined;
+}
 
-            //TODO: make sure this works
-            // Helper to promisify exec
-            function execPromise(command) {
-                return new Promise((resolve, reject) => {
-                    exec(command, {maxBuffer: 1024 * 16384}, (error, stdout, stderr) => {
-                        if (error) {
-                            reject(stderr || error);
-                        } else {
-                            resolve(stdout);
-                        }
-                    });
-                });
-            }
+// Conflict detector for external file overrides only
+function detectFileConflicts(overrides) {
+    const map = new Map(); // destAbs -> Set(modName)
+    for (const o of overrides) {
+        const key = o.to.toLowerCase();
+        if (!map.has(key)) map.set(key, new Set());
+        map.get(key).add(o.modName);
+    }
+    const conflicts = [];
+    for (const [to, mods] of map.entries()) {
+        if (mods.size > 1) conflicts.push(Array.from(mods));
+    }
+    return { found: conflicts.length > 0, conflicts };
+}
+//Zork's Patch: This function discovers all chapters in the gamePath
+// It looks for data.win files in the root and subdirectories, mirroring the C# structure of GM3P.
+function discoverChapters(gamePath) {
+    const out = [];
+    const root = path.join(gamePath, 'data.win');
+    if (fs.existsSync(root)) out.push(root);
 
-            try {
+    // EXACTLY mirror C# Directory.GetDirectories(...).OrderBy(d => d), or multi chapter mods will not work
+    // (they expect the data.win files to be in a specific order)
+    // This is a bit of a hack, but it works for the current game structure.
+    const subdirs = fs.readdirSync(gamePath, { withFileTypes: true })
+        .filter(d => d.isDirectory && d.isDirectory())
+        .map(d => path.join(gamePath, d.name))
+        .sort((a, b) => a.localeCompare(b)); // lexicographic, full path
 
-                console.log((xdeltas.map(z => z.modPath).join(',')).replace('/', '\\') + '\n');
-                console.log(pathing.join(gamePath, xdeltas[0].to));
-                if (fs.existsSync(pathing.join(__dirname, "../gm3p/output/xDeltaCombiner")))
-                {
-                    await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " clear");
-                }
-                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " massPatch " + pathing.join(gamePath, xdeltas[0]?.to) + " GM " + xdeltas.length + " \",," + (xdeltas.map(z => pathing.join(z.modPath, z.patch)).join(',')).replace('/','\\') + "\"");
-                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " compare " + xdeltas.length + " true true");
-                // Use the first modName for result (or adapt as needed)
-                const modName = xdeltas[0]?.modName || "result";
-                await execPromise(pathing.join(__dirname, "../gm3p/GM3P.exe") + " result \"" + modName + "\" true");
-                const to = pathing.join(gamePath, xdeltas[0]?.to || "data.win");
-                fs.rmSync(to, { force: true, recursive: true });
-                fs.copyFileSync(pathing.join(__dirname, "../gm3p/output/result/", modName, "0/data.win"), to);
-            } catch (err) {
-                returnedObj.patched = false;
-                returnedObj.log += `Error during xdelta patching: ${err}\n`;
-            }
-        }
+    for (const dir of subdirs) {
+        const candidate = path.join(dir, 'data.win');
+        if (fs.existsSync(candidate)) out.push(candidate);
+    }
+    return out;
+}
 
-        for (const file of files) {
-            var from = pathing.join(file.modPath, file.patch);
-            var to = pathing.join(gamePath, file.to);
 
-            console.log(`Copying file from ${from} to ${to}`);
 
-            if (!fs.existsSync(from)) {
-                returnedObj.patched = false;
-                returnedObj.log += `File not found: ${from}\n`;
+function safeReadDir(dir, opts) {
+    try { return fs.readdirSync(dir, opts); } catch { return []; }
+}
+function safeStat(p) {
+    try { return fs.statSync(p); } catch { return null; }
+}
+
+// ------------------------------ main ----------------------------------------
+
+async function startGamePatch(gamePath, dbPath, enableMods) {
+    const log = [];
+    const ret = { patched: false, log: '' };
+    const enabled = new Set(enableMods || []);
+    function logln(s) { log.push(String(s)); clog(s); }
+
+    clog('== startGamePatch ==');
+    clog('gamePath:', gamePath);
+    clog('dbPath:', dbPath);
+    clog('enabledMods:', Array.from(enabled));
+
+    if (!fs.existsSync(GM3P_EXE)) {
+        ret.log = `GM3P missing at ${GM3P_EXE}`;
+        dialog.showErrorBox('GM3P missing', ret.log);
+        clog('[FATAL]', ret.log);
+        return ret;
+    }
+
+    // Collect actions from all enabled mods
+    const objects = []; // {type:'xdelta'|'override', patch/from, to, modName}
+    const modsInDb = safeReadDir(dbPath);
+    clog('DB mods found:', modsInDb.length);
+
+    for (const mod of modsInDb) {
+        const modDir = path.join(dbPath, mod);
+        try {
+            const modRoot = findModRoot(modDir);
+            const idf  = findFirstByName(modRoot, '__deltaID.json');
+            const xmlf = findFirstByName(modRoot, 'modding.xml');
+            const infof= findFirstByName(modRoot, '_deltamodInfo.json');
+            if (!idf || !xmlf) continue;
+            if (!fs.existsSync(idf) || !fs.existsSync(xmlf)) {
+                clog('Skip (missing id/xml):', mod);
                 continue;
             }
 
-            fs.rmSync(to, {force: true, recursive: true});
-            fs.copyFileSync(from, to);
+            const { uniqueId } = JSON.parse(fs.readFileSync(idf, 'utf8'));
+            if (!enabled.has(uniqueId)) {
+                clog('Skip (not enabled):', uniqueId);
+                continue;
+            }
+
+            const info = fs.existsSync(infof) ? JSON.parse(fs.readFileSync(infof, 'utf8')) : {};
+            const modName = info?.metadata?.name || uniqueId;
+            logln(`Applying mod: ${uniqueId}${info?.metadata?.name ? ` (${info.metadata.name})` : ''}`);
+
+            const xml = fs.readFileSync(xmlf, 'utf8');
+            const root = JSON.parse(convert.xml2json(xml, { compact: false }));
+            const all = walkElements(root);
+            clog('Parsed XML nodes for', mod, ':', all.length);
+
+            for (const el of all) {
+                const at = el.attributes || {};
+                const name = (el.name || '').toLowerCase();
+                const type = (at.type || '').toLowerCase();
+
+                // attribute spells
+                const srcPatch = pickAttr(at, 'patch', 'file', 'path', 'src');
+                const toTarget = pickAttr(at, 'to', 'dest', 'target') || 'data.win';
+                const fromFile = pickAttr(at, 'from', 'patch', 'file', 'path', 'src');
+
+                // identify xdelta
+                const isXdelta = name === 'xdelta' ||
+                    (name === 'patch' && type === 'xdelta') ||
+                    (name === 'delta' && type === 'xdelta') ||
+                    type === 'xdelta';
+
+                if (isXdelta && srcPatch) {
+                    const absPatch = path.join(modRoot, srcPatch);
+                    const sz = safeStat(absPatch)?.size ?? -1;
+                    objects.push({
+                        type: 'xdelta',
+                        patch: absPatch,
+                        to: toTarget,
+                        modName
+                    });
+                    clog('  + xdelta:', absPatch, `(size ${sz})`, '->', toTarget);
+                    continue;
+                }
+
+                // identify override
+                const isOverride = name === 'file' || name === 'override' ||
+                    (name === 'patch' && (type === 'override' || type === 'file')) ||
+                    (type === 'override' || type === 'file');
+
+                if (isOverride && fromFile && toTarget) {
+                    const srcAbs = path.join(modRoot, fromFile);
+                    const destAbs = resolveAbsTarget(gamePath, toTarget);
+                    const sz = safeStat(srcAbs)?.size ?? -1;
+                    objects.push({
+                        type: 'override',
+                        from: srcAbs,
+                        to: destAbs,
+                        modName
+                    });
+                    clog('  + override:', srcAbs, `(size ${sz})`, '->', destAbs);
+                }
+            }
+        } catch (e) {
+            logln(`Error reading mod ${mod}: ${e.message}`);
         }
-
-        await timeoutPromise(1000); // Delay needed (TODO fix)
-
-        return returnedObj;
     }
-};
+
+    const xdeltas   = objects.filter(o => o.type === 'xdelta');
+    const overrides = objects.filter(o => o.type === 'override');
+
+    clog('Collected:', xdeltas.length, 'xdelta(s),', overrides.length, 'override(s)');
+
+    if (xdeltas.length === 0 && overrides.length === 0) {
+        ret.log = log.concat('No actions for selected mods.').join('\n');
+        clog('[END] Nothing to do');
+        return ret;
+    }
+
+    // Group xdeltas by absolute target `to` and back them up
+    const groups = new Map(); // targetAbs -> [patchAbs]
+    for (const x of xdeltas) {
+        const targetAbs = resolveAbsTarget(gamePath, x.to);
+        if (!groups.has(targetAbs)) groups.set(targetAbs, []);
+        groups.get(targetAbs).push(x.patch);
+    }
+    clog('Xdelta groups:', Array.from(groups.entries()).map(([t, l]) => `${t} (${l.length})`));
+
+    for (const [target] of groups) {
+        const st = safeStat(target);
+        clog('Target:', target, st ? `(exists, size ${st.size})` : '(MISSING!)');
+        ensureBackup(target);
+    }
+    for (const f of overrides) ensureBackup(f.to);
+
+    // 1) Discover chapters in the install (absolute data.win paths)
+    const chapterTargets = discoverChapters(gamePath);  // uses the helper you pasted
+    if (chapterTargets.length === 0) {
+        ret.log = log.concat('No data.win found under gamePath.').join('\n');
+        dialog.showErrorBox('Patching failed', ret.log);
+        return ret;
+    }
+    clog('Chapters detected:', chapterTargets);
+
+    // 2) Map each xdelta to a chapter index
+    const idxOfTarget = new Map(chapterTargets.map((p, i) => [path.normalize(p), i]));
+    const perChapterPatches = Array.from({ length: chapterTargets.length }, () => []);
+
+    for (const x of xdeltas) {
+        const targetAbs = resolveAbsTarget(gamePath, x.to);
+        const idx = idxOfTarget.get(path.normalize(targetAbs));
+        if (idx == null) {
+            clog('  ! xdelta target not in discovered chapters (skip):', targetAbs);
+            continue;
+        }
+        perChapterPatches[idx].push(x.patch);
+    }
+
+    // 3) If no xdelta anywhere, skip GM3P and just do overrides later
+    const totalXdeltas = perChapterPatches.reduce((n, l) => n + l.length, 0);
+    if (totalXdeltas === 0) {
+        clog('No xdelta patches; skipping GM3P (will only apply overrides).');
+    } else {
+        // Backups for chapter data.wins + any override destinations
+        for (const t of chapterTargets) ensureBackup(t);
+        for (const f of overrides) ensureBackup(f.to);
+
+        // Build the multi-chapter argument string: one slot per chapter
+        const slots      = perChapterPatches.map(list => list.length ? (',,' + list.join(',')) : '');
+        const filepathArg = slots.join('::');
+        const modAmount   = Math.max(1, ...perChapterPatches.map(l => l.length)); // GM3P expects MAX patches across chapters
+
+        clog('MULTI massPatch folder:', gamePath, 'chapters:', chapterTargets.length, 'modAmount:', modAmount);
+        perChapterPatches.forEach((l, i) => clog(`  chapter[${i}] patches: ${l.length}`));
+
+        try {
+            await run(GM3P_EXE, ['clear']);
+
+            await run(GM3P_EXE, ['massPatch', gamePath, 'GM', String(modAmount), filepathArg]);
+
+            // Heavy step ONCE for all chapters
+            await run(GM3P_EXE, ['compare', String(modAmount), 'true', 'true']);
+
+            // Produce: one subfolder per chapter index
+            const pack   = 'DeltamodPack_Multi';
+            const outDir = path.join(__dirname, '../gm3p/output/result', pack);
+            fs.rmSync(outDir, { recursive: true, force: true });
+            await run(GM3P_EXE, ['result', pack, 'true']);
+
+            // Copy each produced chapter back
+            for (let i = 0; i < chapterTargets.length; i++) {
+                const produced = path.join(outDir, String(i), 'data.win');
+                clog(`Produced[${i}]:`, produced, fs.existsSync(produced) ? '(exists)' : '(MISSING)');
+                if (!fs.existsExists?.(produced) && !fs.existsSync(produced)) {
+                    throw new Error(`GM3P did not produce chapter ${i} data.win`);
+                }
+                fs.rmSync(chapterTargets[i], { force: true });
+                copyOver(produced, chapterTargets[i]);
+            }
+        } catch (e) {
+            clog('GM3P error, restoring backups:', e.message);
+            for (const t of chapterTargets) restoreIfBackup(t);
+            ret.log = log.concat('GM3P error: ' + e.message).join('\n');
+            dialog.showErrorBox('Patching failed', ret.log);
+            return ret;
+        }
+    }
+
+    // External file overrides (after merge)
+    const conflicts = detectFileConflicts(overrides);
+    if (conflicts.found) {
+        const msg = 'Conflicting external file overrides (data.win is merged by GM3P):\n\n' +
+            conflicts.conflicts.map((c, i) => `${i + 1}. ${c.join(', ')}`).join('\n');
+        ret.log = log.concat(msg).join('\n');
+        clog('[CONFLICTS]', msg);
+        dialog.showErrorBox('Conflict Detected', msg);
+        return ret;
+    }
+
+    for (const f of overrides) {
+        try {
+            if (!fs.existsSync(f.from)) { logln('Missing file in mod: ' + f.from); continue; }
+            clog('Copy override:', f.from, '->', f.to);
+            copyOver(f.from, f.to);
+        } catch (e) {
+            logln(`Error copying ${f.from} -> ${f.to}: ${e.message}`);
+        }
+    }
+
+    ret.patched = true;
+    ret.log = log.concat('Patched via GM3P + overrides.').join('\n');
+    clog('== startGamePatch DONE ==');
+    return ret;
+}
+
+// Restore *.original files inside gamePath (root and one level deep)
+function restoreOriginalsIfAny(gamePath) {
+    const restored = [];
+    function tryRestore(target) {
+        if (restoreIfBackup(target)) restored.push(target);
+    }
+    clog('Restore check in', gamePath);
+    try {
+        // root level
+        for (const e of safeReadDir(gamePath, { withFileTypes: true })) {
+            if (e.isFile && e.isFile() && e.name.endsWith(BACKUP_SUFFIX)) {
+                const target = path.join(gamePath, e.name.slice(0, -BACKUP_SUFFIX.length));
+                clog('Found root backup:', e.name, '->', target);
+                tryRestore(target);
+            }
+        }
+        // one level deep
+        for (const e of safeReadDir(gamePath, { withFileTypes: true })) {
+            if (e.isDirectory && e.isDirectory()) {
+                const sub = path.join(gamePath, e.name);
+                for (const f of safeReadDir(sub)) {
+                    if (String(f).endsWith(BACKUP_SUFFIX)) {
+                        const target = path.join(sub, String(f).slice(0, -BACKUP_SUFFIX.length));
+                        clog('Found sub backup:', f, '->', target);
+                        tryRestore(target);
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        clog('Restore scan error:', e.message);
+    }
+    clog('Restored count:', restored.length);
+    return restored;
+}
+
+module.exports = { startGamePatch, restoreOriginalsIfAny };
