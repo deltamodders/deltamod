@@ -15,6 +15,7 @@ const GamePatching = require('./GamePatching.js');
 const { error } = require('console');
 const { default: axios } = require('axios');
 
+
 let itch;
 let canLoadItch = false;
 try {
@@ -75,6 +76,84 @@ protocol.registerSchemesAsPrivileged([
     }
   }
 ])
+
+// find the first file named `name` anywhere under `root`
+function findFirstByName(root, name) {
+    const stack = [root];
+    const needle = name.toLowerCase();
+    while (stack.length) {
+        const dir = stack.pop();
+        let ents;
+        try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
+        for (const e of ents) {
+            const full = paths.join(dir, e.name);
+            if (e.isFile() && e.name.toLowerCase() === needle) return full;
+            if (e.isDirectory()) stack.push(full);
+        }
+    }
+    return null;
+}
+
+// Zork's Patch: pick the directory that looks like the real mod root
+function findModRoot(root) {
+    const stack = [root];
+    let fallback = null;
+    while (stack.length) {
+        const dir = stack.pop();
+        const hasXml  = fs.existsSync(paths.join(dir, 'modding.xml'));
+        const hasId   = fs.existsSync(paths.join(dir, '__deltaID.json'));
+        const hasInfo = fs.existsSync(paths.join(dir, '_deltamodInfo.json'));
+        if (hasXml && hasId) return dir;
+        if (!fallback && (hasXml || hasId || hasInfo)) fallback = dir;
+
+        let ents;
+        try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
+        for (const e of ents) if (e.isDirectory()) stack.push(paths.join(dir, e.name));
+    }
+    return fallback || root;
+}
+
+function isSubpath(parent, child) {
+    const P = p => paths.resolve(p).toLowerCase();
+    const a = P(parent), b = P(child);
+    return b.startsWith(a + paths.sep) || a === b;
+}
+
+// Zork's Patch: move/copy everything from `wrapper` → `dest`, then delete `wrapper`
+function flattenInto(dest, wrapper) {
+    const destR = paths.resolve(dest);
+    const wrapR = paths.resolve(wrapper);
+    if (destR === wrapR) return;
+    if (!isSubpath(destR, wrapR)) {
+        console.warn('[flattenInto] refused: wrapper not inside dest', { destR, wrapR });
+        return;
+    }
+
+    for (const name of fs.readdirSync(wrapR)) {
+        const from = paths.join(wrapR, name);
+        const to   = paths.join(destR, name);
+
+        // overwrite if already exists
+        try { fs.rmSync(to, { recursive: true, force: true }); } catch {}
+
+        try {
+            fs.renameSync(from, to); // fast path
+        } catch {
+            const st = fs.statSync(from);
+            if (st.isDirectory()) {
+                copyRecursiveSync(from, to);
+            } else {
+                fs.mkdirSync(paths.dirname(to), { recursive: true });
+                fs.copyFileSync(from, to);
+            }
+            // remove original
+            fs.rmSync(from, { recursive: true, force: true });
+        }
+    }
+
+    // remove now-empty wrapper dir
+    try { fs.rmSync(wrapR, { recursive: true, force: true }); } catch {}
+}
 
 function copyRecursiveSync(src, dest) {
     const stat = fs.statSync(src);
@@ -182,46 +261,51 @@ function createWindow() {
      * importMod
      * Imports a mod from a zip file.
     */
-    ipcMain.handle('importMod', async (event, args) => {
-        dialog.showOpenDialog(win, {
+    ipcMain.handle('importMod', async () => {
+        const { canceled, filePaths } = await dialog.showOpenDialog(win, {
             properties: ['openFile'],
-            filters: [
-                { name: 'Mod Archives', extensions: ['zip'] }
-            ]
-        }).then(async (result) => {
-            var filePath = result.filePaths[0];
-            if (!filePath) {
-                return;
-            }
-            var modPath = paths.join(app.getPath('userData'), 'pkg.db', 'mod-' + Date.now() + '-' + Math.random());
-
-            fs.mkdirSync(modPath, { recursive: true });
-
-            try {
-                await zl.extract(filePath, modPath);
-                fs.unlinkSync(filePath); // Remove the zip file after extraction
-
-                // Check if the mod has a manifest
-                var manifestPath = paths.join(modPath, '_deltamodInfo.json');
-                if (fs.existsSync(manifestPath)) {
-                    // all good
-                    dialog.showMessageBox(win, {
-                        type: 'info',
-                        title: 'Import Successful',
-                        message: 'Mod imported successfully.',
-                        buttons: ['OK']
-                    }).then(() => {
-                        app.relaunch();
-                        app.exit();
-                        process.exit();
-                    });
-                } else {
-                    throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
-                }
-            } catch (err) {
-                console.error('Error importing mod:', err);
-            }
+            filters: [{ name: 'Mod Archives', extensions: ['zip'] }]
         });
+        if (canceled || !filePaths || !filePaths[0]) return;
+
+        const filePath = filePaths[0];
+
+        // create unique mod folder
+        const modPath = paths.join(app.getPath('userData'), 'pkg.db', 'mod-' + Date.now() + '-' + Math.random());
+        fs.mkdirSync(modPath, { recursive: true });
+
+        try {
+            await zl.extract(filePath, modPath);
+
+            // fs.unlinkSync (filePath); // delete the zip file after extraction, I (Zork) commented this out temporarily to keep the zip file for debugging.
+
+            // Normalize: pull contents out of wrapper folder so mod is flat
+            const realRoot = findModRoot(modPath);
+            if (realRoot && paths.resolve(realRoot) !== paths.resolve(modPath)) {
+                flattenInto(modPath, realRoot);
+            }
+
+            // Check manifest anywhere in the tree (now usually at root after flatten)
+            const manifestPath = findFirstByName(modPath, '_deltamodInfo.json') || paths.join(modPath, '_deltamodInfo.json');
+            if (!fs.existsSync(manifestPath)) {
+                throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
+            }
+
+            await dialog.showMessageBox(win, {
+                type: 'info',
+                title: 'Import Successful',
+                message: 'Mod imported successfully.',
+                buttons: ['OK']
+            });
+
+            // Simple way to refresh the list
+            app.relaunch();
+            app.exit();
+            process.exit();
+        } catch (err) {
+            console.error('Error importing mod:', err);
+            dialog.showErrorBox('Import failed', String(err));
+        }
     });
 
     /*
@@ -300,10 +384,34 @@ function createWindow() {
                 fs.mkdirSync(extractPath, { recursive: true });
             }
 
-            await zl.extract(zipPath, extractPath);
+            await zl.extract(zipPath, dest);
+
+            // normalize: move contents from the true mod root to `dest` if wrapped
+            const realRoot = findModRoot(dest);
+            if (realRoot && realRoot !== dest && realRoot.startsWith(dest)) {
+                const items = fs.readdirSync(realRoot);
+                for (const name of items) {
+                    const from = paths.join(realRoot, name);
+                    const to   = paths.join(dest, name);
+                    try { fs.renameSync(from, to); }
+                    catch {
+                        // cross-device or conflicts → fallback to copy
+                        if (fs.statSync(from).isDirectory()) {
+                            copyRecursiveSync(from, to);
+                            fs.rmSync(from, { recursive: true, force: true });
+                        } else {
+                            fs.mkdirSync(paths.dirname(to), { recursive: true });
+                            fs.copyFileSync(from, to);
+                            fs.rmSync(from, { force: true });
+                        }
+                    }
+                }
+                // try to remove the now-empty wrapper
+                try { fs.rmSync(realRoot, { recursive: true, force: true }); } catch {}
+            }
 
             fs.unlinkSync(zipPath);
-            
+
             dialog.showMessageBox(win, {
                 type: 'info',
                 title: 'Import Successful',
@@ -347,7 +455,7 @@ function createWindow() {
         }
     });
 
-    /* 
+    /*
      * getUniqueFlag
      * Returns the value of a unique flag.
      * args[0] is the name of the flag.
@@ -406,7 +514,6 @@ function createWindow() {
                 invalidInstalls.push(index);
                 return; // Skip empty directories
             }
-            
 
             if (index === 'unique') return;
 
@@ -448,36 +555,50 @@ function createWindow() {
                 return false;
             }
 
-            // make a copy
-            var tempPath = getSystemFolder('temp_' + hash(Date.now() + '-' + Math.random()), false);
-            fs.mkdirSync(tempPath, { recursive: true });
+            // In case a previous run crashed mid-restore
+            GamePatching.restoreOriginalsIfAny(pathname);
 
-            copyRecursiveSync(pathname, tempPath);
-
-            var log = await GamePatching.startGamePatch(tempPath, getPacketDatabase(), args[0]);
+            // Patch the REAL install in-place (GamePatching backs up to *.original)
+            var log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0]);
 
             if (!log.patched) {
-                dialog.showErrorBox('Patching failed', 'Please check the log for more details.\n\n' + log.log + '\n\nPlease resolve the issues and try again.');
+                dialog.showErrorBox('Patching failed', 'Please check the log and try again.\n\n' + log.log);
                 win.webContents.executeJavaScript('openAudio(); page(\'main\');');
                 return false;
             }
             console.log('Patching log: ', log);
 
+            // Launch the game from the install (no temp copy)
             win.hide();
             win.webContents.executeJavaScript('closeAudio();'); // Clear the viewport
 
-            exec(`"${tempPath}/DELTARUNE.exe"`, {cwd: tempPath}, (error, stdout, stderr) => {
-                fs.rmdirSync(tempPath, { recursive: true, force: true });
+            const exeCandidate = Paths.readKVS('deltaruneExecutable');
+            const exe = exeCandidate && fs.existsSync(exeCandidate)
+                ? exeCandidate
+                : (fs.existsSync(paths.join(pathname, 'DELTARUNE.exe'))
+                    ? paths.join(pathname, 'DELTARUNE.exe')
+                    : null);
+
+            if (!exe) {
+                errorWin('Could not find a Deltarune executable to run.');
+                win.show();
+                win.webContents.executeJavaScript('openAudio(); page(\'main\');');
+                return false;
+            }
+
+            exec(`"${exe}"`, { cwd: paths.dirname(exe) }, (error, stdout, stderr) => {
+                // Always restore originals after the game closes
+                GamePatching.restoreOriginalsIfAny(pathname);
                 win.show();
                 win.webContents.executeJavaScript('openAudio(); page(\'main\');');
             });
-        }
-        catch (err) {
+        } catch (err) {
             errorWin('Coudn\'t patch and run Deltarune: ' + err.toString());
             return false;
         }
     });
-    
+
+
     /*
      * loadedDeltarune
      * Returns true if the file has been set.
@@ -516,7 +637,7 @@ function createWindow() {
         }
     });
 
-    /*     
+    /*
      * browseFile
      * Opens a file dialog to select a file.
      * args[0] is the name of the file type (e.g., "Deltarune data.win").
@@ -603,7 +724,7 @@ function createWindow() {
 
         try {
             copyRecursiveSync(path1, path2);
-            
+
             dialog.showMessageBox(win, {
                 type: 'info',
                 title: 'Import Successful',
@@ -626,7 +747,24 @@ function createWindow() {
     });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+    // Run a safety restore before creating the window (handles crash-last-time cases)
+    try {
+        const p = Paths.readKVS('deltarunePath');
+        if (p) {
+            const restored = GamePatching.restoreOriginalsIfAny(p);
+            if (restored && restored.length) {
+                console.log('[boot-restore] restored:', restored);
+            }
+        }
+    } catch (e) {
+        console.warn('[boot-restore] failed:', e.message);
+    }
+
+    createWindow();       // the main window
+});
+
+
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
