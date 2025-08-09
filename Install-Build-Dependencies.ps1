@@ -1,3 +1,5 @@
+# get winget if the user doesn't have it
+Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
 # first install DeltaMOD dependiencies
 winget install OpenJS.Electron.37
 winget install OpenJS.NodeJS.LTS
