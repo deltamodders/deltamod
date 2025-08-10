@@ -1,5 +1,3 @@
-# get winget if the user doesn't have it
-Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
 # first install DeltaMOD dependiencies
 winget install OpenJS.Electron.37
 winget install OpenJS.NodeJS.LTS
@@ -11,5 +9,6 @@ winget install Meld
 New-Item -Path ".\" -Name "gm3p" -ItemType Directory
 dra download --output ".\" --tag "v0.5.0" --select "GM3P.v0.5.0.zip" techy804/MassModPatcher
 Expand-Archive ".\GM3P.v0.5.0.zip" -DestinationPath ".\gm3p" -Force
+del ".\GM3P.v0.5.0.zip"
 # Lastly, install DeltaMOD's node modules
 npm i
