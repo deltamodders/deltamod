@@ -5,3 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         return ipcRenderer.invoke(channel, data);
     }
 });
+
+contextBridge.exposeInMainWorld('preloadAPI', {
+  onPage: (callback) => ipcRenderer.on('page', (_, title) => callback(title)),
+  onAudio: (callback) => ipcRenderer.on('audio', (_, stat) => callback(stat))
+});

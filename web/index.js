@@ -1,13 +1,14 @@
 var audio = new Audio();
 var currentAudio = "";
-var themeIndex = 1;
+var theme = null;
 
 console.log = function(...arguments) {
     window.electronAPI.invoke('log', [arguments.join(' ')]);
 }
 
 async function page(name) {
-    document.getElementsByClassName('viewport')[0].style.backgroundImage = 'url(./commons/bg' + themeIndex + '.gif)';
+    theme = await fetch('./themes/base.theme.json').then(response => response.json());
+    document.getElementsByClassName('viewport')[0].style.backgroundImage = 'url(./' + theme.background + ')';
     window.currentPageStack = {};
     var purifiedHTML =  await fetch('./' + name + '/index.html').then(response => response.text());
     var runScripts = false;
@@ -23,7 +24,7 @@ async function page(name) {
             audio.pause();
             audio.currentTime = 0;
             if (audioSrc[1] == 'mainTheme.mp3') {
-                audio.src = './mainTheme' + themeIndex + '.mp3';
+                audio.src = './' + theme.mainSong;
             }
             else {
                 audio.src = './' + audioSrc[1];
@@ -77,3 +78,12 @@ function openAudio() {
         });
     }
 }
+
+window.preloadAPI.onPage((title) => {
+    page(title);
+});
+
+window.preloadAPI.onAudio((stat) => {
+    if (stat) openAudio();
+    else closeAudio();
+});
