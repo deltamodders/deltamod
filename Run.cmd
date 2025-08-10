@@ -1,15 +1,22 @@
 @echo off
-(where GM3P.exe)>nul 2>&1
-if errorlevel 1 (
-	echo Did not find GM3P installed. Would you like to install it (and install or update Node while we're at it)?
-	:inputLoop
-	echo Enter y for yes:
-	set /p installScript = 
-	if not "%installScript%" neq "y" goto runDELTA
+if exist "C:\Program Files\nodejs\node.exe" (
+	echo Found Node
+) else (
+	goto installScriptPrompt
+)
+if exist ".\gm3p\GM3P.exe" (
+	echo Found GM3P
+) else (
+	goto installScriptPrompt
+)
+	:installScriptPrompt
+	echo "Did not find GM3P or Node installed. Would you like to install them?"
+	choice /c ny /n /m "Yes or No: "
+	if %errorlevel% equ 1 goto runDELTA
 
 	echo starting Install Script.
 	powershell.exe -ExecutionPolicy Unrestricted -Command ". '.\Install-Build-Dependencies.ps1'"
-)
+
 :runDELTA
 set DELTAMOD_ENV=dev
 npm test
