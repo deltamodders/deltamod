@@ -78,3 +78,12 @@ function openAudio() {
         });
     }
 }
+
+window.preloadAPI.onPage((title) => {
+    page(title);
+});
+
+window.preloadAPI.onAudio((stat) => {
+    if (stat) openAudio();
+    else closeAudio();
+});

@@ -564,14 +564,17 @@ function createWindow() {
 
             if (!log.patched) {
                 dialog.showErrorBox('Patching failed', 'Please check the log and try again.\n\n' + log.log);
-                win.webContents.executeJavaScript('openAudio(); page(\'main\');');
+                win.webContents.send('audio', true);
+                win.webContents.send('page', 'main');
+                //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
                 return false;
             }
             console.log('Patching log: ', log);
 
             // Launch the game from the install (no temp copy)
             win.hide();
-            win.webContents.executeJavaScript('closeAudio();'); // Clear the viewport
+            win.webContents.send('audio', false); // Stop audio before launching the game
+            //win.webContents.executeJavaScript('closeAudio();');
 
             const exeCandidate = Paths.readKVS('deltaruneExecutable');
             const exe = exeCandidate && fs.existsSync(exeCandidate)
@@ -583,7 +586,9 @@ function createWindow() {
             if (!exe) {
                 errorWin('Could not find a Deltarune executable to run.');
                 win.show();
-                win.webContents.executeJavaScript('openAudio(); page(\'main\');');
+                win.webContents.send('audio', true);
+                win.webContents.send('page', 'main');
+                //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
                 return false;
             }
 
@@ -591,7 +596,9 @@ function createWindow() {
                 // Always restore originals after the game closes
                 GamePatching.restoreOriginalsIfAny(pathname);
                 win.show();
-                win.webContents.executeJavaScript('openAudio(); page(\'main\');');
+                win.webContents.send('audio', true);
+                win.webContents.send('page', 'main');
+                //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
             });
         } catch (err) {
             errorWin('Coudn\'t patch and run Deltarune: ' + err.toString());
