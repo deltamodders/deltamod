@@ -14,6 +14,7 @@ const Modstore = require('./Modstore.js');
 const GamePatching = require('./GamePatching.js');
 const { error } = require('console');
 const { default: axios } = require('axios');
+const System = require('./System.js');
 
 
 let itch;
@@ -255,6 +256,21 @@ function createWindow() {
 
     ipcMain.handle('log', (event, args) => {
         console.log(...args);
+    });
+
+    /*
+     * getTheme
+     * returns theme name as specified in the themes folder.
+    */
+    ipcMain.handle('getTheme', async () => {
+        var themeHost = System.getSystemFile('_theme', true);
+        if (fs.existsSync(themeHost)) {
+            var theme = fs.readFileSync(themeHost, 'utf8');
+            return theme;
+        } else {
+            fs.writeFileSync(themeHost, 'base');
+            return 'base';
+        }
     });
 
     /*

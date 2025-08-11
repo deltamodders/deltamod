@@ -7,7 +7,7 @@ console.log = function(...arguments) {
 }
 
 async function page(name) {
-    theme = await fetch('./themes/base.theme.json').then(response => response.json());
+    theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('viewport')[0].style.backgroundImage = 'url(./' + theme.background + ')';
     window.currentPageStack = {};
     var purifiedHTML =  await fetch('./' + name + '/index.html').then(response => response.text());

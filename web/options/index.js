@@ -64,7 +64,7 @@ async function addButton(name, description, click, buttonText) {
 
 (async() => {
     addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background. The dogcheck will still have music.', 'audio');
-    addButton('Open mod folder', 'Open the folder where mods are stored.', async () => {
+    addButton('Open mod folder', 'Open the folder where mods are stored. You can drag mod folders in Deltamod format there.', async () => {
         await window.electronAPI.invoke('openSysFolder', ['mods']);
     }, 'Open');
 })();

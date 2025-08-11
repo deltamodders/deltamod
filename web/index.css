@@ -1,5 +1,5 @@
 :root {
-    --topbar-height: 30px;
+    --topbar-height: 40px;
 }
 
 #top-options > button {
@@ -28,6 +28,7 @@ body {
     padding: 20px;
     box-sizing: border-box;
     background-size: cover;
+    background-position-x: 40px;
     background-position: center;
     background-repeat: no-repeat;
 }

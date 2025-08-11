@@ -7,6 +7,10 @@
     "test": "electron .",
     "build-windows": "electron-builder --win"
   },
+  "build": {
+    "icon": "build/packIcon.png",
+    "asar": false
+  },
   "author": "GhinoRhino",
   "license": "EUPL-1.2",
   "devDependencies": {
