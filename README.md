@@ -18,4 +18,5 @@ _Note: If you have access to the `ItchKeys.js` file you can put it in the `node`
 
 All external libraries are property of their respective owners.<br />
 This project is in no way affiliated with Deltarune, Fangamer, Toby Fox or Materia Collective.<br />
-Our software is licensed under the EUPL (revision 1.2). You can read the license [here](./LICENSE.txt).
+The main Deltamod software is licensed under the EUPL (revision 1.2). You can read the license [here](./LICENSE.txt).<br />
+The standard is instead licensed using a modified EUPL license. You can read the standard's license [here](./examplemod/LICENSE.txt).

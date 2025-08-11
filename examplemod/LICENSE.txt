@@ -1,0 +1,57 @@
+EUPL-1.2-DELTAMOD
+
+European Union Public Licence – Revocable Edition
+
+Preamble
+This is a modified version of the European Union Public Licence (EUPL v1.2).
+It is not an OSI-approved open source licence. It preserves most of the structure and terms of the EUPL v1.2 but adds the right for the Licensor to revoke the licence for specific users or entities at their discretion.
+Distribution of works under this licence does not meet the Open Source Definition maintained by the Open Source Initiative.
+Article 1 – Definitions
+
+As in EUPL v1.2, except that:
+
+    “Licence” means this EUPL-1.2-DELTAMOD.
+
+    “Licensor” includes the right to revoke this Licence in accordance with Article 15A.
+
+(Original EUPL 1.2 definitions otherwise apply.)
+Article 2 – Scope of the Rights Granted
+
+Same as EUPL v1.2.
+The rights granted under this Licence are subject to the additional conditions of Article 15A.
+Article 3 – Communication of the Source Code
+
+Unmodified from EUPL v1.2.
+Article 4 – Limitations on Copyright
+
+Unmodified from EUPL v1.2.
+Articles 5 to 14
+
+Unmodified from EUPL v1.2.
+Article 15 – Termination
+
+(From EUPL v1.2, unchanged.)
+However, see Article 15A for additional termination rights.
+Article 15A – Discretionary Revocation by Licensor
+
+    Right of Revocation
+    Notwithstanding any other provision of this Licence, the Licensor may, at any time and for any reason or no reason, revoke this Licence with respect to any particular Licensee or entity by giving written or electronic notice.
+
+    Effect of Revocation
+    Upon receipt of such notice, the affected Licensee must immediately:
+
+        Cease all use, reproduction, modification, and distribution of the Work;
+
+        Destroy or permanently delete all copies of the Work in their possession or control;
+
+        Cease making the Work available to third parties.
+
+    No Impact on Other Licensees
+    Termination under this Article 15A applies only to the notified Licensee(s) and does not affect the rights of any other Licensee(s) who have not received such notice.
+
+    Survival of Obligations
+    Obligations under Articles relating to liability, warranty disclaimer, and any contractual obligations surviving termination shall remain in force after revocation.
+
+Articles 16 to 18
+
+Same as EUPL v1.2, except that all references to “EUPL” are replaced with “EUPL-1.2-DELTAMOD”.
