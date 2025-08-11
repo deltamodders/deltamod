@@ -1,11 +1,17 @@
 (async() => {
     try {
         var gbpage = await fetch('https://gamebanana.com/apiv11/Wip/94135/ProfilePage').then(r => r.json());
+        localStorage.setItem('gbpage', JSON.stringify(gbpage));
     }
     catch (e) {
-        window.alert('Failed to load credits! You must be online to view credits.');
-        page('main');
-        return;
+        if (localStorage.getItem('gbpage')) {
+            var gbpage = JSON.parse(localStorage.getItem('gbpage'));
+        } else {
+            console.error('Failed to fetch GameBanana profile page:', e);
+            window.alert('Failed to load credits! You must be online to view credits.');
+            page('main');
+            return;
+        }
     }
 
     gbpage._aCredits.forEach(group => {
@@ -15,10 +21,13 @@
         document.querySelector('.gbcredits').appendChild(h3);
 
         group._aAuthors.forEach(credit => {
-            var p = document.createElement('p');
+            var p = document.createElement('a');
             p.style.marginTop = '0';
+            p.style.display = 'block';
+            p.href = credit._sProfileUrl;
             p.style.marginBottom = '0';
             p.innerHTML = credit._sName;
+            p.style.color = 'white';
             p.className = 'calibri';
             document.querySelector('.gbcredits').appendChild(p);
         });

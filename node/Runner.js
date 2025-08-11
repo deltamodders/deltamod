@@ -254,6 +254,21 @@ function createWindow() {
     });
     win.loadURL('deltapack://web/index.html');
 
+    win.webContents.on('will-navigate', (event, url) => {
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            event.preventDefault();
+            shell.openExternal(url);
+        }
+    });
+
+    win.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            shell.openExternal(url);
+            return { action: 'deny' };
+        }
+        return { action: 'allow' };
+    });
+
     ipcMain.handle('log', (event, args) => {
         console.log(...args);
     });
@@ -304,6 +319,7 @@ function createWindow() {
             // Check manifest anywhere in the tree (now usually at root after flatten)
             const manifestPath = findFirstByName(modPath, '_deltamodInfo.json') || paths.join(modPath, '_deltamodInfo.json');
             if (!fs.existsSync(manifestPath)) {
+                fs.rmdirSync(modPath, { recursive: true, force: true });
                 throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
             }
 
