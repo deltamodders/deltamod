@@ -281,6 +281,10 @@ function createWindow() {
         var themeHost = System.getSystemFile('_theme', true);
         if (fs.existsSync(themeHost)) {
             var theme = fs.readFileSync(themeHost, 'utf8');
+            if (!fs.existsSync(paths.join(__dirname, '..', 'web', 'themes', theme + '.theme.json'))) {
+                errorWin('The theme "' + theme + '" does not exist. Please select a valid theme.');
+                return 'base';
+            }
             return theme;
         } else {
             fs.writeFileSync(themeHost, 'base');
