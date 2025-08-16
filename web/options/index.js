@@ -67,4 +67,5 @@ async function addButton(name, description, click, buttonText) {
     addButton('Open mod folder', 'Open the folder where mods are stored. You can drag mod folders in Deltamod format there.', async () => {
         await window.electronAPI.invoke('openSysFolder', ['mods']);
     }, 'Open');
+    addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod.', 'outputDelta');
 })();

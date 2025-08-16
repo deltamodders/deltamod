@@ -628,12 +628,26 @@ function createWindow() {
                 return false;
             }
 
-            exec(`"${exe}"`, { cwd: paths.dirname(exe) }, (error, stdout, stderr) => {
+            var args = "";
+            if (Paths.readUniqueFlag("outputDelta")) {
+                if (fs.existsSync(paths.join(paths.dirname(exe), '_console.txt'))) {
+                    fs.unlinkSync(paths.join(paths.dirname(exe), '_console.txt'));
+                }
+                args += '-output _console.txt';
+            }
+            exec(`"${exe}" ${args}`, { cwd: paths.dirname(exe) }, (error, stdout, stderr) => {
                 // Always restore originals after the game closes
                 GamePatching.restoreOriginalsIfAny(pathname);
                 win.show();
+
+                if (Paths.readUniqueFlag('outputDelta')) {
+                    var consoleFile = paths.join(paths.dirname(exe), '_console.txt');
+                    var consoleContent = fs.readFileSync(consoleFile, 'utf8');
+                    fs.unlinkSync(consoleFile);
+                    setSharedVar('deltaruneLogs', consoleContent);
+                }
                 win.webContents.send('audio', true);
-                win.webContents.send('page', 'main');
+                win.webContents.send('page', (Paths.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main'));
                 //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
             });
         } catch (err) {
