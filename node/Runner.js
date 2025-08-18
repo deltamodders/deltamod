@@ -9,6 +9,7 @@ const {Downloader} = require("nodejs-file-downloader");
 const { startGamePatch } = require('./GamePatching.js');
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex } = require('./System.js');
 const crypto = require('crypto');
+const {randomString} = require('./Utils.js');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const GamePatching = require('./GamePatching.js');
@@ -299,14 +300,14 @@ function createWindow() {
     ipcMain.handle('importMod', async () => {
         const { canceled, filePaths } = await dialog.showOpenDialog(win, {
             properties: ['openFile'],
-            filters: [{ name: 'Mod Archives', extensions: ['zip'] }]
+            filters: [{ name: 'Deltamod compatible archive', extensions: ['zip'] }]
         });
         if (canceled || !filePaths || !filePaths[0]) return;
 
         const filePath = filePaths[0];
 
         // create unique mod folder
-        const modPath = paths.join(app.getPath('userData'), 'pkg.db', 'mod-' + Date.now() + '-' + Math.random());
+        const modPath = paths.join(app.getPath('userData'), 'pkg.db', randomString(32));
         fs.mkdirSync(modPath, { recursive: true });
 
         try {
@@ -374,6 +375,7 @@ function createWindow() {
             resizable: false,
             maximizable: false,
             minimizable: false,
+            closable: false,
             fullscreenable: false,
             modal: true,
             parent: win,
@@ -475,6 +477,7 @@ function createWindow() {
      * Writes a file to the desktop.
      * args[0] is the content of the file.
      * args[1] is the name of the file.
+     * (Patched to actually write to Documents)
     */
     ipcMain.handle('writeToDocuments', async (event, args) => {
         try {

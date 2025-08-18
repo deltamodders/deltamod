@@ -9,7 +9,11 @@
   },
   "build": {
     "icon": "build/packIcon.png",
-    "asar": false
+    "asar": false,
+    "nsis": {
+      "oneClick": false,
+      "license": "LICENSE.txt"
+    }
   },
   "author": "GhinoRhino",
   "license": "EUPL-1.2",
