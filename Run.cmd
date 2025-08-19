@@ -23,6 +23,5 @@ if %dep% equ 2 (
 	powershell.exe -ExecutionPolicy Unrestricted -Command ". '.\Install-Build-Dependencies.ps1'"
 
 :runDELTA
-set DELTAMOD_ENV=dev
 npm test
 pause

@@ -16,6 +16,7 @@ const GamePatching = require('./GamePatching.js');
 const { error } = require('console');
 const { default: axios } = require('axios');
 const System = require('./System.js');
+const { screen } = require('electron');
 
 
 let itch;
@@ -233,6 +234,29 @@ function createWindow() {
         });
     });
 
+    let unmetConditions = require('./RunConditions.js').checkConditions();
+
+    if (unmetConditions.length > 0) {
+        if (unmetConditions.filter((c => c.required)).length > 0) {
+            let message = 'The following PC requirements for running Deltamod are not met in this machine:\n' + unmetConditions.map(n => n.name).join('\n') + "\n\nDeltamod will not run on this machine.";
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'PC Requirements Not Met',
+                message: message,
+            });
+            app.exit(1);
+            return;
+        }
+        else {
+            let message = 'The following suggested PC requirements for running Deltamod are not met in this machine:\n' + unmetConditions.map(n => n.name).join('\n') + "\n\nYou might experience issues or crashes if you continue.";
+            dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'PC Requirements Not Met',
+                message: message,
+            });
+        }
+    }
+
     Paths.retrieve();
     win = new BrowserWindow({
         width: 800,
@@ -247,13 +271,37 @@ function createWindow() {
             height: 28
         },
         webPreferences: {
-            devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
             nodeIntegration: true,
             partition: partition,
             preload: Paths.file('web', 'preload.js'),
         }
     });
     win.loadURL('deltapack://web/index.html');
+
+    devToolsEnabled = (process.env.DELTAMOD_ENV === 'dev' ? true : false);
+
+    win.webContents.on('devtools-opened', () => {
+        if (!devToolsEnabled) {
+            win.webContents.closeDevTools();
+            
+            dialog.showMessageBox(win, {
+                type: 'warning',
+                title: 'DevTools Warning',
+                message: 'Are you sure you want to open the DevTools? This is not recommended for normal users.\n\nIf you were told by someone to open the DevTools, please make sure you trust them! You can possibly hack your PC if you don\'t know what you are doing.',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+            }).then((choice) => {
+                if (choice.response === 0) {
+                    devToolsEnabled = true;
+                    win.webContents.send('warn', 'Please be careful when using the DevTools! You can possibly hack your PC if you don\'t know what you are doing.');
+                    win.webContents.openDevTools({ mode: 'detach' });
+                }
+                else {
+                    win.webContents.closeDevTools();
+                }
+            });    
+        }
+    });
 
     win.webContents.on('will-navigate', (event, url) => {
         if (url.startsWith('http://') || url.startsWith('https://')) {
