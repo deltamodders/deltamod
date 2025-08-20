@@ -2,7 +2,7 @@
 <hr />
 
 # Running Deltamod from source
-In order to run Deltamod, you can run the `Run.cmd` file provided within the repository. If the program doesn't find required programs
+In order to run Deltamod, you can run the `Run.cmd` file provided within the repository. If the script doesn't find the required programs, it can install them for you if you wish.
 <br />
 <hr />
 
