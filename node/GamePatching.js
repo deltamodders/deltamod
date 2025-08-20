@@ -20,8 +20,16 @@ const { dialog } = require('electron');
 const { execFile } = require('child_process');
 const { timeoutPromise } = require('./Utils.js');
 const convert = require('xml-js');
+const process = require('process');
 
-const GM3P_EXE = path.join(__dirname, '../gm3p/GM3P.exe');
+// Checks to see what platform DeltaMOD is running on and set constants accordingly
+if (process.platform === 'win32') {
+    GM3P_EXE = path.join(__dirname, '../gm3p/GM3P.exe');
+    GM3P_DLL = '';
+} else {
+    GM3P_EXE = '/usr/bin/dotnet';
+    GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
+}
 const BACKUP_SUFFIX = '.original';
 
 // ----------------------------- logger ---------------------------------------
@@ -207,12 +215,12 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
     clog('dbPath:', dbPath);
     clog('enabledMods:', Array.from(enabled));
 
-    if (!fs.existsSync(GM3P_EXE)) {
-        ret.log = `GM3P missing at ${GM3P_EXE}`;
-        dialog.showErrorBox('GM3P missing', ret.log);
-        clog('[FATAL]', ret.log);
-        return ret;
-    }
+    //if (!fs.existsSync(GM3P_EXE)) {
+    //    ret.log = `GM3P missing at ${GM3P_EXE}`;
+    //    dialog.showErrorBox('GM3P missing', ret.log);
+    //    clog('[FATAL]', ret.log);
+    //    return ret;
+    //}
 
     // Collect actions from all enabled mods
     const objects = []; // {type:'xdelta'|'override', patch/from, to, modName}
@@ -361,18 +369,20 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
         perChapterPatches.forEach((l, i) => clog(`  chapter[${i}] patches: ${l.length}`));
 
         try {
-            await run(GM3P_EXE, ['clear']);
+            await run(GM3P_EXE, [GM3P_DLL, 'clear']);
 
-            await run(GM3P_EXE, ['massPatch', gamePath, 'GM', String(modAmount), filepathArg]);
+            await run(GM3P_EXE, [GM3P_DLL, 'clear', 'modpacks']);
+
+            await run(GM3P_EXE, [GM3P_DLL, 'massPatch', gamePath, 'GM', String(modAmount), filepathArg]);
 
             // Heavy step ONCE for all chapters
-            await run(GM3P_EXE, ['compare', String(modAmount), 'true', 'true']);
+            await run(GM3P_EXE, [GM3P_DLL, 'compare', String(modAmount), 'true', 'true']);
 
             // Produce: one subfolder per chapter index
             const pack   = 'DeltamodPack_Multi';
             const outDir = path.join(__dirname, '../gm3p/output/result', pack);
             fs.rmSync(outDir, { recursive: true, force: true });
-            await run(GM3P_EXE, ['result', pack, 'true']);
+            await run(GM3P_EXE, [GM3P_DLL, 'result', pack, 'true']);
 
             // Copy each produced chapter back
             for (let i = 0; i < chapterTargets.length; i++) {
