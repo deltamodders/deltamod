@@ -22,12 +22,9 @@
     "electron-builder": "^26.0.12"
   },
   "dependencies": {
-    "22": "^0.0.0",
-    "37": "^1.0.0",
     "@chainsafe/xdelta3-node": "^1.0.2",
     "axios": "^1.11.0",
     "mime-types": "^3.0.1",
-    "n": "^10.2.0",
     "node-html-parser": "^7.0.1",
     "nodejs-file-downloader": "^4.13.0",
     "xml-js": "^1.6.11",
