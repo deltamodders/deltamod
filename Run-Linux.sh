@@ -44,18 +44,12 @@ unzip -f -o "./GM3P.v0.6.0-alpha1.zip" -d "./gm3p"
 
 rm './GM3P.v0.6.0-alpha1.zip'
 
-#Run GM3P Help command in order to trigger .NET SDK install
-
-dotnet './gm3p/GM3P.dll' 'help'
-
 #Install needed npm packages and run
 
-npm --verbose install electron@37 --save-dev
+npm --verbose install electron@37
 
 npm install n 22
 
 npm i
-
-set DELTAMOD_ENV=dev
 
 npm test
