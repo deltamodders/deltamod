@@ -30,7 +30,7 @@ const conditions = [
                 const version = parseInt(release.split('.')[0], 10);
                 return version >= 10;
             }
-            return false; // Not Windows
+            return platform === "linux"; // Not Windows
         }
     }
 ];
