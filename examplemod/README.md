@@ -17,10 +17,18 @@ There should be 3 files (1 optional) dedicated to mod metadata and patching data
         "description": "Lorem ipsum",
         "author": ["Mod Developer 1", "Mod Developer 2"],
         "demoMod": true
-    }
+    },
+    "neededFiles": [
+        {
+            "file": "data.win",
+            "checksum": "YOUR CHECKSUM HERE"
+        }
+    ]
 }
 ```
-This is an example on how a `_deltamodInfo.json` should be structured. Deltamod checks the file is valid before loading the mod. Missing or corrupted fields will be replaced by a placeholder.
+This is an example on how a `_deltamodInfo.json` should be structured. Deltamod checks the file is valid before loading the mod. Missing or corrupted fields will be replaced by a placeholder. 
+
+The `neededFiles` parameter can help you define files needed for your mod to function, but also check if they're the same files you have on your computer.<br /> When specifying a needed file, you'll need to specify it's name (examples: `data.win`, `chapter1_windows/data.win`) and its checksum. <br />To calculate a checksum of a file you can simply open it [here](https://emn178.github.io/online-tools/sha256_checksum.html).
 
 ## `modding.xml`
 

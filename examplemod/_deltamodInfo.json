@@ -5,5 +5,11 @@
         "description": "Lorem ipsum",
         "author": ["Mod Developer 1", "Mod Developer 2"],
         "demoMod": true
-    }
+    },
+    "neededFiles": [
+        {
+            "file": "data.win",
+            "checksum": "YOUR CHECKSUM HERE"
+        }
+    ]
 }

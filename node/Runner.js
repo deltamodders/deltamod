@@ -9,7 +9,7 @@ const {Downloader} = require("nodejs-file-downloader");
 const { startGamePatch } = require('./GamePatching.js');
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex } = require('./System.js');
 const crypto = require('crypto');
-const {randomString} = require('./Utils.js');
+const {randomString, hashFile} = require('./Utils.js');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const GamePatching = require('./GamePatching.js');
@@ -17,6 +17,7 @@ const { error } = require('console');
 const { default: axios } = require('axios');
 const System = require('./System.js');
 const { screen } = require('electron');
+const path = require('path');
 
 
 let itch;
@@ -210,7 +211,7 @@ function createWindow() {
     else {
         console.log('No system index override found, using default index.');
     }
-    const partition = 'persist:deltamod'; // Use a persistent partition for session storage
+    const partition = 'persist:deltamod'; 
     const ses = session.fromPartition(partition);
 
     ses.protocol.handle('deltapack', async (request) => {
@@ -626,7 +627,29 @@ function createWindow() {
         var edition = Paths.readKVS('deltaruneEdition');
 
         return modlist.filter((mod) => {
-            return (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
+            var editionCompatible = (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
+            var hashCompatible = true;
+
+            try {
+                mod.neededFiles.forEach((file) => {
+                    var specifiedHash = file.checksum;
+                    var filePath = paths.join(Paths.readKVS('deltarunePath'), file.file);
+
+                    if (!fs.existsSync(filePath)) {
+                        hashCompatible = false;
+                    }
+
+                    if (file.checksum) {
+                        if (hashFile(filePath) !== specifiedHash) {
+                            hashCompatible = false;
+                        }
+                    }
+                });
+            }
+            catch (e) {
+                console.error('Error checking mod hashes compatibility:', e);
+                hashCompatible = true;
+            }
         });
     });
 
