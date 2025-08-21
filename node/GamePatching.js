@@ -371,14 +371,20 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
             await run(GM3P_EXE + ' ' + GM3P_DLL + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg );
 
             // Heavy step ONCE for all chapters
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' compare ' + String(modAmount) + ' true ' + 'true');
-
+            // Skip if it there is only one mod per chapter
+            if (modAmount > 1) {
+                await run(GM3P_EXE + ' ' + GM3P_DLL + ' compare ' + String(modAmount) + ' true ' + 'true');
+            }
             // Produce: one subfolder per chapter index
             const pack   = 'DeltamodPack_Multi';
             const outDir = path.join(__dirname, '../gm3p/output/result', pack);
             fs.rmSync(outDir, { recursive: true, force: true });
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' result ' + pack + ' true');
+            if (modAmount > 1) {
+                await run(GM3P_EXE + ' ' + GM3P_DLL + ' result ' + pack + ' true');
+            } else {
 
+                await run(GM3P_EXE + ' ' + GM3P_DLL + ' result ' + pack + ' false');
+            }
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' clear');
 
             // Copy each produced chapter back
