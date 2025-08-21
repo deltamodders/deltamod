@@ -14,6 +14,8 @@
         }
     }
 
+    document.querySelector('.gbcredits').innerHTML = '';
+
     gbpage._aCredits.forEach(group => {
         var h3 = document.createElement('h2');
         h3.className = 'calibri';

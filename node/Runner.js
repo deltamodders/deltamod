@@ -1,7 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell } = require('electron');
 const Paths = require('./Paths.js');
 const fs = require('fs');
-const paths = require('path');
 const mime = require('mime-types');
 const zl = require("zip-lib");
 const { pathToFileURL } = require('url');
@@ -90,7 +89,7 @@ function findFirstByName(root, name) {
         let ents;
         try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
         for (const e of ents) {
-            const full = paths.join(dir, e.name);
+            const full = path.join(dir, e.name);
             if (e.isFile() && e.name.toLowerCase() === needle) return full;
             if (e.isDirectory()) stack.push(full);
         }
@@ -104,29 +103,29 @@ function findModRoot(root) {
     let fallback = null;
     while (stack.length) {
         const dir = stack.pop();
-        const hasXml  = fs.existsSync(paths.join(dir, 'modding.xml'));
-        const hasId   = fs.existsSync(paths.join(dir, '__deltaID.json'));
-        const hasInfo = fs.existsSync(paths.join(dir, '_deltamodInfo.json'));
+        const hasXml  = fs.existsSync(path.join(dir, 'modding.xml'));
+        const hasId   = fs.existsSync(path.join(dir, '__deltaID.json'));
+        const hasInfo = fs.existsSync(path.join(dir, '_deltamodInfo.json'));
         if (hasXml && hasId) return dir;
         if (!fallback && (hasXml || hasId || hasInfo)) fallback = dir;
 
         let ents;
         try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
-        for (const e of ents) if (e.isDirectory()) stack.push(paths.join(dir, e.name));
+        for (const e of ents) if (e.isDirectory()) stack.push(path.join(dir, e.name));
     }
     return fallback || root;
 }
 
 function isSubpath(parent, child) {
-    const P = p => paths.resolve(p).toLowerCase();
+    const P = p => path.resolve(p).toLowerCase();
     const a = P(parent), b = P(child);
-    return b.startsWith(a + paths.sep) || a === b;
+    return b.startsWith(a + path.sep) || a === b;
 }
 
 // Zork's Patch: move/copy everything from `wrapper` → `dest`, then delete `wrapper`
 function flattenInto(dest, wrapper) {
-    const destR = paths.resolve(dest);
-    const wrapR = paths.resolve(wrapper);
+    const destR = path.resolve(dest);
+    const wrapR = path.resolve(wrapper);
     if (destR === wrapR) return;
     if (!isSubpath(destR, wrapR)) {
         console.warn('[flattenInto] refused: wrapper not inside dest', { destR, wrapR });
@@ -134,8 +133,8 @@ function flattenInto(dest, wrapper) {
     }
 
     for (const name of fs.readdirSync(wrapR)) {
-        const from = paths.join(wrapR, name);
-        const to   = paths.join(destR, name);
+        const from = path.join(wrapR, name);
+        const to   = path.join(destR, name);
 
         // overwrite if already exists
         try { fs.rmSync(to, { recursive: true, force: true }); } catch {}
@@ -147,7 +146,7 @@ function flattenInto(dest, wrapper) {
             if (st.isDirectory()) {
                 copyRecursiveSync(from, to);
             } else {
-                fs.mkdirSync(paths.dirname(to), { recursive: true });
+                fs.mkdirSync(path.dirname(to), { recursive: true });
                 fs.copyFileSync(from, to);
             }
             // remove original
@@ -167,8 +166,8 @@ function copyRecursiveSync(src, dest) {
         }
         fs.readdirSync(src).forEach((child) => {
             copyRecursiveSync(
-                paths.join(src, child),
-                paths.join(dest, child)
+                path.join(src, child),
+                path.join(dest, child)
             );
         });
     } else {
@@ -178,7 +177,7 @@ function copyRecursiveSync(src, dest) {
 
 if (process.defaultApp) {
     if (process.argv.length >= 2) {
-        app.setAsDefaultProtocolClient('deltamod', process.execPath, [paths.resolve(process.argv[1])])
+        app.setAsDefaultProtocolClient('deltamod', process.execPath, [path.resolve(process.argv[1])])
     }
 } else {
     app.setAsDefaultProtocolClient('deltamod')
@@ -223,7 +222,7 @@ function createWindow() {
             win.loadURL('deltapack://web/errorWrt/index.html');
             return new Response("bad");
         }
-        const filePath = paths.resolve(__dirname, '..', url.hostname + url.pathname);
+        const filePath = path.resolve(__dirname, '..', url.hostname + url.pathname);
 
         const data = await fs.promises.readFile(filePath);
         return new Response(data, {
@@ -331,7 +330,7 @@ function createWindow() {
         var themeHost = System.getSystemFile('_theme', true);
         if (fs.existsSync(themeHost)) {
             var theme = fs.readFileSync(themeHost, 'utf8');
-            if (!fs.existsSync(paths.join(__dirname, '..', 'web', 'themes', theme + '.theme.json'))) {
+            if (!fs.existsSync(path.join(__dirname, '..', 'web', 'themes', theme + '.theme.json'))) {
                 errorWin('The theme "' + theme + '" does not exist. Please select a valid theme.');
                 return 'base';
             }
@@ -356,7 +355,7 @@ function createWindow() {
         const filePath = filePaths[0];
 
         // create unique mod folder
-        const modPath = paths.join(app.getPath('userData'), 'pkg.db', randomString(32));
+        const modPath = path.join(app.getPath('userData'), 'pkg.db', randomString(32));
         fs.mkdirSync(modPath, { recursive: true });
 
         try {
@@ -366,12 +365,12 @@ function createWindow() {
 
             // Normalize: pull contents out of wrapper folder so mod is flat
             const realRoot = findModRoot(modPath);
-            if (realRoot && paths.resolve(realRoot) !== paths.resolve(modPath)) {
+            if (realRoot && path.resolve(realRoot) !== path.resolve(modPath)) {
                 flattenInto(modPath, realRoot);
             }
 
             // Check manifest anywhere in the tree (now usually at root after flatten)
-            const manifestPath = findFirstByName(modPath, '_deltamodInfo.json') || paths.join(modPath, '_deltamodInfo.json');
+            const manifestPath = findFirstByName(modPath, '_deltamodInfo.json') || path.join(modPath, '_deltamodInfo.json');
             if (!fs.existsSync(manifestPath)) {
                 fs.rmdirSync(modPath, { recursive: true, force: true });
                 throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
@@ -403,7 +402,11 @@ function createWindow() {
         var folder = args[0];
         switch (folder) {
             case 'mods':
-                shell.openExternal(paths.join(app.getPath('userData'), 'pkg.db'));
+                shell.openExternal(path.join(app.getPath('userData'), 'pkg.db'));
+                break;
+            case 'delta':
+                shell.openExternal(getSystemFolder('deltaruneInstall', false));
+                break;
         }
     });
 
@@ -444,7 +447,7 @@ function createWindow() {
 
         var deltaruneUrl = api.data.url;
 
-        var zipPath = paths.join(app.getPath('downloads'), 'deltarune_demo.zip');
+        var zipPath = path.join(app.getPath('downloads'), 'deltarune_demo.zip');
 
         if (fs.existsSync(zipPath)) {
             fs.unlinkSync(zipPath);
@@ -478,8 +481,8 @@ function createWindow() {
             if (realRoot && realRoot !== extractPath && realRoot.startsWith(extractPath)) {
                 const items = fs.readdirSync(realRoot);
                 for (const name of items) {
-                    const from = paths.join(realRoot, name);
-                    const to   = paths.join(extractPath, name);
+                    const from = path.join(realRoot, name);
+                    const to   = path.join(extractPath, name);
                     try { fs.renameSync(from, to); }
                     catch {
                         // cross-device or conflicts → fallback to copy
@@ -487,7 +490,7 @@ function createWindow() {
                             copyRecursiveSync(from, to);
                             fs.rmSync(from, { recursive: true, force: true });
                         } else {
-                            fs.mkdirSync(paths.dirname(to), { recursive: true });
+                            fs.mkdirSync(path.dirname(to), { recursive: true });
                             fs.copyFileSync(from, to);
                             fs.rmSync(from, { force: true });
                         }
@@ -531,11 +534,11 @@ function createWindow() {
     ipcMain.handle('writeToDocuments', async (event, args) => {
         try {
             const desktopPath = app.getPath('documents');
-            if (!fs.existsSync(paths.join(desktopPath, 'deltamod')))
+            if (!fs.existsSync(path.join(desktopPath, 'deltamod')))
             {
                 fs.mkdirSync(desktopPath + "/deltamod");
             }
-            const filePath = paths.join(desktopPath, 'deltamod', args[1]);
+            const filePath = path.join(desktopPath, 'deltamod', args[1]);
             await fs.promises.writeFile(filePath, args[0], 'utf8');
             console.log(`File written to documents: ${filePath}`);
         }
@@ -591,14 +594,14 @@ function createWindow() {
         }
     });
     ipcMain.handle('getMaxExistingIndex', async (event, args) => {
-        var systemFiles = fs.readdirSync(paths.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
+        var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
         var maxIndex = 0;
         var invalidInstalls = [];
         systemFiles.forEach((file) => {
             var index = file.split('-')[1];
-            var contents = fs.readdirSync(paths.join(app.getPath('userData'), file));
+            var contents = fs.readdirSync(path.join(app.getPath('userData'), file));
             if (!contents.includes('deltaruneInstall') && index != 'unique') {
-                fs.rmdirSync(paths.join(app.getPath('userData'), file), { recursive: true });
+                fs.rmdirSync(path.join(app.getPath('userData'), file), { recursive: true });
                 console.log(`Removed empty directory: ${file}`);
                 invalidInstalls.push(index);
                 return; // Skip empty directories
@@ -617,6 +620,21 @@ function createWindow() {
         app.relaunch();
         app.exit();
     });
+
+    /*
+     * getEditionByIndex
+     * Returns the edition of the game by index.
+    */
+    ipcMain.handle('getEditionByIndex', async (event, args) => {
+        var index = args[0];
+        var edition = Paths.readKVSOfIndex('deltaruneEdition', index);
+        if (edition) {
+            return edition;
+        }
+        else {
+            return "Unknown";
+        }
+    });
     /*
      * getModList
      * Returns the list of mods from the KVS.
@@ -634,7 +652,7 @@ function createWindow() {
                 if (Paths.file > 0) {
                     mod.neededFiles.forEach((file) => {
                         var specifiedHash = file.checksum;
-                        var filePath = paths.join(Paths.readKVS('deltarunePath'), file.file);
+                        var filePath = path.join(Paths.readKVS('deltarunePath'), file.file);
 
                         if (!fs.existsSync(filePath)) {
                             hashCompatible = false;
@@ -693,8 +711,8 @@ function createWindow() {
             const exeCandidate = Paths.readKVS('deltaruneExecutable');
             const exe = exeCandidate && fs.existsSync(exeCandidate)
                 ? exeCandidate
-                : (fs.existsSync(paths.join(pathname, 'DELTARUNE.exe'))
-                    ? paths.join(pathname, 'DELTARUNE.exe')
+                : (fs.existsSync(path.join(pathname, 'DELTARUNE.exe'))
+                    ? path.join(pathname, 'DELTARUNE.exe')
                     : null);
 
             if (!exe) {
@@ -708,18 +726,18 @@ function createWindow() {
 
             var args = "";
             if (Paths.readUniqueFlag("outputDelta")) {
-                if (fs.existsSync(paths.join(paths.dirname(exe), '_console.txt'))) {
-                    fs.unlinkSync(paths.join(paths.dirname(exe), '_console.txt'));
+                if (fs.existsSync(path.join(path.dirname(exe), '_console.txt'))) {
+                    fs.unlinkSync(path.join(path.dirname(exe), '_console.txt'));
                 }
                 args += '-output _console.txt';
             }
-            exec(`"${exe}" ${args}`, { cwd: paths.dirname(exe) }, (error, stdout, stderr) => {
+            exec(`"${exe}" ${args}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
                 // Always restore originals after the game closes
                 GamePatching.restoreOriginalsIfAny(pathname);
                 win.show();
 
                 if (Paths.readUniqueFlag('outputDelta')) {
-                    var consoleFile = paths.join(paths.dirname(exe), '_console.txt');
+                    var consoleFile = path.join(path.dirname(exe), '_console.txt');
                     var consoleContent = fs.readFileSync(consoleFile, 'utf8');
                     fs.unlinkSync(consoleFile);
                     setSharedVar('deltaruneLogs', consoleContent);
@@ -806,20 +824,20 @@ function createWindow() {
         if (pathdial.canceled) {
             return null;
         } else {
-            var path = pathdial.filePaths[0];
+            var deltapath = pathdial.filePaths[0];
             var keyItems = ['data.win', 'DELTARUNE.exe'];
             var missingItems = [];
             var isValid = true;
 
             keyItems.forEach((item) => {
-                if (!fs.existsSync(`${path}/${item}`)) {
+                if (!fs.existsSync(`${deltapath}/${item}`)) {
                     isValid = false;
                     missingItems.push(item);
                 }
             });
 
             if (isValid) {
-                return path;
+                return deltapath;
             } else {
                 dialog.showErrorBox('This folder doesn\'t contain a valid Deltarune install', `The selected folder is not a valid Deltarune install.`);
                 return null;

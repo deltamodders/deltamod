@@ -34,6 +34,10 @@ function getSystemFile(fileid, unique) {
     return path.join(app.getPath('userData'), 'deltamod_system-' + (unique ? "unique" : systemIndex), fileid);
 }
 
+function getSystemFileOfIndex(fileid, index) {
+    return path.join(app.getPath('userData'), 'deltamod_system-' + index, fileid);
+}
+
 function getSystemFolder(folderid, unique) {
     return path.join(app.getPath('userData'), 'deltamod_system-' + (unique ? "unique" : systemIndex), folderid);
 }
@@ -50,5 +54,6 @@ module.exports = {
     getPacketDatabase: getPacketDatabase,
     setSystemIndex: setSystemIndex,
     healthCheck: healthCheck,
+    getSystemFileOfIndex: getSystemFileOfIndex,
     generateUniqueId: generateUniqueId,
 };

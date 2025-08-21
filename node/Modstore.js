@@ -100,6 +100,7 @@ function modList() {
         }
     });
 
+    /*
     // Zork's Patch: give the “No.” column a value most UIs expect, this could be used for sorting mods by priority in the future, but probably not as GM3P doesn't have that right now.
     modList.sort((a, b) => String(a.uniqueId).localeCompare(String(b.uniqueId)));
     modList.forEach((m, i) => {
@@ -109,6 +110,8 @@ function modList() {
         m.index    = n;
         m.no       = n;
     });
+    */
+   // CURRENTLY DEPRECATED: priority function was planned but removed to favor GM3P integration
 
     return modList;
 }

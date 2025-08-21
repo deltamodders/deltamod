@@ -1,10 +1,12 @@
-function createMod(modName, modDescription, priority, modUID) {
+function createMod(modName, modDescription, modUID) {
     const tr = document.createElement('tr');
 
+    /*
     const td0 = document.createElement('td');
     td0.className = 'ord';
     td0.id = modUID;
     td0.innerHTML = priority;
+    */
 
     const td1 = document.createElement('td');
     const titleSpan = document.createElement('span');
@@ -28,7 +30,6 @@ function createMod(modName, modDescription, priority, modUID) {
     checkbox.checked = true;
     td2.appendChild(checkbox);
 
-    tr.appendChild(td0);
     tr.appendChild(td1);
     tr.appendChild(td2);
 
@@ -45,13 +46,13 @@ function loadInst(index) {
     var modList = await window.electronAPI.invoke('getModList', []);
 
     modList.forEach((mod, index) => {
-        createMod(mod.name, mod.description, mod.priority, mod.uid);
+        createMod(mod.name, mod.description, mod.uid);
     });
 
     if (modList.length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 3;
+        td.colSpan = 2;
         td.innerHTML = 'No compatible mods found.';
         td.style.textAlign = 'center';
         tr.appendChild(td);
@@ -73,11 +74,8 @@ function loadInst(index) {
         if (i === sysindex) {
             option.selected = true;
         }
-        option.innerHTML = `Install ${i + 1}`;
-        if (maxindex[1].includes(i)) {
-            option.disabled = true;
-            option.innerHTML += ' <i>(Invalid)</i>';
-        }
+        var edition = await window.electronAPI.invoke('getEditionByIndex', [i]);
+        option.innerHTML = `Install ${i + 1} (${edition})`;
         document.getElementById('installs').appendChild(option);
     }
     var newOption = document.createElement('option');

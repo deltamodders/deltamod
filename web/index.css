@@ -1,5 +1,5 @@
 :root {
-    --topbar-height: 40px;
+    --topbar-height: 35px;
 }
 
 #top-options > button {
@@ -47,11 +47,18 @@ body {
     animation: 0.5s fadeIn ease-in-out;
 }
 
+* {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: auto;
+    font-smoothing: none;
+}
+
 .topbar {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
+    padding-left: 20px;
     height: calc(var(--topbar-height) * 1);
     font-size: 10px;
     background-color: rgba(0, 0, 0, 1);

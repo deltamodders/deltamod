@@ -16,6 +16,10 @@ function downloadDelta() {
 
 window.currentPageStack.id = id;
 
+window.currentPageStack.back = function() {
+    window.electronAPI.invoke('changeSystemIndex', ["0"]);
+};
+
 window.currentPageStack.locateDelta = locateDelta;
 
 window.currentPageStack.downloadDelta = downloadDelta;

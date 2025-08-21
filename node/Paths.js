@@ -2,7 +2,7 @@ const path = require('path');
 const app = require('electron').app;
 const fs = require('fs');
 let kvs = {};
-const { getSystemFile, getSystemFolder, healthCheck } = require('./System.js');
+const { getSystemFile, getSystemFolder, healthCheck, getSystemFileOfIndex } = require('./System.js');
 const { get } = require('http');
 const crypto = require('crypto');
 
@@ -68,6 +68,11 @@ function setKVS(name, value) {
     kvsFlush();
 }
 
+function readKVSOfIndex(name, index) {
+    var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
+    return odb[name] || null;
+}
+
 function readKVS(name) {
     return kvs[name] || null;
 }
@@ -80,5 +85,6 @@ module.exports = {
     kvsWipe,
     writeUniqueFlag,
     readUniqueFlag,
+    readKVSOfIndex,
     retrieve,
 };
