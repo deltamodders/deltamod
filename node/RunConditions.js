@@ -42,7 +42,7 @@ const conditions = [
 
 function checkConditions() {
     let checkers = [];
-    conditions.forEach(condition => {
+    for (var condition of conditions) {
         if (condition.checker() == false) {
             console.log(`Checking ${condition.name}`);
             checkers.push(condition);
@@ -50,7 +50,7 @@ function checkConditions() {
         else {
             console.log(`Checking ${condition.name}`);
         }
-    });
+    };
     return checkers;
 }
 

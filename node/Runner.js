@@ -600,7 +600,7 @@ function createWindow() {
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
         var maxIndex = 0;
         var invalidInstalls = [];
-        systemFiles.forEach((file) => {
+        for (var file of systemFiles) {
             var index = file.split('-')[1];
             var contents = fs.readdirSync(path.join(app.getPath('userData'), file));
             if (!contents.includes('deltaruneInstall') && index != 'unique') {
@@ -615,7 +615,7 @@ function createWindow() {
             if (index) {
                 maxIndex = Math.max(maxIndex, parseInt(index));
             }
-        });
+        };
         return [maxIndex, invalidInstalls];
     });
     ipcMain.handle('changeSystemIndex', async (event, args) => {

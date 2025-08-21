@@ -232,9 +232,10 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
         const modDir = path.join(dbPath, mod);
         try {
             const modRoot = findModRoot(modDir);
-            const idf  = findFirstByName(modRoot, '__deltaID.json');
-            const xmlf = findFirstByName(modRoot, 'modding.xml');
-            const infof= findFirstByName(modRoot, '_deltamodInfo.json');
+            const idf   = findFirstByName(modRoot, '__deltaID.json');
+            const infof = findFirstByName(modRoot, '_deltamodInfo.json');
+            const xmlf  = findFirstByName(modRoot, 'modding.xml');
+            
             if (!idf || !xmlf) continue;
             if (!fs.existsSync(idf) || !fs.existsSync(xmlf)) {
                 clog('Skip (missing id/xml):', mod);

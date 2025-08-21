@@ -33,7 +33,7 @@ function modList() {
     var modList = [];
     var uniqueIdSet = new Set(); // actually use it
 
-    mods.forEach((mod) => {
+    for (var mod of mods) {
         try {
             var modPath = path.join(system.getPacketDatabase(), mod);
 
@@ -99,7 +99,7 @@ function modList() {
             console.error(`Error reading mod info for ${mod}:`, e);
             return;
         }
-    });
+    };
 
     /*
     // Zork's Patch: give the “No.” column a value most UIs expect, this could be used for sorting mods by priority in the future, but probably not as GM3P doesn't have that right now.
