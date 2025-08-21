@@ -654,7 +654,7 @@ function createWindow() {
             try {
                 if (mod.neededFiles > 0) {
                     mod.neededFiles.forEach((file) => {
-                        var specifiedHash = file.checksum;
+                        var specifiedHash = file.checksum.toLowerCase();
                         var filePath = path.join(KeyValue.readKVS('deltarunePath'), file.file);
 
                         if (!fs.existsSync(filePath)) {
@@ -662,7 +662,7 @@ function createWindow() {
                         }
 
                         if (file.checksum) {
-                            if (hashFile(filePath) !== specifiedHash) {
+                            if (hashFile(filePath).toLowerCase() !== specifiedHash) {
                                 hashCompatible = false;
                             }
                         }
