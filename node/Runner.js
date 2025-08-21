@@ -597,26 +597,33 @@ function createWindow() {
         }
     });
     ipcMain.handle('getMaxExistingIndex', async (event, args) => {
-        var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
-        var maxIndex = 0;
-        var invalidInstalls = [];
-        for (var file of systemFiles) {
-            var index = file.split('-')[1];
-            var contents = fs.readdirSync(path.join(app.getPath('userData'), file));
-            if (!contents.includes('deltaruneInstall') && index != 'unique') {
-                fs.rmdirSync(path.join(app.getPath('userData'), file), { recursive: true });
-                console.log(`Removed empty directory: ${file}`);
-                invalidInstalls.push(index);
-                return; // Skip empty directories
-            }
+        try {
+            var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
+            var maxIndex = 0;
+            var invalidInstalls = [];
+            systemFiles.forEach((file) => {
+                var index = file.split('-')[1];
+                var contents = fs.readdirSync(path.join(app.getPath('userData'), file));
+                if (!contents.includes('deltaruneInstall') && index != 'unique') {
+                    fs.rmdirSync(path.join(app.getPath('userData'), file), { recursive: true });
+                    console.log(`Removed empty directory: ${file}`);
+                    invalidInstalls.push(index);
+                    return; // Skip empty directories
+                }
 
-            if (index === 'unique') return;
+                if (index === 'unique') return;
 
-            if (index) {
-                maxIndex = Math.max(maxIndex, parseInt(index));
-            }
-        };
-        return [maxIndex, invalidInstalls];
+                if (index) {
+                    maxIndex = Math.max(maxIndex, parseInt(index));
+                }
+            });
+            console.log(`Max existing index: ${maxIndex}`);
+            return [maxIndex, invalidInstalls];
+        }
+        catch (err) {
+            console.error('Error getting max existing index:', err);
+            return [0, []];
+        }
     });
     ipcMain.handle('changeSystemIndex', async (event, args) => {
         fs.writeFileSync(getSystemFile('_sysindex',true), args[0]);
