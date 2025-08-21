@@ -1,4 +1,3 @@
-const Paths = require('./Paths');
 const path = require('path');
 const system = require('./System');
 const fs = require('fs');
