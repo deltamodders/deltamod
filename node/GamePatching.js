@@ -57,7 +57,7 @@ function run(file, args, opts = {}) {
     clog('RUN:', file, JSON.stringify(args));
     const tStart = ms();
     return new Promise((resolve, reject) => {
-        execFile(file, args, _opts, (err, stdout, stderr) => {
+        exec(file + " " + args.join(' '), (err, stdout, stderr) => {
             const dt = (ms() - tStart).toFixed(1);
             if (stdout) clog('stdout:', trunc(stdout));
             if (stderr) clog('stderr:', trunc(stderr));
