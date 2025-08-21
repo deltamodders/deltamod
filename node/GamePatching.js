@@ -21,6 +21,7 @@ const { execFile } = require('child_process');
 const { timeoutPromise } = require('./Utils.js');
 const convert = require('xml-js');
 const process = require('process');
+const console = require('./Console.js');
 
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
 if (process.platform === 'win32') {
@@ -36,7 +37,7 @@ const BACKUP_SUFFIX = '.original';
 const t0 = process.hrtime.bigint();
 const ms = () => Number(process.hrtime.bigint() - t0) / 1e6;
 function clog(...args) {
-    console.log(`[GamePatching +${ms().toFixed(1)}ms]`, ...args);
+    console.log(...args);
 }
 function trunc(s, n = 4000) {
     if (!s) return '';
