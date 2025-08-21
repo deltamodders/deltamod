@@ -24,7 +24,7 @@ const process = require('process');
 
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
 if (process.platform === 'win32') {
-    GM3P_EXE = 'C:\\Program Files (x86)\\dotnet\\dotnet.exe';
+    GM3P_EXE = 'C:\\Program Files\\dotnet\\dotnet.exe';
     GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
 } else {
     GM3P_EXE = '/usr/bin/dotnet';
