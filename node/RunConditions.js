@@ -19,7 +19,7 @@ const conditions = [
         }
     },
     {
-        name: 'Windows 10 or later',
+        name: 'Windows 10 or later; or Linux kernel 5.0 or later',
         required: true,
         checker: () => {
             const os = require('os');
@@ -30,7 +30,11 @@ const conditions = [
                 const version = parseInt(release.split('.')[0], 10);
                 return version >= 10;
             }
-            return platform === "linux"; // Not Windows
+            else if (platform === 'linux') {
+                const version = parseInt(release.split('.')[0], 10);
+                return version >= 5;
+            }
+            return false; // Not Windows or Linux
         }
     }
 ];

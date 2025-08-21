@@ -12,7 +12,7 @@ goto() {
 
 prompt_for_input() {
     while true; do
-        echo -n "Do you want to install or update dependencies? (y/n): "
+        echo -n "Do you want to install or update dependencies (note this will only work on Ubuntu-based systems)? (y/n): "
         read -r response
         case "$response" in
             [Yy]* )
@@ -43,25 +43,11 @@ prompt_for_input
 
 		sudo snap install 'dotnet-sdk' --classic
 
-		#Install node through docker
+		#Install node
 
-		sudo apt install 'docker'
+		sudo apt install 'npm'
 
-		# Docker has specific installation instructions for each operating system.
-		# Please refer to the official documentation at https://docker.com/get-started/
-
-		# Pull the Node.js Docker image:
-		docker pull node:22-alpine
-
-		# Create a Node.js container and start a Shell session:
-		docker run -it --rm --entrypoint sh node:22-alpine
-
-		# Verify the Node.js version:
-		node -v # Should print "v22.18.0".
-
-		# Verify npm version:
-		npm -v # Should print "10.9.3".
-
+		sudo apt install 'nodejs'
 
 		#Install needed libraries
 
@@ -89,7 +75,7 @@ prompt_for_input
 
 		npm --verbose install electron@37
 
-		npm install n@22
+		npm install n
 
 		goto run
 

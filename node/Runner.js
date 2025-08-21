@@ -631,20 +631,22 @@ function createWindow() {
             var hashCompatible = true;
 
             try {
-                mod.neededFiles.forEach((file) => {
-                    var specifiedHash = file.checksum;
-                    var filePath = paths.join(Paths.readKVS('deltarunePath'), file.file);
+                if (Paths.file > 0) {
+                    mod.neededFiles.forEach((file) => {
+                        var specifiedHash = file.checksum;
+                        var filePath = paths.join(Paths.readKVS('deltarunePath'), file.file);
 
-                    if (!fs.existsSync(filePath)) {
-                        hashCompatible = false;
-                    }
-
-                    if (file.checksum) {
-                        if (hashFile(filePath) !== specifiedHash) {
+                        if (!fs.existsSync(filePath)) {
                             hashCompatible = false;
                         }
-                    }
-                });
+
+                        if (file.checksum) {
+                            if (hashFile(filePath) !== specifiedHash) {
+                                hashCompatible = false;
+                            }
+                        }
+                    });
+                }
             }
             catch (e) {
                 console.error('Error checking mod hashes compatibility:', e);
