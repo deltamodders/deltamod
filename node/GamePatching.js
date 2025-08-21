@@ -24,8 +24,8 @@ const process = require('process');
 
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
 if (process.platform === 'win32') {
-    GM3P_EXE = path.join(__dirname, '../gm3p/GM3P.exe');
-    GM3P_DLL = '';
+    GM3P_EXE = 'C:\\Program Files (x86)\\dotnet\\dotnet.exe';
+    GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
 } else {
     GM3P_EXE = '/usr/bin/dotnet';
     GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
@@ -215,8 +215,8 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
     clog('dbPath:', dbPath);
     clog('enabledMods:', Array.from(enabled));
 
-    if (!fs.existsSync(GM3P_EXE)) {
-        ret.log = `GM3P missing at ${GM3P_EXE}`;
+    if (!fs.existsSync(GM3P_DLL)) {
+        ret.log = `GM3P missing at ${GM3P_DLL}`;
         dialog.showErrorBox('GM3P missing', ret.log);
         clog('[FATAL]', ret.log);
         return ret;

@@ -75,8 +75,6 @@ prompt_for_input
 
 		npm --verbose install electron@37
 
-		npm install n
-
 		goto run
 
 #run:#
