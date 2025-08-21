@@ -3,6 +3,7 @@ const path = require('path');
 const system = require('./System');
 const fs = require('fs');
 const os = require('os');
+const console = require('./Console.js');
 
 const computerName = os.hostname();
 // [ADDED] depth-first search for a file by name anywhere under root

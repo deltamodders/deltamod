@@ -1,4 +1,5 @@
 const { screen } = require('electron');
+const console = require('./Console.js');
 
 const conditions = [
     {
@@ -41,18 +42,15 @@ const conditions = [
 
 function checkConditions() {
     let checkers = [];
-    console.log('[==CONDITIONS==]');
     conditions.forEach(condition => {
-        console.log(`Checking condition: ${condition.name}`);
         if (condition.checker() == false) {
-            console.log(`Condition not met: ${condition.name}`);
+            console.log(`Checking ${condition.name}`);
             checkers.push(condition);
         }
         else {
-            console.log(`Condition met: ${condition.name}`);
+            console.log(`Checking ${condition.name}`);
         }
     });
-    console.log('[==END CONDITIONS==]');
     return checkers;
 }
 

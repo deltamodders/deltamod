@@ -1,9 +1,22 @@
 var audio = new Audio();
 var currentAudio = "";
 var theme = null;
+var pageN = null;
 
 console.log = function(...arguments) {
-    window.electronAPI.invoke('log', [arguments.join(' ')]);
+    window.electronAPI.invoke('log', [arguments.join(' '), 'LOG', pageN]);
+}
+
+console.warn = function(...arguments) {
+    window.electronAPI.invoke('log', [arguments.join(' '), 'WARN', pageN]);
+}
+
+console.error = function(...arguments) {
+    window.electronAPI.invoke('log', [arguments.join(' '), 'ERROR', pageN]);
+}
+
+console.info = function(...arguments) {
+    window.electronAPI.invoke('log', [arguments.join(' '), 'INFO', pageN]);
 }
 
 async function page(name) {
@@ -42,6 +55,7 @@ async function page(name) {
         purifiedHTML = purifiedHTML.replace(/AUDIO\[(.*?)\]/g, '');
     }
     document.getElementsByClassName('viewport')[0].innerHTML = purifiedHTML;
+    pageN = name;
     if (runScripts) {
         eval(await fetch('./' + name + '/index.js').then(response => response.text()));
     }

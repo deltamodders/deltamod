@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell } = require('electron');
 const Paths = require('./Paths.js');
+const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
 const mime = require('mime-types');
 const zl = require("zip-lib");
@@ -18,6 +19,7 @@ const System = require('./System.js');
 const { screen } = require('electron');
 const path = require('path');
 
+const console = require('./Console.js');
 
 let itch;
 let canLoadItch = false;
@@ -33,7 +35,8 @@ let win; // Main window
 let sharedVariables = {}; // shared vars with renderer
 
 function errorWin(err) {
-    setSharedVar('error', err.toString());
+    const errorStack = err.stack || 'No stack trace available';
+    setSharedVar('error', err.toString() + "\n" + errorStack);
     win.loadURL('deltapack://web/errorWrt/index.html');
 }
 
@@ -190,9 +193,9 @@ function showError(errorCode) {
 }
 
 function createWindow() {
-    if (!Paths.readUniqueFlag('setup')) {
-        Paths.writeUniqueFlag('setup', 'true');
-        Paths.writeUniqueFlag('audio', 'true');
+    if (!KeyValue.readUniqueFlag('setup')) {
+        KeyValue.writeUniqueFlag('setup', 'true');
+        KeyValue.writeUniqueFlag('audio', 'true');
     }
     app.setAsDefaultProtocolClient('deltamod' + (process.env.DELTAMOD_ENV === 'dev' ? '-dev' : ''));
 
@@ -257,7 +260,7 @@ function createWindow() {
         }
     }
 
-    Paths.retrieve();
+    KeyValue.retrieve();
     win = new BrowserWindow({
         width: 800,
         height: 800,
@@ -319,7 +322,7 @@ function createWindow() {
     });
 
     ipcMain.handle('log', (event, args) => {
-        console.log(...args);
+        console.rendererLog(args[1], args[2], args[0]);
     });
 
     /*
@@ -508,10 +511,10 @@ function createWindow() {
                 message: 'Deltarune install downloaded and imported successfully.',
                 buttons: ['OK']
             }).then(() => {
-                Paths.setKVS('loadedDeltarune', true);
-                Paths.setKVS('deltarunePath', extractPath);
-                Paths.setKVS('deltaruneEdition', "demo");
-                Paths.kvsFlush();
+                KeyValue.setKVS('loadedDeltarune', true);
+                KeyValue.setKVS('deltarunePath', extractPath);
+                KeyValue.setKVS('deltaruneEdition', "demo");
+                KeyValue.kvsFlush();
                 app.relaunch();
                 app.exit();
             });
@@ -553,7 +556,7 @@ function createWindow() {
      * args[0] is the name of the flag.
     */
     ipcMain.handle('getUniqueFlag', async (event, args) => {
-        return Paths.readUniqueFlag(args[0].toUpperCase());
+        return KeyValue.readUniqueFlag(args[0].toUpperCase());
     });
 
     /*
@@ -563,7 +566,7 @@ function createWindow() {
      * args[1] is the value of the flag.
     */
     ipcMain.handle('setUniqueFlag', async (event, args) => {
-        Paths.writeUniqueFlag(args[0].toUpperCase(), args[1]);
+        KeyValue.writeUniqueFlag(args[0].toUpperCase(), args[1]);
     });
 
     /*
@@ -627,7 +630,7 @@ function createWindow() {
     */
     ipcMain.handle('getEditionByIndex', async (event, args) => {
         var index = args[0];
-        var edition = Paths.readKVSOfIndex('deltaruneEdition', index);
+        var edition = KeyValue.readKVSOfIndex('deltaruneEdition', index);
         if (edition) {
             return edition;
         }
@@ -642,17 +645,17 @@ function createWindow() {
     ipcMain.handle('getModList', async (event, args) => {
         var modlist = Modstore.modList();
 
-        var edition = Paths.readKVS('deltaruneEdition');
+        var edition = KeyValue.readKVS('deltaruneEdition');
 
         return modlist.filter((mod) => {
             var editionCompatible = (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
             var hashCompatible = true;
 
             try {
-                if (Paths.file > 0) {
+                if (mod.neededFiles > 0) {
                     mod.neededFiles.forEach((file) => {
                         var specifiedHash = file.checksum;
-                        var filePath = path.join(Paths.readKVS('deltarunePath'), file.file);
+                        var filePath = path.join(KeyValue.readKVS('deltarunePath'), file.file);
 
                         if (!fs.existsSync(filePath)) {
                             hashCompatible = false;
@@ -682,7 +685,7 @@ function createWindow() {
     */
     ipcMain.handle('patchAndRun', async (event, args) => {
         try {
-            var pathname = Paths.readKVS('deltarunePath');
+            var pathname = KeyValue.readKVS('deltarunePath');
             if (!pathname) {
                 dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
                 return false;
@@ -708,7 +711,7 @@ function createWindow() {
             win.webContents.send('audio', false); // Stop audio before launching the game
             //win.webContents.executeJavaScript('closeAudio();');
 
-            const exeCandidate = Paths.readKVS('deltaruneExecutable');
+            const exeCandidate = KeyValue.readKVS('deltaruneExecutable');
             const exe = exeCandidate && fs.existsSync(exeCandidate)
                 ? exeCandidate
                 : (fs.existsSync(path.join(pathname, 'DELTARUNE.exe'))
@@ -725,7 +728,7 @@ function createWindow() {
             }
 
             var args = "";
-            if (Paths.readUniqueFlag("outputDelta")) {
+            if (KeyValue.readUniqueFlag("outputDelta")) {
                 if (fs.existsSync(path.join(path.dirname(exe), '_console.txt'))) {
                     fs.unlinkSync(path.join(path.dirname(exe), '_console.txt'));
                 }
@@ -736,14 +739,14 @@ function createWindow() {
                 GamePatching.restoreOriginalsIfAny(pathname);
                 win.show();
 
-                if (Paths.readUniqueFlag('outputDelta')) {
+                if (KeyValue.readUniqueFlag('outputDelta')) {
                     var consoleFile = path.join(path.dirname(exe), '_console.txt');
                     var consoleContent = fs.readFileSync(consoleFile, 'utf8');
                     fs.unlinkSync(consoleFile);
                     setSharedVar('deltaruneLogs', consoleContent);
                 }
                 win.webContents.send('audio', true);
-                win.webContents.send('page', (Paths.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main'));
+                win.webContents.send('page', (KeyValue.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main'));
                 //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
             });
         } catch (err) {
@@ -759,9 +762,9 @@ function createWindow() {
     */
     ipcMain.handle('loadedDeltarune', async (event, name) => {
         try {
-            var pathname = Paths.readKVS('deltarunePath');
-            if (!Paths.readKVS('loadedDeltarune')) {
-                Paths.setKVS('deltarunePath', null);
+            var pathname = KeyValue.readKVS('deltarunePath');
+            if (!KeyValue.readKVS('loadedDeltarune')) {
+                KeyValue.setKVS('deltarunePath', null);
                 return {
                     loaded: false
                 };
@@ -774,8 +777,8 @@ function createWindow() {
             }
 
             if (!fs.existsSync(pathname)) {
-                Paths.setKVS('loadedDeltarune', false);
-                Paths.setKVS('deltarunePath', null);
+                KeyValue.setKVS('loadedDeltarune', false);
+                KeyValue.setKVS('deltarunePath', null);
                 return {
                     loaded: false
                 };
@@ -885,10 +888,10 @@ function createWindow() {
                 message: 'Deltarune install imported successfully.',
                 buttons: ['OK']
             }).then(() => {
-                Paths.setKVS('loadedDeltarune', true);
-                Paths.setKVS('deltarunePath', path2);
-                Paths.setKVS('deltaruneEdition', gameEdition);
-                Paths.kvsFlush();
+                KeyValue.setKVS('loadedDeltarune', true);
+                KeyValue.setKVS('deltarunePath', path2);
+                KeyValue.setKVS('deltaruneEdition', gameEdition);
+                KeyValue.kvsFlush();
                 app.relaunch();
                 app.exit();
             });
@@ -904,7 +907,7 @@ function createWindow() {
 app.whenReady().then(() => {
     // Run a safety restore before creating the window (handles crash-last-time cases)
     try {
-        const p = Paths.readKVS('deltarunePath');
+        const p = KeyValue.readKVS('deltarunePath');
         if (p) {
             const restored = GamePatching.restoreOriginalsIfAny(p);
             if (restored && restored.length) {

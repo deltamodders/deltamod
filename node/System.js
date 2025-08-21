@@ -2,7 +2,10 @@ const fs = require('fs');
 const app = require('electron').app;
 const path = require('path');
 const { randomString } = require('./Utils');
+const console = require('./Console.js');
+
 let systemIndex = "0";
+
 
 function generateUniqueId() {
     return "deltamod_" + randomString(16) + "_" + Date.now() + "_" + require('../package.json').version;

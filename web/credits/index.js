@@ -1,6 +1,9 @@
+const GB_URL = 'https://gamebanana.com/apiv11/Wip/94135/ProfilePage';
+
 (async() => {
     try {
-        var gbpage = await fetch('https://gamebanana.com/apiv11/Wip/94135/ProfilePage').then(r => r.json());
+        console.log('Obtaining credits from ' + GB_URL);
+        var gbpage = await fetch(GB_URL).then(r => r.json());
         localStorage.setItem('gbpage', JSON.stringify(gbpage));
     }
     catch (e) {
