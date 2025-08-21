@@ -17,7 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const { dialog } = require('electron');
-const { execFile } = require('child_process');
+const { exec } = require('child_process');
 const { timeoutPromise } = require('./Utils.js');
 const convert = require('xml-js');
 const process = require('process');
@@ -25,8 +25,8 @@ const console = require('./Console.js');
 
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
 if (process.platform === 'win32') {
-    GM3P_EXE = 'C:\\Program Files\\dotnet\\dotnet.exe';
-    GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
+    GM3P_EXE = path.join(__dirname, '../gm3p/GM3P.exe');
+    GM3P_DLL = '';
 } else {
     GM3P_EXE = '/usr/bin/dotnet';
     GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
@@ -50,22 +50,18 @@ function trunc(s, n = 4000) {
 function run(file, args, opts = {}) {
     const _opts = {
         windowsHide: true,
-        maxBuffer: 64 * 1024 * 1024, // 64MB to be safe
-        timeout: 10 * 60 * 1000,     // 10 minutes hard cap (avoid infinite hangs)
+        maxBuffer: 24 * 1024 * 1024, // 24MB
+        timeout: 15 * 60 * 1000,     // 15 minutes hard cap (avoid infinite hangs)
         ...opts
     };
     clog('RUN:', file, JSON.stringify(args));
-    const tStart = ms();
     return new Promise((resolve, reject) => {
-        exec(file + " " + args.join(' '), (err, stdout, stderr) => {
-            const dt = (ms() - tStart).toFixed(1);
+        exec(file, _opts, (err, stdout, stderr) => {
             if (stdout) clog('stdout:', trunc(stdout));
             if (stderr) clog('stderr:', trunc(stderr));
             if (err) {
-                clog(`RUN ERROR after ${dt}ms`);
                 return reject(new Error((stderr || '') + (stdout || '') || err.message));
             }
-            clog(`RUN OK in ${dt}ms`);
             resolve({ stdout, stderr });
         });
     });
@@ -216,8 +212,8 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
     clog('dbPath:', dbPath);
     clog('enabledMods:', Array.from(enabled));
 
-    if (!fs.existsSync(GM3P_DLL)) {
-        ret.log = `GM3P missing at ${GM3P_DLL}`;
+    if (!fs.existsSync(GM3P_EXE)) {
+        ret.log = `GM3P missing at ${GM3P_EXE}`;
         dialog.showErrorBox('GM3P missing', ret.log);
         clog('[FATAL]', ret.log);
         return ret;
@@ -371,20 +367,19 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
         perChapterPatches.forEach((l, i) => clog(`  chapter[${i}] patches: ${l.length}`));
 
         try {
-            await run(GM3P_EXE, [GM3P_DLL, 'clear']);
 
-            await run(GM3P_EXE, [GM3P_DLL, 'clear', 'modpacks']);
-
-            await run(GM3P_EXE, [GM3P_DLL, 'massPatch', gamePath, 'GM', String(modAmount), filepathArg]);
+            await run(GM3P_EXE + ' ' + GM3P_DLL + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg );
 
             // Heavy step ONCE for all chapters
-            await run(GM3P_EXE, [GM3P_DLL, 'compare', String(modAmount), 'true', 'true']);
+            await run(GM3P_EXE + ' ' + GM3P_DLL + ' compare ' + String(modAmount) + ' true ' + 'true');
 
             // Produce: one subfolder per chapter index
             const pack   = 'DeltamodPack_Multi';
             const outDir = path.join(__dirname, '../gm3p/output/result', pack);
             fs.rmSync(outDir, { recursive: true, force: true });
-            await run(GM3P_EXE, [GM3P_DLL, 'result', pack, 'true']);
+            await run(GM3P_EXE + ' ' + GM3P_DLL + ' result ' + pack + ' true');
+
+            await run(GM3P_EXE + ' ' + GM3P_DLL + ' clear');
 
             // Copy each produced chapter back
             for (let i = 0; i < chapterTargets.length; i++) {
@@ -396,6 +391,8 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
                 fs.rmSync(chapterTargets[i], { force: true });
                 copyOver(produced, chapterTargets[i]);
             }
+
+            await run(GM3P_EXE + ' ' + GM3P_DLL + ' clear ' + 'modpacks');
         } catch (e) {
             clog('GM3P error, restoring backups:', e.message);
             for (const t of chapterTargets) restoreIfBackup(t);
