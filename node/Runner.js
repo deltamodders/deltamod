@@ -650,6 +650,8 @@ function createWindow() {
                 console.error('Error checking mod hashes compatibility:', e);
                 hashCompatible = true;
             }
+
+            return hashCompatible && editionCompatible;
         });
     });
 
