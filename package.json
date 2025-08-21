@@ -5,7 +5,8 @@
   "main": "node/Runner.js",
   "scripts": {
     "test": "electron .",
-    "build-windows": "electron-builder --win"
+    "build-windows": "electron-builder --win",
+    "build-linux": "electron-builder --linux"
   },
   "build": {
     "icon": "build/packIcon.png",
@@ -13,6 +14,11 @@
     "nsis": {
       "oneClick": false,
       "license": "LICENSE.txt"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility",
+      "icon": "build/packIcon.png"
     }
   },
   "author": "GhinoRhino",
