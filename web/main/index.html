@@ -13,6 +13,7 @@
                 <tr>
                     <th>Mod</th>
                     <th>Apply?</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="modlist">
@@ -29,78 +30,6 @@
         </div>
     </div>
 </div>
-
-<style>
-    .buttons {
-        background-color: rgba(56, 56, 56, 0.384);
-        padding: 10px;
-        transform: translateY(-10px);
-        border-radius: 4px;
-        animation: none !important;
-        width: calc(100% - 40px);
-        padding-left: 25px;
-        padding-right: 25px;
-    }
-    .array {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        margin-top: 10px;
-        width: 100%;
-    }
-    .hbiggest {
-        width: 100%;
-    }
-
-    tr {
-        height: 100%;
-    }
-
-    select {
-        font-family: "Pixel", sans-serif;
-        font-size: 10px;
-        color: white;
-        background-color: rgb(15, 15, 15);
-        border: 1px solid rgb(66, 66, 66);
-        padding: 5px;
-        width: 100%;
-        margin-bottom: 10px;
-    }
-
-    .checkmod {
-        text-align: center;
-    }
-
-    .checkmod > input {
-        margin: 0;
-        width: 30px;
-        height: 15px;
-        accent-color: rgb(79, 151, 101);
-        border: 6px solid white;
-        scale: 1.1;
-    }
-    @keyframes accentuate {
-        0% {
-            transform: rotateX(10deg) rotateY(10deg);
-            scale: 1.6;
-        }
-        100% {
-            transform: rotateX(0deg) rotateY(0deg);
-            scale: 1.1;
-        }
-        
-    }
-    .checkmod > input:checked {
-        /* For browsers that don't support accent-color, fallback: */
-        background-color: black;
-        color: white;
-        animation: 1s accentuate;
-    }
-
-    th {
-        text-align: left;
-    }
-</style>
 JSL
 AUDIO[mainTheme.mp3]
+STYLESHEET[main]

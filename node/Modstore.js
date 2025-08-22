@@ -2,9 +2,69 @@ const path = require('path');
 const system = require('./System');
 const fs = require('fs');
 const os = require('os');
-const console = require('./Console.js');
+const console = require('./Console');
+const _7z = require('7zip-min');
+const { randomString, page } = require('./Utils');
+const { findModRoot } = require('./GamePatching');
+const { dialog } = require('electron');
 
 const computerName = os.hostname();
+
+async function importMod(filePath) {
+    // create unique mod folder
+    const modPath = path.join(system.getPacketDatabase(), randomString(32));
+    fs.mkdirSync(modPath, { recursive: true });
+
+    try {
+        await _7z.unpack(filePath, modPath);
+        // I (mc) believe that we shouldn't delete a user's files if we did not create/download them ourselves
+        // fs.unlinkSync (filePath); // delete the zip file after extraction, I (Zork) commented this out temporarily to keep the zip file for debugging.
+
+        // Normalize: pull contents out of wrapper folder so mod is flat
+        const realRoot = findModRoot(modPath);
+        if (realRoot && path.resolve(realRoot) !== path.resolve(modPath)) {
+            flattenInto(modPath, realRoot);
+        }
+
+        // Check manifest anywhere in the tree (now usually at root after flatten)
+        const manifestPath = findFirstByName(modPath, '_deltamodInfo.json') || path.join(modPath, '_deltamodInfo.json');
+        if (!fs.existsSync(manifestPath)) {
+            fs.rmdirSync(modPath, { recursive: true, force: true });
+            throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
+        }
+
+        /*await dialog.showMessageBox(win, {
+            type: 'info',
+            title: 'Import Successful',
+            message: 'Mod imported successfully.',
+            buttons: ['OK']
+        });*/
+
+        // simpler way to refresh the list
+        page("main");
+
+        // Simple way to refresh the list
+        // app.relaunch();
+        // app.exit();
+        // process.exit();
+    } catch (err) {
+        console.error('Error importing mod:', err);
+        dialog.showErrorBox('Import failed', String(err));
+    }
+}
+
+function removeModSafe(modid) {
+    var modPath = path.join(system.getPacketDatabase(), modid);
+
+    // make sure that what we're deleting is actually a mod and not a random folder
+    if (fs.existsSync(path.join(modPath, "__deltaID.json")) && fs.existsSync(modPath)) {
+        console.log("Deleting mod", modPath);
+        fs.rmSync(modPath, { recursive: true });
+    } else console.warn("Error: Mod", modPath, "doesn't seem to be a valid mod with a __deltaID.json.");
+
+    page("main");
+}
+
 // [ADDED] depth-first search for a file by name anywhere under root
 function findFirstByName(root, fileName) {
     const needle = String(fileName).toLowerCase();
@@ -121,5 +181,7 @@ if (!fs.existsSync(system.getPacketDatabase())) {
 }
 
 module.exports = {
-    modList: modList
+    modList,
+    importMod,
+    removeModSafe
 };

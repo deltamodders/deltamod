@@ -1,6 +1,13 @@
 @font-face {
     font-family: "Deltarune";
     src: url("./deltarune.ttf") format("truetype");
+
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+
+    font-weight: normal !important; /* bold fucks shit up the entire font */
 }
 
 @font-face {
@@ -10,11 +17,22 @@
     */
     font-family: "Pixel";
     src: url("./pixel.otf") format("opentype");
+
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+
+    font-weight: normal !important; /* bold fucks shit up the entire font */
 }
 /* Hide scrollbar for all browsers */
 * {
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
+}
+
+* {
+    font-weight: normal !important; /* bold fucks shit up the entire font */
 }
 
 *::-webkit-scrollbar {

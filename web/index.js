@@ -2,6 +2,7 @@ var audio = new Audio();
 var currentAudio = "";
 var theme = null;
 var pageN = null;
+var addedStyle = null;
 
 console.log = function(...arguments) {
     window.electronAPI.invoke('log', [arguments.join(' '), 'LOG', pageN]);
@@ -30,6 +31,21 @@ async function page(name) {
         purifiedHTML = purifiedHTML.replace('JSL', '');
         runScripts = true;
     }
+    if (purifiedHTML.includes('STYLESHEET[')) {
+        var stylesheetSrc = purifiedHTML.match(/STYLESHEET\[(.*?)\]/);
+        if (stylesheetSrc && stylesheetSrc[1]) {
+            var stylesheetContent = await fetch(`./${name}/${stylesheetSrc[1]}.css`).then(res => res.text());
+
+            var s = addedStyle ?? document.createElement("style");
+            s.innerHTML = stylesheetContent;
+
+            if (!addedStyle) {
+                var h = document.getElementById("head");
+                addedStyle = h.appendChild(s);
+            }
+        }
+        purifiedHTML = purifiedHTML.replace(/STYLESHEET\[(.*?)\]/g, '');
+    } else if (addedStyle) addedStyle.innerHTML = ""; // remove styles to not interfere with other pages
     if (purifiedHTML.includes('AUDIO[')) {
         var audioSrc = purifiedHTML.match(/AUDIO\[(.*?)\]/);
         if (audioSrc && audioSrc[1] && audioSrc[1] !== currentAudio) {
@@ -56,9 +72,8 @@ async function page(name) {
     }
     document.getElementsByClassName('viewport')[0].innerHTML = purifiedHTML;
     pageN = name;
-    if (runScripts) {
+    if (runScripts)
         eval(await fetch('./' + name + '/index.js').then(response => response.text()));
-    }
 }
 
 if (!window.electronAPI) {

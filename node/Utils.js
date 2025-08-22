@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const fs = require('fs');
 
+var win = null;
+
 function timeoutPromise(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -21,4 +23,16 @@ function hashFile(filePath) {
     .digest('hex');
 }
 
-module.exports = {timeoutPromise, randomString, hashFile, lastOfArray};
+function getWindow() {
+  return win;
+}
+
+function setWindow(newwin) {
+  win = newwin;
+}
+
+function page(newPage) {
+  win.webContents.send("page", [newPage]);
+}
+
+module.exports = {timeoutPromise, randomString, hashFile, lastOfArray, getWindow, setWindow, page};

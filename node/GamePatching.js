@@ -124,15 +124,16 @@ function findFirstByName(root, name) {
 
 // find the directory that looks like the "mod root"
 function findModRoot(root) {
-    // prefer directory that has BOTH modding.xml and _deltamodInfo.json
     const stack = [root];
     let fallback = null;
     while (stack.length) {
         const dir = stack.pop();
-        const hasXml = fs.existsSync(path.join(dir, 'modding.xml'));
-        const hasInfo= fs.existsSync(path.join(dir, '_deltamodInfo.json'));
-        if (hasXml) return dir;
-        if (!fallback && (hasXml || hasInfo)) fallback = dir;
+        const hasXml  = fs.existsSync(path.join(dir, 'modding.xml'));
+        const hasId   = fs.existsSync(path.join(dir, '__deltaID.json'));
+        const hasInfo = fs.existsSync(path.join(dir, '_deltamodInfo.json'));
+        if (hasXml && hasId) return dir;
+        if (!fallback && (hasXml || hasId || hasInfo)) fallback = dir;
+
         let ents;
         try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
         for (const e of ents) if (e.isDirectory()) stack.push(path.join(dir, e.name));
@@ -505,4 +506,4 @@ function restoreOriginalsIfAny(gamePath) {
     return restored;
 }
 
-module.exports = { startGamePatch, restoreOriginalsIfAny };
+module.exports = { startGamePatch, restoreOriginalsIfAny, findModRoot };

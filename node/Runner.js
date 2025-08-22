@@ -3,23 +3,20 @@ const Paths = require('./Paths.js');
 const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
 const mime = require('mime-types');
-const zl = require("zip-lib");
-const { pathToFileURL } = require('url');
+const _7z = require("7zip-min");
 const {Downloader} = require("nodejs-file-downloader");
-const { startGamePatch } = require('./GamePatching.js');
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex } = require('./System.js');
 const crypto = require('crypto');
-const {randomString, hashFile} = require('./Utils.js');
+const { hashFile, setWindow } = require('./Utils.js');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const GamePatching = require('./GamePatching.js');
-const { error } = require('console');
 const { default: axios } = require('axios');
 const System = require('./System.js');
-const { screen } = require('electron');
 const path = require('path');
 
 const console = require('./Console.js');
+const { handleProtocolLaunch } = require('./Protocol.js');
 
 let itch;
 let canLoadItch = false;
@@ -33,6 +30,10 @@ catch (e) {
 
 let win; // Main window
 let sharedVariables = {}; // shared vars with renderer
+
+function loadUrl(url) {
+    win.loadURL(url);
+}
 
 function errorWin(err) {
     const errorStack = err.stack || 'No stack trace available';
@@ -80,6 +81,14 @@ protocol.registerSchemesAsPrivileged([
       secure: true,
       supportFetchAPI: true
     }
+  },
+  {
+    scheme: "deltamod",
+    privileges: {
+        standard: false,
+        secure: true,
+        supportFetchAPI: true
+    }
   }
 ])
 
@@ -98,25 +107,6 @@ function findFirstByName(root, name) {
         }
     }
     return null;
-}
-
-// Zork's Patch: pick the directory that looks like the real mod root
-function findModRoot(root) {
-    const stack = [root];
-    let fallback = null;
-    while (stack.length) {
-        const dir = stack.pop();
-        const hasXml  = fs.existsSync(path.join(dir, 'modding.xml'));
-        const hasId   = fs.existsSync(path.join(dir, '__deltaID.json'));
-        const hasInfo = fs.existsSync(path.join(dir, '_deltamodInfo.json'));
-        if (hasXml && hasId) return dir;
-        if (!fallback && (hasXml || hasId || hasInfo)) fallback = dir;
-
-        let ents;
-        try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
-        for (const e of ents) if (e.isDirectory()) stack.push(path.join(dir, e.name));
-    }
-    return fallback || root;
 }
 
 function isSubpath(parent, child) {
@@ -197,7 +187,7 @@ function createWindow() {
         KeyValue.writeUniqueFlag('setup', 'true');
         KeyValue.writeUniqueFlag('audio', 'true');
     }
-    app.setAsDefaultProtocolClient('deltamod' + (process.env.DELTAMOD_ENV === 'dev' ? '-dev' : ''));
+    //app.setAsDefaultProtocolClient('deltamod' + (process.env.DELTAMOD_ENV === 'dev' ? '-dev' : ''));
 
     // lets check if we need to change part
     var threrror = "";
@@ -351,49 +341,21 @@ function createWindow() {
     ipcMain.handle('importMod', async () => {
         const { canceled, filePaths } = await dialog.showOpenDialog(win, {
             properties: ['openFile'],
-            filters: [{ name: 'Deltamod compatible archive', extensions: ['zip'] }]
+            filters: [{ name: 'Deltamod compatible archive', extensions: ['zip', 'rar', '7z', 'tar.gz', 'lzma'] }]
         });
         if (canceled || !filePaths || !filePaths[0]) return;
 
         const filePath = filePaths[0];
+        Modstore.importMod(filePath);
+    });
 
-        // create unique mod folder
-        const modPath = path.join(app.getPath('userData'), 'pkg.db', randomString(32));
-        fs.mkdirSync(modPath, { recursive: true });
-
-        try {
-            await zl.extract(filePath, modPath);
-
-            // fs.unlinkSync (filePath); // delete the zip file after extraction, I (Zork) commented this out temporarily to keep the zip file for debugging.
-
-            // Normalize: pull contents out of wrapper folder so mod is flat
-            const realRoot = findModRoot(modPath);
-            if (realRoot && path.resolve(realRoot) !== path.resolve(modPath)) {
-                flattenInto(modPath, realRoot);
-            }
-
-            // Check manifest anywhere in the tree (now usually at root after flatten)
-            const manifestPath = findFirstByName(modPath, '_deltamodInfo.json') || path.join(modPath, '_deltamodInfo.json');
-            if (!fs.existsSync(manifestPath)) {
-                fs.rmdirSync(modPath, { recursive: true, force: true });
-                throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
-            }
-
-            await dialog.showMessageBox(win, {
-                type: 'info',
-                title: 'Import Successful',
-                message: 'Mod imported successfully.',
-                buttons: ['OK']
-            });
-
-            // Simple way to refresh the list
-            app.relaunch();
-            app.exit();
-            process.exit();
-        } catch (err) {
-            console.error('Error importing mod:', err);
-            dialog.showErrorBox('Import failed', String(err));
-        }
+    /*
+     * removeMod
+     * Removes the folder containing the mod and reloads the list.
+     * args[0] is the ID of the mod.
+     */
+    ipcMain.handle('removeMod', async (event, args) => {
+        await Modstore.removeModSafe(args[0]);
     });
 
     /*
@@ -405,7 +367,7 @@ function createWindow() {
         var folder = args[0];
         switch (folder) {
             case 'mods':
-                shell.openExternal(path.join(app.getPath('userData'), 'pkg.db'));
+                shell.openExternal(getPacketDatabase());
                 break;
             case 'delta':
                 shell.openExternal(getSystemFolder('deltaruneInstall', false));
@@ -477,10 +439,10 @@ function createWindow() {
                 fs.mkdirSync(extractPath, { recursive: true });
             }
 
-            await zl.extract(zipPath, extractPath);
+            await _7z.unpack(zipPath, extractPath);
 
             // normalize: move contents from the true mod root to `dest` if wrapped
-            const realRoot = findModRoot(extractPath);
+            const realRoot = GamePatching.findModRoot(extractPath);
             if (realRoot && realRoot !== extractPath && realRoot.startsWith(extractPath)) {
                 const items = fs.readdirSync(realRoot);
                 for (const name of items) {
@@ -651,7 +613,6 @@ function createWindow() {
     */
     ipcMain.handle('getModList', async (event, args) => {
         var modlist = Modstore.modList();
-
         var edition = KeyValue.readKVS('deltaruneEdition');
 
         return modlist.filter((mod) => {
@@ -909,9 +870,25 @@ function createWindow() {
             return false;
         }
     });
+
+    setWindow(win);
 }
 
+if (!app.requestSingleInstanceLock()) app.quit();
+else app.on('second-instance', (e, argv) => {
+    console.log("Received second-instance check:", argv);
+    const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
+    if (maybeUrl)
+        handleProtocolLaunch(maybeUrl);
+});
+
 app.whenReady().then(() => {
+    if (process.platform === 'win32' || process.platform === 'linux') {
+        const maybeUrl = process.argv.find(arg => arg.startsWith('deltamod://'));
+        if (maybeUrl)
+            handleProtocolLaunch(maybeUrl);
+    }
+
     // Run a safety restore before creating the window (handles crash-last-time cases)
     try {
         const p = KeyValue.readKVS('deltarunePath');
@@ -928,8 +905,6 @@ app.whenReady().then(() => {
     createWindow();       // the main window
 });
 
-
-
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
@@ -937,3 +912,5 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
+
+module.exports = {loadUrl};

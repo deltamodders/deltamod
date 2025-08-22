@@ -49,14 +49,19 @@ function getPacketDatabase() {
     return path.join(app.getPath('userData'), 'pkg.db');
 }
 
+function getTemporary() {
+    return app.getPath('temp');
+}
+
 healthCheck();
 
 module.exports = {
-    getSystemFile: getSystemFile,
-    getSystemFolder: getSystemFolder,
-    getPacketDatabase: getPacketDatabase,
-    setSystemIndex: setSystemIndex,
-    healthCheck: healthCheck,
-    getSystemFileOfIndex: getSystemFileOfIndex,
-    generateUniqueId: generateUniqueId,
+    getSystemFile,
+    getSystemFolder,
+    getPacketDatabase,
+    setSystemIndex,
+    healthCheck,
+    getSystemFileOfIndex,
+    generateUniqueId,
+    getTemporary
 };
