@@ -77,7 +77,11 @@ function run(file, args, opts = {}) {
 
 function copyOver(src, dst) {
     fs.mkdirSync(path.dirname(dst), { recursive: true });
-    fs.copyFileSync(src, dst);
+    if (!fs.lstatSync(src).isFile()) {
+        fs.copyFileSync(src, dst);
+    } else {
+        fs.cpSync(src, dst, { recursive: true });
+    }
 }
 
 function ensureBackup(targetAbs) {
