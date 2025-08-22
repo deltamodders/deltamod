@@ -13,12 +13,19 @@
   },
   "build": {
     "icon": "build/packIcon.png",
-    "asar": false,
-    "asarUnpack": "node_modules/7zip-bin",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/7zip-bin/win",
+      "node_modules/7zip-bin/linux",
+      "node_modules/7zip-bin/mac",
+      "node_modules/7zip-bin/7x.sh",
+      "gm3p"
+    ],
     "nsis": {
       "oneClick": false,
       "license": "LICENSE.txt"
     },
+    "files": ["!**/output/Cache"],
     "linux": {
       "target": "AppImage",
       "category": "Utility",

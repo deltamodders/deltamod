@@ -15,6 +15,8 @@ const { default: axios } = require('axios');
 const System = require('./System.js');
 const path = require('path');
 
+const { getConfig, config } = require('7zip-min');
+const { path7za } = require('7zip-bin');
 const console = require('./Console.js');
 const { handleProtocolLaunch } = require('./Protocol.js');
 
@@ -188,6 +190,9 @@ function createWindow() {
         KeyValue.writeUniqueFlag('audio', 'true');
     }
     //app.setAsDefaultProtocolClient('deltamod' + (process.env.DELTAMOD_ENV === 'dev' ? '-dev' : ''));
+
+    // 7-zip fix for electron
+    config({ ...getConfig(), binaryPath: path7za.replaceAll("app.asar", "app.asar.unpacked") });
 
     // lets check if we need to change part
     var threrror = "";
