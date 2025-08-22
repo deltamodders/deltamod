@@ -65,13 +65,13 @@ function setKVS(name, value) {
     kvsFlush();
 }
 
-function readKVSOfIndex(name, index) {
+function readKVSOfIndex(name, index, defaultTo = null) {
     var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
-    return odb[name] || null;
+    return odb[name] ?? defaultTo;
 }
 
-function readKVS(name) {
-    return kvs[name] || null;
+function readKVS(name, defaultTo = null) {
+    return kvs[name] ?? defaultTo;
 }
 
 module.exports = {

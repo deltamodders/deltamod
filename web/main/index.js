@@ -1,44 +1,96 @@
-function createMod(mod) {
+async function createMod(mod) {
     const modRow = document.createElement('tr');
 
     // Column 1 (Mod)
     const modNameContainer = document.createElement('td');
     const titleSpan = document.createElement('span');
-    titleSpan.innerHTML = `<b>${mod.name}</b>`;
+    titleSpan.innerText = mod.name;
     titleSpan.id = `modtitle-${mod.uid}`;
     modNameContainer.appendChild(titleSpan);
     modNameContainer.appendChild(document.createElement('br'));
 
     const descSpan = document.createElement('span');
     descSpan.className = 'calibri';
-    descSpan.innerHTML = mod.description;
+    descSpan.innerText = mod.description;
     descSpan.id = `moddesc-${mod.uid}`;
     modNameContainer.appendChild(descSpan);
 
-    // Column 2 (Apply?)
-    const applyContainer = document.createElement('td');
-    applyContainer.className = 'checkmod';
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = `modcheck-${mod.uid}`;
-    checkbox.checked = true;
-    applyContainer.appendChild(checkbox);
-
-    // Column 3 (Actions)
+    // Column 2 (Actions)
     const actionContainer = document.createElement('td');
     actionContainer.className = 'modlist-actions-column';
+    {
+        const enabled = document.createElement("input");
+        enabled.type = 'checkbox';
+        enabled.id = `modcheck-${mod.uid}`;
+        enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
+        enabled.onchange = e => {
+            const c = e.target;
+            const isEnabled = c.checked;
+            const forMod = mod.uid;
 
-    const deleteModButton = document.createElement('button');
-    deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-    deleteModButton.innerText = "Delete [TEMP FOR ICON]";
-    actionContainer.appendChild(deleteModButton);
+            window.electronAPI.invoke("toggleModState", [forMod, isEnabled]);
+        };
+        actionContainer.appendChild(enabled);
+
+        const exploreModButton = document.createElement('button');
+        exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
+        exploreModButton.innerText = "🔎";
+        actionContainer.appendChild(exploreModButton);
+
+        const deleteModButton = document.createElement('button');
+        deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
+        deleteModButton.innerText = "🗑️";
+        actionContainer.appendChild(deleteModButton);
+    }
 
     modRow.appendChild(modNameContainer);
-    modRow.appendChild(applyContainer);
     modRow.appendChild(actionContainer);
 
     document.getElementById('modlist').appendChild(modRow);
     return modRow;
+}
+
+function createErroringMods(errors) {
+    const dialogElement = document.getElementById("error-list-dialog");
+    const errorList = document.getElementById("error-list-div");
+
+    for (const child of errorList.children) errorList.removeChild(child);
+
+    for (const err of errors) {
+        // err { mod: string, reason: string }
+        const element = document.createElement("div");
+        element.className = "error-holder";
+
+        const modId = document.createElement("span");
+        modId.innerHTML = `Mod ID '${err.mod}'`;
+
+        const reasoning = document.createElement("span");
+        reasoning.className = 'calibri';
+        reasoning.innerHTML = `<b style='font-weight: bold !important;'>Reason:</b> ${err.reason}`;
+
+        const actionRow = document.createElement("div");
+        actionRow.className = "error-buttons";
+        {
+            // Action Row
+            const exploreBtn = document.createElement("button");
+            exploreBtn.innerText = "Open Folder";
+            exploreBtn.onclick = () => window.electronAPI.invoke("openModFolder", [err.mod]);
+            actionRow.appendChild(exploreBtn);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerText = "Delete Permanently";
+            deleteBtn.onclick = () => window.electronAPI.invoke("removeMod", [err.mod]);
+            actionRow.appendChild(deleteBtn);
+        }
+
+        element.appendChild(modId);
+        element.appendChild(document.createElement("br"));
+        element.appendChild(reasoning);
+        element.appendChild(actionRow);
+        errorList.appendChild(element);
+    }
+
+    dialogElement.showModal();
 }
 
 function loadInst(index) {
@@ -46,19 +98,27 @@ function loadInst(index) {
 }
 
 (async () => {
-    var modList = await window.electronAPI.invoke('getModList', []);
+    const errorBanner = document.getElementById("error-banner");
+
+    var { modList, errors } = await window.electronAPI.invoke('getModList', []);
     modList.forEach(x => createMod(x));
+
+    if (errors.length > 0) {
+        errorBanner.onclick = () => createErroringMods(errors);
+        errorBanner.children[0].innerText = `${errors.length} mod${errors.length === 1 ? "" : "s"} failed to load`;
+        errorBanner.style.display = "inherit";
+    } else errorBanner.style.display = "none";
 
     if (modList.length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 2;
-        td.innerHTML = 'No compatible mods found.';
+        td.innerText = 'No compatible mods found.';
         td.style.textAlign = 'center';
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
 
-        document.getElementById('par').innerHTML = 'Run without patches';
+        document.getElementById('par').innerText = 'Run without patches';
     }
 
     var sysindex = await window.electronAPI.invoke('getSystemIndex', []);
@@ -75,7 +135,7 @@ function loadInst(index) {
             option.selected = true;
         }
         var edition = await window.electronAPI.invoke('getEditionByIndex', [i]);
-        option.innerHTML = `Install ${i + 1} (${edition})`;
+        option.innerText = `Install ${i + 1} (${edition})`;
         document.getElementById('installs').appendChild(option);
     }
     var newOption = document.createElement('option');

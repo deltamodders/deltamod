@@ -90,10 +90,14 @@ function safeReadJSON(p) {
 function modList() {
     var mods = fs.readdirSync(system.getPacketDatabase());
     var modList = [];
+    var errors = [];
     var uniqueIdSet = new Set(); // actually use it
+
+    var failureReason = "";
 
     for (var mod of mods) {
         try {
+            failureReason = "Unknown. Contact a developer!";
             var modPath = path.join(system.getPacketDatabase(), mod);
 
             // Zork's Patch: Find manifest anywhere in the mod folder, not only at root (safe)
@@ -102,16 +106,18 @@ function modList() {
                 path.join(modPath, '_deltamodInfo.json');
 
             // Zork's Patch: Read defensively; synthesize defaults if missing
+            failureReason = "Failed to read _deltamodInfo JSON.";
             var modInfo = safeReadJSON(manifestPath) || {
                 metadata: { name: mod, version: '1.0.0', demoMod: false },
                 dependencies: []
             };
             var meta = modInfo.metadata || {};
 
-
             const idPath = findFirstByName(modPath, '__deltaID.json') || path.join(modPath, '__deltaID.json');
+            failureReason = "Failed to read __deltaID JSON.";
             let deltamodExclusive = safeReadJSON(idPath);
 
+            failureReason = "Failed to generate unique __deltaID for mod.";
             if (!deltamodExclusive || !deltamodExclusive.uniqueId) {
                 console.log('generating unique uid for mod:', mod);
                 deltamodExclusive = {
@@ -129,6 +135,7 @@ function modList() {
             uniqueIdSet.add(uid);
 
             // sanity for required fields
+            failureReason = "_deltamodInfo.json is missing required fields `name`, `description` or `demoMod`.";
             if (
                 !meta ||
                 typeof meta.name !== 'string' ||
@@ -156,7 +163,7 @@ function modList() {
         }
         catch (e) {
             console.error(`Error reading mod info for ${mod}:`, e);
-            return;
+            errors.push({ mod, reason: failureReason });
         }
     };
 
@@ -173,7 +180,7 @@ function modList() {
     */
    // CURRENTLY DEPRECATED: priority function was planned but removed to favor GM3P integration
 
-    return modList;
+    return { modList, errors };
 }
 
 if (!fs.existsSync(system.getPacketDatabase())) {

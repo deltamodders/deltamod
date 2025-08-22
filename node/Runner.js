@@ -7,7 +7,7 @@ const _7z = require("7zip-min");
 const {Downloader} = require("nodejs-file-downloader");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex } = require('./System.js');
 const crypto = require('crypto');
-const { hashFile, setWindow } = require('./Utils.js');
+const { hashFile, setWindow, page } = require('./Utils.js');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const GamePatching = require('./GamePatching.js');
@@ -346,7 +346,7 @@ function createWindow() {
     ipcMain.handle('importMod', async () => {
         const { canceled, filePaths } = await dialog.showOpenDialog(win, {
             properties: ['openFile'],
-            filters: [{ name: 'Deltamod compatible archive', extensions: ['zip', 'rar', '7z', 'tar.gz', 'lzma'] }]
+            filters: [{ name: 'Deltamod compatible archive', extensions: ['zip', '7z', 'tar.gz', 'lzma'] }]
         });
         if (canceled || !filePaths || !filePaths[0]) return;
 
@@ -361,6 +361,26 @@ function createWindow() {
      */
     ipcMain.handle('removeMod', async (event, args) => {
         await Modstore.removeModSafe(args[0]);
+    });
+
+    /*
+     * toggleModState
+     * Changes the mod availability status for the current system profile.
+     * args[0] is the ID of the mod.
+     * args[1] is the new state of the mod.
+     */
+    ipcMain.handle('toggleModState', async (event, args) => {
+        if (args[1]) KeyValue.setKVS("enabledMods", [...KeyValue.readKVS("enabledMods", []), args[0]]);
+        else KeyValue.setKVS("enabledMods", KeyValue.readKVS("enabledMods", []).filter(x => x !== args[0]));
+    });
+
+    /*
+     * getModState
+     * Gets the mod availability status for the current system profile.
+     * args[0] is the ID of the mod.
+     */
+    ipcMain.handle('getModState', async (event, args) => {
+        return KeyValue.readKVS("enabledMods", []).includes(args[0]);
     });
 
     /*
@@ -381,10 +401,19 @@ function createWindow() {
     });
 
     /*
-        * downloadDelta
-        * Downloads the latest version of the Deltarune demo.
-        * The host is itch.io, and Deltamod uses its API to download the game.
-    */
+     * openModFolder
+     * Opens the specified mod's data folder.
+     * args[0] is the ID of the mod to open the folder of.
+     */
+    ipcMain.handle('openModFolder', async (event, args) => {
+        shell.openExternal(path.join(getPacketDatabase(), args[0]));
+    });
+
+    /*
+     * downloadDelta
+     * Downloads the latest version of the Deltarune demo.
+     * The host is itch.io, and Deltamod uses its API to download the game.
+     */
     ipcMain.handle('downloadDelta', async (event, args) => {
         if (!canLoadItch) {
             dialog.showErrorBox('itch.io download not available', 'Deltamod cannot download the Deltarune demo because the needed authentication file is not available.');
@@ -500,7 +529,7 @@ function createWindow() {
      * args[0] is the content of the file.
      * args[1] is the name of the file.
      * (Patched to actually write to Documents)
-    */
+     */
     ipcMain.handle('writeToDocuments', async (event, args) => {
         try {
             const desktopPath = app.getPath('documents');
@@ -617,38 +646,36 @@ function createWindow() {
      * Returns the list of mods from the KVS.
     */
     ipcMain.handle('getModList', async (event, args) => {
-        var modlist = Modstore.modList();
+        var { modList, errors } = Modstore.modList();
         var edition = KeyValue.readKVS('deltaruneEdition');
 
-        return modlist.filter((mod) => {
+        const datalist = modList.filter((mod) => {
             var editionCompatible = (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
+            if (!editionCompatible) return false; // return early if the first check fails, no need to check the file hashes at that point
+
             var hashCompatible = true;
 
             try {
-                if (mod.neededFiles > 0) {
-                    mod.neededFiles.forEach((file) => {
+                if (mod.neededFiles > 0)
+                    for (const file of mod.neededFiles) {
                         var specifiedHash = file.checksum.toLowerCase();
                         var filePath = path.join(KeyValue.readKVS('deltarunePath'), file.file);
 
-                        if (!fs.existsSync(filePath)) {
+                        if (!fs.existsSync(filePath) || hashFile(filePath).toLowerCase() !== specifiedHash) {
                             hashCompatible = false;
+                            break; // further checking is not needed, as at least one file is invalid anyway
                         }
-
-                        if (file.checksum) {
-                            if (hashFile(filePath).toLowerCase() !== specifiedHash) {
-                                hashCompatible = false;
-                            }
-                        }
-                    });
-                }
+                    };
             }
             catch (e) {
                 console.error('Error checking mod hashes compatibility:', e);
-                hashCompatible = true;
+                hashCompatible = false;
             }
 
             return hashCompatible && editionCompatible;
         });
+
+        return { modList: datalist, errors };
     });
 
     /*
@@ -855,19 +882,13 @@ function createWindow() {
         try {
             copyRecursiveSync(path1, path2);
 
-            dialog.showMessageBox(win, {
-                type: 'info',
-                title: 'Import Successful',
-                message: 'Deltarune install imported successfully.',
-                buttons: ['OK']
-            }).then(() => {
-                KeyValue.setKVS('loadedDeltarune', true);
-                KeyValue.setKVS('deltarunePath', path2);
-                KeyValue.setKVS('deltaruneEdition', gameEdition);
-                KeyValue.kvsFlush();
-                app.relaunch();
-                app.exit();
-            });
+            KeyValue.setKVS('loadedDeltarune', true);
+            KeyValue.setKVS('deltarunePath', path2);
+            KeyValue.setKVS('deltaruneEdition', gameEdition);
+            KeyValue.setKVS('enabledMods', []);
+            KeyValue.kvsFlush();
+            
+            page("main");
             return true;
         } catch (err) {
             dialog.showErrorBox('Import failed', `Failed to import Deltarune install: ${err.message}`);

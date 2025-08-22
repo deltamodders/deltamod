@@ -12,12 +12,14 @@
             <thead style="position: sticky; top: -2px;">
                 <tr>
                     <th>Mod</th>
-                    <th>Apply?</th>
                     <th>Actions</th>
                 </tr>
             </thead>
+            <div style="display: none;" class="modlist-error" id="error-banner">
+                <h2>{x} mod(s) failed to load</h2>
+                <span class="calibri">Click on this banner to view more details.</span>
+            </div>
             <tbody id="modlist">
-
             </tbody>
         </table>
     </div>
@@ -28,6 +30,16 @@
             <button onclick="page('credits')">Credits</button>
             <button onclick="page('options')">Options</button>
         </div>
+        <dialog class="error-list-dialog" id="error-list-dialog">
+            <h2>Some mods failed to load</h2>
+            <span class="calibri">Below is a list of mods that have failed to load along with the reason.</span>
+            <div class="error-list-div" id="error-list-div">
+
+            </div>
+            <div class="error-buttons">
+                <button onclick="document.getElementById('error-list-dialog').close()">OK</button>
+            </div>
+        </dialog>
     </div>
 </div>
 JSL
