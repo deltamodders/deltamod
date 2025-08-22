@@ -23,13 +23,21 @@ const convert = require('xml-js');
 const process = require('process');
 const console = require('./Console.js');
 
+
+
+const GM3P_OUTPUT = path.join(__dirname, '../gm3p/output');
+const UTMT_FOLD = path.join(__dirname, '../gm3p/UTMTCLI');
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
 if (process.platform === 'win32') {
     GM3P_EXE = path.join(__dirname, '../gm3p/GM3P.exe');
     GM3P_DLL = '';
+    UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.exe');
+    DOTNET_UNIX = '';
 } else {
     GM3P_EXE = '/usr/bin/dotnet';
     GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
+    UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.dll');
+    DOTNET_UNIX = '/usr/bin/dotnet';
 }
 const BACKUP_SUFFIX = '.original';
 
@@ -39,7 +47,7 @@ const ms = () => Number(process.hrtime.bigint() - t0) / 1e6;
 function clog(...args) {
     console.log(...args);
 }
-function trunc(s, n = 4000) {
+function trunc(s, n = 10000) {
     if (!s) return '';
     s = String(s);
     return s.length > n ? s.slice(0, n) + '... [truncated]' : s;
@@ -365,20 +373,42 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
 
         clog('MULTI massPatch folder:', gamePath, 'chapters:', chapterTargets.length, 'modAmount:', modAmount);
         perChapterPatches.forEach((l, i) => clog(`  chapter[${i}] patches: ${l.length}`));
-
         try {
 
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg );
 
+            //Attempt to speed things up and to lower chances of a timeout by having UTMTCLI being a child instead of a grandchild process.
+                for (var i = 0; i < 5; i++) {
+                    for (var modNumber = 0; modNumber < modAmount+2; modNumber++) {
+                        if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'))) {
+                            fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'));
+                        }
+                        if (modNumber != 1) {
+                            fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
+                            fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'modNumbersCache.txt'), modNumber.toString());
+                            await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAllTexturesGrouped.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAllCode.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAssetOrder.csx'));
+                        }
+                    }
+                }
+
+
+
             // Heavy step ONCE for all chapters
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' compare ' + String(modAmount) + ' true ' + 'true');
+            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' compare ' + String(modAmount) + ' false ' + 'false');
+
+            //UTMT Importing
+            for (var i = 0; i < 5; i++) {
+                fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
+                await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1', 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1', 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportGraphics.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportGML.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportAssetOrder.csx'));
+            }
+
             
             // Produce: one subfolder per chapter index
             const pack   = 'DeltamodPack_Multi';
             const outDir = path.join(__dirname, '../gm3p/output/result', pack);
             fs.rmSync(outDir, { recursive: true, force: true });
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' result ' + pack + ' true');
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' clear');
+            //await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' clear');
 
             // Copy each produced chapter back
             for (let i = 0; i < chapterTargets.length; i++) {
