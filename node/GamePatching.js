@@ -436,7 +436,7 @@ async function startGamePatch(gamePath, dbPath, enableMods) {
             dialog.showErrorBox('Patching failed', ret.log);
             return ret;
         }
-        //await run(GM3P_EXE + ' ' + GM3P_DLL + ' clear ' + 'modpacks');
+        await run(GM3P_EXE + ' ' + GM3P_DLL + ' clear ' + 'modpacks');
     }
 
     // External file overrides (after merge)
