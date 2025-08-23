@@ -6,6 +6,7 @@ const system = require("./System");
 const _7z = require("7zip-min");
 const { error } = require("console");
 const { importMod } = require("./Modstore");
+const { dialog } = require("electron");
 
 // https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
 function trim(str, ch) {
@@ -55,6 +56,8 @@ async function handleProtocolLaunch(url) {
             if (!items.find(x => x.name === "_deltamodInfo.json") || !items.find(x => x.name === "modding.xml")) {
                 error("Invalid archive -- couldn't find _deltamodInfo.json or modding.xml");
                 rmSync(filepath);
+
+                dialog.showErrorBox('Import failed', 'The mod you\'re attempting to download from GameBanana does not support the Deltamod format.');
                 break;
             }
 
