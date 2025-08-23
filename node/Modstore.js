@@ -18,6 +18,7 @@ async function importMod(filePath) {
     try {
         await _7z.unpack(filePath, modPath);
         // I (mc) believe that we shouldn't delete a user's files if we did not create/download them ourselves
+        // I (techy) agree with mc
         // fs.unlinkSync (filePath); // delete the zip file after extraction, I (Zork) commented this out temporarily to keep the zip file for debugging.
 
         // Normalize: pull contents out of wrapper folder so mod is flat
