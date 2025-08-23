@@ -60,13 +60,16 @@ async function page(name) {
             }
             audio.loop = true;
             audio.volume = 0.7;
-            if ((await window.electronAPI.invoke('getUniqueFlag', ['audio']))) {
-                audio.play().catch(error => {
-
-                });
-            }
 
             changeAudio = true;
+        }
+        let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
+        console.log('Audio should play:', shouldPlayAudio);
+        if (shouldPlayAudio) {
+            audio.play();
+        }
+        else {
+            audio.pause();
         }
         purifiedHTML = purifiedHTML.replace(/AUDIO\[(.*?)\]/g, '');
     }

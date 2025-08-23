@@ -1,19 +1,53 @@
+function purifyDescription(desc) {
+    var final = desc;
+    final = desc.replace(/\n/g, ' ').substring(0, 100);
+    if (desc.length > 100) final += '...';
+    return final;
+}
+
 async function createMod(mod) {
     const modRow = document.createElement('tr');
 
     // Column 1 (Mod)
     const modNameContainer = document.createElement('td');
+    
+    const bigAhhContainer = document.createElement('div');
+    bigAhhContainer.style.display = 'flex';
+    bigAhhContainer.style.alignItems = 'center';
+    bigAhhContainer.style.gap = '10px';
+    bigAhhContainer.style.justifyContent = 'left';
+
+    let IMAGE_DIMENSION = 32;
+    const imageContainer = document.createElement('div');
+    imageContainer.style.width = IMAGE_DIMENSION + 'px';
+    imageContainer.style.height = IMAGE_DIMENSION + 'px';
+    
+    const imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
+
+    const img = document.createElement('img');
+    img.src = imeta.path;
+    img.style.width = IMAGE_DIMENSION + 'px';
+    img.style.height = IMAGE_DIMENSION + 'px';
+    img.style.objectFit = 'contain';
+    imageContainer.appendChild(img);
+
+    const infoContainer = document.createElement('div');
     const titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
     titleSpan.id = `modtitle-${mod.uid}`;
-    modNameContainer.appendChild(titleSpan);
-    modNameContainer.appendChild(document.createElement('br'));
+    infoContainer.appendChild(titleSpan);
+    infoContainer.appendChild(document.createElement('br'));
 
     const descSpan = document.createElement('span');
     descSpan.className = 'calibri';
-    descSpan.innerText = mod.description;
+    descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
-    modNameContainer.appendChild(descSpan);
+    infoContainer.appendChild(descSpan);
+
+    bigAhhContainer.appendChild(imageContainer);
+    bigAhhContainer.appendChild(infoContainer);
+
+    modNameContainer.appendChild(bigAhhContainer);
 
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
@@ -157,3 +191,21 @@ function patchAndRun() {
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
+
+window.currentPageStack.disableMusic = async function(button) {
+    audio.pause();
+    audio.currentTime = 0;
+    button.style.display = 'none';
+    button.disabled = true;
+    await window.electronAPI.invoke('setUniqueFlag', ["AUDIO", false]);
+};
+
+(async () => {
+    var audioEnabled = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
+    if (audioEnabled) {
+        document.getElementById('audioBtn').style.display = 'block';
+    }
+    else {
+        document.getElementById('audioBtn').style.display = 'none';
+    }
+})();

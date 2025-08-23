@@ -183,6 +183,21 @@ function modList() {
     return { modList, errors };
 }
 
+function getModImage(moduid) {
+    var modPackets = fs.readdirSync(system.getPacketDatabase());
+    for (var mod of modPackets) {
+        var deltaID = safeReadJSON(path.join(system.getPacketDatabase(), mod, '__deltaID.json'));
+        if (deltaID && deltaID.uniqueId === moduid) {
+            try {
+                const imgPath = ((mod + '/_icon.png'));
+                return { exists: fs.existsSync(imgPath), path: "packet://" + imgPath };
+            }
+            catch {
+                return { exists: false, path: null };
+            }
+        }
+    }
+}
 if (!fs.existsSync(system.getPacketDatabase())) {
     fs.mkdirSync(system.getPacketDatabase(), { recursive: true });
 }
@@ -190,5 +205,6 @@ if (!fs.existsSync(system.getPacketDatabase())) {
 module.exports = {
     modList,
     importMod,
-    removeModSafe
+    removeModSafe,
+    getModImage
 };

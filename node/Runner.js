@@ -232,6 +232,27 @@ function createWindow() {
         });
     });
 
+    ses.protocol.handle('packet', async (request) => {
+        const url = new URL(request.url);
+        // security
+        var combined = url.hostname+url.pathname;
+        if (combined.includes('..')) {
+            setSharedVar('error', 'Unsecure request made to deltapack.');
+            win.loadURL('deltapack://web/errorWrt/index.html');
+            return new Response("bad");
+        }
+        const filePath = path.resolve(System.getPacketDatabase(), url.hostname + url.pathname);
+
+        const data = await fs.promises.readFile(filePath);
+        return new Response(data, {
+            headers: {
+                'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
+                'Content-Length': data.length,
+                'Cache-Control': 'no-cache'
+            }
+        });
+    });
+
     let unmetConditions = require('./RunConditions.js').checkConditions();
 
     if (unmetConditions.length > 0) {
@@ -260,7 +281,7 @@ function createWindow() {
         width: 800,
         height: 800,
         titleBarStyle: 'hidden',
-        resizable: false,
+        resizable: true,
         maximizable: false,
         fullscreenable: false,
         titleBarOverlay: {
@@ -274,6 +295,7 @@ function createWindow() {
             preload: Paths.file('web', 'preload.js'),
         }
     });
+
     win.loadURL('deltapack://web/index.html');
 
     devToolsEnabled = (process.env.DELTAMOD_ENV === 'dev' ? true : false);
@@ -398,6 +420,15 @@ function createWindow() {
                 shell.openExternal(getSystemFolder('deltaruneInstall', false));
                 break;
         }
+    });
+
+    /*
+     * getModImage
+     * Returns the URL of a mod, using the file protocol.
+     * TODO: code a custom protocol for this.
+    */
+    ipcMain.handle('getModImage', async (event, args) => {
+        return Modstore.getModImage(args[0]);
     });
 
     /*
@@ -676,6 +707,15 @@ function createWindow() {
         });
 
         return { modList: datalist, errors };
+    });
+
+    /*
+     * getModListFull
+     * Returns the list of mods from the KVS.
+     * Includes incompatible mods as well.
+    */
+    ipcMain.handle('getModListFull', async (event, args) => {
+        return Modstore.modList();
     });
 
     /*
