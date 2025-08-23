@@ -735,7 +735,7 @@ function createWindow() {
             GamePatching.restoreOriginalsIfAny(pathname);
 
             // Patch the REAL install in-place (GamePatching backs up to *.original)
-            var log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0]);
+            var log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0], BrowserWindow.fromWebContents(event.sender));
 
             if (!log.patched) {
                 dialog.showErrorBox('Patching failed', 'Please check the log and try again.\n\n' + log.log);

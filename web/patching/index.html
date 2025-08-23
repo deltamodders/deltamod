@@ -2,10 +2,28 @@
     <div style="text-align: center;">
         <img src="./patching/ledog.webp" alt="" srcset="" class="mike">
         <p>Patching Deltarune...</p>
-        <small id="gplog"><i>The dog is transporting the mods one by one.</i></small>
+        <small><i>The dog is transporting the mods one by one. He invites you to press X to show the GM3P logs.</i></small>
+        <br>
+        <div class="logs" id="gpl" style="display: none;"></div>
     </div>
 </div>
 <style>
+    .logs {
+        width: 600px;
+        margin-top: 15px !important;
+        height: 200px;
+        overflow-y: scroll;
+        overflow-x: scroll;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-family: "Calibri", monospace;
+        text-align: left;
+        padding: 5px;
+        font-size: 12px;
+        margin: 0;
+        border: 2px solid white;
+        border-radius: 10px;
+    }
     small {
         color: #888;
         font-size: 0.8em;

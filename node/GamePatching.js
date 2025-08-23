@@ -44,8 +44,12 @@ const BACKUP_SUFFIX = '.original';
 // ----------------------------- logger ---------------------------------------
 const t0 = process.hrtime.bigint();
 const ms = () => Number(process.hrtime.bigint() - t0) / 1e6;
+let sendToWin = null;
 function clog(...args) {
     console.log(...args);
+    if (sendToWin) {
+        sendToWin.webContents.send('gplog', [...args]);
+    }
 }
 function trunc(s, n = 10000) {
     if (!s) return '';
@@ -214,7 +218,8 @@ function safeStat(p) {
 
 // ------------------------------ main ----------------------------------------
 
-async function startGamePatch(gamePath, dbPath, enableMods) {
+async function startGamePatch(gamePath, dbPath, enableMods, window) {
+    sendToWin = window;
     const log = [];
     const ret = { patched: false, log: '' };
     const enabled = new Set(enableMods || []);

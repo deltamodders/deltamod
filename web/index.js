@@ -20,6 +20,12 @@ console.info = function(...arguments) {
     window.electronAPI.invoke('log', [arguments.join(' '), 'INFO', pageN]);
 }
 
+window.preloadAPI.onGPL((message) => {
+    if (window.currentPageStack.gpl) {
+        window.currentPageStack.gpl(message);
+    }
+});
+
 async function page(name) {
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('viewport')[0].style.backgroundImage = 'url(./' + theme.background + ')';
