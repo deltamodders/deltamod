@@ -10,13 +10,16 @@
     <div class="win">
         <div class="organizer">
         <img src="animated.webp" alt="" width="100">
+        <p style="animation: txtAppear 6s linear;">Deltamod encountered an error! If you want to report it, go to "Documents" > "deltamod" and find the file named "$FILE". You can then send its contents to a Deltamod dev.</p>
         </div>
     </div>
 </body>
 <style>
-    p > i {
+    p {
         font-style: italic;
         color: #505050;
+        font-family: 'Calibri', sans-serif;
+        font-size: 15px;
     }
     body {
         width: 100%;
@@ -44,14 +47,22 @@
             transform: translateY(0px);
         }
     }
+    @keyframes txtAppear {
+        0% {
+            opacity: 0;
+        }
+        90% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
     img {
         animation: dogAppear 6s linear;
     }
     .organizer {
-        display: flex;
-        width: 100%;
-        justify-content: center;
-        align-items: center;
+
     }
 </style>
 <script>
@@ -59,7 +70,10 @@
 
     (async() => {
         error = await window.electronAPI.invoke('fetchSharedVariable',['error']);
-        await window.electronAPI.invoke('writeToDocuments',[error, "DELTAMOD_ERROR_" + Date.now() + ".txt"]);
+        var filename = "DELTAMOD_ERROR_REPORT_" + Date.now() + ".txt";
+        document.querySelector('p').innerHTML = "ERROR: " + error + "<br><br>If you want to report it, go to \"Documents\" > \"deltamod\" and find the file named \"" + filename + "\". You can then send its contents to a Deltamod dev.<br><br>Press CTRL+C to copy the error message to clipboard.";
+        
+        await window.electronAPI.invoke('writeToDocuments',[error, filename]);
     })();
 
     document.addEventListener('keydown', async function(e) {
