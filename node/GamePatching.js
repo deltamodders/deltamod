@@ -386,7 +386,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
         try {
             clog("Max Mods per Chapter: " + modAmount.toString());
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' clear');
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'massPatch \'' + gamePath + '\' GM ' + String(modAmount) + ' \'' + filepathArg + '\'');
+            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg);
             if (modAmount > 1) {
                 //Attempt to speed things up and to lower chances of a timeout by having UTMTCLI being a child instead of a grandchild process.
                 for (var i = 0; i < 5; i++) {
