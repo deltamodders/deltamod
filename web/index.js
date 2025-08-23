@@ -3,6 +3,21 @@ var currentAudio = "";
 var theme = null;
 var pageN = null;
 var addedStyle = null;
+var update = false;
+
+window.preloadAPI.onUpdateAvailable((info) => {
+    console.log('Update available:', info.version);
+    update = true;
+    window.ustack = {};
+    window.ustack.updateInfo = info;
+    page('update');
+});
+
+window.preloadAPI.onDDS((info) => {
+    if (window.currentPageStack.du) {
+        window.currentPageStack.du(info.percentage);
+    }
+});
 
 console.log = function(...arguments) {
     window.electronAPI.invoke('log', [arguments.join(' '), 'LOG', pageN]);
@@ -96,7 +111,13 @@ if (!window.electronAPI) {
     var loaded = await window.electronAPI.invoke('loadedDeltarune',[]);
 
     if (loaded.loaded) {
-        await page('main');
+        window.electronAPI.invoke('fireUpdate', []);
+        if (!update) {
+            await page('main');
+        }
+        else {
+            await page('update');
+        }
     } else {
         await page('locate');
     }

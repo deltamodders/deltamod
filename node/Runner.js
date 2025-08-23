@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const { hashFile, setWindow, page } = require('./Utils.js');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
+const Updates = require('./Updates.js');
 const GamePatching = require('./GamePatching.js');
 const { default: axios } = require('axios');
 const System = require('./System.js');
@@ -32,6 +33,11 @@ catch (e) {
 
 let win; // Main window
 let sharedVariables = {}; // shared vars with renderer
+let ignoreUpdate = false;
+
+if (process.argv.includes('--developer')) {
+    ignoreUpdate = true;
+}
 
 function loadUrl(url) {
     win.loadURL(url);
@@ -189,6 +195,8 @@ function createWindow() {
         KeyValue.writeUniqueFlag('setup', 'true');
         KeyValue.writeUniqueFlag('audio', 'true');
     }
+
+    
     //app.setAsDefaultProtocolClient('deltamod' + (process.env.DELTAMOD_ENV === 'dev' ? '-dev' : ''));
 
     // 7-zip fix for electron
@@ -632,6 +640,43 @@ function createWindow() {
         return;
     }
 
+    ipcMain.handle('start-update', async (event, args) => {
+        console.log(args[0].version);
+        BrowserWindow.fromWebContents(event.sender).webContents.send('page', 'downloadingUpdate');
+
+        const downloader = new Downloader({
+            url: args[0].newVersionLink,
+            fileName: "_deltamod_update_" + args[0].version + ".exe",
+            directory: app.getPath('downloads'),
+            onProgress: function (percentage, chunk, remainingSize) {
+                win.webContents.send('du-progress', {
+                    percentage: percentage
+                });
+            },
+        });
+
+        try {
+            await asyncTimeout(1000); // give some time to the page to load
+            await downloader.download();
+            console.log('Update download completed successfully');
+
+            const filePath = path.join(app.getPath('downloads'), "_deltamod_update_" + args[0].version + ".exe");
+            shell.openPath(filePath);
+            app.exit(0);
+        }
+        catch (error) {
+            console.error('Update download failed:', error);
+            dialog.showErrorBox('Update Download Failed', 'An error occurred while downloading the Deltamod update. Please try again later.');
+            ignoreUpdate = true;
+            win.webContents.send('page', 'main');
+            win.webContents.send('audio', true);
+        }
+    });
+
+    ipcMain.handle('ignore-update', async (event, args) => {
+        ignoreUpdate = true;
+        BrowserWindow.fromWebContents(event.sender).webContents.send('page', 'main');
+    });
     // A collection of IPC handlers for handling of sysindexes.
     ipcMain.handle('getSystemIndex', async (event, args) => {
         var partOverride = getSystemFile('_sysindex',true);
@@ -907,6 +952,24 @@ function createWindow() {
                 return null;
             }
         }
+    });
+
+    /*
+     * fireUpdate
+     * Called by window when ready to get update info.
+    */
+    ipcMain.handle('fireUpdate', async (event) => {
+        Updates.checkUpdates().then((updateInfo) => {
+            console.log('Update check result:', updateInfo.update);
+            if (updateInfo.update && !ignoreUpdate) {
+                win.webContents.send('updateAvailable', updateInfo);
+                return;
+            }
+            else {
+                // nothing
+                return;
+            }
+        });
     });
 
     /*

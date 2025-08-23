@@ -36,6 +36,17 @@
     a {
         color: white;
     }
+    @keyframes dogAppear {
+        0% {
+            transform: translateY(-100%);
+        }
+        100% {
+            transform: translateY(0px);
+        }
+    }
+    img {
+        animation: dogAppear 6s linear;
+    }
     .organizer {
         display: flex;
         width: 100%;
@@ -68,7 +79,7 @@
     }
 
     var a = new Audio('dogcheck.mp3');
-    a.playbackRate = randomFloatInRange(0.9, 1.2);
+    a.playbackRate = 1;
     a.play().catch((e) => {
         console.error("Audio playback failed:", e);
     });
