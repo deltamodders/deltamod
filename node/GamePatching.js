@@ -416,8 +416,8 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
             } else { oneMod = ' false'; }
             
             // Produce: one subfolder per chapter index
-            const pack   = 'DeltamodPack_Multi';
-            const outDir = path.join(GM3P_OUTPUT, 'result', pack);
+            pack   = 'DeltamodPack_Multi';
+            outDir = path.join(GM3P_OUTPUT, 'result', pack);
             fs.rmSync(outDir, { recursive: true, force: true });
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'result ' + pack + oneMod);
 
