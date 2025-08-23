@@ -22,10 +22,13 @@ async function createMod(mod) {
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
     
-    const imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
+    let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
+    if (!imeta.path) {
+        imeta.path = 'deltapack://web/mod-placeholder.png';
+    }
 
     const img = document.createElement('img');
-    img.src = imeta.path;
+    img.src = (imeta.path.includes('deltapack') ? '' : "packet://") + imeta.path;
     img.style.width = IMAGE_DIMENSION + 'px';
     img.style.height = IMAGE_DIMENSION + 'px';
     img.style.objectFit = 'contain';
@@ -43,6 +46,15 @@ async function createMod(mod) {
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
+
+    const authorSpan = document.createElement('span');
+    authorSpan.className = 'calibri';
+    authorSpan.style.fontSize = 'smaller';
+    authorSpan.style.color = '#888';
+    authorSpan.innerText = `Authors: ${mod.author.join(', ')}`;
+    authorSpan.id = `modauthor-${mod.uid}`;
+    infoContainer.appendChild(document.createElement('br'));
+    infoContainer.appendChild(authorSpan);
 
     bigAhhContainer.appendChild(imageContainer);
     bigAhhContainer.appendChild(infoContainer);

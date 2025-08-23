@@ -7,7 +7,7 @@
     "GB-OneClick"
   ],
   "scripts": {
-    "test": "electron .",
+    "test": "electron . --developer",
     "build-windows": "electron-builder --win",
     "build-linux": "electron-builder --linux"
   },

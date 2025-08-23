@@ -190,7 +190,12 @@ function getModImage(moduid) {
         if (deltaID && deltaID.uniqueId === moduid) {
             try {
                 const imgPath = ((mod + '/_icon.png'));
-                return { exists: fs.existsSync(imgPath), path: "packet://" + imgPath };
+                if (fs.existsSync(path.join(system.getPacketDatabase(), imgPath))) {
+                    return { exists: true, path: imgPath };
+                }
+                else {
+                    return { exists: false, path: null };
+                }
             }
             catch {
                 return { exists: false, path: null };

@@ -74,4 +74,7 @@ async function addButton(name, description, click, buttonText) {
     addButton('View all installed mods', 'Opens a list of all the installed mods.', async () => {
         page('allmods');
     }, 'Open');
+    addButton('Select a theme', 'Opens the theme selection menu.', async () => {
+        await window.electronAPI.invoke('chooseTheme', []);
+    }, 'Open');
 })();

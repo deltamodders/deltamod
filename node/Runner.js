@@ -236,8 +236,8 @@ function createWindow() {
         const url = new URL(request.url);
         // security
         var combined = url.hostname+url.pathname;
-        if (combined.includes('..')) {
-            setSharedVar('error', 'Unsecure request made to deltapack.');
+        if (combined.includes('..') || combined.includes('.js')) {
+            setSharedVar('error', 'Unsecure request made to packet protocol.');
             win.loadURL('deltapack://web/errorWrt/index.html');
             return new Response("bad");
         }
@@ -298,7 +298,7 @@ function createWindow() {
 
     win.loadURL('deltapack://web/index.html');
 
-    devToolsEnabled = (process.env.DELTAMOD_ENV === 'dev' ? true : false);
+    devToolsEnabled = (process.argv.includes('--developer') || process.env.DELTAMOD_ENV === 'dev' ? true : false);
 
     win.webContents.on('devtools-opened', () => {
         if (!devToolsEnabled) {
@@ -342,6 +342,27 @@ function createWindow() {
         console.rendererLog(args[1], args[2], args[0]);
     });
 
+    ipcMain.handle('chooseTheme', async () => {
+        var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes')).filter(f => f.endsWith('.theme.json'));
+        var themeObjects = available.map(f => {
+            return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', f), 'utf8'));
+        });
+
+        var choice = dialog.showMessageBoxSync(win, {
+            type: 'question',
+            title: 'Select a theme',
+            message: 'Select a theme from the list below:',
+            buttons: [...themeObjects.map(t => t.name), 'Cancel'],
+            cancelId: themeObjects.length
+        });
+        if (choice === themeObjects.length) return; // Cancel
+        var theme = themeObjects[choice];
+        var themeHost = System.getSystemFile('_theme', true);
+        fs.writeFileSync(themeHost, theme.id);
+        app.relaunch();
+        app.exit();
+        process.exit(0);
+    });
     /*
      * getTheme
      * returns theme name as specified in the themes folder.
