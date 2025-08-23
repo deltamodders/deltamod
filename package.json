@@ -25,7 +25,7 @@
       "oneClick": false,
       "license": "LICENSE.txt"
     },
-    "files": ["!**/output/Cache"],
+    "files": ["!**/output"],
     "linux": {
       "target": "AppImage",
       "category": "Utility",
