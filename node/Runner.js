@@ -51,14 +51,14 @@ function errorWin(err) {
 
 process.on('uncaughtException', (err) => {
     if (win) {
-        setSharedVar('error', err.toString());
+        setSharedVar('error', err.toString() + "\n" + (err.stack || 'No stack trace available'));
         win.loadURL('deltapack://web/errorWrt/index.html');
     }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     if (win) {
-        setSharedVar('error', reason.toString());
+        setSharedVar('error', reason.toString() + "\n" + (reason.stack || 'No stack trace available'));
         win.loadURL('deltapack://web/errorWrt/index.html');
     }
 });
@@ -1029,6 +1029,7 @@ else app.on('second-instance', (e, argv) => {
     console.log("Received second-instance check:", argv);
     const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
     if (maybeUrl)
+        setSharedVar('gb1click', true);
         handleProtocolLaunch(maybeUrl);
 });
 
@@ -1036,6 +1037,7 @@ app.whenReady().then(() => {
     if (process.platform === 'win32' || process.platform === 'linux') {
         const maybeUrl = process.argv.find(arg => arg.startsWith('deltamod://'));
         if (maybeUrl)
+            setSharedVar('gb1click', true);
             handleProtocolLaunch(maybeUrl);
     }
 

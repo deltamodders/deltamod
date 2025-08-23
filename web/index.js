@@ -110,6 +110,11 @@ if (!window.electronAPI) {
     // Check if deltarune is loaded
     var loaded = await window.electronAPI.invoke('loadedDeltarune',[]);
 
+    if (await window.electronAPI.invoke('fetchSharedVariable',["gb1click"]) === true) {
+        page('goc-dl');
+        return;
+    }
+
     if (loaded.loaded) {
         window.electronAPI.invoke('fireUpdate', []);
         if (!update) {

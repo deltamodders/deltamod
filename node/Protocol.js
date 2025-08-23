@@ -22,6 +22,8 @@ function trim(str, ch) {
 }
 
 async function handleProtocolLaunch(url) {
+    if (!url || !url.startsWith("deltamod://")) return;
+    
     log("Protocol launch detected using", url);
 
     url = trim(url.substring("deltamod://".length), '/');
