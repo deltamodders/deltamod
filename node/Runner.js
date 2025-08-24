@@ -641,36 +641,10 @@ function createWindow() {
     }
 
     ipcMain.handle('start-update', async (event, args) => {
-        console.log(args[0].version);
-        BrowserWindow.fromWebContents(event.sender).webContents.send('page', 'downloadingUpdate');
-
-        const downloader = new Downloader({
-            url: args[0].newVersionLink,
-            fileName: "_deltamod_update_" + args[0].version + ".exe",
-            directory: app.getPath('downloads'),
-            onProgress: function (percentage, chunk, remainingSize) {
-                win.webContents.send('du-progress', {
-                    percentage: percentage
-                });
-            },
-        });
-
-        try {
-            await asyncTimeout(1000); // give some time to the page to load
-            await downloader.download();
-            console.log('Update download completed successfully');
-
-            const filePath = path.join(app.getPath('downloads'), "_deltamod_update_" + args[0].version + ".exe");
-            shell.openPath(filePath);
-            app.exit(0);
-        }
-        catch (error) {
-            console.error('Update download failed:', error);
-            dialog.showErrorBox('Update Download Failed', 'An error occurred while downloading the Deltamod update. Please try again later.');
-            ignoreUpdate = true;
-            win.webContents.send('page', 'main');
-            win.webContents.send('audio', true);
-        }
+        // DEPRECATED: autoupdating via Deltamod.
+        shell.openExternal('https://gamebanana.com/tools/download/20575');
+        ignoreUpdate = true;
+        BrowserWindow.fromWebContents(event.sender).webContents.send('page', 'main');
     });
 
     ipcMain.handle('ignore-update', async (event, args) => {
