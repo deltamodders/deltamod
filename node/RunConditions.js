@@ -20,6 +20,17 @@ const conditions = [
         }
     },
     {
+        name: 'At least 2GB of storage available',
+        required: true,
+        checker: () => {
+            const fsp = require("fs");
+            const { bfree, bsize } = fsp.statfsSync(__dirname);
+            free = bfree * bsize;
+            console.log(free);
+            return free >= 2 * 1024 * 1024 * 1024;
+        }
+    },
+    {
         name: 'Windows 10 or later; or Linux kernel 5.0 or later',
         required: true,
         checker: () => {
