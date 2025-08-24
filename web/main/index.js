@@ -5,20 +5,24 @@ function purifyDescription(desc) {
     return final;
 }
 
+function purify(text) {
+    return text.replace(/<[^>]*>/g, '');
+}
+
 async function createMod(mod) {
-    const modRow = document.createElement('tr');
+    let modRow = document.createElement('tr');
 
     // Column 1 (Mod)
-    const modNameContainer = document.createElement('td');
+    let modNameContainer = document.createElement('td');
     
-    const bigAhhContainer = document.createElement('div');
+    let bigAhhContainer = document.createElement('div');
     bigAhhContainer.style.display = 'flex';
     bigAhhContainer.style.alignItems = 'center';
     bigAhhContainer.style.gap = '10px';
     bigAhhContainer.style.justifyContent = 'left';
 
-    let IMAGE_DIMENSION = 32;
-    const imageContainer = document.createElement('div');
+    let IMAGE_DIMENSION = 50;
+    let imageContainer = document.createElement('div');
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
     
@@ -27,31 +31,36 @@ async function createMod(mod) {
         imeta.path = 'deltapack://web/mod-placeholder.png';
     }
 
-    const img = document.createElement('img');
+    let img = document.createElement('img');
     img.src = (imeta.path.includes('deltapack') ? '' : "packet://") + imeta.path;
     img.style.width = IMAGE_DIMENSION + 'px';
     img.style.height = IMAGE_DIMENSION + 'px';
+    img.style.borderRadius = '8px';
     img.style.objectFit = 'contain';
+    img.classList.add('mod-image');
     imageContainer.appendChild(img);
 
-    const infoContainer = document.createElement('div');
-    const titleSpan = document.createElement('span');
+    let infoContainer = document.createElement('div');
+    let titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
     titleSpan.id = `modtitle-${mod.uid}`;
     infoContainer.appendChild(titleSpan);
     infoContainer.appendChild(document.createElement('br'));
 
-    const descSpan = document.createElement('span');
+    let descSpan = document.createElement('span');
     descSpan.className = 'calibri';
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
 
-    const authorSpan = document.createElement('span');
+    let authorSpan = document.createElement('p');
+    authorSpan = adaptForIcons(authorSpan);
+    authorSpan.style.margin = '0px';
+    authorSpan.style.marginTop = '4px';
     authorSpan.className = 'calibri';
     authorSpan.style.fontSize = 'smaller';
     authorSpan.style.color = '#888';
-    authorSpan.innerText = `Authors: ${mod.author.join(', ')}`;
+    authorSpan.innerHTML = `${icon('person', 'small')} ${purify(mod.author.join(', '))}`;
     authorSpan.id = `modauthor-${mod.uid}`;
     infoContainer.appendChild(document.createElement('br'));
     infoContainer.appendChild(authorSpan);
@@ -62,10 +71,10 @@ async function createMod(mod) {
     modNameContainer.appendChild(bigAhhContainer);
 
     // Column 2 (Actions)
-    const actionContainer = document.createElement('td');
+    let actionContainer = document.createElement('td');
     actionContainer.className = 'modlist-actions-column';
     {
-        const enabled = document.createElement("input");
+        let enabled = document.createElement("input");
         enabled.type = 'checkbox';
         enabled.id = `modcheck-${mod.uid}`;
         enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
@@ -78,14 +87,14 @@ async function createMod(mod) {
         };
         actionContainer.appendChild(enabled);
 
-        const exploreModButton = document.createElement('button');
+        let exploreModButton = document.createElement('button');
         exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
-        exploreModButton.innerText = "🔎";
+        exploreModButton.innerHTML = icon('folder_eye', '20px');
         actionContainer.appendChild(exploreModButton);
 
-        const deleteModButton = document.createElement('button');
+        let deleteModButton = document.createElement('button');
         deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-        deleteModButton.innerText = "🗑️";
+        deleteModButton.innerHTML = icon('delete_forever', '20px');
         actionContainer.appendChild(deleteModButton);
     }
 
@@ -210,11 +219,13 @@ window.currentPageStack.disableMusic = async function(button) {
     button.style.display = 'none';
     button.disabled = true;
     await window.electronAPI.invoke('setUniqueFlag', ["AUDIO", false]);
+    await window.electronAPI.invoke('setUniqueFlag', ["DAB", true]);
 };
 
 (async () => {
     var audioEnabled = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
-    if (audioEnabled) {
+    var dabEnabled = await window.electronAPI.invoke('getUniqueFlag', ["DAB"]);
+    if (audioEnabled && !dabEnabled) {
         document.getElementById('audioBtn').style.display = 'block';
     }
     else {

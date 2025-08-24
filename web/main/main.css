@@ -8,6 +8,13 @@
   padding-left: 25px;
   padding-right: 25px;
 }
+.mod-image {
+  transition: all 0.2s ease-in-out;
+  scale: 1;
+}
+.mod-image:hover {
+  scale: 1.1;
+}
 .array {
   display: flex;
   justify-content: center;

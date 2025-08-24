@@ -41,6 +41,17 @@ window.preloadAPI.onGPL((message) => {
     }
 });
 
+function adaptForIcons(element) {
+    element.style.display = 'flex';
+    element.style.alignItems = 'left';
+    element.style.gap = '5px';
+    element.style.justifyContent = 'left';
+    return element;
+}
+function icon(name, fontSize) {
+    return "<span class=\"material-symbols-outlined\" style=\"font-size: " + fontSize + "\">" + name + "</span>";
+}
+
 async function page(name) {
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('viewport')[0].style.backgroundImage = 'url(./' + theme.background + ')';
