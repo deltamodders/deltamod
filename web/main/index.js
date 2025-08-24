@@ -9,6 +9,38 @@ function purify(text) {
     return text.replace(/<[^>]*>/g, '');
 }
 
+function packageAtropos(container) {
+    let atroposContainer = document.createElement('div');
+    atroposContainer.className = 'atropos-inner';
+    atroposContainer.style.width = container.style.width + 10 + 'px';
+    atroposContainer.style.height = container.style.height + 10 + 'px';
+    atroposContainer.style.display = 'flex';
+    atroposContainer.style.alignItems = 'center';
+    atroposContainer.style.justifyContent = 'center';
+    atroposContainer.appendChild(container);
+
+    let atroposRotate = document.createElement('div');
+    atroposRotate.className = 'atropos-rotate';
+    atroposRotate.appendChild(atroposContainer);
+
+    let atroposScale = document.createElement('div');
+    atroposScale.className = 'atropos-scale';
+    atroposScale.appendChild(atroposRotate);
+
+    let atropos = document.createElement('div');
+    atropos.classList.add('atropos');
+    atropos.appendChild(atroposScale);
+
+    const atroposIniter = Atropos({
+        el: atropos,
+        activeOffset: 40,
+        shadowScale: 1.05,
+        highlight: false
+    });
+
+    return atropos;
+}
+
 async function createMod(mod) {
     let modRow = document.createElement('tr');
 
@@ -21,7 +53,7 @@ async function createMod(mod) {
     bigAhhContainer.style.gap = '10px';
     bigAhhContainer.style.justifyContent = 'left';
 
-    let IMAGE_DIMENSION = 50;
+    let IMAGE_DIMENSION = 60;
     let imageContainer = document.createElement('div');
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
@@ -35,10 +67,13 @@ async function createMod(mod) {
     img.src = (imeta.path.includes('deltapack') ? '' : "packet://") + imeta.path;
     img.style.width = IMAGE_DIMENSION + 'px';
     img.style.height = IMAGE_DIMENSION + 'px';
-    img.style.borderRadius = '8px';
+    // img.style.borderRadius = '8px';
     img.style.objectFit = 'contain';
+    img.setAttribute('data-atropos-offset', '10');
     img.classList.add('mod-image');
     imageContainer.appendChild(img);
+
+    var atroposImgContainer = packageAtropos(img);
 
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
@@ -65,7 +100,7 @@ async function createMod(mod) {
     infoContainer.appendChild(document.createElement('br'));
     infoContainer.appendChild(authorSpan);
 
-    bigAhhContainer.appendChild(imageContainer);
+    bigAhhContainer.appendChild(atroposImgContainer);
     bigAhhContainer.appendChild(infoContainer);
 
     modNameContainer.appendChild(bigAhhContainer);

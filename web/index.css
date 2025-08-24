@@ -9,6 +9,11 @@
     padding-right: 10px;
 }
 
+.atropos {
+    width: 70px;
+    height: 70px;
+}
+
 body {
     margin: 0;
     position: fixed;

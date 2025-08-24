@@ -127,8 +127,9 @@ if (!window.electronAPI) {
     }
 
     if (loaded.loaded) {
-        window.electronAPI.invoke('fireUpdate', []);
-        if (!update) {
+        var available = await window.electronAPI.invoke('fireUpdate', []);
+        console.log('Update check complete. Update available:', available);
+        if (!available) {
             await page('main');
         }
         else {
