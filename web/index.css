@@ -9,6 +9,16 @@
     padding-right: 10px;
 }
 
+* {
+    -webkit-user-drag: none;
+    user-drag: none;
+}
+
+.atropos {
+    width: 70px;
+    height: 70px;
+}
+
 body {
     margin: 0;
     position: fixed;

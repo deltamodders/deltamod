@@ -933,17 +933,18 @@ function createWindow() {
      * Called by window when ready to get update info.
     */
     ipcMain.handle('fireUpdate', async (event) => {
-        Updates.checkUpdates().then((updateInfo) => {
+        try {
+            const updateInfo = await Updates.checkUpdates();
             console.log('Update check result:', updateInfo.update);
             if (updateInfo.update && !ignoreUpdate) {
                 win.webContents.send('updateAvailable', updateInfo);
-                return;
+                return true;
             }
-            else {
-                // nothing
-                return;
-            }
-        });
+            return false;
+        } catch (error) {
+            console.error('Error checking updates:', error);
+            return false;
+        }
     });
 
     /*
