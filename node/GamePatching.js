@@ -19,6 +19,7 @@ const path = require('path');
 const { dialog } = require('electron');
 const { exec } = require('child_process');
 const { timeoutPromise } = require('./Utils.js');
+const { emitKeypress } = require('emit-keypress');
 const convert = require('xml-js');
 const process = require('process');
 const console = require('./Console.js');
@@ -29,7 +30,7 @@ const GM3P_OUTPUT = path.join(__dirname, '../gm3p/output').replaceAll("app.asar"
 const UTMT_FOLD = path.join(__dirname, '../gm3p/UTMTCLI').replaceAll("app.asar", "app.asar.unpacked");
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
 if (process.platform === 'win32') {
-    GM3P_EXE = path.join(__dirname, '../gm3p/GM3P.exe').replaceAll("app.asar", "app.asar.unpacked");
+    GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/GM3P.exe').replaceAll("app.asar", "app.asar.unpacked")) + '\"';
     GM3P_DLL = '';
     UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.exe');
     DOTNET_UNIX = '';
@@ -63,7 +64,7 @@ function run(file, args, opts = {}) {
     const _opts = {
         windowsHide: true,
         maxBuffer: 24 * 1024 * 1024, // 24MB
-        timeout: 15 * 60 * 1000,     // 15 minutes hard cap (avoid infinite hangs)
+        timeout: 10 * 60 * 1000,     // 10 minutes hard cap (avoid infinite hangs)
         ...opts
     };
     clog('RUN:', file, JSON.stringify(args));
@@ -216,9 +217,24 @@ function safeStat(p) {
     try { return fs.statSync(p); } catch { return null; }
 }
 
+const onKeypress = async (input, key, close) => {
+    // do stuff with keypress events
+    console.log({ input, key });
+
+    // Close the stream if the user presses `Ctrl+C` or `Enter`
+    if (input === '\x03') {
+        dialog.showErrorBox('Patching was cancelled');
+        for (const t of chapterTargets) restoreIfBackup(t);
+        ret.log = log.concat('Patching was cancelled').join('\n');
+        return ret;
+        close();
+    }
+};
+
 // ------------------------------ main ----------------------------------------
 
 async function startGamePatch(gamePath, dbPath, enableMods, window) {
+
     sendToWin = window;
     const log = [];
     const ret = { patched: false, log: '' };
@@ -387,38 +403,37 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
             clog("Max Mods per Chapter: " + modAmount.toString());
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' clear');
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg);
-            if (modAmount > 1) {
-                //Attempt to speed things up and to lower chances of a timeout by having UTMTCLI being a child instead of a grandchild process.
-                for (var i = 0; i < 5; i++) {
-                    for (var modNumber = 0; modNumber < modAmount + 2; modNumber++) {
-                        if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'))) {
-                            await fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'));
-                        }
-                        fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
-                        fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'modNumbersCache.txt'), modNumber.toString());
-                        if (modNumber != 1) {
-                            await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAllTexturesGrouped.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAllCode.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAssetOrder.csx'));
+            if (modAmount > 1 && !emitKeypress({ onKeypress })) {
+                    //Attempt to speed things up and to lower chances of a timeout by having UTMTCLI being a child instead of a grandchild process.
+                    for (var i = 0; i < 5; i++) {
+                        for (var modNumber = 0; modNumber < modAmount + 2; modNumber++) {
+                            if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'))) {
+                                await fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'));
+                            }
+                            fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
+                            fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'modNumbersCache.txt'), modNumber.toString());
+                            if (modNumber != 1) {
+                                await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAllTexturesGrouped.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAllCode.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAssetOrder.csx'));
+                            }
                         }
                     }
-                }
 
 
 
-                // Heavy step ONCE for all chapters
-                await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' compare ' + String(modAmount) + ' false ' + 'false');
+                    // Heavy step ONCE for all chapters
+                    await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' compare ' + String(modAmount) + ' false ' + 'false');
 
-                //UTMT Importing
-                for (var i = 0; i < 5; i++) {
-                    fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
-                    await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1', 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1', 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportGraphics.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportGML.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportAssetOrder.csx'));
-                }
-                oneMod = ' true';
-            } else { oneMod = ' false'; }
+                    //UTMT Importing
+                    for (var i = 0; i < 5; i++) {
+                        fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
+                        await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1', 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1', 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportGraphics.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportGML.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ImportAssetOrder.csx'));
+                    }
+                    oneMod = ' true';
+                } else { oneMod = ' false'; }
             
             // Produce: one subfolder per chapter index
             pack   = 'DeltamodPack_Multi';
             outDir = path.join(GM3P_OUTPUT, 'result', pack);
-            fs.rmSync(outDir, { recursive: true, force: true });
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'result ' + pack + oneMod);
 
             // Copy each produced chapter back
@@ -435,7 +450,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                 } else { clog(`GM3P did not produce chapter ${i} data.win`); }
             }
             if (pack = 'DeltamodPack_Multi' && fs.existsSync(outDir)) {
-                fs.rmdirSync(outDir, {force: true});
+                fs.rmdirSync(outDir, {force: true, recursive: true});
             }
             
         } catch (e) {

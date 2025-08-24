@@ -17,7 +17,7 @@ prompt_for_install() {
         case "$response" in
             [Yy]* )
                 echo "You selected Yes."
-				goto install
+				goto installUbuntu
                 return 0
                 ;;
             [Nn]* )
@@ -75,7 +75,7 @@ prompt_for_distro() {
 prompt_for_install	
 
 #install:#
-prompt_for_distro
+#prompt_for_distro
 
 #installUbuntu:#
 		#Intall .NET SDK 8.0
@@ -94,33 +94,17 @@ prompt_for_distro
 
 		sudo apt install 'libnss3'
 
-		#Install things needed to download and install GM3P
-
-		sudo apt install 'wget'
-
-		sudo apt-get install 'unzip'
+		#Install things needed for GM3P
 
 		sudo apt-get install 'xdelta3'
 
-		#Install GM3P
+		#Install needed npm packages
 
-		wget https://github.com/techy804/MassModPatcher/releases/download/v0.6.0-alpha2/GM3P.v0.6.0-alpha2.zip
+		npm install electron@37
 
-		unzip -f -o "./GM3P.v0.6.0-alpha2.zip" -d "./gm3p"
-
-		rm './GM3P.v0.6.0-alpha2.zip'
-
-        #Install Proton, this is needed to run Deltarune itself
-
-        sudo apt install proton-caller
-
-		#Install needed npm packages and run
-
-		npm --verbose install electron@37
+        ./deltamod-1.1.0.AppImage --appimage-extract
 
 		goto run
 
 #run:#
-		npm i
-
-		npm test
+        squashfs-root/deltamod
