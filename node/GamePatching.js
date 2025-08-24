@@ -246,13 +246,6 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
     clog('dbPath:', dbPath);
     clog('enabledMods:', Array.from(enabled));
 
-    if (!fs.existsSync(GM3P_EXE)) {
-        ret.log = `GM3P missing at ${GM3P_EXE}`;
-        dialog.showErrorBox('GM3P missing', ret.log);
-        clog('[FATAL]', ret.log);
-        return ret;
-    }
-
     // Collect actions from all enabled mods
     const objects = []; // {type:'xdelta'|'override', patch/from, to, modName}
     const modsInDb = safeReadDir(dbPath);
