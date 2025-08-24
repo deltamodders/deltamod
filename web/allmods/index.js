@@ -5,6 +5,10 @@ function purifyDescription(desc) {
     return final;
 }
 
+function purify(text) {
+    return text.replace(/<[^>]*>/g, '');
+}
+
 async function createMod(mod) {
     const modRow = document.createElement('tr');
 
@@ -21,6 +25,18 @@ async function createMod(mod) {
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     modNameContainer.appendChild(descSpan);
+
+    let authorSpan = document.createElement('p');
+    authorSpan = adaptForIcons(authorSpan);
+    authorSpan.style.margin = '0px';
+    authorSpan.style.marginTop = '4px';
+    authorSpan.className = 'calibri';
+    authorSpan.style.fontSize = 'smaller';
+    authorSpan.style.color = '#888';
+    authorSpan.innerHTML = `${icon('person', 'small')} ${purify(mod.author.join(', '))}`;
+    authorSpan.id = `modauthor-${mod.uid}`;
+    modNameContainer.appendChild(document.createElement('br'));
+    modNameContainer.appendChild(authorSpan);
 
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');

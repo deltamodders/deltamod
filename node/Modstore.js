@@ -146,6 +146,21 @@ function modList() {
                 throw new Error(`Missing required fields in _deltamodInfo.json for mod: ${mod}`);
             }
 
+            var modSize = 0;
+            function calculateFolderSize(folderPath) {
+                const items = fs.readdirSync(folderPath);
+                for (const item of items) {
+                    const itemPath = path.join(folderPath, item);
+                    const stats = fs.statSync(itemPath);
+                    if (stats.isFile()) {
+                        modSize += stats.size;
+                    } else if (stats.isDirectory()) {
+                        calculateFolderSize(itemPath);
+                    }
+                }
+            }
+            calculateFolderSize(modPath);
+            modSize = Math.round(modSize / (1024 * 1024)); // size
             // keep your return shape; just add ids (non-breaking)
             modList.push({
                 name:        meta.name || mod,
@@ -153,6 +168,7 @@ function modList() {
                 author:      meta.author || computerName,
                 description: meta.description || '',
                 folder:      mod,
+                size:        modSize, // New in 1.1.2
                 demo:        !!meta.demoMod,
                 dependencies: modInfo.dependencies || [],
 

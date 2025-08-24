@@ -100,6 +100,17 @@ async function createMod(mod) {
     infoContainer.appendChild(document.createElement('br'));
     infoContainer.appendChild(authorSpan);
 
+    let sizeSpan = document.createElement('p');
+    sizeSpan = adaptForIcons(sizeSpan);
+    sizeSpan.style.margin = '0px';
+    sizeSpan.style.marginTop = '4px';
+    sizeSpan.className = 'calibri';
+    sizeSpan.style.fontSize = 'smaller';
+    sizeSpan.style.color = '#888';
+    sizeSpan.innerHTML = `${icon('hard_disk', 'small')} ${mod.size} MB`;
+    sizeSpan.id = `modvariant-${mod.uid}`;
+    infoContainer.appendChild(sizeSpan);
+
     bigAhhContainer.appendChild(atroposImgContainer);
     bigAhhContainer.appendChild(infoContainer);
 
