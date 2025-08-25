@@ -4,7 +4,7 @@
   "description": "Deltarune mod manager",
   "main": "node/Runner.js",
   "featureFlags": [
-    "GB-OneClick"
+    "GB-OneClick", "AutoupdateNoMatterWhat"
   ],
   "scripts": {
     "test": "electron . --developer",

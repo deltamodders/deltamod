@@ -22,6 +22,7 @@ const { getConfig, config } = require('7zip-min');
 const { path7za } = require('7zip-bin');
 const console = require('./Console.js');
 const { handleProtocolLaunch } = require('./Protocol.js');
+const { isFeatureEnabled } = require('./FeatureFlags.js');
 
 let itch;
 let canLoadItch = false;
@@ -37,7 +38,7 @@ let win; // Main window
 let sharedVariables = {}; // shared vars with renderer
 let ignoreUpdate = false;
 
-if (process.argv.includes('--developer')) {
+if (process.argv.includes('--developer') && !isFeatureEnabled("AutoupdateNoMatterWhat") /* for testing lol */) {
     ignoreUpdate = true;
 }
 
@@ -198,11 +199,11 @@ function createWindow() {
         KeyValue.writeUniqueFlag('audio', 'true');
     }
 
-    
-    //app.setAsDefaultProtocolClient('deltamod' + (process.env.DELTAMOD_ENV === 'dev' ? '-dev' : ''));
-
     // 7-zip fix for electron
     config({ ...getConfig(), binaryPath: path7za.replaceAll("app.asar", "app.asar.unpacked") });
+
+    // clear out the temporary folder, contains modarchives (that failed to import) and deltamod installers
+    try { System.clearTemporary(); } catch (e) { console.error(e); }
 
     // lets check if we need to change part
     var threrror = "";
@@ -643,15 +644,31 @@ function createWindow() {
     }
 
     ipcMain.handle('start-update', async (event, args) => {
-        // DEPRECATED: autoupdating via Deltamod.
-        shell.openExternal('https://gamebanana.com/tools/download/20575');
-        ignoreUpdate = true;
-        BrowserWindow.fromWebContents(event.sender).webContents.send('page', 'main');
+        console.log(`Downloading ${args[0].version} from GameBanana...`);
+        page("autoupdate");
+
+        try {
+            const installerpath = path.join(System.getTemporary(), `installer.${args[0].version.replaceAll(".", "")}.exe`);
+            const bytes = await (await fetch(args[0].newVersionLink)).arrayBuffer();
+            console.log(`Fetched ${bytes.byteLength} bytes from ${args[0].newVersionLink}. Prompting for installation.`);
+
+            // i trust the deltamod team to not fuck up the version and put invalid characters into the file name
+            await fs.writeFileSync(installerpath, Buffer.from(bytes));
+            shell.openPath(installerpath);
+            app.exit(0);
+        } catch (e) {
+            console.error(e);
+            dialog.showErrorBox("Failed to download update", "An unknown error occured while attempting to download the new Deltamod update. Please reinstall Deltamod from GameBanana. The page will now open in your browser.");
+            shell.openExternal('https://gamebanana.com/tools/20575');
+
+            ignoreUpdate = true;
+            page("main");
+        }
     });
 
     ipcMain.handle('ignore-update', async (event, args) => {
         ignoreUpdate = true;
-        BrowserWindow.fromWebContents(event.sender).webContents.send('page', 'main');
+        page("main");
     });
     // A collection of IPC handlers for handling of sysindexes.
     ipcMain.handle('getSystemIndex', async (event, args) => {
@@ -1005,17 +1022,19 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else app.on('second-instance', (e, argv) => {
     console.log("Received second-instance check:", argv);
     const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
-    if (maybeUrl)
+    if (maybeUrl) {
         setSharedVar('gb1click', true);
         handleProtocolLaunch(maybeUrl);
+    }
 });
 
 app.whenReady().then(() => {
     if (process.platform === 'win32' || process.platform === 'linux') {
         const maybeUrl = process.argv.find(arg => arg.startsWith('deltamod://'));
-        if (maybeUrl)
+        if (maybeUrl) {
             setSharedVar('gb1click', true);
             handleProtocolLaunch(maybeUrl);
+        }
     }
 
     // Run a safety restore before creating the window (handles crash-last-time cases)

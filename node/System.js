@@ -50,7 +50,14 @@ function getPacketDatabase() {
 }
 
 function getTemporary() {
-    return app.getPath('temp');
+    return path.join(app.getPath('temp'), "Deltamod");
+}
+
+function clearTemporary() {
+    // Scary!
+    const p = getTemporary();
+    fs.rmSync(p, { recursive: true, force: true });
+    fs.mkdirSync(p);
 }
 
 healthCheck();
@@ -63,5 +70,6 @@ module.exports = {
     healthCheck,
     getSystemFileOfIndex,
     generateUniqueId,
-    getTemporary
+    getTemporary,
+    clearTemporary
 };

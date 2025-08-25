@@ -34,10 +34,11 @@ async function checkUpdates() {
         console.warn("Auto-updates are not supported on Linux. Please check https://gamebanana.com/tools/20575 for updates.");
         return {update: false, newVersionLink: null, version: null};
     }
-    var versionOffline = VERSION + ARTIFACT_NEEDED;
-    var versionOnline = DATA._aFiles.find(f => f._sVersion.endsWith(ARTIFACT_NEEDED));
 
-    if (versionOffline !== versionOnline._sVersion) {
+    var versionOffline = VERSION + ARTIFACT_NEEDED;
+    var versionOnline = DATA._aFiles.find(f => f._sVersion.toLowerCase().endsWith(ARTIFACT_NEEDED.toLowerCase()));
+
+    if (versionOffline.toLowerCase() !== versionOnline._sVersion.toLowerCase()) {
         console.warn(`A new version is available: ${versionOnline._sVersion} (You have ${versionOffline})`);
         return {update: true, newVersionLink: versionOnline._sDownloadUrl.replace("/dl/", "/mmdl/"), version: versionOnline._sVersion};
     }

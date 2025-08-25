@@ -43,7 +43,7 @@ async function handleProtocolLaunch(url) {
 
             log("Installing mod via GameBanana:", modType, modId, modArchive);
             var itemid = system.generateUniqueId();
-            var filepath = join(system.getTemporary(), "Deltamod", `${itemid}.modarchive`);
+            var filepath = join(system.getTemporary(), `${itemid}.modarchive`);
             log("Downloading to", filepath);
 
             mkdirSync(dirname(filepath), { recursive: true });
