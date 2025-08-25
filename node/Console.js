@@ -10,8 +10,11 @@ const prefixColorMap = {
 
 function log(prefix, ...args) {
     const stack = new Error().stack;
-    const callerLine = lastOfArray(stack.split("\n")[3].trim().split("\\")).split(":")[0];
-    process.stdout.write(colors.bold(prefixColorMap[prefix]('[' + prefix + '] ')) + colors.green('[' + callerLine + '] ') + args.join(' ') + '\n');
+    const callerDetails = stack.split("\n")[3].trim();
+    const callerFile = lastOfArray(callerDetails.split("\\")).split(":")[0];
+    const callerLine = lastOfArray(callerDetails.split("\\")).split(":")[1];
+    const callerInfo = `${callerFile}:${callerLine}`;
+    process.stdout.write(colors.bold(prefixColorMap[prefix]('[' + prefix + '] ')) + colors.green('[' + callerInfo + '] ') + args.join(' ') + '\n');
 }
 
 function rendererLog(prefix, page, ...args) {
