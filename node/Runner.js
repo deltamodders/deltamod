@@ -16,6 +16,8 @@ const { default: axios } = require('axios');
 const System = require('./System.js');
 const path = require('path');
 
+let abortController;
+
 const { getConfig, config } = require('7zip-min');
 const { path7za } = require('7zip-bin');
 const console = require('./Console.js');

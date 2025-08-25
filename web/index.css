@@ -46,11 +46,11 @@ body {
 
 @keyframes fadeIn {
     from {
-        scale: 1.05;
+        transform: translateX(-40px);
         opacity: 0.7;
     }
     to {
-        scale: 1;
+        transform: translateX(0px);
         opacity: 1;
     }
 }

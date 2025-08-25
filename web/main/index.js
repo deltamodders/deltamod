@@ -108,8 +108,19 @@ async function createMod(mod) {
     sizeSpan.style.fontSize = 'smaller';
     sizeSpan.style.color = '#888';
     sizeSpan.innerHTML = `${icon('hard_disk', 'small')} ${mod.size} MB`;
-    sizeSpan.id = `modvariant-${mod.uid}`;
+    sizeSpan.id = `modsize-${mod.uid}`;
     infoContainer.appendChild(sizeSpan);
+
+    let versionSpan = document.createElement('p');
+    versionSpan = adaptForIcons(versionSpan);
+    versionSpan.style.margin = '0px';
+    versionSpan.style.marginTop = '4px';
+    versionSpan.className = 'calibri';
+    versionSpan.style.fontSize = 'smaller';
+    versionSpan.style.color = '#888';
+    versionSpan.innerHTML = `${icon('deployed_code_update', 'small')} ${(mod.version ? mod.version : 'Unknown')}`;
+    versionSpan.id = `modsize-${mod.uid}`;
+    infoContainer.appendChild(versionSpan);
 
     bigAhhContainer.appendChild(atroposImgContainer);
     bigAhhContainer.appendChild(infoContainer);

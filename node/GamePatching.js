@@ -232,7 +232,6 @@ const onKeyPress = (input, key, close) => {
 // ------------------------------ main ----------------------------------------
 
 async function startGamePatch(gamePath, dbPath, enableMods, window) {
-
     sendToWin = window;
     const log = [];
     const ret = { patched: false, log: '' };

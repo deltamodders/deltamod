@@ -38,6 +38,17 @@ async function createMod(mod) {
     modNameContainer.appendChild(document.createElement('br'));
     modNameContainer.appendChild(authorSpan);
 
+    let sizeSpan = document.createElement('p');
+    sizeSpan = adaptForIcons(sizeSpan);
+    sizeSpan.style.margin = '0px';
+    sizeSpan.style.marginTop = '4px';
+    sizeSpan.className = 'calibri';
+    sizeSpan.style.fontSize = 'smaller';
+    sizeSpan.style.color = '#888';
+    sizeSpan.innerHTML = `${icon('hard_disk', 'small')} ${mod.size} MB`;
+    sizeSpan.id = `modsize-${mod.uid}`;
+    modNameContainer.appendChild(sizeSpan);
+
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
     actionContainer.className = 'modlist-actions-column';

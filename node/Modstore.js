@@ -164,7 +164,7 @@ function modList() {
             // keep your return shape; just add ids (non-breaking)
             modList.push({
                 name:        meta.name || mod,
-                version:     meta.version || '1.0.0',
+                version:     require('./Utils').validateVersioning(meta.version) || "Unknown",
                 author:      meta.author || computerName,
                 description: meta.description || '',
                 folder:      mod,

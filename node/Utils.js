@@ -27,6 +27,11 @@ function getWindow() {
   return win;
 }
 
+function validateVersioning(version) {
+  const semverRegex = /^\d+\.\d+\.\d+$/;
+  return (semverRegex.test(version) ? version : "Unknown");
+}
+
 function setWindow(newwin) {
   win = newwin;
 }
@@ -35,4 +40,4 @@ function page(newPage) {
   win.webContents.send("page", [newPage]);
 }
 
-module.exports = {timeoutPromise, randomString, hashFile, lastOfArray, getWindow, setWindow, page};
+module.exports = {timeoutPromise, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning};
