@@ -39,4 +39,19 @@ function page(newPage) {
   win.webContents.send("page", [newPage]);
 }
 
-module.exports = {timeoutPromise, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning};
+let sharedVariables = {}; // shared vars with renderer
+function setSharedVar(name, value) {
+    sharedVariables[name] = value;
+    return true;
+}
+
+function getSharedVar(name) {
+    return sharedVariables[name];
+}
+
+function properRelaunch() {
+  const a = process.argv.slice(1);
+  return { args: a.filter(x => !x.toLowerCase().startsWith("deltamod://")) }
+}
+
+module.exports = {timeoutPromise, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning, setSharedVar, getSharedVar, properRelaunch};

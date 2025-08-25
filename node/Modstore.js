@@ -45,7 +45,7 @@ async function importMod(filePath) {
         page("main");
 
         // Simple way to refresh the list
-        // app.relaunch();
+        // app.relaunch(properRelaunch());
         // app.exit();
         // process.exit();
     } catch (err) {

@@ -7,6 +7,7 @@ const _7z = require("7zip-min");
 const { error } = require("console");
 const { importMod } = require("./Modstore");
 const { dialog } = require("electron");
+const { page, setSharedVar } = require("./Utils");
 
 // https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
 function trim(str, ch) {
@@ -37,6 +38,8 @@ async function handleProtocolLaunch(url) {
             if (!isFeatureEnabled("GB-OneClick")) break;
             if (args.length < 3) break;
 
+            setSharedVar('gb1click', true);
+
             var modType = args.shift();
             var modId = args.shift();
             var modArchive = args.join("/");
@@ -58,12 +61,15 @@ async function handleProtocolLaunch(url) {
                 rmSync(filepath);
 
                 dialog.showErrorBox('Import failed', 'The mod you\'re attempting to download from GameBanana does not support the Deltamod format.');
+                page("main");
                 break;
             }
 
             log("Archive valid -- found _deltamodInfo.json and modding.xml");
             //await _7z.unpack(filepath, join(dirname(filepath), itemid));
             await importMod(filepath);
+
+            setSharedVar('gb1click', false);
 
             // cleanup
             rmSync(filepath);

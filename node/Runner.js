@@ -7,7 +7,7 @@ const _7z = require("7zip-min");
 const {Downloader} = require("nodejs-file-downloader");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex } = require('./System.js');
 const crypto = require('crypto');
-const { hashFile, setWindow, page } = require('./Utils.js');
+const { hashFile, setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require('./Utils.js');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
@@ -35,7 +35,6 @@ catch (e) {
 }
 
 let win; // Main window
-let sharedVariables = {}; // shared vars with renderer
 let ignoreUpdate = false;
 
 if (process.argv.includes('--developer') && !isFeatureEnabled("AutoupdateNoMatterWhat") /* for testing lol */) {
@@ -78,10 +77,6 @@ function asyncTimeout(amount) {
     return new Promise((resolve,reject) => {
         setTimeout(resolve, amount);
     })
-}
-function setSharedVar(name, value) {
-    sharedVariables[name] = value;
-    return true;
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -370,7 +365,7 @@ function createWindow() {
         var theme = themeObjects[choice];
         var themeHost = System.getSystemFile('_theme', true);
         fs.writeFileSync(themeHost, theme.id);
-        app.relaunch();
+        app.relaunch(properRelaunch());
         app.exit();
         process.exit(0);
     });
@@ -574,7 +569,7 @@ function createWindow() {
                 KeyValue.setKVS('deltarunePath', extractPath);
                 KeyValue.setKVS('deltaruneEdition', "demo");
                 KeyValue.kvsFlush();
-                app.relaunch();
+                app.relaunch(properRelaunch());
                 app.exit();
             });
         }
@@ -634,7 +629,7 @@ function createWindow() {
      * args[0] is the name of the variable.
     */
     ipcMain.handle('fetchSharedVariable', async (event, args) => {
-        return sharedVariables[args[0]];
+        return getSharedVar(args[0]);
     });
 
     if (threrror !== "") {
@@ -713,7 +708,7 @@ function createWindow() {
     });
     ipcMain.handle('changeSystemIndex', async (event, args) => {
         fs.writeFileSync(getSystemFile('_sysindex',true), args[0]);
-        app.relaunch();
+        app.relaunch(properRelaunch());
         app.exit();
     });
 
@@ -1022,19 +1017,15 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else app.on('second-instance', (e, argv) => {
     console.log("Received second-instance check:", argv);
     const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
-    if (maybeUrl) {
-        setSharedVar('gb1click', true);
+    if (maybeUrl)
         handleProtocolLaunch(maybeUrl);
-    }
 });
 
 app.whenReady().then(() => {
     if (process.platform === 'win32' || process.platform === 'linux') {
         const maybeUrl = process.argv.find(arg => arg.startsWith('deltamod://'));
-        if (maybeUrl) {
-            setSharedVar('gb1click', true);
+        if (maybeUrl)
             handleProtocolLaunch(maybeUrl);
-        }
     }
 
     // Run a safety restore before creating the window (handles crash-last-time cases)
