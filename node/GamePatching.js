@@ -208,8 +208,6 @@ function discoverChapters(gamePath) {
     return out;
 }
 
-
-
 function safeReadDir(dir, opts) {
     try { return fs.readdirSync(dir, opts); } catch { return []; }
 }
@@ -217,11 +215,11 @@ function safeStat(p) {
     try { return fs.statSync(p); } catch { return null; }
 }
 
-const onKeypress = async (input, key, close) => {
+const onKeyPress = (input, key, close) => {
     // do stuff with keypress events
     console.log({ input, key });
 
-    // Close the stream if the user presses `Ctrl+C` or `Enter`
+    // Close the stream if the user presses `Ctrl+C`
     if (input === '\x03') {
         dialog.showErrorBox('Patching was cancelled');
         for (const t of chapterTargets) restoreIfBackup(t);
@@ -393,16 +391,17 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
         clog('MULTI massPatch folder:', gamePath, 'chapters:', chapterTargets.length, 'modAmount:', modAmount);
         perChapterPatches.forEach((l, i) => clog(`  chapter[${i}] patches: ${l.length}`));
         try {
+            emitKeypress({ onKeyPress });
             clog("Max Mods per Chapter: " + modAmount.toString());
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' clear');
             await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg);
-            if (modAmount > 1 && !emitKeypress({ onKeypress })) {
+            if (modAmount > 1) {
                     //Attempt to speed things up and to lower chances of a timeout by having UTMTCLI being a child instead of a grandchild process.
                     for (var i = 0; i < 5; i++) {
                         for (var modNumber = 0; modNumber < modAmount + 2; modNumber++) {
-                            if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'))) {
-                                await fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'));
-                            }
+                                if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'))) {
+                                    await fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'), {recursive: true});
+                                }
                             fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
                             fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'modNumbersCache.txt'), modNumber.toString());
                             if (modNumber != 1) {
@@ -443,7 +442,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                 } else { clog(`GM3P did not produce chapter ${i} data.win`); }
             }
             if (pack = 'DeltamodPack_Multi' && fs.existsSync(outDir)) {
-                fs.rmdirSync(outDir, {force: true, recursive: true});
+                try { fs.rmdirSync(outDir, { force: true, recursive: true }); } catch { }
             }
             
         } catch (e) {

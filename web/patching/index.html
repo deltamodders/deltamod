@@ -24,20 +24,32 @@
         border: 2px solid white;
         border-radius: 10px;
     }
+
     small {
         color: #888;
         font-size: 0.8em;
         font-family: "Calibri", sans-serif;
     }
+
     @keyframes scale {
-        0% { transform: translateX(-700px); }
-        100% { transform: translateX(400px); }
+        0% {
+            transform: translateX(-700px);
+        }
+
+        100% {
+            transform: translateX(400px);
+        }
     }
+
     .mike {
         width: 100px;
         animation: scale 2.93s reverse infinite linear;
         transition: scale 0.3s;
     }
 </style>
+
+<div class="buttons">
+    <button onclick="window.currentPageStack.cancelPatch()" id="abort">Abort</button>
+</div>
 AUDIO[patching.ogg]
 JSL
