@@ -4,9 +4,13 @@
   transform: translateY(-10px);
   border-radius: 4px;
   animation: none !important;
-  width: calc(100% - 40px);
+  width: calc(100% - 80px);
   padding-left: 25px;
   padding-right: 25px;
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .array {
