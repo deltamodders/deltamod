@@ -28,8 +28,7 @@ function getWindow() {
 }
 
 function validateVersioning(version) {
-  const semverRegex = /^\d+\.\d+\.\d+$/;
-  return (semverRegex.test(version) ? version : "Unknown");
+  return version;
 }
 
 function setWindow(newwin) {
