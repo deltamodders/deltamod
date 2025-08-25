@@ -110,12 +110,15 @@ function modList() {
             failureReason = "Failed to read _deltamodInfo JSON.";
             var modInfo = safeReadJSON(manifestPath) || {
                 metadata: { name: mod, version: '1.0.0', demoMod: false },
-                dependencies: []
+                dependencies: [],
             };
             var meta = modInfo.metadata || {};
 
-            const idPath = findFirstByName(modPath, '__deltaID.json') || path.join(modPath, '__deltaID.json');
+            // BACKWARDS COMPATIBILITY FOR OLD STANDARDS HERE:
+            modInfo.variants ??= [];
+
             failureReason = "Failed to read __deltaID JSON.";
+            const idPath = findFirstByName(modPath, '__deltaID.json') || path.join(modPath, '__deltaID.json');
             let deltamodExclusive = safeReadJSON(idPath);
 
             failureReason = "Failed to generate unique __deltaID for mod.";
@@ -146,6 +149,19 @@ function modList() {
                 throw new Error(`Missing required fields in _deltamodInfo.json for mod: ${mod}`);
             }
 
+            failureReason = "_deltamodInfo.json contains invalid `variants` data.";
+            for (const variant of modInfo.variants) {
+                if (
+                    !variant ||
+                    typeof variant.name !== 'string' ||
+                    typeof variant.xml !== 'string'
+                ) {
+                    failureReason = "_deltamodInfo.json `variants`: One or more variants are missing required fields.";
+                    throw new Error(`Missing required variant fields in _deltamodInfo.json for mod: ${mod}`);
+                }
+            }
+
+            failureReason = "Deltamod doesn't have required permissions to access the mods directory (%localappdata%/Deltamod).";
             var modSize = 0;
             function calculateFolderSize(folderPath) {
                 const items = fs.readdirSync(folderPath);
@@ -171,6 +187,7 @@ function modList() {
                 size:        modSize, // New in 1.1.2
                 demo:        !!meta.demoMod,
                 dependencies: modInfo.dependencies || [],
+                variants: modInfo.variants,
 
                 // NEW: give the renderer stable identifiers
                 uniqueId: uid,

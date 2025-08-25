@@ -59,9 +59,8 @@ async function createMod(mod) {
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
     
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
-    if (!imeta.path) {
+    if (!imeta.path)
         imeta.path = 'deltapack://web/mod-placeholder.png';
-    }
 
     let img = document.createElement('img');
     img.src = (imeta.path.includes('deltapack') ? '' : "packet://") + imeta.path;
@@ -128,31 +127,54 @@ async function createMod(mod) {
     modNameContainer.appendChild(bigAhhContainer);
 
     // Column 2 (Actions)
-    let actionContainer = document.createElement('td');
+    const actionContainer = document.createElement('td');
     actionContainer.className = 'modlist-actions-column';
     {
-        let enabled = document.createElement("input");
-        enabled.type = 'checkbox';
-        enabled.id = `modcheck-${mod.uid}`;
-        enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
-        enabled.onchange = e => {
-            const c = e.target;
-            const isEnabled = c.checked;
-            const forMod = mod.uid;
+        const topActionContainer = document.createElement('div');
+        topActionContainer.className = "modlist-actions-holder";
+        {
+            const enabled = document.createElement("input");
+            enabled.type = 'checkbox';
+            enabled.id = `modcheck-${mod.uid}`;
+            enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
+            enabled.onchange = e => {
+                const c = e.target;
+                const isEnabled = c.checked;
+                const forMod = mod.uid;
 
-            window.electronAPI.invoke("toggleModState", [forMod, isEnabled]);
-        };
-        actionContainer.appendChild(enabled);
+                window.electronAPI.invoke("toggleModState", [forMod, isEnabled]);
+            };
+            topActionContainer.appendChild(enabled);
 
-        let exploreModButton = document.createElement('button');
-        exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
-        exploreModButton.innerHTML = icon('folder_eye', '20px');
-        actionContainer.appendChild(exploreModButton);
+            const exploreModButton = document.createElement('button');
+            exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
+            exploreModButton.innerHTML = icon('folder_eye', '20px');
+            topActionContainer.appendChild(exploreModButton);
 
-        let deleteModButton = document.createElement('button');
-        deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-        deleteModButton.innerHTML = icon('delete_forever', '20px');
-        actionContainer.appendChild(deleteModButton);
+            const deleteModButton = document.createElement('button');
+            deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
+            deleteModButton.innerHTML = icon('delete_forever', '20px');
+            topActionContainer.appendChild(deleteModButton);
+        }
+
+        const bottomActionContainer = document.createElement('div');
+        bottomActionContainer.className = "modlist-actions-holder";
+        {
+            const variantDropdown = document.createElement('select');
+            variantDropdown.name = "modlist-variant";
+            variantDropdown.id = `modlist-variant-${mod.uid}`;
+
+            variantDropdown.append(
+                { ...document.createElement("option"), value: "modding.xml", innerText: "Default" },
+                { ...document.createElement("option"), value: "modding-test.xml", innerText: "Test" },
+                { ...document.createElement("option"), value: "modding-other-test.xml", innerText: "Other Test" },
+            );
+
+            bottomActionContainer.appendChild(variantDropdown);
+        }
+
+        actionContainer.appendChild(topActionContainer);
+        actionContainer.appendChild(bottomActionContainer);
     }
 
     modRow.appendChild(modNameContainer);
