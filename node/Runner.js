@@ -746,11 +746,12 @@ function createWindow() {
             var hashCompatible = true;
 
             try {
-                if (mod.neededFiles > 0)
+                if (mod.neededFiles.length > 0)
                     for (const file of mod.neededFiles) {
                         var specifiedHash = file.checksum.toLowerCase();
                         var filePath = path.join(KeyValue.readKVS('deltarunePath'), file.file);
 
+                        console.log(hashFile(filePath).toLowerCase() + ' vs ' + specifiedHash);
                         if (!fs.existsSync(filePath) || hashFile(filePath).toLowerCase() !== specifiedHash) {
                             hashCompatible = false;
                             break; // further checking is not needed, as at least one file is invalid anyway

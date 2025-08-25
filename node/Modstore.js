@@ -171,6 +171,7 @@ function modList() {
                 size:        modSize, // New in 1.1.2
                 demo:        !!meta.demoMod,
                 dependencies: modInfo.dependencies || [],
+                neededFiles: modInfo.neededFiles || [],
 
                 // NEW: give the renderer stable identifiers
                 uniqueId: uid,
