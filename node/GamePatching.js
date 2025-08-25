@@ -443,7 +443,8 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
             if (pack = 'DeltamodPack_Multi' && fs.existsSync(outDir)) {
                 try { fs.rmdirSync(outDir, { force: true, recursive: true }); } catch { }
             }
-            
+
+            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' clear');
         } catch (e) {
             clog('GM3P error, restoring backups:', e.message);
             for (const t of chapterTargets) restoreIfBackup(t);
