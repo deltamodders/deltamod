@@ -88,6 +88,20 @@ function safeReadJSON(p) {
     try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
 }
 
+function validatePID(pid) {
+    console.log("Validating packageID:", pid);
+
+    if (!pid) return "und.und.und"; // default if not specified
+
+    if (typeof pid !== 'string') return "und.und.und";
+    
+    pid = pid.trim();
+
+    if (pid.split('.').length !== 3) return "und.und.und"; // must be three parts
+
+    return pid.toLowerCase();
+}
+
 function modList() {
     var mods = fs.readdirSync(system.getPacketDatabase());
     var modList = [];
@@ -109,7 +123,7 @@ function modList() {
             // Zork's Patch: Read defensively; synthesize defaults if missing
             failureReason = "Failed to read _deltamodInfo JSON.";
             var modInfo = safeReadJSON(manifestPath) || {
-                metadata: { name: mod, version: '1.0.0', demoMod: false },
+                metadata: { name: mod, version: '1.0.0', demoMod: false, packageID: 'und.und.und' },
                 dependencies: []
             };
             var meta = modInfo.metadata || {};
@@ -171,7 +185,7 @@ function modList() {
                 size:        modSize, // New in 1.1.2
                 demo:        !!meta.demoMod,
                 dependencies: modInfo.dependencies || [],
-
+                packageID: validatePID(meta.packageID),
                 // NEW: give the renderer stable identifiers
                 uniqueId: uid,
                 uid:      uid,   // <- many UIs look for this name
