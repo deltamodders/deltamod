@@ -53,7 +53,7 @@ async function createMod(mod) {
     bigAhhContainer.style.gap = '10px';
     bigAhhContainer.style.justifyContent = 'left';
 
-    let IMAGE_DIMENSION = 60;
+    let IMAGE_DIMENSION = 55;
     let imageContainer = document.createElement('div');
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
@@ -88,6 +88,13 @@ async function createMod(mod) {
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
 
+    let flexContnainer = document.createElement('div');
+    flexContnainer.style.display = 'flex';
+    flexContnainer.style.alignItems = 'center';
+    flexContnainer.style.justifyContent = 'left';
+    flexContnainer.style.gap = '6px';
+    infoContainer.appendChild(flexContnainer);
+
     let authorSpan = document.createElement('p');
     authorSpan = adaptForIcons(authorSpan);
     authorSpan.style.margin = '0px';
@@ -97,8 +104,7 @@ async function createMod(mod) {
     authorSpan.style.color = '#888';
     authorSpan.innerHTML = `${icon('person', 'small')} ${purify(mod.author.join(', '))}`;
     authorSpan.id = `modauthor-${mod.uid}`;
-    infoContainer.appendChild(document.createElement('br'));
-    infoContainer.appendChild(authorSpan);
+    flexContnainer.appendChild(authorSpan);
 
     let sizeSpan = document.createElement('p');
     sizeSpan = adaptForIcons(sizeSpan);
@@ -109,7 +115,7 @@ async function createMod(mod) {
     sizeSpan.style.color = '#888';
     sizeSpan.innerHTML = `${icon('hard_disk', 'small')} ${mod.size} MB`;
     sizeSpan.id = `modsize-${mod.uid}`;
-    infoContainer.appendChild(sizeSpan);
+    flexContnainer.appendChild(sizeSpan);
 
     let versionSpan = document.createElement('p');
     versionSpan = adaptForIcons(versionSpan);
@@ -120,7 +126,7 @@ async function createMod(mod) {
     versionSpan.style.color = '#888';
     versionSpan.innerHTML = `${icon('deployed_code_update', 'small')} ${(mod.version ? mod.version : 'Unknown')}`;
     versionSpan.id = `modsize-${mod.uid}`;
-    infoContainer.appendChild(versionSpan);
+    flexContnainer.appendChild(versionSpan);
 
     bigAhhContainer.appendChild(atroposImgContainer);
     bigAhhContainer.appendChild(infoContainer);
