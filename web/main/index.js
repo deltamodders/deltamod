@@ -9,6 +9,10 @@ function purify(text) {
     return text.replace(/<[^>]*>/g, '');
 }
 
+setTimeout(() => {
+    document.getElementsByClassName('buttons')[0].style.display = 'block';
+}, 500);
+
 function packageAtropos(container) {
     let atroposContainer = document.createElement('div');
     atroposContainer.className = 'atropos-inner';

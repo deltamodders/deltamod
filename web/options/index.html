@@ -1,5 +1,5 @@
 <div>
-    <button style="margin-bottom: 10px;" onclick="page('main')">Back</button>
+    <button style="margin-bottom: 10px;" onclick="page('main')" class="back">Back</button>
     <br>
     <h1>Options</h1>
     <div style="overflow-y: scroll; height: 450px; overflow-x: hidden;">
@@ -22,6 +22,12 @@
 </div>
 
 <style>
+    tr {
+       transition: 0.1s all; 
+    }
+    tr:hover {
+        background-color: rgba(124,124,124, 0.2);
+    }
     td, th:not(.center) {
         text-align: left;
     }
@@ -32,6 +38,15 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+    input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+    button:not(.back) {
+        cursor: pointer;
+        width: 100%;
     }
     th {
         height: 100%;

@@ -1,22 +1,27 @@
+@keyframes open {
+  0% { opacity: 0.5; bottom: -40px; }
+  100% { opacity: 1; bottom: 20px; }
+}
+
 .buttons {
   background-color: rgba(124,124,124, 0.2);
   padding: 10px;
   transform: translateY(-10px);
   border-radius: 4px;
-  animation: none !important;
+  display: none;
   width: calc(100% - 100px);
   padding-left: 25px;
   padding-right: 25px;
   position: fixed;
-  bottom: 20px;
+  /*bottom: 20px;*/
   left: 50%;
   transform: translateX(-50%);
   transition: 0.3s all;
+  animation: 0.4s open ease-in-out;
 }
 
 .buttons:hover {
   background-color: rgba(124, 124, 124, 0.4);
-  bottom: 21px;
 }
 
 .array {
