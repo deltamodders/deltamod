@@ -1,16 +1,22 @@
 .buttons {
-  background-color: rgba(56, 56, 56, 0.5);
+  background-color: rgba(124,124,124, 0.2);
   padding: 10px;
   transform: translateY(-10px);
   border-radius: 4px;
   animation: none !important;
-  width: calc(100% - 80px);
+  width: calc(100% - 100px);
   padding-left: 25px;
   padding-right: 25px;
   position: fixed;
-  bottom: 10px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
+  transition: 0.3s all;
+}
+
+.buttons:hover {
+  background-color: rgba(124, 124, 124, 0.4);
+  bottom: 21px;
 }
 
 .array {
@@ -67,12 +73,15 @@ th {
     align-items: center;
     gap: 4px;
     height: 100%;
+}
 
-    input[type=checkbox] {
+.modlist-enabled-column {
+  input[type=checkbox] {
       margin: 0;
-      width: 30px;
-      height: 15px;
-      accent-color: rgb(79, 151, 101);
+      width: 40px;
+      height: 25px;
+      cursor: pointer;
+      accent-color: rgba(57, 57, 57, 0.455);
       border: 6px solid white;
       scale: 1.1;
     }

@@ -44,6 +44,8 @@ function packageAtropos(container) {
 async function createMod(mod) {
     let modRow = document.createElement('tr');
 
+    modRow.className = 'modrow';
+
     // Column 1 (Mod)
     let modNameContainer = document.createElement('td');
     
@@ -133,9 +135,24 @@ async function createMod(mod) {
 
     modNameContainer.appendChild(bigAhhContainer);
 
-    // Column 2 (Actions)
     let actionContainer = document.createElement('td');
+    actionContainer.style.textAlign = 'center';
     actionContainer.className = 'modlist-actions-column';
+
+    let exploreModButton = document.createElement('button');
+    exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
+    exploreModButton.innerHTML = icon('folder_eye', '20px');
+    actionContainer.appendChild(exploreModButton);
+
+    let deleteModButton = document.createElement('button');
+    deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
+    deleteModButton.innerHTML = icon('delete_forever', '20px');
+    actionContainer.appendChild(deleteModButton);
+
+    // Column 2 (Actions)
+    let enabledContainer = document.createElement('td');
+    enabledContainer.style.textAlign = 'center';
+    enabledContainer.className = 'modlist-enabled-column';
     {
         let enabled = document.createElement("input");
         enabled.type = 'checkbox';
@@ -148,20 +165,11 @@ async function createMod(mod) {
 
             window.electronAPI.invoke("toggleModState", [forMod, isEnabled]);
         };
-        actionContainer.appendChild(enabled);
-
-        let exploreModButton = document.createElement('button');
-        exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
-        exploreModButton.innerHTML = icon('folder_eye', '20px');
-        actionContainer.appendChild(exploreModButton);
-
-        let deleteModButton = document.createElement('button');
-        deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-        deleteModButton.innerHTML = icon('delete_forever', '20px');
-        actionContainer.appendChild(deleteModButton);
+        enabledContainer.appendChild(enabled);
     }
 
     modRow.appendChild(modNameContainer);
+    modRow.appendChild(enabledContainer);
     modRow.appendChild(actionContainer);
 
     document.getElementById('modlist').appendChild(modRow);
