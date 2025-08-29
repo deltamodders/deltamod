@@ -65,6 +65,11 @@ body {
     scale: 1.06;
 }
 
+.sidebar-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 .viewport {
     position: absolute;
     top: calc(var(--topbar-height) * 1);

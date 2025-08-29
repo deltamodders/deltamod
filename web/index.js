@@ -78,6 +78,17 @@ async function page(name) {
         }
         purifiedHTML = purifiedHTML.replace(/STYLESHEET\[(.*?)\]/g, '');
     } else if (addedStyle) addedStyle.innerHTML = ""; // remove styles to not interfere with other pages
+    if (purifiedHTML.includes('NO-SIDEBAR')) {
+        purifiedHTML = purifiedHTML.replace('NO-SIDEBAR', '');
+        Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
+            button.disabled = true;
+        });
+    }
+    else {
+        Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
+            button.disabled = false;
+        });
+    }
     if (purifiedHTML.includes('AUDIO[')) {
         var audioSrc = purifiedHTML.match(/AUDIO\[(.*?)\]/);
         if (audioSrc && audioSrc[1] && audioSrc[1] !== currentAudio) {
