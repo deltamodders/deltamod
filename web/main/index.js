@@ -242,8 +242,8 @@ function loadInst(index) {
     if (modList.length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 2;
-        td.innerText = 'No compatible mods found.';
+        td.colSpan = 3;
+        td.innerHTML = 'No comaptible mods were found.';
         td.style.textAlign = 'center';
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);

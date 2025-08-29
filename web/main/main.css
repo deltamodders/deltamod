@@ -9,12 +9,12 @@
   transform: translateY(-10px);
   border-radius: 4px;
   display: none;
-  width: calc(100% - 100px);
+  width: calc(100% - 150px);
   padding-left: 25px;
   padding-right: 25px;
   position: fixed;
   /*bottom: 20px;*/
-  left: 50%;
+  left: calc(50% + 35px);
   transform: translateX(-50%);
   transition: 0.3s all;
   animation: 0.4s open ease-in-out;
