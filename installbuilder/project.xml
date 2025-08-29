@@ -2,9 +2,9 @@
     <shortName>deltamod</shortName>
     <fullName>Deltamod</fullName>
     <version>1.2</version>
-    <leftImage>${build_project_directory}/../build/icon-big.png</leftImage>
+    <leftImage>${build_project_directory}/../build/installer/leftImage.png</leftImage>
     <logoImage>${build_project_directory}/../build/icon-small.png</logoImage>
-    <splashImage>${build_project_directory}/installersplash.png</splashImage>
+    <splashImage>${build_project_directory}/../build/installer/installersplash.png</splashImage>
     <componentList>
         <component>
             <name>default</name>
@@ -115,7 +115,7 @@
     </parameterList>
     <slideShowImageList>
         <slideShowImage>
-            <path>${build_project_directory}/slide.png</path>
+            <path>${build_project_directory}/../build/installer/slide.png</path>
         </slideShowImage>
     </slideShowImageList>
 </project>
