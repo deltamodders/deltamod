@@ -5,6 +5,7 @@
     <leftImage>${build_project_directory}/../build/installer/leftImage.png</leftImage>
     <logoImage>${build_project_directory}/../build/icon-small.png</logoImage>
     <splashImage>${build_project_directory}/../build/installer/installersplash.png</splashImage>
+    <allowLanguageSelection>1</allowLanguageSelection>
     <componentList>
         <component>
             <name>default</name>
@@ -12,6 +13,22 @@
             <canBeEdited>1</canBeEdited>
             <selected>1</selected>
             <show>1</show>
+            <desktopShortcutList>
+                <shortcut>
+                    <comment>Deltarune mod manager</comment>
+                    <exec></exec>
+                    <icon></icon>
+                    <name>Deltamod</name>
+                    <path></path>
+                    <platforms>all</platforms>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>${installdir}\win-unpacked\Deltamod.exe</windowsExec>
+                    <windowsExecArgs></windowsExecArgs>
+                    <windowsIcon></windowsIcon>
+                    <windowsPath></windowsPath>
+                </shortcut>
+            </desktopShortcutList>
             <folderList>
                 <folder>
                     <description>Program Files</description>
@@ -102,21 +119,31 @@
     <parameterList>
         <directoryParameter>
             <name>installdir</name>
-            <description>Installer.Parameter.installdir.description</description>
-            <explanation>Installer.Parameter.installdir.explanation</explanation>
+            <title>Install directory</title>
+            <description></description>
+            <explanation>Choose a directory where to install Deltamod.</explanation>
             <value></value>
             <default>${windows_folder_local_appdata}\${product_shortname}-${product_version}</default>
             <allowEmptyValue>0</allowEmptyValue>
             <cliOptionName>prefix</cliOptionName>
             <mustBeWritable>0</mustBeWritable>
             <mustExist>0</mustExist>
-            <width>40</width>
+            <width>60</width>
         </directoryParameter>
+        <infoParameter>
+            <name>beforenotice</name>
+            <title>About old versions of Deltamod (v.1.1.1 and before)</title>
+            <description></description>
+            <explanation></explanation>
+            <value>Note: If you've installed previous versions of Deltamod, please uninstall them before continuing. Uninstalling them won't affect your installations and mods.
+
+This is needed due to technical reasons.</value>
+            <default></default>
+            <htmlValue>&lt;b&gt;NOTE: &lt;/b&gt; If you've installed previous versions of Deltamod, please uninstall them before continuing. Uninstalling them won't affect your installations and mods.
+
+This is needed due to technical reasons.</htmlValue>
+            <trimMarginNumChars>0</trimMarginNumChars>
+        </infoParameter>
     </parameterList>
-    <slideShowImageList>
-        <slideShowImage>
-            <path>${build_project_directory}/../build/installer/slide.png</path>
-        </slideShowImage>
-    </slideShowImageList>
 </project>
 
