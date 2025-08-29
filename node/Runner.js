@@ -195,7 +195,7 @@ function createWindow() {
     }
 
     // 7-zip fix for electron
-    config({ ...getConfig(), binaryPath: path7za.replaceAll("app.asar", "app.asar.unpacked") });
+    config({ ...getConfig(), binaryPath: path7za });
 
     // clear out the temporary folder, contains modarchives (that failed to import) and deltamod installers
     try { System.clearTemporary(); } catch (e) { console.error(e); }
@@ -1020,6 +1020,7 @@ else app.on('second-instance', (e, argv) => {
     if (maybeUrl)
         handleProtocolLaunch(maybeUrl);
 });
+
 
 app.whenReady().then(() => {
     if (process.platform === 'win32' || process.platform === 'linux') {
