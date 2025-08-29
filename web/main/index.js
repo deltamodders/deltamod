@@ -248,7 +248,7 @@ function loadInst(index) {
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
 
-        document.getElementById('par').innerText = 'Run without patches';
+        //document.getElementById('par').innerText = 'Run without patches';
     }
 
     var sysindex = await window.electronAPI.invoke('getSystemIndex', []);
