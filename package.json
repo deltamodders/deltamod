@@ -13,7 +13,7 @@
   },
   "build": {
     "icon": "build/icon-big.png",
-    "asar": true,
+    "asar": false,
     "asarUnpack": [
       "node_modules/7zip-bin/win",
       "node_modules/7zip-bin/linux",

@@ -26,17 +26,17 @@ const console = require('./Console.js');
 
 
 
-const GM3P_OUTPUT = path.join(__dirname, '../gm3p/output').replaceAll("app.asar", "app.asar.unpacked");
-const UTMT_FOLD = path.join(__dirname, '../gm3p/UTMTCLI').replaceAll("app.asar", "app.asar.unpacked");
+const GM3P_OUTPUT = path.join(__dirname, '../gm3p/output')
+const UTMT_FOLD = path.join(__dirname, '../gm3p/UTMTCLI')
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
 if (process.platform === 'win32') {
-    GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/GM3P.exe').replaceAll("app.asar", "app.asar.unpacked")) + '\"';
+    GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/GM3P.exe')) + '\"';
     GM3P_DLL = '';
     UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.exe');
     DOTNET_UNIX = '';
 } else {
     GM3P_EXE = '/usr/bin/dotnet';
-    GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll').replaceAll("app.asar", "app.asar.unpacked");
+    GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
     UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.dll');
     DOTNET_UNIX = '/usr/bin/dotnet';
 }

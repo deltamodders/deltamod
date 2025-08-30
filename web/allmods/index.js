@@ -55,12 +55,12 @@ async function createMod(mod) {
     {
         const exploreModButton = document.createElement('button');
         exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
-        exploreModButton.innerText = "🔎";
+        exploreModButton.innerHTML = icon('folder_eye', '20px');
         actionContainer.appendChild(exploreModButton);
 
         const deleteModButton = document.createElement('button');
         deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-        deleteModButton.innerText = "🗑️";
+        deleteModButton.innerHTML = icon('delete_forever', '20px');
         actionContainer.appendChild(deleteModButton);
     }
 

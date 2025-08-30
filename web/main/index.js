@@ -9,6 +9,10 @@ function purify(text) {
     return text.replace(/<[^>]*>/g, '');
 }
 
+setTimeout(() => {
+    document.getElementsByClassName('buttons')[0].style.display = 'block';
+}, 500);
+
 function packageAtropos(container) {
     let atroposContainer = document.createElement('div');
     atroposContainer.className = 'atropos-inner';
@@ -44,6 +48,8 @@ function packageAtropos(container) {
 async function createMod(mod) {
     let modRow = document.createElement('tr');
 
+    modRow.className = 'modrow';
+
     // Column 1 (Mod)
     let modNameContainer = document.createElement('td');
     
@@ -53,7 +59,7 @@ async function createMod(mod) {
     bigAhhContainer.style.gap = '10px';
     bigAhhContainer.style.justifyContent = 'left';
 
-    let IMAGE_DIMENSION = 60;
+    let IMAGE_DIMENSION = 55;
     let imageContainer = document.createElement('div');
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
@@ -74,20 +80,27 @@ async function createMod(mod) {
 
     var atroposImgContainer = packageAtropos(img);
 
-    let infoContainer = document.createElement('div');
-    let titleSpan = document.createElement('span');
+    const infoContainer = document.createElement('div');
+    const titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
     titleSpan.id = `modtitle-${mod.uid}`;
     infoContainer.appendChild(titleSpan);
     infoContainer.appendChild(document.createElement('br'));
 
-    let descSpan = document.createElement('span');
+    const descSpan = document.createElement('span');
     descSpan.className = 'calibri';
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
 
-    let authorSpan = document.createElement('p');
+    const flexContnainer = document.createElement('div');
+    flexContnainer.style.display = 'flex';
+    flexContnainer.style.alignItems = 'center';
+    flexContnainer.style.justifyContent = 'left';
+    flexContnainer.style.gap = '6px';
+    infoContainer.appendChild(flexContnainer);
+
+    const authorSpan = document.createElement('p');
     authorSpan = adaptForIcons(authorSpan);
     authorSpan.style.margin = '0px';
     authorSpan.style.marginTop = '4px';
@@ -96,10 +109,9 @@ async function createMod(mod) {
     authorSpan.style.color = '#888';
     authorSpan.innerHTML = `${icon('person', 'small')} ${purify(mod.author.join(', '))}`;
     authorSpan.id = `modauthor-${mod.uid}`;
-    infoContainer.appendChild(document.createElement('br'));
-    infoContainer.appendChild(authorSpan);
+    flexContnainer.appendChild(authorSpan);
 
-    let sizeSpan = document.createElement('p');
+    const sizeSpan = document.createElement('p');
     sizeSpan = adaptForIcons(sizeSpan);
     sizeSpan.style.margin = '0px';
     sizeSpan.style.marginTop = '4px';
@@ -108,9 +120,9 @@ async function createMod(mod) {
     sizeSpan.style.color = '#888';
     sizeSpan.innerHTML = `${icon('hard_disk', 'small')} ${mod.size} MB`;
     sizeSpan.id = `modsize-${mod.uid}`;
-    infoContainer.appendChild(sizeSpan);
+    flexContnainer.appendChild(sizeSpan);
 
-    let versionSpan = document.createElement('p');
+    const versionSpan = document.createElement('p');
     versionSpan = adaptForIcons(versionSpan);
     versionSpan.style.margin = '0px';
     versionSpan.style.marginTop = '4px';
@@ -119,33 +131,40 @@ async function createMod(mod) {
     versionSpan.style.color = '#888';
     versionSpan.innerHTML = `${icon('deployed_code_update', 'small')} ${(mod.version ? mod.version : 'Unknown')}`;
     versionSpan.id = `modsize-${mod.uid}`;
-    infoContainer.appendChild(versionSpan);
+    flexContnainer.appendChild(versionSpan);
 
     bigAhhContainer.appendChild(atroposImgContainer);
     bigAhhContainer.appendChild(infoContainer);
 
     modNameContainer.appendChild(bigAhhContainer);
+  
+    // Column 2 (Enabled)
+    const enabledContainer = document.createElement('td');
+    enabledContainer.style.textAlign = 'center';
+    enabledContainer.className = 'modlist-enabled-column';
+    {
+        const enabled = document.createElement("input");
+        enabled.type = 'checkbox';
+        enabled.id = `modcheck-${mod.uid}`;
+        enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
+        enabled.onchange = e => {
+            const c = e.target;
+            const isEnabled = c.checked;
+            const forMod = mod.uid;
 
-    // Column 2 (Actions)
+            window.electronAPI.invoke("toggleModState", [forMod, isEnabled]);
+        };
+        enabledContainer.appendChild(enabled); 
+    }
+
+    // Column 3 (Actions)
     const actionContainer = document.createElement('td');
+    actionContainer.style.textAlign = 'center';
     actionContainer.className = 'modlist-actions-column';
     {
         const topActionContainer = document.createElement('div');
         topActionContainer.className = "modlist-actions-holder";
         {
-            const enabled = document.createElement("input");
-            enabled.type = 'checkbox';
-            enabled.id = `modcheck-${mod.uid}`;
-            enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
-            enabled.onchange = e => {
-                const c = e.target;
-                const isEnabled = c.checked;
-                const forMod = mod.uid;
-
-                window.electronAPI.invoke("toggleModState", [forMod, isEnabled]);
-            };
-            topActionContainer.appendChild(enabled);
-
             const exploreModButton = document.createElement('button');
             exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
             exploreModButton.innerHTML = icon('folder_eye', '20px');
@@ -178,6 +197,7 @@ async function createMod(mod) {
     }
 
     modRow.appendChild(modNameContainer);
+    modRow.appendChild(enabledContainer);
     modRow.appendChild(actionContainer);
 
     document.getElementById('modlist').appendChild(modRow);

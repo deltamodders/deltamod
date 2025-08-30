@@ -16,6 +16,7 @@ async function addCheckboxOption(name, description, flagid) {
 
     const tdInput = document.createElement('td');
     tdInput.className = 'input';
+    tdInput.classList.add('center');
 
     const input = document.createElement('input');
     input.type = 'checkbox';
@@ -50,6 +51,7 @@ async function addButton(name, description, click, buttonText) {
     tdLabel.appendChild(small);
 
     const tdInput = document.createElement('td');
+    tdInput.classList.add('center');
 
     const button = document.createElement('button');
     button.textContent = buttonText;

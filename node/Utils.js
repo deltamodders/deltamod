@@ -1,3 +1,5 @@
+// collecton of utility functions
+
 const crypto = require('crypto');
 const fs = require('fs');
 
@@ -54,4 +56,9 @@ function properRelaunch() {
   return { args: a.filter(x => !x.toLowerCase().startsWith("deltamod://")) }
 }
 
-module.exports = {timeoutPromise, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning, setSharedVar, getSharedVar, properRelaunch};
+function logOnAccess(obj, logMsg) {
+  console.log(logMsg);
+  return obj;
+}
+
+module.exports = {timeoutPromise, logOnAccess, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning, setSharedVar, getSharedVar, properRelaunch};
