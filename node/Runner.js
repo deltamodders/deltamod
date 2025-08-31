@@ -45,9 +45,16 @@ function loadUrl(url) {
     win.loadURL(url);
 }
 
+/**
+ * Show the dogcheck error screen
+ * @param {Error} err The error to show
+ */
 function errorWin(err) {
-    const errorStack = err.stack || 'No stack trace available';
-    setSharedVar('error', err.toString() + "\n" + errorStack);
+    if (err.stack == null) {
+        setSharedVar('error', err.toString() + "\n No stack trace available");
+    } else {
+        setSharedVar('error', err.stack);
+    }
     win.loadURL('deltapack://web/errorWrt/index.html');
 }
 
@@ -582,17 +589,15 @@ function createWindow() {
     });
 
     /*
-     * writeToDesktop
-     * Writes a file to the desktop.
+     * writeToDocuments
+     * Writes a file to the documents folder.
      * args[0] is the content of the file.
      * args[1] is the name of the file.
-     * (Patched to actually write to Documents)
      */
     ipcMain.handle('writeToDocuments', async (event, args) => {
         try {
             const desktopPath = app.getPath('documents');
-            if (!fs.existsSync(path.join(desktopPath, 'deltamod')))
-            {
+            if (!fs.existsSync(path.join(desktopPath, 'deltamod'))) {
                 fs.mkdirSync(desktopPath + "/deltamod");
             }
             const filePath = path.join(desktopPath, 'deltamod', args[1]);
@@ -602,6 +607,34 @@ function createWindow() {
         catch (err) {
             console.error('Error writing to documents:', err);
         }
+    });
+
+    /*
+     * showFileInDocuments
+     * Shows a file in the OS's file browser.
+     * args[0] is the name of the file.
+     */
+    ipcMain.handle('showFileInDocuments', async (event, args) => {
+        const desktopPath = app.getPath('documents');
+        if (!fs.existsSync(path.join(desktopPath, 'deltamod'))) {
+            return;
+        }
+        const filePath = path.join(desktopPath, 'deltamod', args[0]);
+        shell.showItemInFolder(filePath.toString());
+    });
+
+    /*
+     * openFileInDocuments
+     * Opens a file in the OS's file browser.
+     * args[0] is the name of the file.
+     */
+    ipcMain.handle('openFileInDocuments', async (event, args) => {
+        const desktopPath = app.getPath('documents');
+        if (!fs.existsSync(path.join(desktopPath, 'deltamod'))) {
+            return;
+        }
+        const filePath = path.join(desktopPath, 'deltamod', args[0]);
+        shell.openPath(filePath.toString());
     });
 
     /*
@@ -832,6 +865,9 @@ function createWindow() {
                 // Always restore originals after the game closes
                 GamePatching.restoreOriginalsIfAny(pathname);
                 win.show();
+                if (error != null) {
+                    errorWin(error);
+                }
 
                 if (KeyValue.readUniqueFlag('outputDelta')) {
                     var consoleFile = path.join(path.dirname(exe), '_console.txt');
