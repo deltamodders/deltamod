@@ -371,6 +371,10 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('version', () => {
+        return require('../package.json').version;
+    });
+
     ipcMain.handle('log', (event, args) => {
         console.rendererLog(args[1], args[2], args[0]);
     });
