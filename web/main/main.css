@@ -22,19 +22,32 @@
   animation: 0.4s open cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+#par {
+  background-color: green;
+  color: white;
+}
+
 .buttons > button {
   height: 60px;
   width: 60px;
+  margin-top: 0;
+  margin-bottom: 0;
   margin-left: 10px;
   margin-right: 10px;
   text-align: center;
   padding: 0;
-  font-size: 30px;
+  font-size: 35px;
   border: 2px solid white;
-  border-radius: 50%;
+  border-radius: 47%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.4s all;
 }
 .buttons > button:hover {
   scale: 1.1;
+  color: black !important;
+  background-color: white !important;
   border-color: rgba(255, 255, 255, 0.7);
 }
 /*

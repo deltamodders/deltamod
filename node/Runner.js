@@ -665,7 +665,9 @@ function createWindow() {
         ignoreUpdate = true;
         page("main");
     });
+
     // A collection of IPC handlers for handling of sysindexes.
+    // DEPRECATED 1.2: Use 'getInstallations'
     ipcMain.handle('getSystemIndex', async (event, args) => {
         var partOverride = getSystemFile('_sysindex',true);
         if (fs.existsSync(partOverride)) {
@@ -677,6 +679,7 @@ function createWindow() {
             return 0;
         }
     });
+    // DEPRECATED 1.2: Use 'getInstallations'
     ipcMain.handle('getMaxExistingIndex', async (event, args) => {
         try {
             var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -706,6 +709,27 @@ function createWindow() {
             return [0, []];
         }
     });
+
+    ipcMain.handle('getInstallations', async (event, args) => {
+        try {
+            var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
+            var installations = [];
+            systemFiles.forEach((file) => {
+                if (file.endsWith('unique')) return;
+
+                installations.push({
+                    index: parseInt(file.split('-')[1]),
+                    type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1]))
+                });
+            });
+            return installations;
+        }
+        catch (err) {
+            errorWin('Error getting installations: ' + err.toString());
+            return [];
+        }
+    });
+
     ipcMain.handle('changeSystemIndex', async (event, args) => {
         fs.writeFileSync(getSystemFile('_sysindex',true), args[0]);
         app.relaunch(properRelaunch());
