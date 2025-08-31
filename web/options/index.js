@@ -73,9 +73,7 @@ async function addButton(name, description, click, buttonText) {
         await window.electronAPI.invoke('openSysFolder', ['delta']);
     }, 'Open');
     addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod.', 'outputDelta');
-    addButton('View all installed mods', 'Opens a list of all the installed mods.', async () => {
-        page('allmods');
-    }, 'Open');
+
     addButton('Select a theme', 'Opens the theme selection menu.', async () => {
         await window.electronAPI.invoke('chooseTheme', []);
     }, 'Open');

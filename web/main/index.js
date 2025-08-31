@@ -242,13 +242,13 @@ function loadInst(index) {
     if (modList.length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 2;
-        td.innerText = 'No compatible mods found.';
+        td.colSpan = 3;
+        td.innerHTML = 'No comaptible mods were found.';
         td.style.textAlign = 'center';
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
 
-        document.getElementById('par').innerText = 'Run without patches';
+        //document.getElementById('par').innerText = 'Run without patches';
     }
 
     var sysindex = await window.electronAPI.invoke('getSystemIndex', []);
@@ -296,14 +296,3 @@ window.currentPageStack.disableMusic = async function(button) {
     await window.electronAPI.invoke('setUniqueFlag', ["AUDIO", false]);
     await window.electronAPI.invoke('setUniqueFlag', ["DAB", true]);
 };
-
-(async () => {
-    var audioEnabled = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
-    var dabEnabled = await window.electronAPI.invoke('getUniqueFlag', ["DAB"]);
-    if (audioEnabled && !dabEnabled) {
-        document.getElementById('audioBtn').style.display = 'block';
-    }
-    else {
-        document.getElementById('audioBtn').style.display = 'none';
-    }
-})();
