@@ -448,10 +448,10 @@ function createWindow() {
         var folder = args[0];
         switch (folder) {
             case 'mods':
-                shell.openExternal(getPacketDatabase());
+                shell.openPath(getPacketDatabase());
                 break;
             case 'delta':
-                shell.openExternal(getSystemFolder('deltaruneInstall', false));
+                shell.openPath(getSystemFolder('deltaruneInstall', false));
                 break;
         }
     });
@@ -471,7 +471,7 @@ function createWindow() {
      * args[0] is the ID of the mod to open the folder of.
      */
     ipcMain.handle('openModFolder', async (event, args) => {
-        shell.openExternal(path.join(getPacketDatabase(), args[0]));
+        shell.openPath(path.join(getPacketDatabase(), args[0]));
     });
 
     /*
