@@ -9,17 +9,35 @@
 <body>
     <div class="win">
         <div class="organizer">
-        <img src="animated.webp" alt="" width="100">
-        <p style="animation: txtAppear 6s linear;">Deltamod encountered an error! If you want to report it, go to "Documents" > "deltamod" and find the file named "$FILE". You can then send its contents to a Deltamod dev.</p>
+            <img src="animated.webp" alt="C. Round dancing" width="100">
+            <h1>Deltamod encountered an error!</h1>
+            <p>If you want to report it, go to "Documents" > "deltamod" and find the file named <code id="errorfilename">(shit)</code>. You can then send its contents to a Deltamod dev.</p>
+            <div class="button-container">
+                <button id="showerror">Show error file</button>
+                <button id="openerror">Open error file</button>
+                <button id="copyerror">Copy error to clipboard</button>
+            </div>
+            <br>
+            <pre><code id="error"></code></pre>
         </div>
     </div>
 </body>
 <style>
     p {
-        font-style: italic;
-        color: #505050;
+        color: #ffffff;
         font-family: 'Calibri', sans-serif;
         font-size: 15px;
+        animation: txtAppear 6s linear;
+    }
+    button{ 
+        animation: txtAppear 6s linear;
+    }
+    pre {
+        text-align: left;
+        animation: txtAppear 9s linear;
+    }
+    code {
+        font-size: 10px;
     }
     body {
         width: 100%;
@@ -35,9 +53,17 @@
     }
     div {
         text-align: center;
+        width: 90%;
     }
     a {
         color: white;
+    }
+    .button-container {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
     }
     @keyframes dogAppear {
         0% {
@@ -51,7 +77,7 @@
         0% {
             opacity: 0;
         }
-        90% {
+        70% {
             opacity: 0;
         }
         100% {
@@ -67,23 +93,28 @@
 </style>
 <script>
     let error;
+    const filename = "DELTAMOD_ERROR_REPORT_" + Date.now() + ".txt";
 
     (async() => {
         error = await window.electronAPI.invoke('fetchSharedVariable',['error']);
-        var filename = "DELTAMOD_ERROR_REPORT_" + Date.now() + ".txt";
-        document.querySelector('p').innerHTML = "ERROR: " + error + "<br><br>If you want to report it, go to \"Documents\" > \"deltamod\" and find the file named \"" + filename + "\". You can then send its contents to a Deltamod dev.<br><br>Press CTRL+C to copy the error message to clipboard.";
+        document.querySelector('#error').innerText = error;
+        document.querySelector('#errorfilename').innerText = filename;
         
         await window.electronAPI.invoke('writeToDocuments',[error, filename]);
     })();
 
-    document.addEventListener('keydown', async function(e) {
-        if (e.ctrlKey && e.key.toLowerCase() === 'c') {
-            if (error) {
-                try {
-                    await navigator.clipboard.writeText(error);
-                } catch (err) {
-                    console.error("Failed to copy error to clipboard:", err);
-                }
+    document.querySelector('#showerror').addEventListener('click', async () => {
+        await window.electronAPI.invoke('showFileInDocuments',[filename]);
+    });
+    document.querySelector('#openerror').addEventListener('click', async () => {
+        await window.electronAPI.invoke('openFileInDocuments',[filename]);
+    });
+    document.querySelector('#copyerror').addEventListener('click', async () => {
+        if (error) {
+            try {
+                await navigator.clipboard.writeText(error);
+            } catch (err) {
+                console.error("Failed to copy error to clipboard:", err);
             }
         }
     });
