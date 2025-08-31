@@ -35,6 +35,9 @@ console.info = function(...arguments) {
     window.electronAPI.invoke('log', [arguments.join(' '), 'INFO', pageN]);
 }
 
+function uppercaseFirst(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
 window.preloadAPI.onGPL((message) => {
     if (window.currentPageStack.gpl) {
         window.currentPageStack.gpl(message);
