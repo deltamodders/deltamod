@@ -296,14 +296,3 @@ window.currentPageStack.disableMusic = async function(button) {
     await window.electronAPI.invoke('setUniqueFlag', ["AUDIO", false]);
     await window.electronAPI.invoke('setUniqueFlag', ["DAB", true]);
 };
-
-(async () => {
-    var audioEnabled = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
-    var dabEnabled = await window.electronAPI.invoke('getUniqueFlag', ["DAB"]);
-    if (audioEnabled && !dabEnabled) {
-        document.getElementById('audioBtn').style.display = 'block';
-    }
-    else {
-        document.getElementById('audioBtn').style.display = 'none';
-    }
-})();
