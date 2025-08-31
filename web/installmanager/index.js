@@ -8,8 +8,7 @@
 
         console.log(JSON.stringify(install));
 
-        nameCell.textContent = install.index;
-        pathCell.textContent = install.type;
+        nameCell.innerHTML = "Install no. " + (install.index+1) + "<br>" + install.type;
 
         row.appendChild(nameCell);
         row.appendChild(pathCell);
