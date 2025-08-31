@@ -33,7 +33,14 @@ function retrieve() {
 function kvsFlush() {
     var pathname = getSystemFile('store.json', false);
     fs.writeFileSync(pathname, JSON.stringify(kvs, null, 2) + '##' + hash(JSON.stringify(kvs, null, 2)));
-    console.log('Flushed store to sys1.json');
+    console.log('Store flushed.');
+    return true;
+}
+
+function kvsFlushIndex(obj, index) {
+    var pathname = getSystemFileOfIndex('store.json', index);
+    fs.writeFileSync(pathname, JSON.stringify(obj, null, 2) + '##' + hash(JSON.stringify(obj, null, 2)));
+    console.log('Store flushed for index ' + index);
     return true;
 }
 
@@ -65,6 +72,17 @@ function setKVS(name, value) {
     kvsFlush();
 }
 
+function setKVSOfIndex(name, value, index) {
+    try {
+        var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
+    }
+    catch (e) {
+        var odb = {};
+    }
+    odb[name] = value;
+    kvsFlushIndex(odb, index);
+}
+
 function readKVSOfIndex(name, index, defaultTo = null) {
     var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
     return odb[name] ?? defaultTo;
@@ -82,6 +100,7 @@ module.exports = {
     readUniqueFlag,
     kvsWipe,
     setKVS,
+    setKVSOfIndex,
     readKVSOfIndex,
     readKVS
 };

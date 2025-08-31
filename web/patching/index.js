@@ -1,3 +1,10 @@
+window.tennaDialogue = [
+    "MIKE, patch this Deltarune!",
+    "Have you heard that GM3P is pretty slow?"
+];
+
+
+
 window.currentPageStack = {};
 window.currentPageStack.gpl = function (message) {
     document.getElementById("gpl").innerText += message;

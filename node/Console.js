@@ -4,9 +4,10 @@ const prefixColorMap = {
     'ERROR': colors.red,
     'WARN': colors.yellow,
     'INFO': colors.blue,
-    'LOG': colors.white,
-    'DEBUG': colors.cyan,
+    'LOG': colors.cyan,
+    'DEBUG': colors.white,
 }
+const FIXED_LENGTH = 50;
 
 function log(prefix, ...args) {
     const stack = new Error().stack;
@@ -14,11 +15,12 @@ function log(prefix, ...args) {
     const callerFile = lastOfArray(callerDetails.split("\\")).split(":")[0];
     const callerLine = lastOfArray(callerDetails.split("\\")).split(":")[1];
     const callerInfo = `${callerFile}:${callerLine}`;
-    process.stdout.write(colors.bold(prefixColorMap[prefix]('[' + prefix + '] ')) + colors.green('[' + callerInfo + '] ') + args.join(' ') + '\n');
+    let part1 = colors.bold(prefixColorMap[prefix]('[' + prefix + '] ')) + colors.green('[' + callerInfo + '] ');
+    process.stdout.write(part1 + args.join(' ') + '\n');
 }
 
 function rendererLog(prefix, page, ...args) {
-    process.stdout.write(colors.bold(prefixColorMap[prefix]('[' + prefix + '] ')) + colors.yellow('[Renderer - Page "' + page + '"] ') + args.join(' ') + '\n');
+    process.stdout.write(colors.bold(prefixColorMap[prefix]('[' + prefix + '] ')) + colors.yellow('[Renderer] ' + (page !== null ? '["' + page + '"] ' : '' )) + args.join(' ') + '\n');
 }
 
 

@@ -5,7 +5,7 @@ const fs = require('fs');
 const mime = require('mime-types');
 const _7z = require("7zip-min");
 const {Downloader} = require("nodejs-file-downloader");
-const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex } = require('./System.js');
+const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
 const crypto = require('crypto');
 const { hashFile, setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require('./Utils.js');
 const { exec } = require('child_process');
@@ -23,6 +23,26 @@ const { path7za } = require('7zip-bin');
 const console = require('./Console.js');
 const { handleProtocolLaunch } = require('./Protocol.js');
 const { isFeatureEnabled } = require('./FeatureFlags.js');
+const { valid } = require('node-html-parser');
+
+function validateDeltarune(deltapath) {
+    const keyItems = ['data.win', 'DELTARUNE.exe'];
+    const missingItems = [];
+    let isValid = true;
+
+    keyItems.forEach((item) => {
+        if (!fs.existsSync(`${deltapath}/${item}`)) {
+            isValid = false;
+            missingItems.push(item);
+        }
+    });
+
+    if (isValid) {
+        return deltapath;
+    } else {
+        return null;
+    }
+}
 
 let itch;
 let canLoadItch = false;
@@ -700,7 +720,6 @@ function createWindow() {
     });
 
     // A collection of IPC handlers for handling of sysindexes.
-    // DEPRECATED 1.2: Use 'getInstallations'
     ipcMain.handle('getSystemIndex', async (event, args) => {
         var partOverride = getSystemFile('_sysindex',true);
         if (fs.existsSync(partOverride)) {
@@ -981,24 +1000,7 @@ function createWindow() {
         if (pathdial.canceled) {
             return null;
         } else {
-            var deltapath = pathdial.filePaths[0];
-            var keyItems = ['data.win', 'DELTARUNE.exe'];
-            var missingItems = [];
-            var isValid = true;
-
-            keyItems.forEach((item) => {
-                if (!fs.existsSync(`${deltapath}/${item}`)) {
-                    isValid = false;
-                    missingItems.push(item);
-                }
-            });
-
-            if (isValid) {
-                return deltapath;
-            } else {
-                dialog.showErrorBox('This folder doesn\'t contain a valid Deltarune install', `The selected folder is not a valid Deltarune install.`);
-                return null;
-            }
+            return validateDeltarune(pathdial.filePaths[0]);
         }
     });
 
@@ -1069,6 +1071,82 @@ function createWindow() {
             return false;
         }
     });
+    /*
+     * createNewInstallation
+     * Copy of importDelta that is called from installmanager.
+    */
+    ipcMain.handle('createNewInstallation', async (event, args) => {
+        var i = 0;
+
+        // get max index
+        var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
+        systemFiles.forEach((file) => {
+            var index = file.split('-')[1];
+            if (index === 'unique') return;
+            if (index) {
+                i = Math.max(i, parseInt(index));
+            }
+        });
+
+        i++; // next index
+
+        // officially initialize the folder
+        if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + i))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-' + i), { recursive: true });
+        }
+
+        var path1 = "";
+        const result = await dialog.showOpenDialog(win, {
+            properties: ['openDirectory'],
+        });
+        if (result.canceled || !result.filePaths || !result.filePaths[0]) {
+            dialog.showErrorBox('No folder selected', 'Please select a folder to proceed.');
+            return false;
+        }
+        path1 = result.filePaths[0];
+
+        if (validateDeltarune(path1) === null) {
+            dialog.showErrorBox('Invalid folder', 'The provided folder does not appear to be a valid Deltarune install.');
+            return false;
+        }
+
+        var path2 = getSystemFolderOfIndex('deltaruneInstall',i);
+
+        // Check if the path is valid
+        console.log(`Importing Deltarune install from ${path1} to ${path2}`);
+        if (!fs.existsSync(path1)) {
+            dialog.showErrorBox('Invalid folder', 'The provided folder path is invalid.');
+            return false;
+        }
+
+        var gameEdition = 'demo';
+        if (fs.existsSync(`${path1}/chapter4_windows/data.win`)) {
+            gameEdition = 'full';
+        }
+
+        if (!fs.existsSync(path2)) {
+            fs.mkdirSync(path2, { recursive: true });
+        }
+
+
+        try {
+            copyRecursiveSync(path1, path2);
+
+            KeyValue.setKVSOfIndex('loadedDeltarune', true, i);
+            KeyValue.setKVSOfIndex('deltarunePath', path2, i);
+            KeyValue.setKVSOfIndex('deltaruneEdition', gameEdition, i);
+            KeyValue.setKVSOfIndex('enabledMods', [], i);
+            
+            page("installmanager");
+            return true;
+        } catch (err) {
+            var stack = err.stack ? '\n\n' + err.stack : '';
+            dialog.showErrorBox('Import failed', `Failed to import Deltarune install: ${err.message} ${stack}`);
+            errorWin('Failed to import Deltarune install: ' + err.toString());
+            return false;
+        }
+    });
+
 
     setWindow(win);
 }

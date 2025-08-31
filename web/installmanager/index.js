@@ -1,5 +1,6 @@
 (async() => {
     var installs = await window.electronAPI.invoke('getInstallations', []);
+    var index = await window.electronAPI.invoke('getSystemIndex', []);
     const tbody = document.querySelector('#installations-list');
     installs.forEach(install => {
         const row = document.createElement('tr');
@@ -39,6 +40,12 @@
                 window.electronAPI.invoke('changeSystemIndex', [""+install.index]);
             }
         };
+        if (index == install.index) {
+            goBtn.disabled = true;
+            goBtn.style.cursor = 'not-allowed';
+            goBtn.style.opacity = '0.3';
+            goBtn.innerHTML = icon('check_circle', '18px') + ' Active';
+        }
         goCell.appendChild(goBtn);
 
         nameCell.appendChild(nameContainer);
@@ -64,7 +71,7 @@
     newButton.style.textAlign = 'center';
     newButton.onclick = () => {
         console.log('New button clicked');
-        // Add your logic for the "New" button here
+        window.electronAPI.invoke('createNewInstallation', []);
     };
 
     newCell.appendChild(newButton);
