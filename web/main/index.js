@@ -246,6 +246,14 @@ function loadInst(index) {
         td.innerHTML = 'No comaptible mods were found.';
         td.style.textAlign = 'center';
         tr.appendChild(td);
+        var entiremodlist = await window.electronAPI.invoke('getModListFull', []);
+        if (entiremodlist.modList.length == 0) {
+            let small = document.createElement('small');
+            small.innerHTML = 'You can download mods on GameBanana with the 1-Click Mod Download or press the ' + icon('add_box', 'small') + ' button below to open a downloaded Deltamod pack.';
+            small.style.color = '#888';
+            td.appendChild(document.createElement('br'));
+            td.appendChild(small);
+        }
         document.getElementById('modlist').appendChild(tr);
 
         //document.getElementById('par').innerText = 'Run without patches';
