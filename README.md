@@ -14,7 +14,7 @@ If the script doesn't work, follow these steps:
 # Building
 ## Note
 <img width="128" align="left" src="https://github.com/user-attachments/assets/23c5d57c-56eb-4287-a0ec-14a4fca03d3d" />
-To package Deltamod 1.2 and upwards using the reccomended project file, you will need an <b>InstallBuilder</b> license. <br /> <br />We understand that using commercial products may be an hassle to people wanting to build Deltamod installers, however we need to do so as the product is robust and fixes many of the hassles of the legacy installer tech. <br /><br /><i>We do not condone piracy of said software; Deltamod's owner has a regular copy that the team generously gave us for use in open source development.</i><br /><br /> If you need to compile Deltamod, we encourage you download their 30-day free trial at https://installbuilder.com/
+To package Deltamod 1.2 and upwards using the reccomended project file, you will need an <b>InstallBuilder</b> license. <br /> <br />We understand that using commercial products may be an hassle to people wanting to build Deltamod installers, however we need to do so as the product is robust and fixes many of the hassles of the legacy installer tech. <br /><br /><i>We do not condone piracy of said software; Deltamod's owner has a regular copy that the team generously gave us free of charge, for use in open source development of Deltamod.</i><br /><br /> If you need to compile Deltamod, we encourage you download their 30-day free trial at https://installbuilder.com/ or to write to <a href="mailto:sales@installbuilder.com">sales@installbuilder.com</a> to request an open source license like we did.
 
 <br />
 
