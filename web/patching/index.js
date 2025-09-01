@@ -20,13 +20,11 @@ window.currentPageStack.cancelPatch = function () {
     return;
 }
 
-document.addEventListener('keydown', function(event) {
-    if(event.key === "x" || event.key === "X") {
-        const gplElement = document.getElementById("gpl");
+window.currentPageStack.toggleGM3P = function () {
+    const gplElement = document.getElementById("gpl");
         if (gplElement.style.display === "none" || gplElement.style.display === "") {
             gplElement.style.display = "block";
         } else {
             gplElement.style.display = "none";
         }
-    }
-});
+};

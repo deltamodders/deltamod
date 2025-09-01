@@ -39,6 +39,9 @@
                         <distributionDirectory>
                             <origin>${build_project_directory}/../dist/win-unpacked</origin>
                         </distributionDirectory>
+                        <distributionFile>
+                            <origin>${build_project_directory}/dotnet.exe</origin>
+                        </distributionFile>
                     </distributionFileList>
                     <shortcutList>
                         <shortcut>
@@ -112,7 +115,14 @@
             </startMenuShortcutList>
         </component>
     </componentList>
-    <compressionAlgorithm>lzma</compressionAlgorithm>
+    <postInstallationActionList>
+        <runProgram>
+            <program>${installdir}/dotnet.exe</program>
+            <programArguments></programArguments>
+            <progressText>Executing .NET installer</progressText>
+            <run>${installnet}</run>
+        </runProgram>
+    </postInstallationActionList>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <vendor>Deltamodders</vendor>
@@ -144,6 +154,16 @@ This is needed due to technical reasons.</value>
 This is needed due to technical reasons.</htmlValue>
             <trimMarginNumChars>0</trimMarginNumChars>
         </infoParameter>
+        <booleanParameter>
+            <name>installnet</name>
+            <title>Install .NET</title>
+            <description></description>
+            <explanation>Do you wish to install the .NET 8.0 runtime on this machine?
+
+Please note that if .NET isn't installed in the machine, Deltamod will not run.</explanation>
+            <value></value>
+            <default></default>
+        </booleanParameter>
     </parameterList>
 </project>
 
