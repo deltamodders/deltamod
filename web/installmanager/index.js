@@ -32,7 +32,7 @@ function countingSake(str) {
         editablespan.value = sanitizeHTML(install.name || `Install #${install.index + 1}`);
         editablespan.style.cursor = 'text';
         editablespan.onblur = () => {
-            if (countingSake(editablespan.value.trim()) == "") {
+            if (editablespan.value.trim() === "") {
                 window.alert("Installation name cannot be empty.");
                 editablespan.value = `Install #${install.index + 1}`;
             }
