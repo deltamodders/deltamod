@@ -118,7 +118,7 @@
     <postInstallationActionList>
         <runProgram>
             <program>${installdir}/dotnet.exe</program>
-            <programArguments></programArguments>
+            <programArguments>/silent /norestart</programArguments>
             <progressText>Executing .NET installer</progressText>
             <run>${installnet}</run>
         </runProgram>
@@ -132,39 +132,46 @@
             <name>installdir</name>
             <title>Install directory</title>
             <description></description>
-            <explanation>Choose a directory where to install Deltamod.</explanation>
+            <explanation>Choose the directory where you wish to install Deltamod.</explanation>
             <value></value>
-            <default>${windows_folder_local_appdata}\${product_shortname}-${product_version}</default>
+            <default>${windows_folder_local_appdata}\${product_shortname}</default>
             <allowEmptyValue>0</allowEmptyValue>
             <cliOptionName>prefix</cliOptionName>
             <mustBeWritable>0</mustBeWritable>
             <mustExist>0</mustExist>
             <width>60</width>
         </directoryParameter>
-        <infoParameter>
-            <name>beforenotice</name>
-            <title>About old versions of Deltamod (v.1.1.1 and before)</title>
-            <description></description>
-            <explanation></explanation>
-            <value>Note: If you've installed previous versions of Deltamod, please uninstall them before continuing. Uninstalling them won't affect your installations and mods.
-
-This is needed due to technical reasons.</value>
-            <default></default>
-            <htmlValue>&lt;b&gt;NOTE: &lt;/b&gt; If you've installed previous versions of Deltamod, please uninstall them before continuing. Uninstalling them won't affect your installations and mods.
-
-This is needed due to technical reasons.</htmlValue>
-            <trimMarginNumChars>0</trimMarginNumChars>
-        </infoParameter>
         <booleanParameter>
             <name>installnet</name>
             <title>Install .NET</title>
             <description></description>
             <explanation>Do you wish to install the .NET 8.0 runtime on this machine?
 
-Please note that if .NET isn't installed in the machine, Deltamod will not run.</explanation>
+Please note that if .NET isn't installed in the machine, Deltamod will not run due to GM3P depending on it.</explanation>
             <value></value>
             <default></default>
         </booleanParameter>
+        <parameterGroup>
+            <name>legacynotice</name>
+            <title>Old versions</title>
+            <explanation>Please note that with this update the old versions of the Deltamod installer are considered Legacy as the installer technology has been updated.
+
+However, as a side effect, you will have to uninstall previous versions of Deltamod before proceeding with the installation.
+
+If you have any Deltamod install to delete, please do so now.</explanation>
+            <value></value>
+            <default></default>
+        </parameterGroup>
     </parameterList>
+    <platformOptionsList>
+        <platformOptions>
+            <platform>windows</platform>
+        </platformOptions>
+    </platformOptionsList>
+    <slideShowImageList>
+        <slideShowImage>
+            <path>${build_project_directory}/../build/installer/slide.png</path>
+        </slideShowImage>
+    </slideShowImageList>
 </project>
 
