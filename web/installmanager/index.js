@@ -79,7 +79,7 @@ function countingSake(str) {
         deleteBtn.style.padding = '4px';
         deleteBtn.style.textAlign = 'center';
         deleteBtn = adaptForIcons(deleteBtn);
-        deleteBtn.innerHTML = icon('delete', '18px') + '';
+        deleteBtn.innerHTML = icon('delete', '18px');
         deleteBtn.onclick = () => {
             if (window.confirm(`Are you sure you want to delete this installation? This action cannot be undone.`)) {
                 window.electronAPI.invoke('deleteSystemIndex', [""+install.index]);
