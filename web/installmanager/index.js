@@ -93,7 +93,7 @@ function countingSake(str) {
         openBtn = adaptForIcons(openBtn);
         openBtn.innerHTML = icon('folder_open', '18px') + '';
         openBtn.onclick = () => {
-            window.electronAPI.invoke('openInstallationFolder', [""+install.index]);
+            window.electronAPI.invoke('openInstallationFolder', [install.index.toString()]);
         }
         buttonsDiv.appendChild(openBtn);
 
