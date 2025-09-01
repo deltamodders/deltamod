@@ -25,6 +25,9 @@ const { handleProtocolLaunch } = require('./Protocol.js');
 const { isFeatureEnabled } = require('./FeatureFlags.js');
 const { valid } = require('node-html-parser');
 
+function deltaInstallPath(index) {
+    return getSystemFolderOfIndex('deltaruneInstall', index);
+}
 function validateDeltarune(deltapath) {
     const keyItems = ['data.win', 'DELTARUNE.exe'];
     const missingItems = [];
@@ -236,7 +239,7 @@ function createWindow() {
             console.error('The specified installation of Deltarune is invalid.');
             threrror = 'The specified installation of Deltarune is invalid.';
         }
-        if (!fs.existsSync(app.getPath('userData') + '/deltamod_system-' + overrideData + '/deltaruneInstall') && overrideData !== '0') {
+        if (!fs.existsSync(deltaInstallPath(overrideData)) && overrideData !== '0') {
             overrideData = '0'; // Only 0 can be valid without a deltaruneInstallù
             dialog.showMessageBoxSync({
                 type: 'warning',
@@ -484,7 +487,7 @@ function createWindow() {
                 shell.openPath(getPacketDatabase());
                 break;
             case 'delta':
-                shell.openPath(getSystemFolder('deltaruneInstall', false));
+                shell.openPath(deltaInstallPath(fs.readFileSync(getSystemFile('_sysindex',true), 'utf8')));
                 break;
         }
     });
@@ -1213,7 +1216,7 @@ function createWindow() {
                 if (idx !== 'unique') return;
                 if (stop) return;
 
-                if (fs.existsSync(path.join(app.getPath('userData'), file, 'deltaruneInstall', 'DELTARUNE.exe'))) {
+                if (fs.existsSync(path.join(deltaInstallPath(idx), 'DELTARUNE.exe'))) {
                     launchHere = parseInt(idx);
                     stop = true;
                 }
