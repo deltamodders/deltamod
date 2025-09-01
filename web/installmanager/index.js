@@ -37,7 +37,7 @@ function countingSake(str) {
                 editablespan.value = `Install #${install.index + 1}`;
             }
             install.name = editablespan.value.trim();
-            window.electronAPI.invoke('setInstallationCName', [""+install.index, install.name]);
+            window.electronAPI.invoke('setInstallationCName', [install.index.toString(), install.name]);
         };
 
         let boldName = document.createElement('small');
