@@ -236,11 +236,20 @@ function createWindow() {
             console.error('The specified installation of Deltarune is invalid.');
             threrror = 'The specified installation of Deltarune is invalid.';
         }
+        if (!fs.existsSync(app.getPath('userData') + '/deltamod_system-' + overrideData + '/deltaruneInstall') && overrideData !== '0') {
+            overrideData = '0'; // Only 0 can be valid without a deltaruneInstallù
+            dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Invalid Installation Selected',
+                message: 'The specified installation of Deltarune is invalid. Reverting to the default installation.'
+            });
+        }
         setSystemIndex(overrideData);
     }
     else {
         console.log('No system index override found, using default index.');
     }
+
     const partition = 'persist:deltamod'; 
     const ses = session.fromPartition(partition);
 
@@ -1172,6 +1181,7 @@ function createWindow() {
 
     ipcMain.handle('deleteSystemIndex', async (event, args) => {
         var index = args[0];
+        var currentIndex = parseInt(fs.readFileSync(getSystemFile('_sysindex',true), 'utf8'));
         var pathToDelete = path.join(app.getPath('userData'), 'deltamod_system-' + index);
 
         if (fs.existsSync(pathToDelete)) {
@@ -1195,7 +1205,29 @@ function createWindow() {
             fs.renameSync(oldPath, newPath);
         });
 
+        if (currentIndex == index)  {
+            var stop = false;
+            var launchHere = 0;
+            systemFiles.forEach((file) => {
+                var idx = file.split('-')[1];
+                if (idx !== 'unique') return;
+                if (stop) return;
+
+                if (fs.existsSync(path.join(app.getPath('userData'), file, 'deltaruneInstall', 'DELTARUNE.exe'))) {
+                    launchHere = parseInt(idx);
+                    stop = true;
+                }
+            });
+
+            fs.writeFileSync(getSystemFile('_sysindex',true), ""+launchHere);
+
+            app.relaunch(properRelaunch());
+            app.exit();
+            return true;
+        }
+
         page("installmanager");
+
         return true;
     });
 
