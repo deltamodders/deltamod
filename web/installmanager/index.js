@@ -82,7 +82,7 @@ function countingSake(str) {
         deleteBtn.innerHTML = icon('delete', '18px');
         deleteBtn.onclick = () => {
             if (window.confirm(`Are you sure you want to delete this installation? This action cannot be undone.`)) {
-                window.electronAPI.invoke('deleteSystemIndex', [""+install.index]);
+                window.electronAPI.invoke('deleteSystemIndex', [install.index.toString()]);
             }
         };
         buttonsDiv.appendChild(deleteBtn);
