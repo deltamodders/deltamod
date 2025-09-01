@@ -1,7 +1,3 @@
-function countingSake(str) {
-    return str.replace(/\s+/g, '');
-}
-
 (async() => {
     var installs = await window.electronAPI.invoke('getInstallations', []);
     var index = await window.electronAPI.invoke('getSystemIndex', []);
@@ -63,15 +59,15 @@ function countingSake(str) {
         goBtn.style.padding = '4px';
         goBtn.style.textAlign = 'center';
         goBtn = adaptForIcons(goBtn);
-        goBtn.innerHTML = icon('sync_arrow_up', '18px') + '';
+        goBtn.innerHTML = icon('sync_arrow_up', '18px');
         goBtn.onclick = () => {
-            window.electronAPI.invoke('changeSystemIndex', [""+install.index]);
+            window.electronAPI.invoke('changeSystemIndex', [install.index.toString()]);
         };
         if (index == install.index) {
             goBtn.disabled = true;
             goBtn.style.cursor = 'not-allowed';
             goBtn.style.opacity = '0.3';
-            goBtn.innerHTML = icon('check_circle', '18px') + '';
+            goBtn.innerHTML = icon('check_circle', '18px');
         }
         buttonsDiv.appendChild(goBtn);
 
@@ -81,7 +77,7 @@ function countingSake(str) {
         deleteBtn = adaptForIcons(deleteBtn);
         deleteBtn.innerHTML = icon('delete', '18px');
         deleteBtn.onclick = () => {
-            if (window.confirm(`Are you sure you want to delete this installation? This action cannot be undone.`)) {
+            if (window.confirm("Are you sure you want to delete this installation? This action cannot be undone.")) {
                 window.electronAPI.invoke('deleteSystemIndex', [install.index.toString()]);
             }
         };
@@ -91,7 +87,7 @@ function countingSake(str) {
         openBtn.style.padding = '4px';
         openBtn.style.textAlign = 'center';
         openBtn = adaptForIcons(openBtn);
-        openBtn.innerHTML = icon('folder_open', '18px') + '';
+        openBtn.innerHTML = icon('folder_open', '18px');
         openBtn.onclick = () => {
             window.electronAPI.invoke('openInstallationFolder', [install.index.toString()]);
         }
