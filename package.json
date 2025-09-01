@@ -21,12 +21,14 @@
       "node_modules/7zip-bin/7x.sh",
       "gm3p"
     ],
-    "nsis": {
-      "oneClick": true,
-      "license": "LICENSE.txt"
+    "win": {
+      "target": [
+        "portable"
+      ]
     },
     "files": [
-      "!**/output"
+      "!**/output",
+      "!**/installbuilder"
     ],
     "linux": {
       "target": "AppImage",

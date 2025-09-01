@@ -123,6 +123,7 @@
             <run>${installnet}</run>
         </runProgram>
     </postInstallationActionList>
+    <compressionAlgorithm>lzma</compressionAlgorithm>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <vendor>Deltamodders</vendor>
