@@ -1151,6 +1151,35 @@ function createWindow() {
         }
     });
 
+    ipcMain.handle('deleteSystemIndex', async (event, args) => {
+        var index = args[0];
+        var pathToDelete = path.join(app.getPath('userData'), 'deltamod_system-' + index);
+
+        if (fs.existsSync(pathToDelete)) {
+            fs.rmdirSync(pathToDelete, { recursive: true });
+        }
+
+        // Now reorder the remaining sysindex
+        var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
+        systemFiles.forEach((file) => {
+            var currentIndex = file.split('-')[1];
+            if (currentIndex === 'unique') return;
+
+            var newIndex = parseInt(currentIndex);
+            if (newIndex > index) {
+                newIndex--;
+            }
+
+            var oldPath = path.join(app.getPath('userData'), file);
+            var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + newIndex);
+
+            fs.renameSync(oldPath, newPath);
+        });
+
+        page("installmanager");
+        return true;
+    });
+
 
     setWindow(win);
 }

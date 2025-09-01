@@ -36,9 +36,7 @@
         goBtn = adaptForIcons(goBtn);
         goBtn.innerHTML = icon('sync_arrow_up', '18px') + ' Switch';
         goBtn.onclick = () => {
-            if (window.confirm(`Are you sure you want to switch? Deltamod will reboot.`)) {
-                window.electronAPI.invoke('changeSystemIndex', [""+install.index]);
-            }
+            window.electronAPI.invoke('changeSystemIndex', [""+install.index]);
         };
         if (index == install.index) {
             goBtn.disabled = true;
@@ -47,6 +45,18 @@
             goBtn.innerHTML = icon('check_circle', '18px') + ' Active';
         }
         goCell.appendChild(goBtn);
+
+        let deleteBtn = document.createElement('button');
+        deleteBtn.style.padding = '8px';
+        deleteBtn.style.textAlign = 'center';
+        deleteBtn = adaptForIcons(deleteBtn);
+        deleteBtn.innerHTML = icon('delete', '18px') + ' Delete';
+        deleteBtn.onclick = () => {
+            if (window.confirm(`Are you sure you want to delete this installation? This action cannot be undone.`)) {
+                window.electronAPI.invoke('deleteSystemIndex', [""+install.index]);
+            }
+        };
+        goCell.appendChild(deleteBtn);
 
         nameCell.appendChild(nameContainer);
 
