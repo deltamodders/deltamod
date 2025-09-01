@@ -236,11 +236,20 @@ function createWindow() {
             console.error('The specified installation of Deltarune is invalid.');
             threrror = 'The specified installation of Deltarune is invalid.';
         }
+        if (!fs.existsSync(app.getPath('userData') + '/deltamod_system-' + overrideData + '/deltaruneInstall') && overrideData !== '0') {
+            overrideData = '0'; // Only 0 can be valid without a deltaruneInstallù
+            dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Invalid Installation Selected',
+                message: 'The specified installation of Deltarune is invalid. Reverting to the default installation.'
+            });
+        }
         setSystemIndex(overrideData);
     }
     else {
         console.log('No system index override found, using default index.');
     }
+
     const partition = 'persist:deltamod'; 
     const ses = session.fromPartition(partition);
 
@@ -766,6 +775,7 @@ function createWindow() {
         }
     });
 
+    // Returns array of indexes with edition, ui name and index.
     ipcMain.handle('getInstallations', async (event, args) => {
         try {
             var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -773,8 +783,18 @@ function createWindow() {
             systemFiles.forEach((file) => {
                 if (file.endsWith('unique')) return;
 
+                let commonName = "";
+                try {
+                    commonName = fs.readFileSync(path.join(app.getPath('userData'), file, '_cname'), 'utf8');
+                }
+                catch {
+                    commonName = "Install #" + (parseInt(file.split('-')[1]) + 1);
+                    fs.writeFileSync(path.join(app.getPath('userData'), file, '_cname'), commonName);
+                }
+
                 installations.push({
                     index: parseInt(file.split('-')[1]),
+                    name: commonName,
                     type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1]))
                 });
             });
@@ -784,6 +804,14 @@ function createWindow() {
             errorWin('Error getting installations: ' + err.toString());
             return [];
         }
+    });
+
+    // Changes C(ommon)Name of the specified installation.
+    ipcMain.handle('setInstallationCName', async (event, args) => {
+        var index = args[0];
+        var newName = args[1];
+
+        fs.writeFileSync(path.join(app.getPath('userData'), 'deltamod_system-'+index, '_cname'), newName);
     });
 
     ipcMain.handle('changeSystemIndex', async (event, args) => {
@@ -1149,6 +1177,62 @@ function createWindow() {
             errorWin('Failed to import Deltarune install: ' + err.toString());
             return false;
         }
+    });
+
+    ipcMain.handle('deleteSystemIndex', async (event, args) => {
+        var index = args[0];
+        var currentIndex = parseInt(fs.readFileSync(getSystemFile('_sysindex',true), 'utf8'));
+        var pathToDelete = path.join(app.getPath('userData'), 'deltamod_system-' + index);
+
+        if (fs.existsSync(pathToDelete)) {
+            fs.rmdirSync(pathToDelete, { recursive: true });
+        }
+
+        // Now reorder the remaining sysindex
+        var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
+        systemFiles.forEach((file) => {
+            var currentIndex = file.split('-')[1];
+            if (currentIndex === 'unique') return;
+
+            var newIndex = parseInt(currentIndex);
+            if (newIndex > index) {
+                newIndex--;
+            }
+
+            var oldPath = path.join(app.getPath('userData'), file);
+            var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + newIndex);
+
+            fs.renameSync(oldPath, newPath);
+        });
+
+        if (currentIndex == index)  {
+            var stop = false;
+            var launchHere = 0;
+            systemFiles.forEach((file) => {
+                var idx = file.split('-')[1];
+                if (idx !== 'unique') return;
+                if (stop) return;
+
+                if (fs.existsSync(path.join(app.getPath('userData'), file, 'deltaruneInstall', 'DELTARUNE.exe'))) {
+                    launchHere = parseInt(idx);
+                    stop = true;
+                }
+            });
+
+            fs.writeFileSync(getSystemFile('_sysindex',true), ""+launchHere);
+
+            app.relaunch(properRelaunch());
+            app.exit();
+            return true;
+        }
+
+        page("installmanager");
+
+        return true;
+    });
+
+    ipcMain.handle('openInstallationFolder', async (event, args) => {
+        shell.openExternal(getSystemFolderOfIndex('deltaruneInstall', args[0]));
     });
 
 
