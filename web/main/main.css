@@ -105,6 +105,22 @@ th {
 }
 
 .modlist-actions-column {
+  input[type=checkbox] {
+    margin: 0;
+    width: 30px;
+    height: 15px;
+    accent-color: rgb(79, 151, 101);
+    border: 6px solid white;
+    scale: 1.1;
+  }
+}
+
+.modlist-actions-holder {
+  margin: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
     display: flex;
     justify-content: center;
     align-items: center;

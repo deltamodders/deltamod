@@ -65,9 +65,8 @@ async function createMod(mod) {
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
     
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
-    if (!imeta.path) {
+    if (!imeta.path)
         imeta.path = 'deltapack://web/mod-placeholder.png';
-    }
 
     let img = document.createElement('img');
     img.src = (imeta.path.includes('deltapack') ? '' : "packet://") + imeta.path;
@@ -81,27 +80,27 @@ async function createMod(mod) {
 
     var atroposImgContainer = packageAtropos(img);
 
-    let infoContainer = document.createElement('div');
-    let titleSpan = document.createElement('span');
+    const infoContainer = document.createElement('div');
+    const titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
     titleSpan.id = `modtitle-${mod.uid}`;
     infoContainer.appendChild(titleSpan);
     infoContainer.appendChild(document.createElement('br'));
 
-    let descSpan = document.createElement('span');
+    const descSpan = document.createElement('span');
     descSpan.className = 'calibri';
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
 
-    let flexContnainer = document.createElement('div');
+    const flexContnainer = document.createElement('div');
     flexContnainer.style.display = 'flex';
     flexContnainer.style.alignItems = 'center';
     flexContnainer.style.justifyContent = 'left';
     flexContnainer.style.gap = '6px';
     infoContainer.appendChild(flexContnainer);
 
-    let authorSpan = document.createElement('p');
+    const authorSpan = document.createElement('p');
     authorSpan = adaptForIcons(authorSpan);
     authorSpan.style.margin = '0px';
     authorSpan.style.marginTop = '4px';
@@ -112,7 +111,7 @@ async function createMod(mod) {
     authorSpan.id = `modauthor-${mod.uid}`;
     flexContnainer.appendChild(authorSpan);
 
-    let sizeSpan = document.createElement('p');
+    const sizeSpan = document.createElement('p');
     sizeSpan = adaptForIcons(sizeSpan);
     sizeSpan.style.margin = '0px';
     sizeSpan.style.marginTop = '4px';
@@ -123,7 +122,7 @@ async function createMod(mod) {
     sizeSpan.id = `modsize-${mod.uid}`;
     flexContnainer.appendChild(sizeSpan);
 
-    let versionSpan = document.createElement('p');
+    const versionSpan = document.createElement('p');
     versionSpan = adaptForIcons(versionSpan);
     versionSpan.style.margin = '0px';
     versionSpan.style.marginTop = '4px';
@@ -138,27 +137,13 @@ async function createMod(mod) {
     bigAhhContainer.appendChild(infoContainer);
 
     modNameContainer.appendChild(bigAhhContainer);
-
-    let actionContainer = document.createElement('td');
-    actionContainer.style.textAlign = 'center';
-    actionContainer.className = 'modlist-actions-column';
-
-    let exploreModButton = document.createElement('button');
-    exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
-    exploreModButton.innerHTML = icon('folder_eye', '20px');
-    actionContainer.appendChild(exploreModButton);
-
-    let deleteModButton = document.createElement('button');
-    deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-    deleteModButton.innerHTML = icon('delete_forever', '20px');
-    actionContainer.appendChild(deleteModButton);
-
-    // Column 2 (Actions)
-    let enabledContainer = document.createElement('td');
+  
+    // Column 2 (Enabled)
+    const enabledContainer = document.createElement('td');
     enabledContainer.style.textAlign = 'center';
     enabledContainer.className = 'modlist-enabled-column';
     {
-        let enabled = document.createElement("input");
+        const enabled = document.createElement("input");
         enabled.type = 'checkbox';
         enabled.id = `modcheck-${mod.uid}`;
         enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
@@ -169,7 +154,46 @@ async function createMod(mod) {
 
             window.electronAPI.invoke("toggleModState", [forMod, isEnabled]);
         };
-        enabledContainer.appendChild(enabled);
+        enabledContainer.appendChild(enabled); 
+    }
+
+    // Column 3 (Actions)
+    const actionContainer = document.createElement('td');
+    actionContainer.style.textAlign = 'center';
+    actionContainer.className = 'modlist-actions-column';
+    {
+        const topActionContainer = document.createElement('div');
+        topActionContainer.className = "modlist-actions-holder";
+        {
+            const exploreModButton = document.createElement('button');
+            exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
+            exploreModButton.innerHTML = icon('folder_eye', '20px');
+            topActionContainer.appendChild(exploreModButton);
+
+            const deleteModButton = document.createElement('button');
+            deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
+            deleteModButton.innerHTML = icon('delete_forever', '20px');
+            topActionContainer.appendChild(deleteModButton);
+        }
+
+        const bottomActionContainer = document.createElement('div');
+        bottomActionContainer.className = "modlist-actions-holder";
+        {
+            const variantDropdown = document.createElement('select');
+            variantDropdown.name = "modlist-variant";
+            variantDropdown.id = `modlist-variant-${mod.uid}`;
+
+            variantDropdown.append(
+                { ...document.createElement("option"), value: "modding.xml", innerText: "Default" },
+                { ...document.createElement("option"), value: "modding-test.xml", innerText: "Test" },
+                { ...document.createElement("option"), value: "modding-other-test.xml", innerText: "Other Test" },
+            );
+
+            bottomActionContainer.appendChild(variantDropdown);
+        }
+
+        actionContainer.appendChild(topActionContainer);
+        actionContainer.appendChild(bottomActionContainer);
     }
 
     modRow.appendChild(modNameContainer);
