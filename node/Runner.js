@@ -1199,6 +1199,10 @@ function createWindow() {
         return true;
     });
 
+    ipcMain.handle('openInstallationFolder', async (event, args) => {
+        shell.openExternal(getSystemFolderOfIndex('deltaruneInstall', args[0]));
+    });
+
 
     setWindow(win);
 }

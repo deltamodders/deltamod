@@ -60,7 +60,7 @@ function countingSake(str) {
         nameContainer.appendChild(details);
 
         let goBtn = document.createElement('button');
-        goBtn.style.padding = '8px';
+        goBtn.style.padding = '4px';
         goBtn.style.textAlign = 'center';
         goBtn = adaptForIcons(goBtn);
         goBtn.innerHTML = icon('sync_arrow_up', '18px') + '';
@@ -76,7 +76,7 @@ function countingSake(str) {
         buttonsDiv.appendChild(goBtn);
 
         let deleteBtn = document.createElement('button');
-        deleteBtn.style.padding = '8px';
+        deleteBtn.style.padding = '4px';
         deleteBtn.style.textAlign = 'center';
         deleteBtn = adaptForIcons(deleteBtn);
         deleteBtn.innerHTML = icon('delete', '18px') + '';
@@ -86,6 +86,16 @@ function countingSake(str) {
             }
         };
         buttonsDiv.appendChild(deleteBtn);
+
+        let openBtn = document.createElement('button');
+        openBtn.style.padding = '4px';
+        openBtn.style.textAlign = 'center';
+        openBtn = adaptForIcons(openBtn);
+        openBtn.innerHTML = icon('folder_open', '18px') + '';
+        openBtn.onclick = () => {
+            window.electronAPI.invoke('openInstallationFolder', [""+install.index]);
+        }
+        buttonsDiv.appendChild(openBtn);
 
         goCell.appendChild(buttonsDiv);
 
