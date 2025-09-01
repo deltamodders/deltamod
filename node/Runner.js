@@ -766,6 +766,7 @@ function createWindow() {
         }
     });
 
+    // Returns array of indexes with edition, ui name and index.
     ipcMain.handle('getInstallations', async (event, args) => {
         try {
             var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -773,8 +774,18 @@ function createWindow() {
             systemFiles.forEach((file) => {
                 if (file.endsWith('unique')) return;
 
+                let commonName = "";
+                try {
+                    commonName = fs.readFileSync(path.join(app.getPath('userData'), file, '_cname'), 'utf8');
+                }
+                catch {
+                    commonName = "Install #" + (parseInt(file.split('-')[1]) + 1);
+                    fs.writeFileSync(path.join(app.getPath('userData'), file, '_cname'), commonName);
+                }
+
                 installations.push({
                     index: parseInt(file.split('-')[1]),
+                    name: commonName,
                     type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1]))
                 });
             });
@@ -784,6 +795,14 @@ function createWindow() {
             errorWin('Error getting installations: ' + err.toString());
             return [];
         }
+    });
+
+    // Changes C(ommon)Name of the specified installation.
+    ipcMain.handle('setInstallationCName', async (event, args) => {
+        var index = args[0];
+        var newName = args[1];
+
+        fs.writeFileSync(path.join(app.getPath('userData'), 'deltamod_system-'+index, '_cname'), newName);
     });
 
     ipcMain.handle('changeSystemIndex', async (event, args) => {
