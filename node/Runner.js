@@ -1069,6 +1069,11 @@ function createWindow() {
         var path1 = args[0];
         var path2 = getSystemFolder('deltaruneInstall',false);
 
+        if (validateDeltarune(path1) === null) {
+            dialog.showErrorBox('Invalid folder', 'The provided folder does not appear to be a valid Deltarune install.');
+            return false;
+        }
+
         // Check if the path is valid
         console.log(`Importing Deltarune install from ${path1} to ${path2}`);
         if (!fs.existsSync(path1)) {
