@@ -405,9 +405,7 @@ function createWindow() {
         var theme = themeObjects[choice];
         var themeHost = System.getSystemFile('_theme', true);
         fs.writeFileSync(themeHost, theme.id);
-        app.relaunch(properRelaunch());
-        app.exit();
-        process.exit(0);
+        win.webContents.send('themeChange');
     });
     /*
      * getTheme

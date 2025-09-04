@@ -60,6 +60,17 @@ function adaptForIcons(element) {
 function icon(name, fontSize) {
     return "<span class=\"material-symbols-outlined\" style=\"font-size: " + fontSize + "\">" + name + "</span>";
 }
+async function refreshTheme() {
+    theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    audio.pause();
+    audio.currentTime = 0;
+    audio.loop = true;
+    audio.volume = 0.7;
+    audio.src = './' + theme.mainSong;
+    audio.play();
+    page(pageN);
+}
+window.preloadAPI.onThemeChange(refreshTheme);
 
 async function page(name) {
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
