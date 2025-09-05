@@ -79,6 +79,10 @@ body {
     scale: 1.06;
 }
 
+.sidebar-button.active {
+    scale: 1.03;
+    background-color: rgb(50, 50, 50);
+}
 .sidebar-button:disabled {
     opacity: 0.7;
     cursor: not-allowed;

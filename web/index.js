@@ -137,6 +137,14 @@ async function page(name) {
         purifiedHTML = purifiedHTML.replace(/AUDIO\[(.*?)\]/g, '');
     }
     document.getElementsByClassName('viewport')[0].innerHTML = purifiedHTML;
+    Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
+        if (button.getAttribute('data-page') === name) {
+            button.classList.add('active');
+        }
+        else {
+            button.classList.remove('active');
+        }
+    });
     pageN = name;
     if (runScripts)
         eval(await fetch('./' + name + '/index.js').then(response => response.text()));
