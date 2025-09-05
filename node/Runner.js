@@ -781,6 +781,26 @@ function createWindow() {
             systemFiles.forEach((file) => {
                 if (file.endsWith('unique')) return;
 
+                var storeJSON = path.join(app.getPath('userData'), file, 'store.json');
+                var deltaruneInstall = path.join(app.getPath('userData'), file, 'deltaruneInstall');
+                if (!fs.existsSync(deltaruneInstall) || !fs.existsSync(storeJSON)) {
+                    var cname = path.join(app.getPath('userData'), file, '_cname');
+                    if (fs.existsSync(cname)) {
+                        cname = fs.readFileSync(cname, 'utf8');
+                    }
+                    else {
+                        cname = "Install #" + (parseInt(file.split('-')[1]) + 1);
+                    }
+                    dialog.showMessageBoxSync({
+                        type: 'warning',
+                        title: 'Invalid Installation Found',
+                        message: `An invalid installation of Deltarune was found and will be removed: ${cname}.`,
+                    });
+                    fs.rmdirSync(path.join(app.getPath('userData'), file), { recursive: true });
+                    console.log(`Removed invalid installation: ${file}`);
+                    return; // Skip invalid installations
+                }
+
                 let commonName = "";
                 try {
                     commonName = fs.readFileSync(path.join(app.getPath('userData'), file, '_cname'), 'utf8');
@@ -1184,7 +1204,12 @@ function createWindow() {
 
     ipcMain.handle('deleteSystemIndex', async (event, args) => {
         var index = args[0];
-        var currentIndex = parseInt(fs.readFileSync(getSystemFile('_sysindex',true), 'utf8'));
+        try {
+            var currentIndex = parseInt(fs.readFileSync(getSystemFile('_sysindex',true), 'utf8'));
+        }
+        catch {
+            var currentIndex = 0;
+        }
         var pathToDelete = path.join(app.getPath('userData'), 'deltamod_system-' + index);
 
         if (fs.existsSync(pathToDelete)) {
@@ -1209,6 +1234,11 @@ function createWindow() {
         });
 
         if (currentIndex == index)  {
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Current installation deleted',
+                message: 'The installation you were using has been deleted. The app will now reboot.'
+            });
             var stop = false;
             var launchHere = 0;
             systemFiles.forEach((file) => {
