@@ -22,6 +22,7 @@ To package Deltamod 1.2 and upwards using the reccomended project file, you will
 - Open InstallBuilder Enterprise.
 - Click `Open` and choose the `project.xml` file.
 - In the same folder, download a .NET 8.0 installer and name it `dotnet.exe`.
+- Also download a GitSCM installer and name it `git.exe`.
 - Press Build to build your Deltamod installer.
 - You can find the output in Documents > InstallBuilder > output.
 

@@ -10,3 +10,4 @@ node/ItchKeys.js
 /deltamod-example-mod
 installbuilder/dotnet.exe
 installbuilder/project.xml.backup
+installbuilder/git.exe
