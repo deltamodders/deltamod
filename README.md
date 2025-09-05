@@ -1,4 +1,4 @@
-<p align="center"><img width="200" alt="Deltamod" src="./web/gblogo-outline.png" /></p><p align="center"><b>A Deltarune mod manager, written in Node.js and Electron.</b> <i>Compatible with Windows and Linux.</i></p>
+<p align="center"><img width="200" alt="Deltamod" src="./web/gblogo-outline.png" /></p><p align="center"><b>A Deltarune mod manager, written in Node.js and Electron.</b> <i>Compatible with Windows and Linux*</i></p>
 
 # Running Deltamod from source
 ## Script
@@ -31,3 +31,6 @@ All external libraries are property of their respective owners.<br />
 This project is in no way affiliated with Deltarune, Fangamer, Toby Fox or Materia Collective.<br />
 The main Deltamod software is licensed under the EUPL (revision 1.2). You can read the license [here](./LICENSE.txt).<br />
 The standard is instead licensed using a modified EUPL license.
+
+### Note: Linux support
+In its current state, Deltamod is very buggy on Linux devices. This is partly to blame on Deltamod being mainly engineered around Windows. You can build and run Deltamod on Linux from source, but **no support will be provided from devs in case of bugs**.
