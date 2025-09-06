@@ -324,8 +324,6 @@ function createWindow() {
         height: 800,
         titleBarStyle: 'hidden',
         resizable: true,
-        maximizable: false,
-        fullscreenable: false,
         titleBarOverlay: {
             color: 'rgba(249,249,249,0)',
             symbolColor: 'rgb(255, 255, 255)',
