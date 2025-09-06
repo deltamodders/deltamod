@@ -1277,7 +1277,11 @@ else app.on('second-instance', (e, argv) => {
     console.log("Received second-instance check:", argv);
     const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
     if (maybeUrl)
+    {
         handleProtocolLaunch(maybeUrl);
+        page('goc-dl');
+        win.focus();
+    }
 });
 
 
