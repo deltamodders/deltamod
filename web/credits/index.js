@@ -34,8 +34,14 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
         group._aAuthors.forEach(credit => {
             var personname = document.createElement('span');
             personname.onclick = () => window.open(credit._sProfileUrl);
-            personname.innerHTML = `${credit._sName}${credit._sRole ? `<i class="calibri credits-author-role">${credit._sRole}</i>` : ''}`;
+            personname.innerHTML = `${credit._sName}`;
             personname.className = 'credits-author';
+
+            if (credit._sRole) {
+                tippy(personname, {
+                    content: credit._sRole,
+                });
+            }
 
             authorsDiv.appendChild(personname);
         });

@@ -31,14 +31,4 @@
 
 .credits-author:hover {
     color: yellow;
-
-    .credits-author-role {
-        display: block;
-    }
-}
-
-.credits-author-role {
-    color: gray;
-    margin: 0;
-    display: none;
 }
