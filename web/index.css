@@ -1,0 +1,189 @@
+:root {
+    --topbar-height: 35px;
+    --sidebar-size: 50px;
+}
+
+#top-options > button {
+    margin: 0;
+    margin-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+@font-face {
+    font-family: 'Orchestra';
+    src: url("./commons/orchestra.ttf") format("truetype");
+}
+
+.sidebar-ribbon {
+    display: inline-flex;
+    justify-content: left;
+    align-items: center;
+    gap: 16px;
+    margin-left: 7px;
+}
+* {
+    -webkit-user-drag: none;
+    user-drag: none;
+}
+
+.atropos {
+    width: 70px;
+    height: 70px;
+}
+
+body {
+    margin: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+}
+
+.sidebar {
+    position: absolute;
+    top: calc(var(--topbar-height) * 1);
+    left: 0;
+    opacity: 0.6;
+    width: calc(var(--sidebar-size) * 1 + 10px);
+    border: 1px solid gray;
+    height: calc(100% - calc(var(--topbar-height) * 1) - 20px);
+    background-color: rgba(0, 0, 0, 1);
+    overflow-x: hidden;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    transition: 0.4s all cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 100;
+}
+
+.sidebar:hover {
+    width: calc(var(--sidebar-size) * 3.2 + 10px);
+    opacity: 1;
+}
+.sidebar > div {
+    margin-left: 5px;
+    text-align: center;
+    margin-right: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    flex-direction: column;
+    gap: 10px
+}
+
+.sidebar-buttons > button {
+    border-radius: 20%;
+    padding: 5px;
+    transition: 0.4s all;
+}
+
+.sidebar-button {
+    transition: 0.5s all cubic-bezier(0.25, 1, 0.5, 1);
+}
+.sidebar-buttons > button:hover {
+    scale: 1.06;
+}
+
+.sidebar-button.active {
+    scale: 1.05;
+    background-color: rgb(72, 72, 72);
+}
+.sidebar-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.viewport {
+    position: absolute;
+    top: calc(var(--topbar-height) * 1);
+    left: calc(var(--sidebar-size) + 15px);
+    width: calc(100% - 45px - (var(--sidebar-size) * 1));
+    height: calc(100% - calc(var(--topbar-height) * 1) - 20px);
+    overflow-y: hidden;
+    padding: 20px;
+    box-sizing: border-box;
+    background-size: cover;
+    background-position-x: 40px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0.5;
+        filter: blur(2px);
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        filter: blur(0px);
+        transform: translateX(0px);
+    }
+}
+.viewport > * {
+    animation: 0.5s fadeIn cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+* {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: auto;
+    font-smoothing: none;
+}
+
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-left: 20px;
+    height: calc(var(--topbar-height) * 1);
+    font-size: 10px;
+    background-color: rgba(0, 0, 0, 1);
+    border-bottom: 1px solid rgb(255, 255, 255);
+    -webkit-app-region: drag;
+    z-index: 1000;
+}
+
+
+.bottombar {
+    position: fixed;
+    bottom: 0;
+    padding-top: 4px;
+    padding-bottom: 6px;
+    left: 0;
+    width: 100%;
+    height: calc(var(--topbar-height) * 1);
+    font-size: 10px;
+    background-color: rgba(0, 0, 0, 1);
+    border-top: 1px solid rgb(255, 255, 255);
+    z-index: 1000;
+}
+
+.topbar > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: var(--topbar-height);
+    margin: 0;
+    padding: 0;
+    color: white;
+    -webkit-app-region: no-drag;
+}
+
+.bottombar > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: var(--topbar-height);
+    margin: 0;
+    padding: 0;
+    color: white;
+    -webkit-app-region: no-drag;
+}
+
+.topbar img {
+    margin-right: 5px;
+}

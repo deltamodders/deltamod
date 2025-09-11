@@ -1,0 +1,13 @@
+node_modules/
+web/setupGit/.vscode/settings.json
+web/locate/.vscode/settings.json
+/dist
+/inno/output
+gm3p/
+node/ItchKeys.js
+/.vs
+/Packager
+/deltamod-example-mod
+installbuilder/dotnet.exe
+installbuilder/project.xml.backup
+installbuilder/git.exe

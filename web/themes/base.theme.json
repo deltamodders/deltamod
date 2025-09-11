@@ -1,0 +1,6 @@
+{
+    "name": "Base Theme",
+    "background": "commons/bg1.gif",
+    "mainSong": "mainTheme1.mp3",
+    "id": "base"
+}

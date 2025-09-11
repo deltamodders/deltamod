@@ -1,0 +1,195 @@
+<project>
+    <shortName>deltamod</shortName>
+    <fullName>Deltamod</fullName>
+    <version>1.2</version>
+    <leftImage>${build_project_directory}/../build/installer/leftImage.png</leftImage>
+    <logoImage>${build_project_directory}/../build/icon-small.png</logoImage>
+    <splashImage>${build_project_directory}/../build/installer/installersplash.png</splashImage>
+    <allowLanguageSelection>1</allowLanguageSelection>
+    <componentList>
+        <component>
+            <name>default</name>
+            <description>Default Component</description>
+            <canBeEdited>1</canBeEdited>
+            <selected>1</selected>
+            <show>1</show>
+            <desktopShortcutList>
+                <shortcut>
+                    <comment>Deltarune mod manager</comment>
+                    <exec></exec>
+                    <icon></icon>
+                    <name>Deltamod</name>
+                    <path></path>
+                    <platforms>all</platforms>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>${installdir}\win-unpacked\Deltamod.exe</windowsExec>
+                    <windowsExecArgs></windowsExecArgs>
+                    <windowsIcon></windowsIcon>
+                    <windowsPath></windowsPath>
+                </shortcut>
+            </desktopShortcutList>
+            <folderList>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${installdir}</destination>
+                    <name>programfiles</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>${build_project_directory}/../dist/win-unpacked</origin>
+                        </distributionDirectory>
+                        <distributionFile>
+                            <origin>${build_project_directory}/dotnet.exe</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>${build_project_directory}/git.exe</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                    <shortcutList>
+                        <shortcut>
+                            <comment>Uninstall</comment>
+                            <exec>${installdir}/${uninstallerName}</exec>
+                            <icon></icon>
+                            <name>Uninstall ${product_fullname}</name>
+                            <path>${installdir}</path>
+                            <platforms>all</platforms>
+                            <runAsAdmin>0</runAsAdmin>
+                            <runInTerminal>0</runInTerminal>
+                            <windowsExec>${installdir}/${uninstallerName}.exe</windowsExec>
+                            <windowsExecArgs></windowsExecArgs>
+                            <windowsIcon></windowsIcon>
+                            <windowsPath>${installdir}</windowsPath>
+                        </shortcut>
+                    </shortcutList>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${installdir}</destination>
+                    <name>programfileslinux</name>
+                    <platforms>linux</platforms>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${installdir}</destination>
+                    <name>programfileslinux64</name>
+                    <platforms>linux-x64</platforms>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${windows_folder_local_appdata}</destination>
+                    <name>programfileswindows</name>
+                    <platforms>windows</platforms>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${windows_folder_local_appdata}</destination>
+                    <name>programfileswindows64</name>
+                    <platforms>windows-x64</platforms>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${installdir}</destination>
+                    <name>programfilesosx</name>
+                    <platforms>osx</platforms>
+                </folder>
+            </folderList>
+            <startMenuShortcutList>
+                <startMenuShortcut>
+                    <comment>Uninstall ${product_fullname}</comment>
+                    <name>Uninstall ${product_fullname}</name>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>${installdir}/${uninstallerName}.exe</windowsExec>
+                    <windowsExecArgs></windowsExecArgs>
+                    <windowsIcon></windowsIcon>
+                    <windowsPath>${installdir}/</windowsPath>
+                </startMenuShortcut>
+                <startMenuShortcut>
+                    <comment></comment>
+                    <name>Deltamod</name>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>${installdir}\win-unpacked\Deltamod.exe</windowsExec>
+                    <windowsExecArgs></windowsExecArgs>
+                    <windowsIcon></windowsIcon>
+                    <windowsPath></windowsPath>
+                </startMenuShortcut>
+            </startMenuShortcutList>
+        </component>
+    </componentList>
+    <postInstallationActionList>
+        <runProgram>
+            <program>${installdir}/dotnet.exe</program>
+            <programArguments>/silent /norestart</programArguments>
+            <progressText>Executing .NET installer</progressText>
+            <run>${installnet}</run>
+        </runProgram>
+        <runProgram>
+            <abortOnError>0</abortOnError>
+            <explanation>Running GIT installer (please check for new windows)</explanation>
+            <program>${installdir}/git.exe</program>
+            <programArguments></programArguments>
+            <progressText>Running GIT installer (please check for new windows)</progressText>
+            <run>${installgit}</run>
+            <showMessageOnError>0</showMessageOnError>
+        </runProgram>
+    </postInstallationActionList>
+    <compressionAlgorithm>lzma</compressionAlgorithm>
+    <enableRollback>1</enableRollback>
+    <enableTimestamp>1</enableTimestamp>
+    <vendor>Deltamodders</vendor>
+    <parameterList>
+        <directoryParameter>
+            <name>installdir</name>
+            <title>Install directory</title>
+            <description></description>
+            <explanation>Choose the directory where you wish to install Deltamod.</explanation>
+            <value></value>
+            <default>${windows_folder_local_appdata}\${product_shortname}</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <cliOptionName>prefix</cliOptionName>
+            <mustBeWritable>0</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>60</width>
+        </directoryParameter>
+        <booleanParameter>
+            <name>installnet</name>
+            <title>Install .NET</title>
+            <description></description>
+            <explanation>Would you like to install .NET 8.0? (needed for Deltamod to run)</explanation>
+            <value></value>
+            <default></default>
+        </booleanParameter>
+        <booleanParameter>
+            <name>installgit</name>
+            <title>Install Git</title>
+            <description></description>
+            <explanation>Would you like to install Git? (needed for Deltamod to run)</explanation>
+            <value>0</value>
+            <default>0</default>
+        </booleanParameter>
+        <parameterGroup>
+            <name>legacynotice</name>
+            <title>Old versions</title>
+            <explanation>Please note that with this update the old versions of the Deltamod installer are considered Legacy as the installer technology has been updated.
+
+However, as a side effect, you will have to uninstall previous versions of Deltamod before proceeding with the installation.
+
+If you have any Deltamod install to delete, please do so now.</explanation>
+            <value></value>
+            <default></default>
+        </parameterGroup>
+    </parameterList>
+    <platformOptionsList>
+        <platformOptions>
+            <platform>windows</platform>
+        </platformOptions>
+    </platformOptionsList>
+    <slideShowImageList>
+        <slideShowImage>
+            <path>${build_project_directory}/../build/installer/slide.png</path>
+        </slideShowImage>
+    </slideShowImageList>
+</project>
+

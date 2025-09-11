@@ -1,0 +1,65 @@
+{
+  "name": "deltamod",
+  "version": "1.2.0",
+  "description": "Deltarune mod manager",
+  "main": "node/Runner.js",
+  "featureFlags": [
+    "GB-OneClick"
+  ],
+  "scripts": {
+    "test": "electron . --developer",
+    "build-windows": "electron-builder --win",
+    "build-linux": "electron-builder --linux"
+  },
+  "build": {
+    "icon": "build/icon-big.png",
+    "asar": false,
+    "asarUnpack": [
+      "node_modules/7zip-bin/win",
+      "node_modules/7zip-bin/linux",
+      "node_modules/7zip-bin/mac",
+      "node_modules/7zip-bin/7x.sh",
+      "gm3p"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "files": [
+      "!**/output",
+      "!**/installbuilder"
+    ],
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility",
+      "icon": "build/icon-big.png"
+    },
+    "protocols": [
+      {
+        "name": "Deltamod",
+        "schemes": [
+          "deltamod"
+        ]
+      }
+    ]
+  },
+  "author": "Deltamodders",
+  "license": "EUPL-1.2",
+  "devDependencies": {
+    "electron": "^37.3.1",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "@chainsafe/xdelta3-node": "^1.0.2",
+    "7zip-min": "^2.1.0",
+    "axios": "^1.11.0",
+    "emit-keypress": "^1.0.1",
+    "mime-types": "^3.0.1",
+    "node-html-parser": "^7.0.1",
+    "nodejs": "^0.0.0",
+    "nodejs-file-downloader": "^4.13.0",
+    "xml-js": "^1.6.11",
+    "yoctocolors-cjs": "^2.1.3"
+  }
+}

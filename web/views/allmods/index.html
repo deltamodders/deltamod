@@ -1,0 +1,27 @@
+<div style="overflow: hidden;">
+    <h1 style="margin-bottom: 0;">All installed mods</h1>
+    <br>
+    <div style="overflow-y: scroll; height: 550px; overflow-x: hidden;">
+        <table style="width: 100%; max-height: 200px; overflow-y: scroll;" id="modtable">
+            <colgroup>
+                <col style="width: 85%;">
+                <col style="width: 15%;">
+            </colgroup>
+            <thead style="position: sticky; top: -2px;">
+                <tr>
+                    <th>Mod</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <div style="display: none;" class="modlist-error" id="error-banner">
+                <h2>{x} mod(s) failed to load</h2>
+                <span class="calibri">Click on this banner to view more details.</span>
+            </div>
+            <tbody id="modlist">
+            </tbody>
+        </table>
+    </div>
+</div>
+JSL
+AUDIO[mainTheme.mp3]
+STYLESHEET[main]

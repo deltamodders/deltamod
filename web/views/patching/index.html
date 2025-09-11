@@ -1,0 +1,50 @@
+<div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+    <div style="text-align: center;">
+        <img src="./views/patching/tenna1.gif" alt="" srcset="" class="mike" width="100">
+        <p><i>MIKE, patch these guys's Deltarune!</i></p>
+        <br>
+        <div class="logs" id="gpl" style="display: none;"></div>
+    </div>
+</div>
+<style>
+    .logs {
+        width: 600px;
+        margin-top: 15px !important;
+        height: 200px;
+        overflow-y: scroll;
+        overflow-x: scroll;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-family: "Calibri", monospace;
+        text-align: left;
+        padding: 5px;
+        font-size: 12px;
+        margin: 0;
+        border: 2px solid white;
+        border-radius: 10px;
+    }
+
+    .buttons {
+        position: fixed;
+        bottom: 20px;
+        display: flex;
+        justify-content: left;
+        align-items: center;
+        gap: 15px;
+        left: 80px;
+    }
+
+    small {
+        color: #888;
+        font-size: 0.8em;
+        font-family: "Calibri", sans-serif;
+    }
+</style>
+
+<div class="buttons">
+    <button onclick="window.currentPageStack.cancelPatch()" id="abort">Abort</button>
+    <button onclick="window.currentPageStack.toggleGM3P()" id="gpl">Toggle logs</button>
+</div>
+AUDIO[patchingNew.mp3]
+JSL
+NO-SIDEBAR

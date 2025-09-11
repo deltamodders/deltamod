@@ -1,0 +1,129 @@
+@font-face {
+    font-family: "Deltarune";
+    src: url("./deltarune.ttf") format("truetype");
+
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+
+    font-weight: normal !important; /* bold fucks shit up the entire font */
+}
+
+@font-face {
+    /*
+        LEGAL INFO:
+        * The FontStruction “8BitOperator JVE (Undertale Dialogue Font)” (https://fontstruct.com/fontstructions/show/1532608) by “ColorSwitchFan25” is licensed under a Creative Commons Attribution Share Alike license (http://creativecommons.org/licenses/by-sa/3.0/).
+    */
+    font-family: "Pixel";
+    src: url("./pixel.otf") format("opentype");
+
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+
+    font-weight: normal !important; /* bold fucks shit up the entire font */
+}
+/* Hide scrollbar for all browsers */
+* {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+* {
+    font-weight: normal !important; /* bold fucks shit up the entire font */
+}
+
+*::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.btnarray > button {
+    margin-right: 10px;
+}
+
+.allcalibri > * {
+    font-family: Calibri, sans-serif;
+}
+
+h1 {
+    font-size: 20px;
+}
+h2 {
+    font-size: 18px;
+}
+p {
+    font-size: 15px;
+}
+button {
+    font-family: "Pixel", sans-serif;
+    font-size: 10px;
+    color: white;
+    background-color: rgb(15, 15, 15);
+    border: 1px solid rgb(66, 66, 66);
+    padding: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: rgb(30, 30, 30);
+}
+
+input {
+    font-family: "Pixel", sans-serif;
+    font-size: 10px;
+    color: white;
+    margin-bottom: 20px;
+    background-color: rgb(15, 15, 15);
+    border: 1px solid rgb(66, 66, 66);
+    padding: 5px;
+}
+
+input::placeholder {
+    color: rgb(150, 150, 150);
+    font-style: italic;
+}
+
+.calibri {
+    font-family: Calibri, sans-serif;
+}
+
+body {
+    background-color: black;
+    color: white;
+    font-family: "Pixel", sans-serif;
+}
+
+.imagetextbundle {
+    display: flex;
+    align-items: center;
+}
+
+.imagetextbundle > img {
+    margin-right: 10px;
+}
+
+h1 {
+    margin-top: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: rgb(40, 40, 40);
+    color: white;
+    font-family: "Pixel", sans-serif;
+    font-size: 13px;
+}
+
+th, td {
+    border: 1px solid rgb(66, 66, 66);
+    padding: 8px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: rgb(30, 30, 30);
+    color: rgb(200, 200, 200);
+}
