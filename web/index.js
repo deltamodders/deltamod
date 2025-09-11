@@ -7,6 +7,42 @@ var update = false;
 var lockFunnyCredits = false;
 var pressCredits = 0;
 
+async function htmlAlert(title, message, buttons) {
+    return new Promise((resolve, reject) => {
+        var alertMain = document.getElementsByClassName('alertMain')[0];
+        var alertMsg = alertMain.getElementsByClassName('alertMsg')[0];
+
+        alertMsg.innerHTML = `
+            <h1>${(title)}</h1>
+            <p>${(message)}</p>
+        `;
+
+        var buttonsHTML = document.createElement('div');
+        buttonsHTML.style.textAlign = 'right';
+        buttons.forEach((button, index) => {
+            var btn = document.createElement('button');
+            btn.textContent = button.text;
+            btn.onclick = function() {
+                alertMain.style.display = 'none';
+                if (button.resolveWith) {
+                    resolve(button.resolveWith);
+                    return;
+                }
+                if (button.rejectWith) {
+                    reject(button.rejectWith);
+                    return;
+                }
+                if (button.onClick) button.onClick();
+                return;
+            }
+            buttonsHTML.appendChild(btn);
+        });
+
+        alertMain.style.display = 'flex';
+        alertMsg.appendChild(buttonsHTML);
+    });
+}
+
 function credits(funny) {
     pressCredits++;
     if (!funny) funny = false;

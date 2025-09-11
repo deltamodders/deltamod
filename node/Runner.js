@@ -368,6 +368,10 @@ function createWindow() {
 
     devToolsEnabled = (process.argv.includes('--developer') || process.env.DELTAMOD_ENV === 'dev' ? true : false);
 
+    if (!devToolsEnabled) {
+        win.setMenu(null);
+    }
+
     win.webContents.on('devtools-opened', () => {
         if (!devToolsEnabled) {
             win.webContents.closeDevTools();
