@@ -144,9 +144,11 @@
             <name>installdir</name>
             <title>Install directory</title>
             <description></description>
-            <explanation>Choose the directory where you wish to install Deltamod.</explanation>
+            <explanation>Choose the directory where you wish to install Deltamod.
+
+NOTE: Directories with spaces are not reccomended as it is known to brick Deltamod sometimes.</explanation>
             <value></value>
-            <default>${windows_folder_local_appdata}\${product_shortname}</default>
+            <default>C:\${product_shortname}</default>
             <allowEmptyValue>0</allowEmptyValue>
             <cliOptionName>prefix</cliOptionName>
             <mustBeWritable>0</mustBeWritable>
