@@ -121,7 +121,21 @@ body {
     transition: 0.4s all;
 }
 
+@keyframes sidebarBtnFadeIn {
+    from {
+        opacity: 0.4;
+        filter: blur(2px);
+        scale: 0.8;
+    }
+    to {
+        opacity: 1;
+        filter: blur(0px);
+        scale: 1;
+    }
+}
+
 .sidebar-button {
+    animation: 0.9s sidebarBtnFadeIn cubic-bezier(0.25, 1, 0.5, 1);
     transition: 0.5s all cubic-bezier(0.25, 1, 0.5, 1);
 }
 .sidebar-buttons > button:hover {

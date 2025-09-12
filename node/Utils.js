@@ -61,4 +61,8 @@ function logOnAccess(obj, logMsg) {
   return obj;
 }
 
-module.exports = {timeoutPromise, logOnAccess, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning, setSharedVar, getSharedVar, properRelaunch};
+function between(string, start, end) {
+  return string.split(start)[1].split(end)[0];
+}
+
+module.exports = {timeoutPromise, between, logOnAccess, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning, setSharedVar, getSharedVar, properRelaunch};

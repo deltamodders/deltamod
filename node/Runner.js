@@ -277,6 +277,7 @@ function createWindow() {
         });
     });
 
+    /*
     ses.protocol.handle('https', async (request) => {
         const url = new URL(request.url);
 
@@ -294,6 +295,7 @@ function createWindow() {
             }
         });
     });
+    */
 
     ses.protocol.handle('http', async (request) => {
         setSharedVar('error', 'HTTP is not supported, please use HTTPS instead.');
@@ -364,6 +366,21 @@ function createWindow() {
         }
     });
 
+    win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
+        // check if it https
+        if (details.url.startsWith('https://')) {
+            console.log('Request to: ' + details.url);
+            var locked = !Netlayer.approve(require('./Utils.js').between(details.url, 'https://', '/'));
+            callback({ cancel: locked });
+            if (locked) {
+                errorWin('A request to an unapproved URL was blocked: ' + details.url);
+            }
+            return;
+        }
+
+        callback({ cancel: false });
+    });
+
     win.loadURL('deltapack://web/index.html');
 
     devToolsEnabled = (process.argv.includes('--developer') || process.env.DELTAMOD_ENV === 'dev' ? true : false);
@@ -408,6 +425,10 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('openExternal', (event, args) => {
+        shell.openExternal(args[0]);
     });
 
     ipcMain.handle('version', () => {
