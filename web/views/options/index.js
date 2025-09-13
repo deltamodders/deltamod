@@ -4,14 +4,14 @@ async function addCheckboxOption(name, description, flagid) {
 
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
-    span.textContent = name;
+    span.innerHTML = name;
     tdLabel.appendChild(span);
 
     tdLabel.appendChild(document.createElement('br'));
 
     const small = document.createElement('small');
     small.className = 'calibri';
-    small.textContent = description;
+    small.innerHTML = description;
     tdLabel.appendChild(small);
 
     const tdInput = document.createElement('td');
@@ -40,21 +40,21 @@ async function addButton(name, description, click, buttonText) {
 
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
-    span.textContent = name;
+    span.innerHTML = name;
     tdLabel.appendChild(span);
 
     tdLabel.appendChild(document.createElement('br'));
 
     const small = document.createElement('small');
     small.className = 'calibri';
-    small.textContent = description;
+    small.innerHTML = description;
     tdLabel.appendChild(small);
 
     const tdInput = document.createElement('td');
     tdInput.classList.add('center');
 
     const button = document.createElement('button');
-    button.textContent = buttonText;
+    button.innerHTML = buttonText;
     button.addEventListener('click', click);
     tdInput.appendChild(button);
 
@@ -72,7 +72,7 @@ async function addButton(name, description, click, buttonText) {
     addButton('Open Deltarune installation folder', 'Open the folder where Deltarune is installed.', async () => {
         await window.electronAPI.invoke('openSysFolder', ['delta']);
     }, 'Open');
-    addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod.', 'outputDelta');
+    addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. <b>Will not work on Steam based installs.</b>', 'outputDelta');
 
     addButton('Select a theme', 'Opens the theme selection menu.', async () => {
         await window.electronAPI.invoke('chooseTheme', []);
