@@ -94,7 +94,7 @@ async function getInstallations(suppressWarnings = false) {
                 dialog.showMessageBoxSync({
                     type: 'warning',
                     title: 'Invalid Installation Found',
-                    message: `An invalid installation of Deltarune was found and will be removed: ${cname}.`,
+                    message: `An invalid or not fully imported installation of Deltarune was found and will be removed from Deltamod: ${cname}.`,
                 });
             }
 
@@ -1152,57 +1152,9 @@ function createWindow() {
 
     /*
      * importDelta
-     * Imports the Deltarune install into the app data.
-     * args[0] is the path to the Deltarune install.
-     * Returns true if successful, false otherwise.
+     * DEPRECATED: use createNewInstallation
     */
-    ipcMain.handle('importDelta', async (event, args) => {
-        if (!args || !args.length) {
-            return false;
-        }
 
-        var path1 = args[0];
-        var path2 = getSystemFolder('deltaruneInstall',false);
-
-        if (validateDeltarune(path1) === null) {
-            dialog.showErrorBox('Invalid folder', 'The provided folder does not appear to be a valid Deltarune install.');
-            return false;
-        }
-
-        // Check if the path is valid
-        console.log(`Importing Deltarune install from ${path1} to ${path2}`);
-        if (!fs.existsSync(path1)) {
-            dialog.showErrorBox('Invalid folder', 'The provided folder path is invalid.');
-            return false;
-        }
-
-        var gameEdition = 'demo';
-        if (fs.existsSync(`${path1}/chapter4_windows/data.win`)) {
-            gameEdition = 'full';
-        }
-
-        if (!fs.existsSync(path2)) {
-            fs.mkdirSync(path2, { recursive: true });
-        }
-
-
-        try {
-            copyRecursiveSync(path1, path2);
-
-            KeyValue.setKVS('loadedDeltarune', true);
-            KeyValue.setKVS('deltarunePath', path2);
-            KeyValue.setKVS('deltaruneEdition', gameEdition);
-            KeyValue.setKVS('enabledMods', []);
-            KeyValue.kvsFlush();
-            
-            page("main");
-            return true;
-        } catch (err) {
-            dialog.showErrorBox('Import failed', `Failed to import Deltarune install: ${err.message}`);
-            errorWin('Failed to import Deltarune install: ' + err.toString());
-            return false;
-        }
-    });
     /*
      * createNewInstallation
      * Copy of importDelta that is called from installmanager.
@@ -1210,6 +1162,8 @@ function createWindow() {
     ipcMain.handle('createNewInstallation', async (event, args) => {
         var i = 0;
         var steam = (args[0] == 'steam');
+        var isFromLocate = (args[1] == 'locate');
+        var specifiedLocatePath = (isFromLocate && args[2] ? args[2] : null);
 
         // get max index
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -1221,7 +1175,12 @@ function createWindow() {
             }
         });
 
-        i++; // next index
+        if (isFromLocate) {
+            i = parseInt(require('./System.js').getCurrentSystemIndex());
+        }
+        else {
+            i++;
+        }
 
         // officially initialize the folder
         if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + i))) {
@@ -1229,7 +1188,7 @@ function createWindow() {
         }
 
         var path1 = "";
-        if (!steam) {
+        if (!steam && !isFromLocate) {
             const result = await dialog.showOpenDialog(win, {
                 properties: ['openDirectory'],
             });
@@ -1239,7 +1198,7 @@ function createWindow() {
             }
             path1 = result.filePaths[0];
         }
-        else {
+        else if (steam && !isFromLocate) {
             dialog.showMessageBoxSync({
                 type: 'info',
                 title: 'Steam information',
@@ -1249,11 +1208,13 @@ function createWindow() {
             var EDITIONS = [{
                 name: "Deltarune (demo)",
                 folder: "DELTARUNEdemo",
-                appid: "1690940"
+                appid: "1690940",
+                downloadable: true
             }, {
                 name: "Deltarune (full)",
                 folder: "DELTARUNE",
-                appid: "1671210"
+                appid: "1671210",
+                downloadable: false
             }];
 
             var userChoice = dialog.showMessageBoxSync({
@@ -1267,9 +1228,22 @@ function createWindow() {
 
             path1 = path.join(STEAM_BASE, chosenEdition.folder);
         }
+        else {
+            path1 = specifiedLocatePath;
+        }
 
         if (validateDeltarune(path1) === null) {
-            dialog.showErrorBox('Invalid folder', 'The provided folder does not appear to be a valid Deltarune install.');
+            dialog.showErrorBox('Invalid folder', (steam ? 'The edition you prompted does not exist on your computer\'s hard drive or is corrupted. Download the game from Steam.' : 'The provided folder does not appear to be a valid Deltarune install.'));
+            if (chosenEdition.downloadable && process.platform === 'win32') {
+                if (dialog.showMessageBoxSync({
+                    type: 'question',
+                    title: 'Download Deltarune demo',
+                    message: 'Would you like to download the Deltarune demo now from Steam?',
+                    buttons: ['Yes', 'No'],
+                }) === 0) {
+                    shell.openExternal('steam://install/' + chosenEdition.appid);
+                }
+            }
             return false;
         }
 
@@ -1309,7 +1283,7 @@ function createWindow() {
                 console.log(`Created junction from ${path1} to ${path2}`);
             }
             
-            page("installmanager");
+            page((isFromLocate ? "main" : "installmanager"));
             return true;
         } catch (err) {
             var stack = err.stack ? '\n\n' + err.stack : '';
@@ -1317,6 +1291,22 @@ function createWindow() {
             errorWin('Failed to import Deltarune install: ' + err.toString());
             return false;
         }
+    });
+
+    ipcMain.handle('isCurrentIndexSteam', async (event, args) => {
+        return KeyValue.readKVSOfIndex('isSteam', parseInt(require('./System.js').getCurrentSystemIndex()));
+    });
+
+    ipcMain.handle('removeSteamIntegration', async (event, args) => {
+        var currentIndex = require('./System.js').getCurrentSystemIndex();
+        Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(currentIndex)));
+        KeyValue.setKVSOfIndex('isSteam', false, parseInt(currentIndex));
+        KeyValue.setKVSOfIndex('originalSteamPath', "", parseInt(currentIndex));
+        KeyValue.setKVSOfIndex('steamAppId', "", parseInt(currentIndex));
+        app.relaunch(properRelaunch());
+        app.exit();
+        process.exit(0);
+        return true;
     });
 
     ipcMain.handle('deleteSystemIndex', async (event, args) => {

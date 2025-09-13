@@ -7,9 +7,12 @@ async function locateDelta() {
 
 function id() {
     console.log(document.getElementById('dpath').value.replaceAll('\\', '/'));
-    window.electronAPI.invoke("importDelta", [document.getElementById('dpath').value.replaceAll('\\', '/')]);
+    window.electronAPI.invoke("createNewInstallation", ["", "locate", document.getElementById('dpath').value.replaceAll('\\', '/')]);
 }
 
+function steam() {
+    window.electronAPI.invoke("createNewInstallation", ["steam", "", ""]);
+}
 function downloadDelta() {
     window.electronAPI.invoke("downloadDelta", []);
 }
@@ -21,5 +24,7 @@ window.currentPageStack.back = function() {
 };
 
 window.currentPageStack.locateDelta = locateDelta;
+
+window.currentPageStack.steam = steam;
 
 window.currentPageStack.downloadDelta = downloadDelta;

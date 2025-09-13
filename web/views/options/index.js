@@ -77,4 +77,11 @@ async function addButton(name, description, click, buttonText) {
     addButton('Select a theme', 'Opens the theme selection menu.', async () => {
         await window.electronAPI.invoke('chooseTheme', []);
     }, 'Open');
+
+    var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
+    if (isSteam) {
+        addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. <b>You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.</b>', async () => {
+            await window.electronAPI.invoke('removeSteamIntegration', []);
+        }, 'Disconnect');
+    }
 })();
