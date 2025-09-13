@@ -8,7 +8,7 @@ const {Downloader} = require("nodejs-file-downloader");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
 const crypto = require('crypto');
 const { hashFile, setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require('./Utils.js');
-const { exec } = require('child_process');
+const { exec, execFileSync } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
 const GamePatching = require('./GamePatching.js');
@@ -864,6 +864,7 @@ function createWindow() {
                 installations.push({
                     index: parseInt(file.split('-')[1]),
                     name: commonName,
+                    steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
                     type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1]))
                 });
             });
@@ -1005,24 +1006,35 @@ function createWindow() {
                 }
                 args += '-output _console.txt';
             }
-            exec(`"${exe}" ${args}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
-                // Always restore originals after the game closes
-                GamePatching.restoreOriginalsIfAny(pathname);
-                win.show();
-                if (error != null) {
-                    errorWin(error);
-                }
+            if (KeyValue.readKVS('isSteam')) {
+                dialog.showMessageBoxSync({
+                    type: 'info',
+                    title: 'Launching via Steam',
+                    message: 'Deltarune will now be launched via Steam. Deltamod will close.',
+                });
+                shell.openExternal(`steam://rungameid/` + KeyValue.readKVS('steamAppId'));
+                app.quit();
+                process.exit(0);
+            } else {
+                exec(`"${exe}" ${args}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
+                    // Always restore originals after the game closes
+                    GamePatching.restoreOriginalsIfAny(pathname);
+                    win.show();
+                    if (error != null) {
+                        errorWin(error);
+                    }
 
-                if (KeyValue.readUniqueFlag('outputDelta')) {
-                    var consoleFile = path.join(path.dirname(exe), '_console.txt');
-                    var consoleContent = fs.readFileSync(consoleFile, 'utf8');
-                    fs.unlinkSync(consoleFile);
-                    setSharedVar('deltaruneLogs', consoleContent);
-                }
-                win.webContents.send('audio', true);
-                win.webContents.send('page', (KeyValue.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main'));
-                //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
-            });
+                    if (KeyValue.readUniqueFlag('outputDelta')) {
+                        var consoleFile = path.join(path.dirname(exe), '_console.txt');
+                        var consoleContent = fs.readFileSync(consoleFile, 'utf8');
+                        fs.unlinkSync(consoleFile);
+                        setSharedVar('deltaruneLogs', consoleContent);
+                    }
+                    win.webContents.send('audio', true);
+                    win.webContents.send('page', (KeyValue.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main'));
+                    //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
+                });
+            }
         } catch (err) {
             errorWin('Coudn\'t patch and run Deltarune: ' + err.toString());
             return false;
@@ -1183,6 +1195,7 @@ function createWindow() {
     */
     ipcMain.handle('createNewInstallation', async (event, args) => {
         var i = 0;
+        var steam = (args[0] == 'steam');
 
         // get max index
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -1202,14 +1215,44 @@ function createWindow() {
         }
 
         var path1 = "";
-        const result = await dialog.showOpenDialog(win, {
-            properties: ['openDirectory'],
-        });
-        if (result.canceled || !result.filePaths || !result.filePaths[0]) {
-            dialog.showErrorBox('No folder selected', 'Please select a folder to proceed.');
-            return false;
+        if (!steam) {
+            const result = await dialog.showOpenDialog(win, {
+                properties: ['openDirectory'],
+            });
+            if (result.canceled || !result.filePaths || !result.filePaths[0]) {
+                dialog.showErrorBox('No folder selected', 'Please select a folder to proceed.');
+                return false;
+            }
+            path1 = result.filePaths[0];
         }
-        path1 = result.filePaths[0];
+        else {
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Steam information',
+                message: 'When importing from Steam, Deltamod will move the game files from the Steam installation folder to the Deltamod folder. After this, the original Steam folder will be deleted and a shortcut to the Deltamod appdata will be made.',
+            });
+            var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
+            var EDITIONS = [{
+                name: "Deltarune (demo)",
+                folder: "DELTARUNEdemo",
+                appid: "1690940"
+            }, {
+                name: "Deltarune (full)",
+                folder: "DELTARUNE",
+                appid: "1671210"
+            }];
+
+            var userChoice = dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Steam edition selection',
+                message: 'Please select the edition of Deltarune you\'d like to import from Steam.',
+                buttons: [...EDITIONS.map(m => m.name), 'Cancel'],
+            });
+
+            var chosenEdition = EDITIONS[userChoice];
+
+            path1 = path.join(STEAM_BASE, chosenEdition.folder);
+        }
 
         if (validateDeltarune(path1) === null) {
             dialog.showErrorBox('Invalid folder', 'The provided folder does not appear to be a valid Deltarune install.');
@@ -1242,6 +1285,15 @@ function createWindow() {
             KeyValue.setKVSOfIndex('deltarunePath', path2, i);
             KeyValue.setKVSOfIndex('deltaruneEdition', gameEdition, i);
             KeyValue.setKVSOfIndex('enabledMods', [], i);
+            KeyValue.setKVSOfIndex('isSteam', steam, i);
+            KeyValue.setKVSOfIndex('originalSteamPath', (steam ? path1 : ""), i);
+            KeyValue.setKVSOfIndex('steamAppId', (steam ? chosenEdition.appid : ""), i);
+
+            if (steam) {
+                fs.rmdirSync(path1, { force: true, recursive: true });
+                execFileSync(path.join(__dirname, '../', 'junction.exe'), ["-accepteula", path1, path2]);
+                console.log(`Created junction from ${path1} to ${path2}`);
+            }
             
             page("installmanager");
             return true;
@@ -1282,6 +1334,11 @@ function createWindow() {
             var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + newIndex);
 
             fs.renameSync(oldPath, newPath);
+
+            if (KeyValue.readKVSOfIndex('isSteam', parseInt(currentIndex)) === true && index != currentIndex) {
+                var originalPath = KeyValue.readKVSOfIndex('originalSteamPath', parseInt(currentIndex));
+                execFileSync(path.join(__dirname, '../', 'junction.exe'), ["-accepteula", originalPath, path.join(newPath, 'deltaruneInstall')]);
+            }
         });
 
         if (currentIndex == index)  {
