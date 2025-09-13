@@ -77,7 +77,7 @@
         deleteBtn = adaptForIcons(deleteBtn);
         deleteBtn.innerHTML = icon('delete', '18px');
         deleteBtn.onclick = () => {
-            if (window.confirm("Are you sure you want to delete this installation? This action cannot be undone.")) {
+            if (window.confirm("Are you sure you want to delete this installation? This action cannot be undone." + (install.steam ? "\nThe game will also be deleted from Steam and will need to be redownloaded to be played." : ""))) {
                 window.electronAPI.invoke('deleteSystemIndex', [install.index.toString()]);
             }
         };

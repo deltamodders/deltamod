@@ -12,6 +12,7 @@ const { exec, execFileSync } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
 const GamePatching = require('./GamePatching.js');
+const Junction = require('./Junction.js');
 const { default: axios } = require('axios');
 const System = require('./System.js');
 const Netlayer = require('./Netlayer.js');
@@ -66,6 +67,60 @@ if (process.argv.includes('--developer') && !isFeatureEnabled("AutoupdateNoMatte
 
 function loadUrl(url) {
     win.loadURL(url);
+}
+
+async function getInstallations(suppressWarnings = false) {
+    const systemFiles = fs
+        .readdirSync(path.join(app.getPath('userData')))
+        .filter(file => file.startsWith('deltamod_system-'));
+
+    const installations = [];
+
+    systemFiles.forEach((file) => {
+        if (file.endsWith('unique')) return;
+
+        const storeJSON = path.join(app.getPath('userData'), file, 'store.json');
+        const deltaruneInstall = path.join(app.getPath('userData'), file, 'deltaruneInstall');
+
+        if (!fs.existsSync(deltaruneInstall) || !fs.existsSync(storeJSON)) {
+            let cname = path.join(app.getPath('userData'), file, '_cname');
+            if (fs.existsSync(cname)) {
+                cname = fs.readFileSync(cname, 'utf8');
+            } else {
+                cname = "Install #" + (parseInt(file.split('-')[1]) + 1);
+            }
+
+            if (!suppressWarnings) {
+                dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Invalid Installation Found',
+                    message: `An invalid installation of Deltarune was found and will be removed: ${cname}.`,
+                });
+            }
+
+            fs.rmdirSync(path.join(app.getPath('userData'), file), { recursive: true });
+            console.log(`Removed invalid installation: ${file}`);
+            return; // Skip invalid installations
+        }
+
+        let commonName = "";
+        try {
+            commonName = fs.readFileSync(path.join(app.getPath('userData'), file, '_cname'), 'utf8');
+        } catch {
+            commonName = "Install #" + (parseInt(file.split('-')[1]) + 1);
+            fs.writeFileSync(path.join(app.getPath('userData'), file, '_cname'), commonName);
+        }
+
+        installations.push({
+            index: parseInt(file.split('-')[1]),
+            name: commonName,
+            steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
+            type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1])),
+            appid: KeyValue.readKVSOfIndex('steamAppID', parseInt(file.split('-')[1])),
+        });
+    });
+
+    return installations;
 }
 
 /**
@@ -827,48 +882,7 @@ function createWindow() {
     // Returns array of indexes with edition, ui name and index.
     ipcMain.handle('getInstallations', async (event, args) => {
         try {
-            var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
-            var installations = [];
-            systemFiles.forEach((file) => {
-                if (file.endsWith('unique')) return;
-
-                var storeJSON = path.join(app.getPath('userData'), file, 'store.json');
-                var deltaruneInstall = path.join(app.getPath('userData'), file, 'deltaruneInstall');
-                if (!fs.existsSync(deltaruneInstall) || !fs.existsSync(storeJSON)) {
-                    var cname = path.join(app.getPath('userData'), file, '_cname');
-                    if (fs.existsSync(cname)) {
-                        cname = fs.readFileSync(cname, 'utf8');
-                    }
-                    else {
-                        cname = "Install #" + (parseInt(file.split('-')[1]) + 1);
-                    }
-                    dialog.showMessageBoxSync({
-                        type: 'warning',
-                        title: 'Invalid Installation Found',
-                        message: `An invalid installation of Deltarune was found and will be removed: ${cname}.`,
-                    });
-                    fs.rmdirSync(path.join(app.getPath('userData'), file), { recursive: true });
-                    console.log(`Removed invalid installation: ${file}`);
-                    return; // Skip invalid installations
-                }
-
-                let commonName = "";
-                try {
-                    commonName = fs.readFileSync(path.join(app.getPath('userData'), file, '_cname'), 'utf8');
-                }
-                catch {
-                    commonName = "Install #" + (parseInt(file.split('-')[1]) + 1);
-                    fs.writeFileSync(path.join(app.getPath('userData'), file, '_cname'), commonName);
-                }
-
-                installations.push({
-                    index: parseInt(file.split('-')[1]),
-                    name: commonName,
-                    steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
-                    type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1]))
-                });
-            });
-            return installations;
+            return await getInstallations();
         }
         catch (err) {
             errorWin('Error getting installations: ' + err.toString());
@@ -1291,7 +1305,7 @@ function createWindow() {
 
             if (steam) {
                 fs.rmdirSync(path1, { force: true, recursive: true });
-                execFileSync(path.join(__dirname, '../', 'junction.exe'), ["-accepteula", path1, path2]);
+                Junction.createJunction(path2, path1);
                 console.log(`Created junction from ${path1} to ${path2}`);
             }
             
@@ -1307,6 +1321,9 @@ function createWindow() {
 
     ipcMain.handle('deleteSystemIndex', async (event, args) => {
         var index = args[0];
+        if (KeyValue.readKVSOfIndex('isSteam', parseInt(index)) === true) {
+            Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(index)));
+        }
         try {
             var currentIndex = parseInt(fs.readFileSync(getSystemFile('_sysindex',true), 'utf8'));
         }
@@ -1334,11 +1351,6 @@ function createWindow() {
             var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + newIndex);
 
             fs.renameSync(oldPath, newPath);
-
-            if (KeyValue.readKVSOfIndex('isSteam', parseInt(currentIndex)) === true && index != currentIndex) {
-                var originalPath = KeyValue.readKVSOfIndex('originalSteamPath', parseInt(currentIndex));
-                execFileSync(path.join(__dirname, '../', 'junction.exe'), ["-accepteula", originalPath, path.join(newPath, 'deltaruneInstall')]);
-            }
         });
 
         if (currentIndex == index)  {
