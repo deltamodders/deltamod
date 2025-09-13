@@ -13,12 +13,7 @@ window.currentPageStack.gpl = function (message) {
     gplElement.scrollTop = gplElement.scrollHeight;
 }
 
-window.currentPageStack.cancelPatch = function () {
-    const controller = new AbortController;
-    page('main');
-    controller.abort();
-    return;
-}
+
 
 window.currentPageStack.toggleGM3P = function () {
     const gplElement = document.getElementById("gpl");
