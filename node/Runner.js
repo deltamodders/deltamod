@@ -116,7 +116,7 @@ async function getInstallations(suppressWarnings = false) {
             name: commonName,
             steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
             type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1])),
-            appid: KeyValue.readKVSOfIndex('steamAppID', parseInt(file.split('-')[1])),
+            appid: KeyValue.readKVSOfIndex('steamAppId', parseInt(file.split('-')[1])),
         });
     });
 
@@ -1182,11 +1182,6 @@ function createWindow() {
             i++;
         }
 
-        // officially initialize the folder
-        if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + i))) {
-            fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-' + i), { recursive: true });
-        }
-
         var path1 = "";
         if (!steam && !isFromLocate) {
             const result = await dialog.showOpenDialog(win, {
@@ -1205,17 +1200,7 @@ function createWindow() {
                 message: 'When importing from Steam, Deltamod will move the game files from the Steam installation folder to the Deltamod folder. After this, the original Steam folder will be deleted and a shortcut to the Deltamod appdata will be made.',
             });
             var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
-            var EDITIONS = [{
-                name: "Deltarune (demo)",
-                folder: "DELTARUNEdemo",
-                appid: "1690940",
-                downloadable: true
-            }, {
-                name: "Deltarune (full)",
-                folder: "DELTARUNE",
-                appid: "1671210",
-                downloadable: false
-            }];
+            var EDITIONS = require('../steamdata.json').editions;
 
             var userChoice = dialog.showMessageBoxSync({
                 type: 'info',
@@ -1225,6 +1210,11 @@ function createWindow() {
             });
 
             var chosenEdition = EDITIONS[userChoice];
+
+            if ((await getInstallations(true)).map(x => x.appid).includes(chosenEdition.appid)) {
+                dialog.showErrorBox('Edition already imported', 'The selected edition has already been imported. Please select another edition or remove the existing one from the Install Manager.');
+                return false;
+            }
 
             path1 = path.join(STEAM_BASE, chosenEdition.folder);
         }
@@ -1248,6 +1238,11 @@ function createWindow() {
         }
 
         var path2 = getSystemFolderOfIndex('deltaruneInstall',i);
+
+        // officially initialize the folder
+        if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + i))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-' + i), { recursive: true });
+        }
 
         // Check if the path is valid
         console.log(`Importing Deltarune install from ${path1} to ${path2}`);

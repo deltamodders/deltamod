@@ -1,0 +1,16 @@
+{
+    "editions": [
+        {
+            "name": "Deltarune (demo)",
+            "folder": "DELTARUNEdemo",
+            "appid": "1690940",
+            "downloadable": true
+        },
+        {
+            "name": "Deltarune (full)",
+            "folder": "DELTARUNE",
+            "appid": "1671210",
+            "downloadable": false
+        }
+    ]
+}
