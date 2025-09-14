@@ -1197,7 +1197,7 @@ function createWindow() {
             dialog.showMessageBoxSync({
                 type: 'info',
                 title: 'Steam information',
-                message: 'When importing from Steam, Deltamod will move the game files from the Steam installation folder to the Deltamod folder. After this, the original Steam folder will be deleted and a shortcut to the Deltamod appdata will be made.',
+                message: 'This will modify your Steam folder to point to a Deltamod-managed install of Deltarune. This feature is in beta and if the install is later removed from Deltamod, you will need to re-download it from Steam.\n\n(This won\'t affect other games installed on Steam.)',
             });
             var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
             var EDITIONS = require('../steamdata.json').editions;
