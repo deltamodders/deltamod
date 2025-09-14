@@ -174,11 +174,9 @@ NOTE: Directories with spaces are not reccomended as it is known to brick Deltam
         <parameterGroup>
             <name>legacynotice</name>
             <title>Old versions</title>
-            <explanation>Please note that with this update the old versions of the Deltamod installer are considered Legacy as the installer technology has been updated.
+            <explanation>Before you install Deltamod 1.2, you will have to uninstall previous versions of Deltamod.
 
-However, as a side effect, you will have to uninstall previous versions of Deltamod before proceeding with the installation.
-
-If you have any Deltamod install to delete, please do so now.</explanation>
+If you have any Deltamod installation to delete, please do so now by going to the Control Panel.</explanation>
             <value></value>
             <default></default>
         </parameterGroup>
