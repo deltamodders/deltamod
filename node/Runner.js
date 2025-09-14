@@ -1197,7 +1197,7 @@ function createWindow() {
             dialog.showMessageBoxSync({
                 type: 'info',
                 title: 'Steam information',
-                message: 'This will modify your Steam folder to point to a Deltamod-managed install of Deltarune. This feature is in beta and if the install is later removed from Deltamod, you will need to re-download it from Steam.',
+                message: 'This will modify your Steam folder to point to a Deltamod-managed install of Deltarune. This feature is in beta and if the install is later removed from Deltamod, you will need to re-download it from Steam.\n\n(This won\'t affect other games installed on Steam.)',
             });
             var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
             var EDITIONS = require('../steamdata.json').editions;
