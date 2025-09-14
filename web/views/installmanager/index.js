@@ -51,6 +51,11 @@
 
         const details = document.createElement('small');
         details.innerHTML = ` Game type: ${uppercaseFirst(install.type)}<br>Game source: ${(install.steam ? 'Steam' : 'Manual')}`;
+        {
+            details.innerText = ` Game type: ${uppercaseFirst(install.type)}`;
+            details.innerHTML += "<br>";
+            details.innerText = `Game source: ${(install.steam ? 'Steam' : 'Manual')}`;
+        }
         details.classList.add('calibri');
         details.style.display = 'block';
         nameContainer.appendChild(details);
