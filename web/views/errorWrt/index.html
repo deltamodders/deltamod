@@ -9,8 +9,8 @@
 <body>
     <div class="win">
         <div class="organizer">
-            <img src="lancer.gif" alt="Lancer" width="130">
-            <h1>Deltamod encountered an error!</h1>
+            <img src="lancer.gif" alt="Lancer" width="130" style="margin-bottom: 10px;">
+            <h1><i>Deltamod encountered an error!</i></h1>
             <p>If you want to report it, go to "Documents" > "deltamod" and find the file named <code id="errorfilename">(shit)</code>. You can then send its contents to a Deltamod dev.</p>
             <div class="button-container">
                 <button id="showerror">Show error file</button>
@@ -19,11 +19,15 @@
                 <button id="gitbtn" onclick="openErrorGithub()">Report this issue on GitHub</button>
             </div>
             <br>
-            <pre><code id="error"></code></pre>
+            <pre id="errorPre"><code id="error"></code></pre>
         </div>
     </div>
 </body>
 <style>
+    #errorPre {
+        text-align: left;
+        max-width: 100%;
+    }
     p {
         color: #ffffff;
         font-family: 'Calibri', sans-serif;
@@ -122,11 +126,9 @@
 
     var a = new Audio('dogcheck.mp3');
     a.playbackRate = 1;
+    a.loop = true;
     a.play().catch((e) => {
         console.error("Audio playback failed:", e);
-    });
-    a.addEventListener('ended', () => {
-        window.close();
     });
 </script>
 </html>
