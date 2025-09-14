@@ -53,7 +53,7 @@
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",
     "7zip-min": "^2.1.0",
-    "axios": "^1.11.0",
+    "axios": "^1.12.0",
     "emit-keypress": "^1.0.1",
     "mime-types": "^3.0.1",
     "node-html-parser": "^7.0.1",
