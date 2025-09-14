@@ -148,7 +148,7 @@
 
 NOTE: Directories with spaces are not reccomended as it is known to brick Deltamod sometimes.</explanation>
             <value></value>
-            <default>C:\${product_shortname}</default>
+            <default>${windows_folder_local_appdata}\${product_shortname}</default>
             <allowEmptyValue>0</allowEmptyValue>
             <cliOptionName>prefix</cliOptionName>
             <mustBeWritable>0</mustBeWritable>
