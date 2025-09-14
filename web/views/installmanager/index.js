@@ -50,11 +50,13 @@
         nameContainer.appendChild(boldName);
 
         const details = document.createElement('small');
-        details.innerHTML = ` Game type: ${uppercaseFirst(install.type)}<br>Game source: ${(install.steam ? 'Steam' : 'Manual')}`;
         {
-            details.innerText = ` Game type: ${uppercaseFirst(install.type)}`;
-            details.innerHTML += "<br>";
-            details.innerText = `Game source: ${(install.steam ? 'Steam' : 'Manual')}`;
+            const gameType = document.createTextNode(` Game type: ${uppercaseFirst(install.type)}`);
+            const lineBreak = document.createElement('br');
+            const gameSource = document.createTextNode(`Game source: ${(install.steam ? 'Steam' : 'Manual')}`);
+            details.appendChild(gameType);
+            details.appendChild(lineBreak);
+            details.appendChild(gameSource);
         }
         details.classList.add('calibri');
         details.style.display = 'block';
