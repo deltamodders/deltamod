@@ -33,6 +33,10 @@ function setSystemIndex(index) {
     console.log(`System index set to ${systemIndex}`);
 }
 
+function getCurrentSystemIndex() {
+    return systemIndex;
+}
+
 function getSystemFile(fileid, unique) {
     return path.join(app.getPath('userData'), 'deltamod_system-' + (unique ? "unique" : systemIndex), fileid);
 }
@@ -74,6 +78,7 @@ module.exports = {
     healthCheck,
     getSystemFolderOfIndex,
     getSystemFileOfIndex,
+    getCurrentSystemIndex,
     generateUniqueId,
     getTemporary,
     clearTemporary

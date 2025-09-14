@@ -50,7 +50,12 @@
         nameContainer.appendChild(boldName);
 
         const details = document.createElement('small');
-        details.innerText = ` Game type: ${uppercaseFirst(install.type)}`;
+        details.innerHTML = ` Game type: ${uppercaseFirst(install.type)}<br>Game source: ${(install.steam ? 'Steam' : 'Manual')}`;
+        {
+            details.innerText = ` Game type: ${uppercaseFirst(install.type)}`;
+            details.innerHTML += "<br>";
+            details.innerText = `Game source: ${(install.steam ? 'Steam' : 'Manual')}`;
+        }
         details.classList.add('calibri');
         details.style.display = 'block';
         nameContainer.appendChild(details);
@@ -77,7 +82,7 @@
         deleteBtn = adaptForIcons(deleteBtn);
         deleteBtn.innerHTML = icon('delete', '18px');
         deleteBtn.onclick = () => {
-            if (window.confirm("Are you sure you want to delete this installation? This action cannot be undone.")) {
+            if (window.confirm("Are you sure you want to delete this installation? This action cannot be undone." + (install.steam ? "\nThe game will also be deleted from Steam and will need to be redownloaded to be played." : ""))) {
                 window.electronAPI.invoke('deleteSystemIndex', [install.index.toString()]);
             }
         };
@@ -123,5 +128,31 @@
 
     newCell.appendChild(newButton);
     newRow.appendChild(newCell);
+
+    const steamRow = document.createElement('tr');
+    const steamCell = document.createElement('td');
+    steamCell.colSpan = 2;
+    steamCell.style.textAlign = 'center';
+
+    let steamButton = document.createElement('button');
+    steamButton.style.width = '100%';
+    steamButton.style.cursor = 'pointer';
+    steamButton.style.display = 'inline-flex';
+    steamButton.style.alignItems = 'center';
+    steamButton.style.gap = '10px';
+    steamButton.style.paddingTop = '10px';
+    steamButton.style.paddingBottom = '10px';
+    steamButton.style.justifyContent = 'center';
+    steamButton.innerHTML = '<img src="./steam.svg" width="20"> Import Steam installation (BETA)';
+    steamButton.style.textAlign = 'center';
+    steamButton.onclick = () => {
+        console.log('Steam button clicked');
+        window.electronAPI.invoke('createNewInstallation', ['steam']);
+    };
+
+    steamCell.appendChild(steamButton);
+    steamRow.appendChild(steamCell);
+    
     tbody.appendChild(newRow);
+    tbody.appendChild(steamRow);
 })();

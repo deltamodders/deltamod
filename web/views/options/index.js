@@ -4,14 +4,14 @@ async function addCheckboxOption(name, description, flagid) {
 
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
-    span.textContent = name;
+    span.innerText = name;
     tdLabel.appendChild(span);
 
     tdLabel.appendChild(document.createElement('br'));
 
     const small = document.createElement('small');
     small.className = 'calibri';
-    small.textContent = description;
+    small.innerText = description;
     tdLabel.appendChild(small);
 
     const tdInput = document.createElement('td');
@@ -40,21 +40,21 @@ async function addButton(name, description, click, buttonText) {
 
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
-    span.textContent = name;
+    span.innerText = name;
     tdLabel.appendChild(span);
 
     tdLabel.appendChild(document.createElement('br'));
 
     const small = document.createElement('small');
     small.className = 'calibri';
-    small.textContent = description;
+    small.innerText = description;
     tdLabel.appendChild(small);
 
     const tdInput = document.createElement('td');
     tdInput.classList.add('center');
 
     const button = document.createElement('button');
-    button.textContent = buttonText;
+    button.innerText = buttonText;
     button.addEventListener('click', click);
     tdInput.appendChild(button);
 
@@ -72,9 +72,16 @@ async function addButton(name, description, click, buttonText) {
     addButton('Open Deltarune installation folder', 'Open the folder where Deltarune is installed.', async () => {
         await window.electronAPI.invoke('openSysFolder', ['delta']);
     }, 'Open');
-    addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod.', 'outputDelta');
+    addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. Will not work on Steam based installs.', 'outputDelta');
 
     addButton('Select a theme', 'Opens the theme selection menu.', async () => {
         await window.electronAPI.invoke('chooseTheme', []);
     }, 'Open');
+
+    var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
+    if (isSteam) {
+        addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.', async () => {
+            await window.electronAPI.invoke('removeSteamIntegration', []);
+        }, 'Disconnect');
+    }
 })();
