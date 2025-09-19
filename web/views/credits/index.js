@@ -54,5 +54,5 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
 
 (async() => {
     var version = await window.electronAPI.invoke('version',[]);
-    document.querySelector('#version').innerText = `Deltamod, version ${version}`;
+    document.querySelector('#version').innerText = `Deltamod v${version}`;
 })();
