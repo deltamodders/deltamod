@@ -532,6 +532,16 @@ function createWindow() {
         return require('../package.json').version;
     });
 
+    ipcMain.handle('resetPWH', () => {
+        {
+            fs.unlinkSync(path.join(app.getPath('userData'), 'deltamod_system-unique', 'dimensions.json'));
+            fs.unlinkSync(path.join(app.getPath('userData'), 'deltamod_system-unique', 'positions.json'));
+        }
+        app.relaunch(properRelaunch());
+        app.exit();
+        process.exit(0);
+    });
+
     ipcMain.handle('log', (event, args) => {
         console.rendererLog(args[1], args[2], args[0]);
     });
