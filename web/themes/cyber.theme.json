@@ -1,6 +1,6 @@
 {
     "name": "Cyber Theme",
-    "background": "commons/bg2.png",
+    "background": "commons/backgrounds/cyberfield.png",
     "mainSong": "mainTheme2.mp3",
     "id": "cyber"
 }

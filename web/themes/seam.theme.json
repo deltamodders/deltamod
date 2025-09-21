@@ -1,6 +1,6 @@
 {
     "name": "Seam's Shop",
-    "background": "commons/bg6.png",
+    "background": "commons/backgrounds/shop.png",
     "mainSong": "seam.mp3",
     "id": "seam"
 }
