@@ -52,7 +52,7 @@ async function createMod(mod) {
 
     // Column 1 (Mod)
     let modNameContainer = document.createElement('td');
-    
+
     let bigAhhContainer = document.createElement('div');
     bigAhhContainer.style.display = 'flex';
     bigAhhContainer.style.alignItems = 'center';
@@ -63,7 +63,7 @@ async function createMod(mod) {
     let imageContainer = document.createElement('div');
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
-    
+
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
     if (!imeta.path) {
         imeta.path = 'deltapack://web/mod-placeholder.png';
@@ -90,6 +90,7 @@ async function createMod(mod) {
 
     let descSpan = document.createElement('span');
     descSpan.className = 'calibri';
+    descSpan.style = 'font-size: 10px; color: #ffffffdd;';
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
@@ -228,7 +229,7 @@ function createErroringMods(errors) {
 }
 
 function loadInst(index) {
-    window.electronAPI.invoke('changeSystemIndex', [""+index])
+    window.electronAPI.invoke('changeSystemIndex', ["" + index])
 }
 
 (async () => {
@@ -269,12 +270,12 @@ function patchAndRun() {
     var selectedMods = allChecks.filter(cb => cb.checked).map(cb => cb.id.replace('modcheck-', ''));
     console.log('Selected mods:', selectedMods);
     page('patching');
-    window.electronAPI.invoke('patchAndRun',[selectedMods]);
+    window.electronAPI.invoke('patchAndRun', [selectedMods]);
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
 
-window.currentPageStack.disableMusic = async function(button) {
+window.currentPageStack.disableMusic = async function (button) {
     audio.pause();
     audio.currentTime = 0;
     button.style.display = 'none';

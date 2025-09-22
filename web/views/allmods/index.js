@@ -22,6 +22,7 @@ async function createMod(mod) {
 
     const descSpan = document.createElement('span');
     descSpan.className = 'calibri';
+    descSpan.style = 'font-size: 10px; color: #ffffffdd;';
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     modNameContainer.appendChild(descSpan);
