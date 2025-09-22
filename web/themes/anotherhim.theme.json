@@ -1,6 +1,6 @@
 {
     "name": "ANOTHER HIM",
-    "background": "commons/bg5.png",
+    "background": "commons/backgrounds/HIM.webp",
     "mainSong": "mainTheme1.mp3",
     "id": "anotherhim"
 }
