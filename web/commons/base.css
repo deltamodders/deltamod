@@ -1,64 +1,61 @@
 @font-face {
-    font-family: "Deltarune";
-    src: url("./deltarune.ttf") format("truetype");
-
-    image-rendering: pixelated;
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: geometricPrecision;
-
-    font-weight: normal !important; /* bold fucks shit up the entire font */
-}
-
-@font-face {
     /*
         LEGAL INFO:
         * The FontStruction “8BitOperator JVE (Undertale Dialogue Font)” (https://fontstruct.com/fontstructions/show/1532608) by “ColorSwitchFan25” is licensed under a Creative Commons Attribution Share Alike license (http://creativecommons.org/licenses/by-sa/3.0/).
     */
     font-family: "Pixel";
-    src: url("./pixel.otf") format("opentype");
+    src: url("./8bitoperator-JVE-fixed2.ttf") format("truetype");
 
     image-rendering: pixelated;
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: geometricPrecision;
 
-    font-weight: normal !important; /* bold fucks shit up the entire font */
+    font-weight: normal !important;
+    /* bold fucks shit up the entire font */
 }
+
 /* Hide scrollbar for all browsers */
 * {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
 }
 
 * {
-    font-weight: normal !important; /* bold fucks shit up the entire font */
+    font-weight: normal !important;
+    /* bold fucks shit up the entire font */
 }
 
 *::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
-.btnarray > button {
+.btnarray>button {
     margin-right: 10px;
 }
 
-.allcalibri > * {
+.allcalibri>* {
     font-family: Calibri, sans-serif;
 }
 
 h1 {
-    font-size: 20px;
+    font-size: 32px;
 }
+
 h2 {
     font-size: 18px;
 }
+
 p {
-    font-size: 15px;
+    font-size: 16px;
 }
+
 button {
     font-family: "Pixel", sans-serif;
-    font-size: 10px;
+    font-size: 16px;
     color: white;
     background-color: rgb(15, 15, 15);
     border: 1px solid rgb(66, 66, 66);
@@ -72,7 +69,7 @@ button:hover {
 
 input {
     font-family: "Pixel", sans-serif;
-    font-size: 10px;
+    font-size: 16px;
     color: white;
     margin-bottom: 20px;
     background-color: rgb(15, 15, 15);
@@ -100,24 +97,30 @@ body {
     align-items: center;
 }
 
-.imagetextbundle > img {
+.imagetextbundle>img {
     margin-right: 10px;
 }
 
 h1 {
     margin-top: 0;
+    margin-block-start: 21px;
+    margin-block-end: 21px;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background-color: rgb(40, 40, 40);
     color: white;
     font-family: "Pixel", sans-serif;
-    font-size: 13px;
+    font-size: 16px;
 }
 
-th, td {
+th,
+td {
     border: 1px solid rgb(66, 66, 66);
     padding: 8px 12px;
     text-align: left;
