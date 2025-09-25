@@ -130,7 +130,7 @@ window.preloadAPI.onThemeChange(refreshTheme);
 
 async function page(name) {
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
-    document.getElementsByClassName('viewport')[0].style.backgroundImage = 'url(./' + theme.background + ')';
+    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(./' + theme.background + ')';
     window.currentPageStack = {};
     var purifiedHTML =  await fetch('./views/' + name + '/index.html').then(response => response.text());
     var runScripts = false;
@@ -231,6 +231,7 @@ if (!window.electronAPI) {
             await page('update');
         }
     } else {
+        window.electronAPI.invoke('showWindow', []);
         await page('locate');
     }
 
