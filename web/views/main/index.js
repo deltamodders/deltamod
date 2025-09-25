@@ -10,7 +10,7 @@ function purify(text) {
 }
 
 setTimeout(() => {
-    document.getElementsByClassName('buttons')[0].style.display = 'block';
+    document.getElementsByClassName('buttons')[0].style.display = 'flex';
 }, 500);
 
 function packageAtropos(container) {

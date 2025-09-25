@@ -19,11 +19,14 @@
   left: calc(50% + 35px);
   transform: translateX(-50%);
   transition: 0.3s all;
-  animation: 0.4s open cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: 0.3s open cubic-bezier(0.34, 1.56, 0.64, 1);
+  justify-content: right;
+  align-items: center;
+  gap: 2px;
 }
 
 #par {
-  background-color: green;
+  background-color: rgb(0, 79, 0);
   color: white;
 }
 
@@ -37,18 +40,22 @@
   text-align: center;
   padding: 0;
   font-size: 35px;
-  border: 2px solid white;
-  border-radius: 47%;
+  border: 2px solid rgba(255, 255, 255, 0.452);
+  border-radius: 50%;
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  transition: 0.4s all;
+  transition: 0.2s all;
 }
 .buttons > button:hover {
   scale: 1.1;
   color: black !important;
+  border-radius: 40%;
   background-color: white !important;
   border-color: rgba(255, 255, 255, 0.7);
+}
+.buttons > button:active {
+  scale: 1.2;
 }
 /*
 .buttons:hover {

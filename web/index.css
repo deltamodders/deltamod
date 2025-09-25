@@ -115,12 +115,6 @@ body {
     gap: 10px
 }
 
-.sidebar-buttons > button {
-    border-radius: 20%;
-    padding: 5px;
-    transition: 0.4s all;
-}
-
 @keyframes sidebarBtnFadeIn {
     from {
         opacity: 0.4;
@@ -135,18 +129,21 @@ body {
 }
 
 .sidebar-button {
-    animation: 0.9s sidebarBtnFadeIn cubic-bezier(0.25, 1, 0.5, 1);
-    transition: 0.5s all cubic-bezier(0.25, 1, 0.5, 1);
+    transition: 0.3s all cubic-bezier(0.25, 1, 0.5, 1);
+    border-radius: 40%;
+    padding: 5px;
+    transition: 0.2s all;
 }
-.sidebar-buttons > button:hover {
-    scale: 1.06;
+.sidebar-button:hover {
+    scale: 1.2;
+    border-radius: 10%;
     background-color: rgb(72, 72, 72);
 }
 
 .sidebar-button.active {
-    scale: 1.05;
     background-color: rgb(107, 107, 107);
 }
+
 .sidebar-button:disabled {
     opacity: 0.7;
     cursor: not-allowed;
