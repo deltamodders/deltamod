@@ -223,6 +223,7 @@ if (!window.electronAPI) {
     if (loaded.loaded) {
         var available = await window.electronAPI.invoke('fireUpdate', []);
         console.log('Update check complete. Update available:', available);
+        window.electronAPI.invoke('showWindow', []);
         if (!available) {
             await page('main');
         }

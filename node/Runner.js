@@ -422,6 +422,7 @@ function createWindow() {
         resizable: true,
         maximizable: false,
         fullscreenable: false,
+        show: false,
         titleBarOverlay: {
             color: 'rgba(249,249,249,0)',
             symbolColor: 'rgb(255, 255, 255)',
@@ -524,6 +525,9 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('showWindow', (event) => {
+        BrowserWindow.fromWebContents(event.sender).show();
+    });
     ipcMain.handle('openExternal', (event, args) => {
         shell.openExternal(args[0]);
     });
