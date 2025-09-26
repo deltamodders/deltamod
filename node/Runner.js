@@ -403,17 +403,7 @@ function createWindow() {
 
     var w = 800;
     var h = 800;
-    try {
-        var dimensionsPath = path.join(app.getPath('userData'), 'deltamod_system-unique', 'dimensions.json');
-        if (fs.existsSync(dimensionsPath)) {
-            var dimensions = JSON.parse(fs.readFileSync(dimensionsPath, 'utf8'));
-            if (isNaN(dimensions.width) || isNaN(dimensions.height)) {
-                w = dimensions.width;
-                h = dimensions.height;
-            }
-        }
-    }
-    catch (e) {}
+    
     KeyValue.retrieve();
     win = new BrowserWindow({
         width: w,
@@ -431,35 +421,6 @@ function createWindow() {
             partition: partition,
             preload: Paths.file('web', 'preload.js'),
         }
-    });
-
-    win.on('moved', () => {
-        const position = {
-            x: win.getBounds().x,
-            y: win.getBounds().y
-        };
-        const positionsPath = path.join(app.getPath('userData'), 'deltamod_system-unique', 'positions.json');
-        fs.writeFileSync(positionsPath, JSON.stringify(position, null, 2), 'utf8');
-    });
-
-    try {
-        var positionsPath = path.join(app.getPath('userData'), 'deltamod_system-unique', 'positions.json');
-        if (fs.existsSync(positionsPath)) {
-            var position = JSON.parse(fs.readFileSync(positionsPath, 'utf8'));
-            if (isNaN(position.x) || isNaN(position.y)) {
-                win.setPosition(position.x, position.y);
-            }
-        }
-    }
-    catch (e) {}
-
-    win.on('resized', () => {
-        const dimensions = {
-            width: win.getBounds().width,
-            height: win.getBounds().height
-        };
-        const dimensionsPath = path.join(app.getPath('userData'), 'deltamod_system-unique', 'dimensions.json');
-        fs.writeFileSync(dimensionsPath, JSON.stringify(dimensions, null, 2), 'utf8');
     });
 
     win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
@@ -532,16 +493,6 @@ function createWindow() {
 
     ipcMain.handle('version', () => {
         return require('../package.json').version;
-    });
-
-    ipcMain.handle('resetPWH', () => {
-        {
-            fs.unlinkSync(path.join(app.getPath('userData'), 'deltamod_system-unique', 'dimensions.json'));
-            fs.unlinkSync(path.join(app.getPath('userData'), 'deltamod_system-unique', 'positions.json'));
-        }
-        app.relaunch(properRelaunch());
-        app.exit();
-        process.exit(0);
     });
 
     ipcMain.handle('log', (event, args) => {

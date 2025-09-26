@@ -13,37 +13,39 @@ setTimeout(() => {
     document.getElementsByClassName('buttons')[0].style.display = 'flex';
 }, 500);
 
-function packageAtropos(container) {
-    let atroposContainer = document.createElement('div');
-    atroposContainer.className = 'atropos-inner';
-    atroposContainer.style.width = container.style.width + 10 + 'px';
-    atroposContainer.style.height = container.style.height + 10 + 'px';
-    atroposContainer.style.display = 'flex';
-    atroposContainer.style.alignItems = 'center';
-    atroposContainer.style.justifyContent = 'center';
-    atroposContainer.appendChild(container);
+function getPredominantColor(img) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
-    let atroposRotate = document.createElement('div');
-    atroposRotate.className = 'atropos-rotate';
-    atroposRotate.appendChild(atroposContainer);
+  const width = canvas.width = 50;
+  const height = canvas.height = 50;
 
-    let atroposScale = document.createElement('div');
-    atroposScale.className = 'atropos-scale';
-    atroposScale.appendChild(atroposRotate);
+  ctx.drawImage(img, 0, 0, width, height);
 
-    let atropos = document.createElement('div');
-    atropos.classList.add('atropos');
-    atropos.appendChild(atroposScale);
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
 
-    const atroposIniter = Atropos({
-        el: atropos,
-        activeOffset: 60,
-        shadowScale: 1.05,
-        highlight: false
-    });
+  const colorCount = {};
+  let maxCount = 0;
+  let dominantColor = { r: 0, g: 0, b: 0 };
 
-    return atropos;
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const key = `${r},${g},${b}`;
+
+    colorCount[key] = (colorCount[key] || 0) + 1;
+
+    if (colorCount[key] > maxCount) {
+      maxCount = colorCount[key];
+      dominantColor = { r, g, b };
+    }
+  }
+
+  return dominantColor;
 }
+
 
 async function createMod(mod) {
     let modRow = document.createElement('tr');
@@ -59,10 +61,12 @@ async function createMod(mod) {
     bigAhhContainer.style.gap = '10px';
     bigAhhContainer.style.justifyContent = 'left';
 
-    let IMAGE_DIMENSION = 55;
+    let IMAGE_DIMENSION = 50;
     let imageContainer = document.createElement('div');
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
+    imageContainer.style.margin = '4px';
+    imageContainer.style.marginLeft = '2px';
 
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
     if (!imeta.path) {
@@ -73,13 +77,12 @@ async function createMod(mod) {
     img.src = (imeta.path.includes('deltapack') ? '' : "packet://") + imeta.path;
     img.style.width = IMAGE_DIMENSION + 'px';
     img.style.height = IMAGE_DIMENSION + 'px';
-    // img.style.borderRadius = '8px';
+    img.style.borderRadius = '5px';
+    img.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.44)';
     img.style.objectFit = 'contain';
     img.setAttribute('data-atropos-offset', '10');
     img.classList.add('mod-image');
     imageContainer.appendChild(img);
-
-    var atroposImgContainer = packageAtropos(img);
 
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
@@ -135,7 +138,7 @@ async function createMod(mod) {
     versionSpan.id = `modsize-${mod.uid}`;
     flexContnainer.appendChild(versionSpan);
 
-    bigAhhContainer.appendChild(atroposImgContainer);
+    bigAhhContainer.appendChild(imageContainer);
     bigAhhContainer.appendChild(infoContainer);
 
     modNameContainer.appendChild(bigAhhContainer);
@@ -177,6 +180,11 @@ async function createMod(mod) {
         enabledContainer.appendChild(enabled);
     }
 
+    var prevalColor = getPredominantColor(img);
+    console.log(JSON.stringify(prevalColor));
+    var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40,40,40, 1) 15%)`;
+    console.log(cssStyle);
+    modNameContainer.style.background = `${cssStyle}`;
     modRow.appendChild(modNameContainer);
     modRow.appendChild(enabledContainer);
     modRow.appendChild(actionContainer);

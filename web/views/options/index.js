@@ -78,10 +78,6 @@ async function addButton(name, description, click, buttonText) {
         await window.electronAPI.invoke('chooseTheme', []);
     }, 'Open');
 
-    addButton('Reset window data', 'May help if you changed monitor and the window looks funky.', async () => {
-        await window.electronAPI.invoke('resetPWH', []);
-    }, 'Open');
-
     var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
     if (isSteam) {
         addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.', async () => {
