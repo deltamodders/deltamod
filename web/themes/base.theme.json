@@ -2,5 +2,13 @@
     "name": "Base Theme",
     "background": "commons/backgrounds/fountain.gif",
     "mainSong": "mainTheme1.mp3",
-    "id": "base"
+    "id": "base",
+    "dynamic": [
+        {
+            "type": "RANDOM_OCCURENCE",
+            "override": {
+                "background": "commons/backgrounds/picazzo.png"
+            }
+        }
+    ]
 }

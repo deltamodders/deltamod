@@ -32,7 +32,10 @@ function retrieve() {
 
 function kvsFlush() {
     var pathname = getSystemFile('store.json', false);
-    fs.writeFileSync(pathname, JSON.stringify(kvs, null, 2) + '##' + hash(JSON.stringify(kvs, null, 2)));
+    var exportedKVS = kvs;
+    
+    exportedKVS.version = 'DELTAMOD_DATA_'+require('../package.json').version;
+    fs.writeFileSync(pathname, JSON.stringify(exportedKVS, null, 2) + '##' + hash(JSON.stringify(exportedKVS, null, 2)));
     console.log('Store flushed.');
     return true;
 }

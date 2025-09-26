@@ -128,8 +128,33 @@ async function refreshTheme() {
 }
 window.preloadAPI.onThemeChange(refreshTheme);
 
+let lockRandoms = false;
+
 async function page(name) {
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    // first render the fantastidynamic
+    try {
+        theme.dynamic.forEach(dynamicEvent => {
+            switch (dynamicEvent.type) {
+                case "RANDOM_OCCURENCE":
+                    if (lockRandoms) return;
+                    lockRandoms = true;
+                    if (Math.random()*100 <= 2) {
+                        console.log(`Dynamic event triggered: ${dynamicEvent.description}`);
+                        if (dynamicEvent.override) {
+                            Object.keys(dynamicEvent.override).forEach(key => {
+                                theme[key] = dynamicEvent.override[key];
+                            });
+                            console.log('Theme updated with dynamic event overrides:', dynamicEvent.override);
+                        }
+                    }
+                    break;
+            }
+        });
+    }
+    catch(e) {
+        console.log('no dynamic theme');
+    }
     document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(./' + theme.background + ')';
     window.currentPageStack = {};
     var purifiedHTML =  await fetch('./views/' + name + '/index.html').then(response => response.text());
