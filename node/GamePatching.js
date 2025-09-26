@@ -431,9 +431,10 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                 if (modAmount > 1) {
                     produced = path.join(outDir, String(i), 'data.win');
                 } else {
-                    produced = path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '2', 'data.win');
+                    produced = path.join(GM3P_OUTPUT, pack, String(i), '2', 'data.win');
                 }
                     clog(`Produced[${i}]:`, produced, fs.existsSync(produced) ? '(exists)' : '(MISSING)');
+                fs.globSync(path.join())
                 if (fs.existsSync(produced)) {
                     fs.rmSync(chapterTargets[i], { force: true });
                     copyOver(produced, chapterTargets[i]);
