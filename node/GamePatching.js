@@ -33,7 +33,10 @@ if (process.platform === 'win32') {
     GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/GM3P.exe')) + '\"';
     UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.exe');
 } else {
-    GM3P_EXE = 'dotnet \"' + path.join(__dirname, '../gm3p/GM3P.dll') + '\"';
+    if (fs.existsSync(path.join(__dirname, "../gm3p/GM3P")))
+        GM3P_EXE = '\"' + path.join(__dirname, "../gm3p/GM3P") + '\"';
+    else
+        GM3P_EXE = 'dotnet \"' + path.join(__dirname, '../gm3p/GM3P.dll') + '\"';
     UTMT_EXE = 'dotnet \"' + path.join(UTMT_FOLD, 'UndertaleModCli.dll') + '\"';
 }
 const BACKUP_SUFFIX = '.original';
