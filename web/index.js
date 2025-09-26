@@ -230,6 +230,19 @@ async function page(name) {
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
 }
 
+window.addEventListener('blur', () => {
+    if (audio) {
+        audio.volume = 0.2;
+    }
+});
+
+window.addEventListener('focus', async () => {
+    let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
+    if (audio && shouldPlayAudio) {
+        audio.volume = 0.7;
+    }
+});
+
 if (!window.electronAPI) {
     window.alert('This application cannot run in this environment.');
     window.close();

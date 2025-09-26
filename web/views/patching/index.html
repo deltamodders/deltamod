@@ -1,13 +1,23 @@
 <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
     <div style="text-align: center;">
-        <img src="./views/patching/tenna1.gif" alt="" srcset="" class="mike" width="100">
-        <p><i>Patching Deltarune...</i></p>
+        <div class="characters">
+            <img src="./views/patching/c1.webp" alt="" srcset="" class="mike" width="100">
+            <img src="./views/patching/c2.webp" alt="" srcset="" class="mike" width="100">
+            <img src="./views/patching/c3.webp" alt="" srcset="" class="mike" width="100">
+        </div>
+        <p style="font-size: 25px; margin-bottom: 0;"><i>Patching Deltarune...</i></p>
         <p class="calibri">Press the button on bottom left to open the GM3P logs.</p>
         <br>
         <div class="logs" id="gpl" style="display: none;"></div>
     </div>
 </div>
 <style>
+    .characters {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
     .logs {
         width: 600px;
         margin-top: 10px !important;

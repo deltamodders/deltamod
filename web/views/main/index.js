@@ -181,9 +181,7 @@ async function createMod(mod) {
     }
 
     var prevalColor = getPredominantColor(img);
-    console.log(JSON.stringify(prevalColor));
     var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40,40,40, 1) 15%)`;
-    console.log(cssStyle);
     modNameContainer.style.background = `${cssStyle}`;
     modRow.appendChild(modNameContainer);
     modRow.appendChild(enabledContainer);
