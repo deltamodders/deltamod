@@ -279,6 +279,13 @@ function createWindow() {
         KeyValue.writeUniqueFlag('audio', 'true');
     }
 
+    // https://github.com/develar/7zip-bin/issues/24
+    try {
+        fs.chmod(path7za, 0o755);
+    } catch (e) {
+        // windows shouldn't throw an error but just in case
+    }
+
     // 7-zip fix for electron
     config({ ...getConfig(), binaryPath: path7za });
 
