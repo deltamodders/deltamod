@@ -31,12 +31,10 @@ const UTMT_FOLD = path.join(__dirname, '../gm3p/UTMTCLI')
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
 if (process.platform === 'win32') {
     GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/GM3P.exe')) + '\"';
-    GM3P_DLL = '';
     UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.exe');
     DOTNET_UNIX = '';
 } else {
-    GM3P_EXE = '/usr/bin/dotnet';
-    GM3P_DLL = path.join(__dirname, '../gm3p/GM3P.dll');
+    GM3P_EXE = '/usr/bin/dotnet \"' + path.join(__dirname, '../gm3p/GM3P.dll') + '\"';
     UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.dll');
     DOTNET_UNIX = '/usr/bin/dotnet';
 }
@@ -392,8 +390,8 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
         try {
             emitKeypress({ onKeyPress });
             clog("Max Mods per Chapter: " + modAmount.toString());
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' clear');
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg);
+            await run(GM3P_EXE + ' ' + ' clear');
+            await run(GM3P_EXE + ' ' + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg);
             if (modAmount > 1) {
                     //Attempt to speed things up and to lower chances of a timeout by having UTMTCLI being a child instead of a grandchild process.
                     for (var i = 0; i < 5; i++) {
@@ -412,7 +410,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
 
 
                     // Heavy step ONCE for all chapters
-                    await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' compare ' + String(modAmount) + ' false ' + 'false');
+                    await run(GM3P_EXE + ' ' + ' compare ' + String(modAmount) + ' false ' + 'false');
 
                     //UTMT Importing
                     for (var i = 0; i < 5; i++) {
@@ -425,7 +423,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
             // Produce: one subfolder per chapter index
             pack   = 'DeltamodPack_Multi';
             outDir = path.join(GM3P_OUTPUT, 'result', pack);
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'result ' + pack + oneMod);
+            await run(GM3P_EXE + ' ' + 'result ' + pack + oneMod);
 
             // Copy each produced chapter back
             for (let i = 0; i < chapterTargets.length; i++) {
@@ -444,7 +442,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                 try { fs.rmdirSync(outDir, { force: true, recursive: true }); } catch { }
             }
 
-            await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + ' clear');
+            await run(GM3P_EXE + ' ' + ' clear');
         } catch (e) {
             clog('GM3P error, restoring backups:', e.message);
             for (const t of chapterTargets) restoreIfBackup(t);
