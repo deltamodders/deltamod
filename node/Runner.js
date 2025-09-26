@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell, globalShortcut } = require('electron');
 const Paths = require('./Paths.js');
 const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
@@ -421,6 +421,25 @@ function createWindow() {
             partition: partition,
             preload: Paths.file('web', 'preload.js'),
         }
+    });
+
+    win.once('ready-to-show', () => {
+        globalShortcut.register('Control+Alt+S', async () => {
+            const screenshotPath = path.join(app.getPath('desktop'), `screenshot-${Date.now()}.png`);
+            try {
+                const image = await win.capturePage();
+                fs.writeFileSync(screenshotPath, image.toPNG());
+                dialog.showMessageBox(win, {
+                    type: 'info',
+                    title: 'Screenshot Saved',
+                    message: `Screenshot saved to: ${screenshotPath}`,
+                    buttons: ['OK']
+                });
+            } catch (err) {
+                console.error('Failed to take screenshot:', err);
+                dialog.showErrorBox('Screenshot Error', 'Failed to take screenshot.');
+            }
+        });
     });
 
     win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
