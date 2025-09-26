@@ -80,7 +80,7 @@ async function addButton(name, description, click, buttonText) {
 
     addButton('Reset window data', 'May help if you changed monitor and the window looks funky.', async () => {
         await window.electronAPI.invoke('resetPWH', []);
-    }, 'Open');
+    }, 'Reset');
 
     var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
     if (isSteam) {
