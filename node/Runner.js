@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell, glob
 const Paths = require('./Paths.js');
 const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
+const { execSync } = require('child_process');
 const mime = require('mime-types');
 const _7z = require("7zip-min");
 const {Downloader} = require("nodejs-file-downloader");
@@ -501,6 +502,20 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('myCommitInfo', (event, args) => {
+        if (!fs.existsSync(path.join(__dirname, '..', '.git'))) {
+            return "";
+        }
+        try {
+            const commitId = execSync('git rev-parse HEAD', { cwd: path.join(__dirname, '..') }).toString().trim();
+            const commitTitle = execSync('git log -1 --pretty=%s', { cwd: path.join(__dirname, '..') }).toString().trim();
+            return `<br>(Commit ${commitId.substring(0,5)} "${commitTitle}")`;
+        } catch (error) {
+            console.error('Failed to retrieve commit info:', error);
+            return 'Failed to retrieve commit info';
+        }
     });
 
     ipcMain.handle('showWindow', (event) => {
