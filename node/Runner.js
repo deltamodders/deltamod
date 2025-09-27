@@ -1039,6 +1039,18 @@ function createWindow() {
             // In case a previous run crashed mid-restore
             GamePatching.restoreOriginalsIfAny(pathname);
 
+            var mods = fs.readdirSync(getPacketDatabase());
+            mods = mods.filter(f => fs.existsSync(path.join(getPacketDatabase(), f, '__deltaID.json')));
+            mods = mods.map(f => {
+                var data = JSON.parse(fs.readFileSync(path.join(getPacketDatabase(), f, '__deltaID.json'), 'utf8'));
+                if (args[0].includes(data.uniqueId)) {
+                    console.log('No more new for you, ' + data.uniqueId);
+                    data.new = false;
+                    fs.writeFileSync(path.join(getPacketDatabase(), f, '__deltaID.json'), JSON.stringify(data, null, 4), 'utf8');
+                }
+                return data;
+            });
+
             // Patch the REAL install in-place (GamePatching backs up to *.original)
             var log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0], BrowserWindow.fromWebContents(event.sender));
 

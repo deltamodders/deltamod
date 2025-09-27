@@ -87,9 +87,16 @@ async function createMod(mod) {
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
+    if (mod.new) {
+        titleSpan = adaptForIcons(titleSpan);
+        titleSpan.style.marginBottom = '0px';
+        titleSpan.innerHTML += ` ${icon('fiber_new', '20px')}`;
+    }
     titleSpan.id = `modtitle-${mod.uid}`;
     infoContainer.appendChild(titleSpan);
-    infoContainer.appendChild(document.createElement('br'));
+    if (!mod.new) {
+        infoContainer.appendChild(document.createElement('br'));
+    }
 
     let descSpan = document.createElement('span');
     descSpan.className = 'calibri';
