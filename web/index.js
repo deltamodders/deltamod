@@ -12,10 +12,14 @@ async function htmlAlert(title, message, buttons) {
         var alertMain = document.getElementsByClassName('alertMain')[0];
         var alertMsg = alertMain.getElementsByClassName('alertMsg')[0];
 
-        alertMsg.innerHTML = `
-            <h1>${(title)}</h1>
-            <p>${(message)}</p>
-        `;
+        alertMsg.innerHTML = '';
+
+        var titleElement = document.createElement('h1');
+        titleElement.innerText = title;
+        var messageElement = document.createElement('p');
+        messageElement.innerText = message;
+        alertMsg.appendChild(titleElement);
+        alertMsg.appendChild(messageElement);
 
         var buttonsHTML = document.createElement('div');
         buttonsHTML.style.textAlign = 'right';

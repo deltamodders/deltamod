@@ -46,6 +46,12 @@ function getPredominantColor(img) {
   return dominantColor;
 }
 
+function noHTML(elem) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = elem;
+    return tempDiv.textContent || tempDiv.innerText || '';
+}
+
 
 async function createMod(mod) {
     let modRow = document.createElement('tr');
@@ -102,6 +108,10 @@ async function createMod(mod) {
     descSpan.className = 'calibri';
     descSpan.style = 'font-size: 10px; color: #ffffffdd;';
     descSpan.innerText = purifyDescription(mod.description);
+    descSpan.onclick = () => {
+        htmlAlert(mod.name,(mod.description),[{text:'Close',resolveWith:'close'}]);
+    };
+    descSpan.style.cursor = 'pointer';
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
 
