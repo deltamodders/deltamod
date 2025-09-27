@@ -537,6 +537,41 @@ function createWindow() {
         fs.writeFileSync(themeHost, theme.id);
         win.webContents.send('themeChange');
     });
+    ipcMain.handle('setSponsor', async (event, args) => {
+        let base = path.join(__dirname, '..', 'web', 'views', 'patching', 'sponsors');
+
+        let buttons = [];
+        let names = [];
+
+        var sponsors = fs.readdirSync(base);
+        sponsors.forEach(s => {
+            var json = JSON.parse(fs.readFileSync(path.join(base, s, 'config.sponsor.json'), 'utf8'));
+            names.push(s);
+            buttons.push(json.name);
+        });
+
+        var choice = dialog.showMessageBoxSync(win, {
+            type: 'question',
+            title: 'Select a patching character',
+            message: 'Select a patching character from the list below:',
+            buttons: [...buttons, 'Cancel'],
+        });
+
+        if (choice === buttons.length) return; // Cancel
+
+        fs.writeFileSync(System.getSystemFile('_sponsor', true), names[choice]);
+    });
+    ipcMain.handle('getSponsor', async () => {
+        var sponsorHost = System.getSystemFile('_sponsor', true);
+        if (fs.existsSync(sponsorHost)) {
+            var sponsor = fs.readFileSync(sponsorHost, 'utf8');
+            return sponsor;
+        }
+        else {
+            fs.writeFileSync(sponsorHost, 'cd');
+            return 'cd';
+        }
+    });
     /*
      * getTheme
      * returns theme name as specified in the themes folder.

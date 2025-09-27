@@ -1,0 +1,14 @@
+@keyframes scale {
+    0% {
+        transform: translateX(-700px);
+    }
+
+    100% {
+        transform: translateX(400px);
+    }
+}
+
+.sponsor-image {
+    animation: scale 2.93s reverse infinite linear;
+    transition: scale 0.3s;
+}

@@ -78,6 +78,10 @@ async function addButton(name, description, click, buttonText) {
         await window.electronAPI.invoke('chooseTheme', []);
     }, 'Open');
 
+    addButton('Select a patching character', 'Open the patching character selection menu.', async () => {
+        await window.electronAPI.invoke('setSponsor', []);
+    }, 'Open');
+
     var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
     if (isSteam) {
         addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.', async () => {
