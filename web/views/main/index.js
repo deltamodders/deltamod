@@ -110,12 +110,18 @@ async function createMod(mod) {
     flexContnainer.style.alignItems = 'center';
     flexContnainer.style.justifyContent = 'left';
     flexContnainer.style.gap = '6px';
+    flexContnainer.style.marginTop = '4px';
+    flexContnainer.style.border = '3px solid #62626244';
+    flexContnainer.style.borderRadius = '5px';
+    flexContnainer.style.width = 'fit-content';
+    flexContnainer.style.padding = '4px';
+    flexContnainer.style.paddingLeft = '6px';
+    flexContnainer.style.paddingRight = '6px';
     infoContainer.appendChild(flexContnainer);
 
     let authorSpan = document.createElement('p');
     authorSpan = adaptForIcons(authorSpan);
     authorSpan.style.margin = '0px';
-    authorSpan.style.marginTop = '4px';
     authorSpan.className = 'calibri';
     authorSpan.style.fontSize = 'smaller';
     authorSpan.style.color = '#888';
@@ -126,7 +132,6 @@ async function createMod(mod) {
     let sizeSpan = document.createElement('p');
     sizeSpan = adaptForIcons(sizeSpan);
     sizeSpan.style.margin = '0px';
-    sizeSpan.style.marginTop = '4px';
     sizeSpan.className = 'calibri';
     sizeSpan.style.fontSize = 'smaller';
     sizeSpan.style.color = '#888';
@@ -137,7 +142,6 @@ async function createMod(mod) {
     let versionSpan = document.createElement('p');
     versionSpan = adaptForIcons(versionSpan);
     versionSpan.style.margin = '0px';
-    versionSpan.style.marginTop = '4px';
     versionSpan.className = 'calibri';
     versionSpan.style.fontSize = 'smaller';
     versionSpan.style.color = '#888';
@@ -188,7 +192,7 @@ async function createMod(mod) {
     }
 
     var prevalColor = getPredominantColor(img);
-    var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40,40,40, 1) 15%)`;
+    var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40,40,40, 1) 100px)`;
     modNameContainer.style.background = `${cssStyle}`;
     modRow.appendChild(modNameContainer);
     modRow.appendChild(enabledContainer);

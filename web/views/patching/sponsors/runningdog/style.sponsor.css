@@ -1,10 +1,10 @@
 @keyframes scale {
     0% {
-        transform: translateX(-700px);
+        transform: translateX(-80vw);
     }
 
     100% {
-        transform: translateX(400px);
+        transform: translateX(70vw);
     }
 }
 
