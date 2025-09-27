@@ -131,6 +131,7 @@ window.preloadAPI.onThemeChange(refreshTheme);
 let lockRandoms = false;
 
 async function page(name) {
+    window.electronAPI.invoke('showWindow', []);
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     // first render the fantastidynamic
     try {
@@ -261,7 +262,6 @@ if (!window.electronAPI) {
     if (loaded.loaded) {
         var available = await window.electronAPI.invoke('fireUpdate', []);
         console.log('Update check complete. Update available:', available);
-        window.electronAPI.invoke('showWindow', []);
         if (!available) {
             await page('main');
         }
@@ -269,7 +269,6 @@ if (!window.electronAPI) {
             await page('update');
         }
     } else {
-        window.electronAPI.invoke('showWindow', []);
         await page('locate');
     }
 
