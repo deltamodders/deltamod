@@ -559,6 +559,9 @@ function createWindow() {
         let names = [];
 
         var sponsors = fs.readdirSync(base);
+        if (Math.random() >= 0.08) {
+            sponsors = sponsors.filter(s => s !== 'musical');
+        }
         sponsors.forEach(s => {
             var json = JSON.parse(fs.readFileSync(path.join(base, s, 'config.sponsor.json'), 'utf8'));
             names.push(s);
