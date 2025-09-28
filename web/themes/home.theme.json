@@ -1,0 +1,6 @@
+{
+    "name": "Hometown",
+    "background": "commons/backgrounds/home.png",
+    "mainSong": "hometown.mp3",
+    "id": "home"
+}
