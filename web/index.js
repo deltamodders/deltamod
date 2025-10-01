@@ -79,6 +79,12 @@ window.preloadAPI.onDDS((info) => {
     }
 });
 
+window.preloadAPI.onUpdateProgress((info) => {
+    if (window.currentPageStack.u) {
+        window.currentPageStack.u(info.perc);
+    }
+});
+
 function sanitizeHTML(str) {
     var temp = document.createElement('div');
     temp.textContent = str;

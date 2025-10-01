@@ -891,7 +891,16 @@ function createWindow() {
 
         try {
             const installerpath = path.join(System.getTemporary(), `installer.${args[0].version.replaceAll(".", "")}.exe`);
-            const bytes = await (await fetch(args[0].newVersionLink)).arrayBuffer();
+            const { data: bytes } = await axios.get(args[0].newVersionLink, {
+                responseType: 'arraybuffer',
+                onDownloadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    console.log(`Download progress: ${percentCompleted}%`);
+                    win.webContents.send('updateProgress', {
+                        perc: percentCompleted
+                    });
+                }
+            });
             console.log(`Fetched ${bytes.byteLength} bytes from ${args[0].newVersionLink}. Prompting for installation.`);
 
             // i trust the deltamod team to not fuck up the version and put invalid characters into the file name

@@ -12,7 +12,8 @@ contextBridge.exposeInMainWorld('preloadAPI', {
   onGPL: (callback) => ipcRenderer.on('gplog', (_, message) => callback(message)),
   onUpdateAvailable: (callback) => ipcRenderer.on('updateAvailable', (_, info) => callback(info)),
   onDDS: (callback) => ipcRenderer.on('du-progress', (_, info) => callback(info)),
-  onThemeChange: (callback) => ipcRenderer.on('themeChange', () => callback())
+  onThemeChange: (callback) => ipcRenderer.on('themeChange', () => callback()),
+  onUpdateProgress: (callback) => ipcRenderer.on('updateProgress', (_, info) => callback(info)),
 });
 
 ipcRenderer.on('warn', (_, message) => {
