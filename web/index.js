@@ -195,8 +195,12 @@ async function page(name) {
             button.disabled = false;
         });
     }
-    if (purifiedHTML.includes('AUDIO[')) {
+    if (true) {
         var audioSrc = purifiedHTML.match(/AUDIO\[(.*?)\]/);
+        console.log('Audio source found:' + audioSrc);
+        if (!audioSrc || !audioSrc[1]) {
+            audioSrc = ['AUDIO[mainTheme.mp3]','mainTheme.mp3'];
+        }
         if (audioSrc && audioSrc[1] && audioSrc[1] !== currentAudio) {
             currentAudio = audioSrc[1];
             audio.pause();
