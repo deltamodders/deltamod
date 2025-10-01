@@ -83,24 +83,52 @@ body {
     padding: 10px;
 }
 
+@keyframes sidebarFadeIn {
+    from {
+        padding-top: 50px;
+        width: calc(var(--sidebar-size) * 1 - 20px);
+        padding-bottom: 50px;
+        opacity: 0.4;
+        filter: blur(10px);
+        transform: translateX(-40px) translateY(-50%);
+    }
+    to {
+        padding-top: 20px;
+        padding-bottom: 20px;
+        width: calc(var(--sidebar-size) * 1 + 10px);
+        opacity: 1;
+        filter: blur(0px);
+        transform: translateX(0px) translateY(-50%);
+    }
+}
+
 .sidebar {
     position: absolute;
-    top: calc(var(--topbar-height) * 1);
-    left: 0;
-    opacity: 0.6;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 15px;
+    border-radius: 50px;
+    opacity: 1;
     width: calc(var(--sidebar-size) * 1 + 10px);
     border: 1px solid gray;
-    height: calc(100% - calc(var(--topbar-height) * 1) - 20px);
-    background-color: rgba(0, 0, 0, 1);
+    height: fit-content;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    backdrop-filter: blur(7px);
+    background-color: rgba(0, 0, 0, 0.3);
     overflow-x: hidden;
     display: flex;
     justify-content: left;
     align-items: center;
     transition: 0.5s all cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 100;
+    animation: 0.5s sidebarFadeIn cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .sidebar:hover {
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 10px;
     width: calc(var(--sidebar-size) * 3.2 + 10px);
     opacity: 1;
 }
@@ -156,9 +184,9 @@ h1 {
 .viewport {
     position: absolute;
     top: calc(var(--topbar-height) * 1);
-    left: calc(var(--sidebar-size) + 15px);
+    left: calc(var(--sidebar-size) + 25px);
     width: calc(100% - 45px - (var(--sidebar-size) * 1));
-    height: calc(100% - calc(var(--topbar-height) * 1) - 20px);
+    height: calc(100% - calc(var(--topbar-height) * 1) - 30px);
     overflow-y: hidden;
     padding: 20px;
     box-sizing: border-box;
