@@ -191,7 +191,7 @@ h1 {
     position: absolute;
     top: calc(var(--topbar-height) * 1);
     left: calc(var(--sidebar-size) + 30px);
-    width: calc(100% - 45px - (var(--sidebar-size) * 1));
+    width: calc(100% - 65px - (var(--sidebar-size) * 1));
     height: calc(100% - calc(var(--topbar-height) * 1) - 35px);
     overflow-y: hidden;
     padding: 20px;
