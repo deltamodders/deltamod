@@ -59,12 +59,15 @@ button {
     color: white;
     background-color: rgb(15, 15, 15);
     border: 1px solid rgb(66, 66, 66);
+    border-radius: 7px;
     padding: 5px;
     cursor: pointer;
+    transition: 0.2s all;
 }
 
 button:hover {
-    background-color: rgb(30, 30, 30);
+    background-color: rgb(240, 240, 240);
+    color: rgb(15,15,15);
 }
 
 input {

@@ -1,0 +1,39 @@
+.warning {
+    padding: 10px;
+    background-color: #ff5454;
+    font-family: 'Calibri', sans-serif;
+}
+
+strong {
+    font-weight: bold !important;
+}
+.releasecard {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding-left: 10px;
+    padding-bottom: 10px;
+    margin: 10px 0;
+    background-color: #1b1b1b;
+}
+
+.releases {
+    height: 400px;
+    background-color: rgb(15,15,15,0.5);
+    border: 1px solid #333;
+    backdrop-filter: blur(5px);
+    overflow-y: auto;
+    padding: 20px;
+    border-radius: 10px;
+}
+.releasecard > * {
+    margin-bottom: 10px;
+}
+.str {
+    margin-top: 10px;
+    display: block;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+.releasecard > span {
+    display: block;
+}

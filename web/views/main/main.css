@@ -29,6 +29,7 @@
 
 .buttons:hover {
   border-radius: 5px;
+  color: rgb(255,255,255) !important /* override basic style */;
   backdrop-filter: blur(0);
 }
 
@@ -54,6 +55,7 @@
 .buttons > button:hover {
   scale: 1.1;
   border-radius: 10%;
+  color: rgb(255,255,255) !important /* override basic style */;
   background-color: rgb(72, 72, 72);
 }
 .buttons > button:active {
