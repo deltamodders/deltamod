@@ -1,18 +1,20 @@
 @keyframes open {
-  0% { opacity: 0.5; bottom: -40px; }
-  100% { opacity: 1; bottom: 20px; }
+  0% { opacity: 0.5; width: 0px; }
+  100% { opacity: 1; width: 100px; }
 }
 
 .buttons {
-  background-color: none;
+  backdrop-filter: blur(7px);
+  background-color: rgba(0, 0, 0, 0.3);
   padding: 10px;
   transform: translateY(-10px);
-  border-radius: 4px;
+  border-radius: 50px;
+  border: 1px solid gray;
   display: none;
-  width: calc(100% - 150px);
-  padding-left: 25px;
+  width: 100px;
   min-height: 50px;
-  padding-right: 25px;
+  padding-right: 10px;
+  padding-left: 10px;
   text-align: right;
   position: fixed;
   bottom: 20px;
@@ -20,27 +22,29 @@
   transform: translateX(-50%);
   transition: 0.3s all;
   animation: 0.3s open cubic-bezier(0.34, 1.56, 0.64, 1);
-  justify-content: right;
+  justify-content: center;
   align-items: center;
   gap: 2px;
 }
 
-#par {
-  background-color: rgb(0, 79, 0);
-  color: white;
+.buttons:hover {
+  border-radius: 5px;
+  backdrop-filter: blur(0);
 }
 
 .buttons > button {
-  height: 60px;
-  width: 60px;
+  height: 40px;
+  width: 40px;
   margin-top: 0;
   margin-bottom: 0;
-  margin-left: 10px;
-  margin-right: 10px;
+  margin-left: 5px;
+  margin-right: 5px;
   text-align: center;
   padding: 0;
-  font-size: 35px;
-  border: 2px solid rgba(255, 255, 255, 0.452);
+  background-color: none;
+  background: none;
+  font-size: 20px;
+  border: none;
   border-radius: 50%;
   display: inline-flex;
   justify-content: center;
@@ -49,10 +53,8 @@
 }
 .buttons > button:hover {
   scale: 1.1;
-  color: black !important;
-  border-radius: 40%;
-  background-color: white !important;
-  border-color: rgba(255, 255, 255, 0.7);
+  border-radius: 10%;
+  background-color: rgb(72, 72, 72);
 }
 .buttons > button:active {
   scale: 1.2;
