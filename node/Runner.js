@@ -425,6 +425,12 @@ function createWindow() {
     });
 
     win.once('ready-to-show', () => {
+        globalShortcut.register('Control+R', () => {
+            win.webContents.executeJavaScript('window.location.reload()');
+        });
+        globalShortcut.register('Control+Shift+R', () => {
+            win.webContents.refresh();
+        });
         globalShortcut.register('Control+Alt+S', async () => {
             const screenshotPath = path.join(app.getPath('desktop'), `screenshot-${Date.now()}.png`);
             try {

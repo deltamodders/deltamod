@@ -79,6 +79,10 @@ window.preloadAPI.onDDS((info) => {
     }
 });
 
+window.preloadAPI.onRefresh(() => {
+    page(pageN);
+});
+
 window.preloadAPI.onUpdateProgress((info) => {
     if (window.currentPageStack.u) {
         window.currentPageStack.u(info.perc);
