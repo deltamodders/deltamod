@@ -17,7 +17,7 @@ prompt_for_install() {
         case "$response" in
             [Yy]* )
                 echo "You selected Yes."
-				goto install
+				goto installUbuntu
                 return 0
                 ;;
             [Nn]* )
@@ -104,11 +104,11 @@ prompt_for_distro
 
 		#Install GM3P
 
-		wget https://github.com/techy804/MassModPatcher/releases/download/v0.6.0-alpha2/GM3P.v0.6.0-alpha2.zip
+		wget https://github.com/techy804/MassModPatcher/releases/download/v0.6.0-alpha4/GM3P.v0.6.0-alpha4.zip
 
-		unzip -f -o "./GM3P.v0.6.0-alpha2.zip" -d "./gm3p"
+		unzip -f -o "./GM3P.v0.6.0-alpha4.zip" -d "./gm3p"
 
-		rm './GM3P.v0.6.0-alpha2.zip'
+		rm './GM3P.v0.6.0-alpha4.zip'
 
         #Install Proton, this is needed to run Deltarune itself
 
