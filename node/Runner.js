@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell, globalShortcut, screen } = require('electron');
 const Paths = require('./Paths.js');
 const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
@@ -402,9 +402,11 @@ function createWindow() {
         }
     }
 
-    var w = 800;
-    var h = 800;
-    
+    var totalScreenWidth = screen.getPrimaryDisplay().workAreaSize.width;
+    var totalScreenHeight = screen.getPrimaryDisplay().workAreaSize.height;
+    var w = totalScreenWidth * 0.4;
+    var h = totalScreenHeight * 0.7;
+
     KeyValue.retrieve();
     win = new BrowserWindow({
         width: w,
