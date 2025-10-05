@@ -286,8 +286,11 @@ if (!window.electronAPI) {
         else {
             await page('update');
         }
+
+        window.electronAPI.invoke('executeArgumentCmd',[]);
     } else {
         await page('locate');
+        window.electronAPI.invoke('executeArgumentCmd',[]);
     }
 
 })();

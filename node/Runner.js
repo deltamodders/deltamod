@@ -512,6 +512,36 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('executeArgumentCmd', async (event, args) => {
+        if (process.argv.includes('---initialize_deltamod')) {
+            page('busy');
+
+            console.log('Initializing Deltamod...');
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            var appdata = path.join(app.getPath('appData'), 'deltamod');
+
+            fs.readdirSync(appdata).forEach(file => {
+                if (file.startsWith('deltamod_system')) {
+                    const fullPath = path.join(appdata, file);
+                    console.log('Removing old system folder: ' + fullPath);
+                    try {
+                        fs.rmSync(fullPath, { recursive: true, force: true });
+                    } catch (e) {
+                        console.error(`Failed to remove ${fullPath}:`, e);
+                    }
+                }
+            });
+
+            fs.rmdirSync(path.join(app.getPath('appData'), 'deltamod', 'pkg.db'), { recursive: true, force: true });
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            app.quit();
+        }
+    });
+
     ipcMain.handle('myCommitInfo', (event, args) => {
         if (!fs.existsSync(path.join(__dirname, '..', '.git'))) {
             return "";
