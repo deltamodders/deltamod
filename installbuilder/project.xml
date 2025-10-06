@@ -180,6 +180,15 @@ If you have any Deltamod installation to delete, please do so now by going to th
             <value></value>
             <default></default>
         </parameterGroup>
+        <licenseParameter>
+            <name>License</name>
+            <title>License Agreement</title>
+            <description>Please read the following License Agreement. You must accept the terms of this agreement before continuing with the installation.</description>
+            <explanation></explanation>
+            <file>${build_project_directory}/../LICENSE.txt</file>
+            <fileEncoding>utf-8</fileEncoding>
+            <htmlFile></htmlFile>
+        </licenseParameter>
     </parameterList>
     <platformOptionsList>
         <platformOptions>
