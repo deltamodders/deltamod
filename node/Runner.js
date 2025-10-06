@@ -512,6 +512,83 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('downloadGM3P', async (event, args) => {
+        var url = args[0];
+
+        var modal = new BrowserWindow({
+            width: 200,
+            height: 100,
+            resizable: false,
+            maximizable: false,
+            minimizable: false,
+            closable: false,
+            fullscreenable: false,
+            modal: true,
+            parent: win,
+            webPreferences: {
+                devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
+                nodeIntegration: true,
+                preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
+                partition: partition
+            }
+        });
+
+        modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
+        modal.setMenuBarVisibility(false);
+
+        const fileName = "gm3p_pkg.zip";
+        const destPath = path.join(app.getPath('downloads'), fileName);
+
+        const writer = fs.createWriteStream(destPath);
+
+        const response = await axios({
+            method: 'get',
+            url,
+            responseType: 'stream'
+        });
+
+        const totalLength = response.headers['content-length'] ? parseInt(response.headers['content-length'], 10) : null;
+        let downloaded = 0;
+
+        response.data.on('data', (chunk) => {
+            downloaded += chunk.length;
+            if (totalLength) {
+                const percent = ((downloaded / totalLength) * 100).toFixed(2);
+                console.log(`Downloaded ${percent}%`);
+                modal.webContents.send('progress', percent);
+            } else {
+                console.log(`Downloaded ${downloaded} bytes`);
+            }
+        });
+
+        response.data.pipe(writer);
+
+        writer.on('finish', async () => {
+            console.log('Download completed successfully');
+            fs.rmdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
+            fs.mkdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true });
+            await _7z.unpack(destPath, path.join(__dirname, '..', 'gm3p'));
+            dialog.showMessageBoxSync(win, {
+                type: 'info',
+                title: 'Download Complete',
+                message: 'GM3P package downloaded and extracted successfully.',
+            });
+            app.relaunch(properRelaunch());
+            app.quit();
+            process.exit(0);
+        });
+
+        writer.on('error', (err) => {
+            console.error('Error downloading file:', err);
+            dialog.showErrorBoxSync('Download Error', 'An error occurred while downloading the GM3P package. The app will now reboot.');
+            app.relaunch(properRelaunch());
+            app.quit();
+            process.exit(1);
+        });
+
+        return destPath;
+    });
+
     ipcMain.handle('executeArgumentCmd', async (event, args) => {
         if (process.argv.includes('---initialize_deltamod')) {
             page('busy');

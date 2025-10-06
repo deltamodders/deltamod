@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Downloading...</title>
+</head>
+<body>
+    <progress id="prog" max="100"></progress>
+</body>
+<script>
+    window.api.onProgress((data) => {
+        const progressBar = document.getElementById('prog');
+        progressBar.value = Math.round(data);
+    });
+</script>
+</html>
