@@ -5,6 +5,15 @@
     gap: 8px;
 }
 
+.credits-avatar {
+    background-color: rgba(255, 255, 255, 0.5);
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    vertical-align:middle;
+    margin-right:6px;
+}
+
 .credits-group {
     border: 2px solid white;
     background-color: black;
