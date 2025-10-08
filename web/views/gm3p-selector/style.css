@@ -1,7 +1,7 @@
 .warning {
     padding: 10px;
     background-color: #ff5454;
-    font-family: 'Calibri', sans-serif;
+    font-family: var(--secondary-font), sans-serif;
 }
 
 strong {

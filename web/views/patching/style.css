@@ -40,7 +40,7 @@
         background-color: rgba(0, 0, 0, 0.155);
         backdrop-filter: blur(10px);
         color: white;
-        font-family: "Calibri", monospace;
+        font-family: "var(--secondary-font)", monospace;
         text-align: left;
         padding: 10px;
         font-size: 12px;
@@ -80,7 +80,7 @@
     small {
         color: #888;
         font-size: 0.8em;
-        font-family: "Calibri", sans-serif;
+        font-family: "var(--secondary-font)", sans-serif;
     }
 
     .tabs {

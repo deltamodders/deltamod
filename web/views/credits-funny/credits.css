@@ -5,6 +5,6 @@ h1 {
 
 .credits {
     text-align: center;
-    font-family: 'Calibri', sans-serif;
+    font-family: 'var(--secondary-font)', sans-serif;
     font-size: 20px;
 }

@@ -50,7 +50,7 @@
     padding: 20px;
     box-sizing: border-box;
     overflow: hidden;
-    font-family: 'Calibri', sans-serif;
+    font-family: 'var(--secondary-font)', sans-serif;
     color: white;
     font-size: 16px;
     animation: 0.4s alertFadeIn cubic-bezier(0.25, 1, 0.5, 1);

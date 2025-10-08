@@ -1,6 +1,21 @@
 @font-face {
     /*
         LEGAL INFO:
+        * The FontStruction “Jost” (https://fontstruct.com/fontstructions/show/1556421) by “IndieFonts” is licensed under a Creative Commons Attribution Share Alike license (http://creativecommons.org/licenses/by-sa/3.0/).
+    */
+    font-family: "Jost";
+    src: url("./Jost-VariableFont_wght.ttf") format("truetype");
+
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+:root {
+    --secondary-font: "Jost" /* Secondary font (was Calibri) */;
+}
+@font-face {
+    /*
+        LEGAL INFO:
         * The FontStruction “8BitOperator JVE (Undertale Dialogue Font)” (https://fontstruct.com/fontstructions/show/1532608) by “ColorSwitchFan25” is licensed under a Creative Commons Attribution Share Alike license (http://creativecommons.org/licenses/by-sa/3.0/).
     */
     font-family: "Pixel";
@@ -38,7 +53,7 @@
 }
 
 .allcalibri>* {
-    font-family: Calibri, sans-serif;
+    font-family: var(--secondary-font), sans-serif;
 }
 
 h1 {
@@ -86,7 +101,12 @@ input::placeholder {
 }
 
 .calibri {
-    font-family: Calibri, sans-serif;
+    font-family: var(--secondary-font), sans-serif;
+}
+
+/* im a dumbahh this is a workaround */
+.Manrope {
+    font-family: var(--secondary-font), sans-serif;
 }
 
 body {
