@@ -69,13 +69,46 @@ function run(file, args, opts = {}) {
     };
     clog('RUN:', file, JSON.stringify(args));
     return new Promise((resolve, reject) => {
-        exec(file, _opts, (err, stdout, stderr) => {
-            if (stdout) clog('stdout:', trunc(stdout));
-            if (stderr) clog('stderr:', trunc(stderr));
+        const child = exec(file, _opts, (err, stdout, stderr) => {
+            // final callback: keep a summarized dump for compatibility
+            if (stdout) clog('stdout (final):', trunc(stdout));
+            if (stderr) clog('stderr (final):', trunc(stderr));
             if (err) {
-                return reject(new Error((stderr || '') + (stdout || '') || err.message));
+            return reject(new Error((stderr || '') + (stdout || '') || err.message));
             }
             resolve({ stdout, stderr });
+        });
+
+        // Helper to stream and log each line as it arrives
+        function streamLines(stream, label) {
+            if (!stream) return;
+            let buf = '';
+            stream.on('data', (chunk) => {
+            buf += String(chunk);
+            let idx;
+            while ((idx = buf.indexOf('\n')) !== -1) {
+                let line = buf.slice(0, idx);
+                buf = buf.slice(idx + 1);
+                // normalize CRLF and truncate if needed
+                line = line.replace(/\r$/, '');
+                clog(label, trunc(line));
+            }
+            });
+            stream.on('end', () => {
+            if (buf.length) {
+                const line = buf.replace(/\r$/, '');
+                clog(label, trunc(line));
+                buf = '';
+            }
+            });
+            stream.on('error', (e) => clog(label, 'stream error:', e && e.message));
+        }
+
+        streamLines(child.stdout, 'stdout:');
+        streamLines(child.stderr, 'stderr:');
+
+        child.on('error', (e) => {
+            clog('child process error:', e && e.message);
         });
     });
 }

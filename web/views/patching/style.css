@@ -1,0 +1,101 @@
+.tab1 {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        margin-left: 10px;
+    }
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    .rotate {
+        display: inline-block;
+        animation: rotate 2s linear infinite;
+        user-select: none;
+    }
+    .tab2 {
+        margin-right: 20px;
+    }
+    .iconhoster {
+        display: inline-flex;
+        align-items: center;
+        justify-content: left;
+        gap: 10px;
+    }
+    .sponsor-image {
+        width: 60px;
+    }
+    .success {
+        color: #14ab09; /* Green color for success message */
+    }
+    .logs {
+        height: 30vh;
+        overflow-y: scroll;
+        overflow-x: none;
+        background-color: rgba(0, 0, 0, 0.155);
+        backdrop-filter: blur(10px);
+        color: white;
+        font-family: "Calibri", monospace;
+        text-align: left;
+        padding: 10px;
+        font-size: 12px;
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        border: 1px solid white;
+        border-radius: 5px;
+        font-family: 'Consolas';
+    }
+
+    .buttons {
+        position: fixed;
+        bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        left: 80px;
+        width: calc(100% - 125px);
+    }
+
+    #next {
+        padding: 20px;
+        background-color: rgb(14, 87, 0);
+        border: 4px solid rgb(16, 77, 0);
+        border: none;
+    }
+
+    #next:hover {
+        background-color: rgb(22, 132, 0);
+        color: white !important;
+        scale: 1.2;
+        cursor: pointer;
+    }
+
+    small {
+        color: #888;
+        font-size: 0.8em;
+        font-family: "Calibri", sans-serif;
+    }
+
+    .tabs {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+    }
+    .patchingIsland {
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgb(101, 101, 101);
+        padding: 10px;
+        overflow: hidden;
+        border-radius: 10px;
+    }

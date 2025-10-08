@@ -1,62 +1,25 @@
 <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-    <div style="text-align: center;">
-        <div class="sponsor-container">
+    <div class="patchingIsland">
+        <div class="tabs">
+            <div class="tab1">
             
+            </div>
+            <div class="tab2">
+                <p style="font-size: 25px; margin-bottom: 0;" class="iconhoster" id="patchingTXT"><span class="material-symbols-outlined rotate">cycle</span><i>Preparing for launch...</i></p>
+                <p class="calibri">You can toggle the GM3P logs by clicking the button in bottom left.</p>
+                <br>
+            </div>
         </div>
-        <p style="font-size: 25px; margin-bottom: 0;"><i>Patching Deltarune...</i></p>
-        <p class="calibri">Press the button on bottom left to open the GM3P logs.</p>
-        <br>
         <div class="logs" id="gpl" style="display: none;"></div>
     </div>
 </div>
-<style>
-    .sponsor-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-    }
-    .sponsor-image {
-        width: 100px;
-    }
-    .logs {
-        width: 600px;
-        margin-top: 10px !important;
-        height: 200px;
-        overflow-y: scroll;
-        overflow-x: scroll;
-        background-color: rgba(0, 0, 0, 0.5);
-        color: white;
-        font-family: "Calibri", monospace;
-        text-align: left;
-        padding: 10px;
-        font-size: 12px;
-        margin: 0;
-        border: 2px solid white;
-        font-family: 'Consolas';
-        white-space: nowrap;
-    }
 
-    .buttons {
-        position: fixed;
-        bottom: 20px;
-        display: flex;
-        justify-content: left;
-        align-items: center;
-        gap: 15px;
-        left: 80px;
-    }
-
-    small {
-        color: #888;
-        font-size: 0.8em;
-        font-family: "Calibri", sans-serif;
-    }
-</style>
 
 <div class="buttons">
     
     <button onclick="window.currentPageStack.toggleGM3P()" id="gpl">Toggle logs</button>
+    <button onclick="window.currentPageStack.next()" id="next" style="display: none;">Open DELTARUNE</button>
 </div>
 JSL
 NO-SIDEBAR
+STYLESHEET[style]

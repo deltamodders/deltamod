@@ -1,9 +1,19 @@
 window.currentPageStack = {};
 window.currentPageStack.gpl = function (message) {
-    document.getElementById("gpl").innerText += message;
-    document.getElementById("gpl").innerHTML += "<br>";
+    document.getElementById("gpl").innerHTML += "<span style=\"color: green;\">[LOG] </span><span>" + message + "</span><br>";
     const gplElement = document.getElementById("gpl");
     gplElement.scrollTop = gplElement.scrollHeight;
+    gplElement.scrollLeft = 0;
+}
+
+window.currentPageStack.next = function () {
+    window.electronAPI.invoke('npsCallback', []);
+}
+
+window.currentPageStack.fp = function () {
+    document.getElementById("patchingTXT").innerHTML = icon('check') + " Patching complete!";
+    document.getElementById("patchingTXT").classList.add("success");
+    document.getElementById("next").style.display = "block";
 }
 
 
@@ -26,7 +36,7 @@ window.currentPageStack.toggleGM3P = function () {
         let imageElement = document.createElement('img');
         imageElement.src = 'deltapack://web/views/patching/sponsors/' + THEME + '/' + img;
         imageElement.className = 'sponsor-image';
-        document.querySelector('.sponsor-container').appendChild(imageElement);
+        document.querySelector('.tab1').appendChild(imageElement);
     });
 
     try {

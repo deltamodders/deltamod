@@ -14,7 +14,8 @@ contextBridge.exposeInMainWorld('preloadAPI', {
   onDDS: (callback) => ipcRenderer.on('du-progress', (_, info) => callback(info)),
   onThemeChange: (callback) => ipcRenderer.on('themeChange', () => callback()),
   onUpdateProgress: (callback) => ipcRenderer.on('updateProgress', (_, info) => callback(info)),
-  onRefresh: (callback) => ipcRenderer.on('refresh', () => callback())
+  onRefresh: (callback) => ipcRenderer.on('refresh', () => callback()),
+  onFinishedPatch: (callback) => ipcRenderer.on('finishedPatch', () => callback()),
 });
 
 ipcRenderer.on('warn', (_, message) => {

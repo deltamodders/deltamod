@@ -89,6 +89,12 @@ window.preloadAPI.onUpdateProgress((info) => {
     }
 });
 
+window.preloadAPI.onFinishedPatch(() => {
+    if (window.currentPageStack.fp) {
+        window.currentPageStack.fp();
+    }
+});
+
 function sanitizeHTML(str) {
     var temp = document.createElement('div');
     temp.textContent = str;
