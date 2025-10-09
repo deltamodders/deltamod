@@ -17,8 +17,8 @@ function getPredominantColor(img) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
-  const width = canvas.width = 50;
-  const height = canvas.height = 50;
+  const width = canvas.width = 70;
+  const height = canvas.height = 70;
 
   ctx.drawImage(img, 0, 0, width, height);
 
@@ -83,10 +83,6 @@ async function createMod(mod) {
     img.src = (imeta.path.includes('deltapack') ? '' : "packet://") + imeta.path;
     img.style.width = IMAGE_DIMENSION + 'px';
     img.style.height = IMAGE_DIMENSION + 'px';
-    img.style.borderRadius = '5px';
-    img.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.44)';
-    img.style.objectFit = 'contain';
-    img.setAttribute('data-atropos-offset', '10');
     img.classList.add('mod-image');
     imageContainer.appendChild(img);
 

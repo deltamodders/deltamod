@@ -723,7 +723,7 @@ function createWindow() {
         if (fs.existsSync(themeHost)) {
             var theme = fs.readFileSync(themeHost, 'utf8');
             if (!fs.existsSync(path.join(__dirname, '..', 'web', 'themes', theme + '.theme.json'))) {
-                errorWin('The theme "' + theme + '" does not exist. Please select a valid theme.');
+                //errorWin('The theme "' + theme + '" does not exist. Please select a valid theme.');
                 return 'base';
             }
             return theme;

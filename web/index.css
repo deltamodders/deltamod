@@ -73,6 +73,19 @@
     height: 70px;
 }
 
+.winb {
+    z-index: 100000;
+    border: 3px solid rgba(255, 255, 255, 0.582);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
 body {
     margin: 0;
     position: fixed;
@@ -93,8 +106,8 @@ body {
         transform: translateX(-40px) translateY(-50%);
     }
     to {
-        padding-top: 20px;
-        padding-bottom: 20px;
+        padding-top: 15px;
+        padding-bottom: 15px;
         width: calc(var(--sidebar-size) * 1 + 10px);
         opacity: 1;
         filter: blur(0px);
@@ -112,15 +125,15 @@ body {
     width: calc(var(--sidebar-size) * 1 + 10px);
     border: 1px solid gray;
     height: fit-content;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-top: 15px;
+    padding-bottom: 15px;
     backdrop-filter: blur(7px);
     background-color: rgba(0, 0, 0, 0.3);
     overflow-x: hidden;
     display: flex;
     justify-content: left;
     align-items: center;
-    transition: 0.5s all cubic-bezier(0.16, 1, 0.3, 1);
+    transition: 0.9s all cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 100;
     animation: 0.5s sidebarFadeIn cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -130,6 +143,8 @@ body {
     padding-right: 10px;
     border-radius: 10px;
     width: calc(var(--sidebar-size) * 3.2 + 10px);
+    transform: translateY(-50%) translateX(10px);
+    background-color: rgba(0, 0, 0, 0.5);
     opacity: 1;
 }
 .sidebar > div {
