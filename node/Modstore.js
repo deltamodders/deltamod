@@ -193,7 +193,8 @@ function modList() {
                 }
             }
             calculateFolderSize(modPath);
-            modSize = Math.round(modSize / (1024 * 1024)); // size
+            // convert bytes to megabytes, round to 2 decimals; non-zero values are at least 0.01 MB
+            modSize = modSize === 0 ? 0 : Math.max(0.01, Math.round((modSize / (1024 * 1024)) * 100) / 100);
             // keep your return shape; just add ids (non-breaking)
             modList.push({
                 name:        meta.name || mod,

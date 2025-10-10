@@ -5,6 +5,13 @@ function purifyDescription(desc) {
     return final;
 }
 
+function adaptForIconsA(elem) {
+    elem.style.display = 'inline-flex';
+    elem.style.alignItems = 'center';
+    elem.style.gap = '4px';
+    elem.style.justifyContent = 'left';
+    return elem;
+}
 function purify(text) {
     return text.replace(/<[^>]*>/g, '');
 }
@@ -17,8 +24,8 @@ function getPredominantColor(img) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
-  const width = canvas.width = 70;
-  const height = canvas.height = 70;
+  const width = canvas.width = 256;
+  const height = canvas.height = 256;
 
   ctx.drawImage(img, 0, 0, width, height);
 
@@ -90,7 +97,7 @@ async function createMod(mod) {
     let titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
     if (mod.new) {
-        titleSpan = adaptForIcons(titleSpan);
+        titleSpan = adaptForIconsA(titleSpan);
         titleSpan.style.marginBottom = '0px';
         titleSpan.innerHTML += ` ${icon('fiber_new', '20px')}`;
     }
@@ -125,33 +132,24 @@ async function createMod(mod) {
     flexContnainer.style.paddingRight = '6px';
     infoContainer.appendChild(flexContnainer);
 
+    var fontSize = 13;
     let authorSpan = document.createElement('p');
-    authorSpan = adaptForIcons(authorSpan);
+    authorSpan = adaptForIconsA(authorSpan);
     authorSpan.style.margin = '0px';
     authorSpan.className = 'calibri';
-    authorSpan.style.fontSize = 'smaller';
+    authorSpan.style.fontSize = fontSize + 'px';
     authorSpan.style.color = '#888';
-    authorSpan.innerHTML = `${icon('person', 'small')} ${purify(mod.author.join(', '))}`;
+    authorSpan.innerHTML = `${icon('attribution', fontSize + 'px')} ${purify(mod.author.join(', '))}`;
     authorSpan.id = `modauthor-${mod.uid}`;
     flexContnainer.appendChild(authorSpan);
 
-    let sizeSpan = document.createElement('p');
-    sizeSpan = adaptForIcons(sizeSpan);
-    sizeSpan.style.margin = '0px';
-    sizeSpan.className = 'calibri';
-    sizeSpan.style.fontSize = 'smaller';
-    sizeSpan.style.color = '#888';
-    sizeSpan.innerHTML = `${icon('hard_disk', 'small')} ${mod.size} MB`;
-    sizeSpan.id = `modsize-${mod.uid}`;
-    flexContnainer.appendChild(sizeSpan);
-
     let versionSpan = document.createElement('p');
-    versionSpan = adaptForIcons(versionSpan);
+    versionSpan = adaptForIconsA(versionSpan);
     versionSpan.style.margin = '0px';
     versionSpan.className = 'calibri';
-    versionSpan.style.fontSize = 'smaller';
+    versionSpan.style.fontSize = fontSize + 'px';
     versionSpan.style.color = '#888';
-    versionSpan.innerHTML = `${icon('deployed_code_update', 'small')} ${(mod.version ? mod.version : 'Unknown')}`;
+    versionSpan.innerHTML = `${icon('change_history', fontSize + 'px')} ${(mod.version ? mod.version : 'Unknown')}`;
     versionSpan.id = `modsize-${mod.uid}`;
     flexContnainer.appendChild(versionSpan);
 
