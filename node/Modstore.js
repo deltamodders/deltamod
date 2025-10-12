@@ -63,7 +63,7 @@ function removeModSafe(modid) {
         fs.rmSync(modPath, { recursive: true });
     } else console.warn("Error: Mod", modPath, "doesn't seem to be a valid mod with a __deltaID.json.");
 
-    page("main");
+    page("");
 }
 
 // [ADDED] depth-first search for a file by name anywhere under root

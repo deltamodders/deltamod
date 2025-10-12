@@ -151,6 +151,9 @@ window.preloadAPI.onThemeChange(refreshTheme);
 let lockRandoms = false;
 
 async function page(name) {
+    if (name == "") {
+        name = pageN;
+    }
     window.electronAPI.invoke('showWindow', []);
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     // first render the fantastidynamic
