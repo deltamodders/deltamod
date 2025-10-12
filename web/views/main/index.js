@@ -124,12 +124,13 @@ async function createMod(mod) {
     flexContnainer.style.justifyContent = 'left';
     flexContnainer.style.gap = '6px';
     flexContnainer.style.marginTop = '4px';
-    flexContnainer.style.border = '3px solid #62626244';
+    flexContnainer.style.border = '3px solid #474747a0';
+    flexContnainer.style.backgroundColor = '#1a1a1a54';
     flexContnainer.style.borderRadius = '5px';
     flexContnainer.style.width = 'fit-content';
     flexContnainer.style.padding = '4px';
-    flexContnainer.style.paddingLeft = '6px';
-    flexContnainer.style.paddingRight = '6px';
+    flexContnainer.style.paddingLeft = '10px';
+    flexContnainer.style.paddingRight = '10px';
     infoContainer.appendChild(flexContnainer);
 
     var fontSize = 13;
