@@ -1,13 +1,72 @@
+@keyframes open {
+  0% { opacity: 0.5; width: 0px; }
+  100% { opacity: 1; width: 100px; }
+}
+
 .buttons {
-  background-color: rgba(56, 56, 56, 0.384);
+  backdrop-filter: blur(7px);
+  background-color: rgba(0, 0, 0, 0.3);
   padding: 10px;
   transform: translateY(-10px);
-  border-radius: 4px;
-  animation: none !important;
-  width: calc(100% - 40px);
-  padding-left: 25px;
-  padding-right: 25px;
+  border-radius: 50px;
+  border: 1px solid gray;
+  display: none;
+  width: 100px;
+  min-height: 50px;
+  padding-right: 10px;
+  padding-left: 10px;
+  text-align: right;
+  position: fixed;
+  bottom: 20px;
+  left: calc(50% + 35px);
+  transform: translateX(-50%);
+  transition: 0.3s all;
+  animation: 0.3s open cubic-bezier(0.34, 1.56, 0.64, 1);
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
 }
+
+.buttons:hover {
+  border-radius: 5px;
+  color: rgb(255,255,255) !important /* override basic style */;
+  backdrop-filter: blur(0);
+}
+
+.buttons > button {
+  height: 40px;
+  width: 40px;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 5px;
+  margin-right: 5px;
+  text-align: center;
+  padding: 0;
+  background-color: none;
+  background: none;
+  font-size: 20px;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.2s all;
+}
+.buttons > button:hover {
+  scale: 1.1;
+  border-radius: 10%;
+  color: rgb(255,255,255) !important /* override basic style */;
+  background-color: rgb(72, 72, 72);
+}
+.buttons > button:active {
+  scale: 1.2;
+}
+/*
+.buttons:hover {
+  background-color: rgba(124, 124, 124, 0.4);
+}
+*/
+
 .array {
   display: flex;
   justify-content: center;
@@ -56,18 +115,36 @@ th {
   text-align: left;
 }
 
-.modlist-actions-column {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    height: 100%;
+.mod-image {
+  border-radius: 6px;
+  border: 2px solid #ffffff3c;
+  box-shadow: 0px 4px 6px rgba(105, 105, 105, 0.44);
+  object-fit: contain;
+  display: block;
+  transition: 0.4s all;
+}
 
-    input[type=checkbox] {
+.mod-image:hover {
+  border: 2px solid white;
+  box-shadow: 0px 6px 8px rgba(105, 105, 105, 0.6);
+  scale: 1.05;
+}
+
+.modlist-actions-column-bdiv {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: nowrap;
+  height: 100%;
+}
+.modlist-enabled-column {
+  input[type=checkbox] {
       margin: 0;
-      width: 30px;
-      height: 15px;
-      accent-color: rgb(79, 151, 101);
+      width: 40px;
+      height: 25px;
+      cursor: pointer;
+      accent-color: rgba(57, 57, 57, 0.455);
       border: 6px solid white;
       scale: 1.1;
     }
