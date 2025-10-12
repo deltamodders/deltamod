@@ -600,6 +600,20 @@ function createWindow() {
 
     ipcMain.handle('executeArgumentCmd', async (event, args) => {
         if (process.argv.includes('---initialize_deltamod')) {
+            win.hide();
+            const confirm = dialog.showMessageBoxSync({
+                type: 'warning',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                cancelId: 1,
+                title: 'Initialize Deltamod',
+                message: 'A request was received for Deltamod to initialize and remove every installation and mod from the system. This action is irreversible. Do you want to continue?'
+            });
+            if (confirm !== 0) {
+                process.exit(0);
+                app.quit();
+                return;
+            }
             page('busy');
 
             console.log('Initializing Deltamod...');

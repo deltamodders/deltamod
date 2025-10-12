@@ -136,6 +136,7 @@
         </runProgram>
     </postInstallationActionList>
     <compressionAlgorithm>lzma</compressionAlgorithm>
+    <disableSplashScreen>1</disableSplashScreen>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <vendor>Deltamodders</vendor>
@@ -144,9 +145,7 @@
             <name>installdir</name>
             <title>Install directory</title>
             <description></description>
-            <explanation>Choose the directory where you wish to install Deltamod.
-
-NOTE: Directories with spaces are not reccomended as it is known to brick Deltamod sometimes.</explanation>
+            <explanation>Choose the directory where you wish to install Deltamod.</explanation>
             <value></value>
             <default>${windows_folder_local_appdata}\${product_shortname}</default>
             <allowEmptyValue>0</allowEmptyValue>
@@ -159,7 +158,7 @@ NOTE: Directories with spaces are not reccomended as it is known to brick Deltam
             <name>installnet</name>
             <title>Install .NET</title>
             <description></description>
-            <explanation>Would you like to install .NET 8.0? (needed for Deltamod to run)</explanation>
+            <explanation>Would you like to install the .NET framework?</explanation>
             <value></value>
             <default></default>
         </booleanParameter>
@@ -167,14 +166,14 @@ NOTE: Directories with spaces are not reccomended as it is known to brick Deltam
             <name>installgit</name>
             <title>Install Git</title>
             <description></description>
-            <explanation>Would you like to install Git? (needed for Deltamod to run)</explanation>
+            <explanation>Would you like to install Git?</explanation>
             <value>0</value>
             <default>0</default>
         </booleanParameter>
         <parameterGroup>
             <name>legacynotice</name>
             <title>Old versions</title>
-            <explanation>Before you install Deltamod 1.2, you will have to uninstall previous versions of Deltamod.
+            <explanation>Before you install Deltamod, you will have to uninstall previous versions of Deltamod.
 
 If you have any Deltamod installation to delete, please do so now by going to the Control Panel.</explanation>
             <value></value>
