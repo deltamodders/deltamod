@@ -18,7 +18,6 @@ const { default: axios } = require('axios');
 const System = require('./System.js');
 const Netlayer = require('./Netlayer.js');
 const path = require('path');
-const platform = require('os').platform();
 
 let abortController;
 let callbackNPS;
@@ -34,10 +33,7 @@ const { valid } = require('node-html-parser');
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
 function validateDeltarune(deltapath) {
-    let keyItems = ['data.win', 'DELTARUNE.exe'];
-    if (platform === 'darwin') {
-        keyItems = ['Contents/Resources/game.ios', 'Contents/Resources/chapter1_mac/game.ios'];
-    }
+    const keyItems = ['data.win', 'DELTARUNE.exe'];
     const missingItems = [];
     let isValid = true;
 
@@ -516,11 +512,6 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
-    });
-
-
-    ipcMain.handle('getOS', async () => {
-        return platform;
     });
 
     // NPS callbacks can be used for everything, so feel free.
@@ -1375,26 +1366,13 @@ function createWindow() {
      * Returns the selected folder path or null if canceled or install isn't detected.
     */
     ipcMain.handle('locateDelta', async (event) => {
-        if (platform === 'darwin') {
-            const pathdial = await dialog.showOpenDialog(win, {
-                properties: ['openFile'],
-                filters: [{ name: 'Application Bundle', extensions: ['app'] }],
-                title: 'Select the .app bundle'
-            });
-            if (pathdial.canceled) {
-                return null;
-            } else {
-                return validateDeltarune(pathdial.filePaths[0]);
-            }
+        const pathdial = await dialog.showOpenDialog(win, {
+            properties: ['openDirectory']
+        });
+        if (pathdial.canceled) {
+            return null;
         } else {
-            const pathdial = await dialog.showOpenDialog(win, {
-                properties: ['openDirectory']
-            });
-            if (pathdial.canceled) {
-                return null;
-            } else {
-                return validateDeltarune(pathdial.filePaths[0]);
-            }
+            return validateDeltarune(pathdial.filePaths[0]);
         }
     });
 
@@ -1432,15 +1410,6 @@ function createWindow() {
         var isFromLocate = (args[1] == 'locate');
         var specifiedLocatePath = (isFromLocate && args[2] ? args[2] : null);
 
-        if (platform == 'darwin' && steam) {
-            dialog.showMessageBoxSync(win, {
-                type: 'error',
-                title: 'Unsupported platform', 
-                message: 'Importing Steam installations is not supported on macOS at this time.',
-            });
-            return false;
-        }
-
         // get max index
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
         systemFiles.forEach((file) => {
@@ -1460,23 +1429,9 @@ function createWindow() {
 
         var path1 = "";
         if (!steam && !isFromLocate) {
-            let result;
-            console.log('Platform:', platform);
-            if (platform != 'darwin') {
-                console.log('Windows platform detected, using folder selection dialog.');
-                // On Windows, let the user pick a folder
-                result = await dialog.showOpenDialog(win, {
-                    properties: ['openDirectory'],
-                });
-            } else {
-                console.log('Non-Windows platform detected, using .app bundle selection dialog.');
-                // On macOS / other platforms, let the user pick a .app bundle
-                result = await dialog.showOpenDialog(win, {
-                    properties: ['openFile'],
-                    filters: [{ name: 'Application Bundle', extensions: ['app'] }],
-                    title: 'Select the .app bundle',
-                });
-            }
+            const result = await dialog.showOpenDialog(win, {
+                properties: ['openDirectory'],
+            });
             if (result.canceled || !result.filePaths || !result.filePaths[0]) {
                 dialog.showErrorBox('No folder selected', 'Please select a folder to proceed.');
                 return false;

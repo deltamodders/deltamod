@@ -12,4 +12,3 @@ installbuilder/dotnet.exe
 installbuilder/project.xml.backup
 installbuilder/git.exe
 /.idea
-.DS_Store
