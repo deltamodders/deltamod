@@ -126,6 +126,15 @@ window.preloadAPI.onGPL((message) => {
     }
 });
 
+(async() => {
+    if (await window.electronAPI.invoke('getOS', []) == "darwin") {
+        document.querySelector('.topbar > .title').style.justifyContent = 'center';
+    }
+    else {
+        document.querySelector('.topbar > .title').style.justifyContent = 'left';
+    }
+})();
+
 function adaptForIcons(element) {
     element.style.display = 'flex';
     element.style.alignItems = 'left';

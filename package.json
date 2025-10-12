@@ -9,6 +9,7 @@
   "scripts": {
     "test": "electron . --developer",
     "build-windows": "electron-builder --win",
+    "build-macos": "electron-builder --mac",
     "build-linux": "electron-builder --linux"
   },
   "build": {
