@@ -1197,6 +1197,88 @@ function createWindow() {
         return Modstore.modList();
     });
 
+    ipcMain.handle('startGame', async (event, args) => {
+        const pathname = KeyValue.readKVS('deltarunePath');
+        if (!pathname) {
+            dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
+            return false;
+        }
+
+        // Hide UI and stop audio before launching
+        win.hide();
+        win.webContents.send('audio', false);
+
+        const exeCandidate = KeyValue.readKVS('deltaruneExecutable');
+        const exe = (exeCandidate && fs.existsSync(exeCandidate))
+            ? exeCandidate
+            : (fs.existsSync(path.join(pathname, 'DELTARUNE.exe')) ? path.join(pathname, 'DELTARUNE.exe') : null);
+
+        if (!exe) {
+            errorWin('Could not find a Deltarune executable to run.');
+            win.show();
+            win.webContents.send('audio', true);
+            win.webContents.send('page', 'main');
+            return false;
+        }
+
+        // Build args
+        let argsStr = '';
+        if (KeyValue.readUniqueFlag('outputDelta')) {
+            const consoleFile = path.join(path.dirname(exe), '_console.txt');
+            try {
+                if (fs.existsSync(consoleFile)) fs.unlinkSync(consoleFile);
+            } catch (e) {
+                console.warn('Could not remove previous console file:', e);
+            }
+            argsStr = '-output _console.txt';
+        }
+
+        // If this install is steam-managed, launch via steam protocol and quit
+        if (KeyValue.readKVS('isSteam')) {
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Launching via Steam',
+                message: 'Deltarune will now be launched via Steam. Deltamod will close.',
+            });
+            shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
+            app.quit();
+            process.exit(0);
+            return true;
+        }
+
+        // Launch executable
+        exec(`"${exe}" ${argsStr}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
+            // Always restore originals after the game closes
+            try {
+                GamePatching.restoreOriginalsIfAny(pathname);
+            } catch (e) {
+                console.error('Failed to restore originals after run:', e);
+            }
+
+            win.show();
+
+            if (error) {
+                errorWin(error);
+            }
+
+            if (KeyValue.readUniqueFlag('outputDelta')) {
+                try {
+                    const consoleFile = path.join(path.dirname(exe), '_console.txt');
+                    const consoleContent = fs.readFileSync(consoleFile, 'utf8');
+                    fs.unlinkSync(consoleFile);
+                    setSharedVar('deltaruneLogs', consoleContent);
+                } catch (e) {
+                    console.error('Failed to read or remove console file:', e);
+                }
+            }
+
+            win.webContents.send('audio', true);
+            win.webContents.send('page', KeyValue.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main');
+        });
+
+        return true;
+    });
+
     /*
      * patchAndRun
      * Patches the Deltarune install and runs the game.

@@ -94,6 +94,10 @@ function createErroringMods(errors) {
     dialogElement.showModal();
 }
 
+window.currentPageStack.openGame = async function() {
+    await window.electronAPI.invoke('startGame', []);
+};
+
 (async () => {
     const errorBanner = document.getElementById("error-banner");
 
