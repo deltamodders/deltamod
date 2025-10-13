@@ -9,59 +9,57 @@
     }
     var releasesData = await releases.json();
 
-    releasesData.forEach(async release => {
+    for (const release of releasesData) {
 
-        var releaseCard = document.createElement('div');
+        const releaseCard = document.createElement('div');
         releaseCard.className = 'releasecard';
 
-        var title = document.createElement('span');
+        const title = document.createElement('span');
         title.className = 'str';
         title.style.fontSize = '30px';
         title.innerHTML = release.name + (release.prerelease ? ' <span style="color:orange;">(Beta)</span>' : ' <span style="color:green;">(Stable)</span>');
 
-        var description = document.createElement('p');
+        const description = document.createElement('p');
         description.className = 'desc calibri';
         description.style.marginTop = '8px';
         description.style.fontStyle = 'italic';
         description.style.color = '#ccc';
         description.style.marginBottom = '8px';
-        description.innerHTML = release.body.replaceAll('\n', '<br>') || 'No description provided.';
+        description.innerHTML = release.body ? release.body.replaceAll('\n', '<br>') : 'No description provided.';
 
-        var desc = document.createElement('span');
+        const desc = document.createElement('span');
         desc.className = 'desc calibri';
         desc.innerHTML = `<img src="${release.author.avatar_url}" alt="Author avatar" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:8px;">
         Released by <strong>${release.author.login}</strong> on <strong>${new Date(release.published_at).toLocaleDateString()}</strong>`;
 
-        var res = await fetch(release.url);
-        var code = res.status;
-        var json = await res.json();
+        const res = await fetch(release.url);
+        const code = res.status;
+        const json = await res.json();
 
-        var buttonContainer = document.createElement('div');
+        const buttonContainer = document.createElement('div');
         buttonContainer.className = 'asset-buttons';
 
         if (Array.isArray(json.assets) && json.assets.length) {
-            json.assets.forEach(asset => {
-            var btn = document.createElement('button');
-            btn.style.display = 'block';
-            btn.style.marginBottom = '8px';
-            btn.textContent = `Download ${asset.name}`;
-            btn.onclick = () => {
-                window.electronAPI.invoke('downloadGM3P', [asset.browser_download_url]);
-            };
-            buttonContainer.appendChild(btn);
-            });
+            for (const asset of json.assets) {
+                const btn = document.createElement('button');
+                btn.style.display = 'block';
+                btn.style.marginBottom = '8px';
+                btn.textContent = `Download ${asset.name}`;
+                btn.onclick = () => {
+                    window.electronAPI.invoke('downloadGM3P', [asset.browser_download_url]);
+                };
+                buttonContainer.appendChild(btn);
+            }
         } else {
-            var noAssets = document.createElement('span');
+            const noAssets = document.createElement('span');
             noAssets.textContent = (code == 403) ? 'GitHub is rate limiting your requests, and thus no assets can be downloaded.' : 'No assets available for this release.';
             buttonContainer.appendChild(noAssets);
         }
 
-        var button = buttonContainer;
-
         releaseCard.appendChild(title);
         releaseCard.appendChild(desc);
         releaseCard.appendChild(description);
-        releaseCard.appendChild(button);
+        releaseCard.appendChild(buttonContainer);
         viewport.appendChild(releaseCard);
-    });
+    }
 })();

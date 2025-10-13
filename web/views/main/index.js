@@ -107,6 +107,8 @@ async function createMod(mod) {
         infoContainer.appendChild(document.createElement('br'));
     }
 
+    infoContainer.appendChild(document.createElement('br'));
+
     let descSpan = document.createElement('span');
     descSpan.className = 'calibri';
     descSpan.style = 'font-size: 10px; color: #ffffffdd;';

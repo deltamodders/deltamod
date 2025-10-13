@@ -1,7 +1,12 @@
 .warning {
     padding: 10px;
-    background-color: #ff5454;
+    background-color: #ffe854;
+    color: black;
     font-family: 'Calibri', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    justify-content: left;
+    gap: 10px;
 }
 
 strong {

@@ -60,4 +60,14 @@ window.currentPageStack.toggleGM3P = function () {
     if (shouldPlayAudio) {
         audio.play();
     }
+
+    if (window._pageArguments.customPatchingText) {
+        document.getElementById("patchingTXT").innerHTML = "<span class=\"material-symbols-outlined rotate\">cycle</span>" + window._pageArguments.customPatchingText;
+    }
+
+    if (window._pageArguments.customPatchingDesc) {
+        document.getElementById("patchingDesc").innerHTML = window._pageArguments.customPatchingDesc;
+    }
+
+    window._pageArguments = {};
 })();
