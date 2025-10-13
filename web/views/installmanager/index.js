@@ -44,7 +44,7 @@
         boldName.style.marginBottom = '6px';
         boldName.style.justifyContent = 'left';
         boldName.style.fontWeight = 'normal';
-        boldName.innerHTML = icon((install.bakedInstallation ? 'stockpot' : 'snippet_folder'));
+        boldName.innerHTML = icon((install.bakedInstallation ? 'skillet' : 'snippet_folder'));
         boldName.appendChild(editablespan);
 
         nameContainer.appendChild(boldName);
@@ -56,7 +56,7 @@
             const gameSource = document.createTextNode(`Game source: ${(install.steam ? 'Steam' : 'Manual')}`);
             if (install.bakedInstallation) {
                 const bakedInfo = document.createElement('i');
-                bakedInfo.textContent = 'This installation is a baked installation and is pre-modified.';
+                bakedInfo.textContent = 'Baked installation';
                 details.appendChild(bakedInfo);
                 details.appendChild(lineBreak.cloneNode());
             }

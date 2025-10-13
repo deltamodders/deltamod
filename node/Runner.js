@@ -1254,8 +1254,8 @@ function createWindow() {
 
     ipcMain.on('startGame', async (event, args) => {
         console.log('Starting game...');
-        const pathname = KeyValue.readKVS('deltarunePath');
-        if (!pathname) {
+        var pathname = path.join(app.getPath('userData'), 'deltamod_system-' + System.getCurrentSystemIndex(), 'deltaruneInstall');
+        if (!fs.existsSync(pathname)) {
             dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
             return false;
         }

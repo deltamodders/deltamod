@@ -315,6 +315,15 @@ function patchAndRun() {
     }
     if (baking) {
         window._pageArguments = { baker: true, customPatchingText: 'Baking installation...', customPatchingDesc: 'Please wait while the installation is baked.' };
+        var msg = [
+            'You are about to bake the selected mods into the game installation.',
+            'This installation will not be able to use any other mods apart from the ones you selected now.',
+            'You can still add a new installation and it will be unaffected by this.',
+            'Are you sure you want to continue?'
+        ]
+        if (!window.confirm(msg.join('\n'))) {
+            return;
+        }
     }
     page('patching');
     window.electronAPI.invoke('patchAndRun', [selectedMods, (baking ? 'baker' : '')]);
