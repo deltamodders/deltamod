@@ -45,50 +45,7 @@ async function createMod(mod) {
     modNameContainer.appendChild(document.createElement('br'));
     modNameContainer.appendChild(authorSpan);
 
-    let sizeSpan = document.createElement('p');
-    sizeSpan = adaptForIcons(sizeSpan);
-    sizeSpan.style.margin = '0px';
-    sizeSpan.style.marginTop = '4px';
-    sizeSpan.className = 'calibri';
-    sizeSpan.style.fontSize = 'smaller';
-    sizeSpan.style.color = '#888';
-    sizeSpan.innerHTML = `${icon('hard_disk', 'small')} ${mod.size} MB`;
-    sizeSpan.id = `modsize-${mod.uid}`;
-    modNameContainer.appendChild(sizeSpan);
-
-    let compatibilitySpan = document.createElement('p');
-    compatibilitySpan = adaptForIcons(compatibilitySpan);
-    compatibilitySpan.style.margin = '0px';
-    compatibilitySpan.style.marginTop = '4px';
-    compatibilitySpan.className = 'calibri';
-    compatibilitySpan.style.fontSize = 'smaller';
-    compatibilitySpan.style.color = '#888';
-    compatibilitySpan.innerHTML = `${icon('task_alt', 'small')} Compatible with ${mod.demo ? 'demo version' : 'full version'}`;
-    compatibilitySpan.id = `modcompat-${mod.uid}`;
-    modNameContainer.appendChild(compatibilitySpan);
-
-    // Column 2 (Actions)
-    const actionContainer = document.createElement('td');
-    actionContainer.style.textAlign = 'center';
-    actionContainer.className = 'modlist-actions-column';
-    {
-        let bdiv = document.createElement('div');
-        bdiv.className = 'modlist-actions-column-bdiv';
-        actionContainer.appendChild(bdiv);
-
-        const exploreModButton = document.createElement('button');
-        exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
-        exploreModButton.innerHTML = icon('folder_eye', '20px');
-        bdiv.appendChild(exploreModButton);
-
-        const deleteModButton = document.createElement('button');
-        deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-        deleteModButton.innerHTML = icon('delete_forever', '20px');
-        bdiv.appendChild(deleteModButton);
-    }
-
     modRow.appendChild(modNameContainer);
-    modRow.appendChild(actionContainer);
 
     document.getElementById('modlist').appendChild(modRow);
     return modRow;
@@ -140,7 +97,7 @@ function createErroringMods(errors) {
 (async () => {
     const errorBanner = document.getElementById("error-banner");
 
-    var { modList, errors } = await window.electronAPI.invoke('getModListFull', []);
+    var { modList, errors } = await window.electronAPI.invoke('getBakedMods', []);
     modList.forEach(x => createMod(x));
 
     if (errors.length > 0) {

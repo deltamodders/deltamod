@@ -86,6 +86,14 @@ async function addButton(name, description, click, buttonText) {
         page('gm3p-selector');
     }, 'Open');
 
+    if (!await window.electronAPI.invoke('isBaked', [])) {
+        addButton('Bake this install', 'Allows you to select mods to bake into the game (so you don\'t have to patch everytime)', async () => {
+            window._pageArguments = { baker: true };
+            page('main');
+        }, 'Open');
+    }
+
+
     var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
     if (isSteam) {
         addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.', async () => {

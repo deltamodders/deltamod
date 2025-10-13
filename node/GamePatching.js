@@ -555,4 +555,41 @@ function restoreOriginalsIfAny(gamePath) {
     return restored;
 }
 
-module.exports = { startGamePatch, restoreOriginalsIfAny, findModRoot };
+
+// nuke that backup if it exists (needed for baking)
+function deleteOriginals(gamePath) {
+    const restored = [];
+    function tryRestore(target) {
+        if (restoreIfBackup(target)) restored.push(target);
+    }
+    clog('Restore check in', gamePath);
+    try {
+        // root level
+        for (const e of safeReadDir(gamePath, { withFileTypes: true })) {
+            if (e.isFile && e.isFile() && e.name.endsWith(BACKUP_SUFFIX)) {
+                const filePath = path.join(gamePath, e.name);
+                clog('Deleting root backup:', e.name);
+                try { fs.rmSync(filePath, { force: true }); } catch {}
+            }
+        }
+        // one level deep
+        for (const e of safeReadDir(gamePath, { withFileTypes: true })) {
+            if (e.isDirectory && e.isDirectory()) {
+                const sub = path.join(gamePath, e.name);
+                for (const f of safeReadDir(sub)) {
+                    if (String(f).endsWith(BACKUP_SUFFIX)) {
+                        const filePath = path.join(sub, String(f).slice(0, -BACKUP_SUFFIX.length));
+                        clog('Deleting sub backup:', f);
+                        try { fs.rmSync(filePath, { force: true }); } catch {}
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        clog('Restore scan error:', e.message);
+    }
+    clog('Restored count:', restored.length);
+    return restored;
+}
+
+module.exports = { startGamePatch, restoreOriginalsIfAny, findModRoot, deleteOriginals };

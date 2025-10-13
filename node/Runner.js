@@ -120,6 +120,7 @@ async function getInstallations(suppressWarnings = false) {
             steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
             type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1])),
             appid: KeyValue.readKVSOfIndex('steamAppId', parseInt(file.split('-')[1])),
+            bakedInstallation: KeyValue.readKVSOfIndex('baked', parseInt(file.split('-')[1])) === true,
         });
     });
 
@@ -512,6 +513,14 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('isBaked', async (event, args) => {
+        return KeyValue.readKVS('baked');
+    });
+
+    ipcMain.handle('getBakedMods', async (event, args) => {
+        return {modList: KeyValue.readKVS("bakeList"), errors: [] };
     });
 
     // NPS callbacks can be used for everything, so feel free.
@@ -1195,6 +1204,7 @@ function createWindow() {
     */
     ipcMain.handle('patchAndRun', async (event, args) => {
         try {
+            var baking = args[1] == 'baker';
             var pathname = KeyValue.readKVS('deltarunePath');
             if (!pathname) {
                 dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
@@ -1270,12 +1280,12 @@ function createWindow() {
                     return false;
                 }
 
-                var args = "";
+                var argus = "";
                 if (KeyValue.readUniqueFlag("outputDelta")) {
                     if (fs.existsSync(path.join(path.dirname(exe), '_console.txt'))) {
                         fs.unlinkSync(path.join(path.dirname(exe), '_console.txt'));
                     }
-                    args += '-output _console.txt';
+                    argus += '-output _console.txt';
                 }
                 if (KeyValue.readKVS('isSteam')) {
                     dialog.showMessageBoxSync({
@@ -1287,7 +1297,7 @@ function createWindow() {
                     app.quit();
                     process.exit(0);
                 } else {
-                    exec(`"${exe}" ${args}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
+                    exec(`"${exe}" ${argus}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
                         // Always restore originals after the game closes
                         GamePatching.restoreOriginalsIfAny(pathname);
                         win.show();
@@ -1306,8 +1316,23 @@ function createWindow() {
                     });
                 }
             };
-            callbackNPSPassWith = [pathname];
-            win.webContents.send('finishedPatch',[]);
+            if (!baking) {
+                callbackNPSPassWith = [pathname];
+                win.webContents.send('finishedPatch',mods);
+            }
+            else {
+                KeyValue.setKVS('baked', true);
+                var allMods = Modstore.modList().modList.filter(m => (args[0].includes(m.uniqueId))).map(m => ({
+                    name: m.name,
+                    description: m.description,
+                    author: m.author,
+                    version: m.version,
+                }));
+                KeyValue.setKVS('bakeList', allMods);
+                GamePatching.deleteOriginals(pathname);
+                app.relaunch(properRelaunch());
+                app.exit();
+            }
         } catch (err) {
             errorWin('Coudn\'t patch and run Deltarune: ' + err.toString());
             return false;

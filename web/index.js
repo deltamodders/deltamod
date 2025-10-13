@@ -154,6 +154,10 @@ async function page(name) {
     if (name == "") {
         name = pageN;
     }
+    // make sure nobody can escape to home
+    if (await window.electronAPI.invoke('isBaked', []) && name == 'main') {
+        name = 'bakedhome';
+    }
     window.electronAPI.invoke('showWindow', []);
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     // first render the fantastidynamic

@@ -44,7 +44,7 @@
         boldName.style.marginBottom = '6px';
         boldName.style.justifyContent = 'left';
         boldName.style.fontWeight = 'normal';
-        boldName.innerHTML = icon('snippet_folder');
+        boldName.innerHTML = icon((install.bakedInstallation ? 'stockpot' : 'snippet_folder'));
         boldName.appendChild(editablespan);
 
         nameContainer.appendChild(boldName);
@@ -54,6 +54,12 @@
             const gameType = document.createTextNode(` Game type: ${uppercaseFirst(install.type)}`);
             const lineBreak = document.createElement('br');
             const gameSource = document.createTextNode(`Game source: ${(install.steam ? 'Steam' : 'Manual')}`);
+            if (install.bakedInstallation) {
+                const bakedInfo = document.createElement('i');
+                bakedInfo.textContent = 'This installation is a baked installation and is pre-modified.';
+                details.appendChild(bakedInfo);
+                details.appendChild(lineBreak.cloneNode());
+            }
             details.appendChild(gameType);
             details.appendChild(lineBreak);
             details.appendChild(gameSource);

@@ -1,9 +1,17 @@
 function purifyDescription(desc) {
-    var final = desc;
-    final = desc.replace(/\n/g, ' ').substring(0, 100);
-    if (desc.length > 100) final += '...';
-    return final;
+    if (desc === null || desc === undefined) return '';
+    let text = String(desc);
+    // Remove any HTML tags first
+    text = purify(text);
+    // Normalize whitespace/newlines to single spaces
+    text = text.replace(/\s+/g, ' ').trim();
+    // Truncate safely
+    const max = 100;
+    if (text.length > max) return text.substring(0, max) + '...';
+    return text;
 }
+
+var baking = false;
 
 function adaptForIconsA(elem) {
     elem.style.display = 'inline-flex';
@@ -287,14 +295,29 @@ function loadInst(index) {
 
         //document.getElementById('par').innerText = 'Run without patches';
     }
+
+    baking = window._pageArguments && window._pageArguments.baker;
+    if (baking) {
+        document.getElementById('ptitle').innerText = 'Select mods to bake';
+        document.getElementById('importModBtn').disabled = true;
+        document.getElementById('importModBtn').style.opacity = 0.3;
+    }
+    window._pageArguments = null;
 })();
 
 function patchAndRun() {
     var allChecks = Array.from(document.querySelectorAll('input[type="checkbox"]')).filter(cb => cb.id.startsWith('modcheck-'));
     var selectedMods = allChecks.filter(cb => cb.checked).map(cb => cb.id.replace('modcheck-', ''));
     console.log('Selected mods:', selectedMods);
+    if (baking && selectedMods.length === 0) {
+        htmlAlert('No mods selected', 'You need to select at least one mod to bake into the game.', [{ text: 'Close', resolveWith: 'close' }]);
+        return;
+    }
+    if (baking) {
+        window._pageArguments = { baker: true, customPatchingText: 'Baking installation...', customPatchingDesc: 'Please wait while the installation is baked.' };
+    }
     page('patching');
-    window.electronAPI.invoke('patchAndRun', [selectedMods]);
+    window.electronAPI.invoke('patchAndRun', [selectedMods, (baking ? 'baker' : '')]);
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
