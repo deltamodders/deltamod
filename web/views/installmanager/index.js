@@ -84,6 +84,12 @@
         }
         buttonsDiv.appendChild(goBtn);
 
+        tippy(goBtn, {
+            content: index == install.index ? "Current installation" : "Switch to this installation",
+            placement: 'top',
+            delay: [500, 0],
+        });
+
         let deleteBtn = document.createElement('button');
         deleteBtn.style.padding = '4px';
         deleteBtn.style.textAlign = 'center';
@@ -96,6 +102,12 @@
         };
         buttonsDiv.appendChild(deleteBtn);
 
+        tippy(deleteBtn, {
+            content: "Delete this installation",
+            placement: 'top',
+            delay: [500, 0],
+        });
+
         let openBtn = document.createElement('button');
         openBtn.style.padding = '4px';
         openBtn.style.textAlign = 'center';
@@ -104,6 +116,27 @@
         openBtn.onclick = () => {
             window.electronAPI.invoke('openInstallationFolder', [install.index.toString()]);
         }
+        tippy(openBtn, {
+            content: "Open installation folder",
+            placement: 'top',
+            delay: [500, 0],
+        });
+
+        let shortcutBtn = document.createElement('button');
+        shortcutBtn.style.padding = '4px';
+        shortcutBtn.style.textAlign = 'center';
+        shortcutBtn = adaptForIcons(shortcutBtn);
+        shortcutBtn.innerHTML = icon('forward', '18px');
+        shortcutBtn.title = 'Create shortcut';
+        shortcutBtn.onclick = () => {
+            window.electronAPI.invoke('createInstallLink', [install.index.toString(), install.name || `Install #${install.index + 1}`]);
+        };
+        tippy(shortcutBtn, {
+            content: "Create desktop shortcut to launch this installation",
+            placement: 'top',
+            delay: [500, 0],
+        });
+        buttonsDiv.appendChild(shortcutBtn);
         buttonsDiv.appendChild(openBtn);
 
         goCell.appendChild(buttonsDiv);

@@ -60,6 +60,7 @@
     "node-html-parser": "^7.0.1",
     "nodejs": "^0.0.0",
     "nodejs-file-downloader": "^4.13.0",
+    "windows-shortcuts": "^0.1.6",
     "xml-js": "^1.6.11",
     "yoctocolors-cjs": "^2.1.3"
   }

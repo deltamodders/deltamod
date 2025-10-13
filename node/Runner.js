@@ -4,6 +4,7 @@ const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const mime = require('mime-types');
+const winShortcuts = require('windows-shortcuts');
 const _7z = require("7zip-min");
 const {Downloader} = require("nodejs-file-downloader");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
@@ -292,6 +293,22 @@ function createWindow() {
     // lets check if we need to change part
     var threrror = "";
     var partOverride = getSystemFile('_sysindex',true);
+    // if caller passed ---system_index=<n> on CLI, persist it to the _sysindex file
+    const sysArg = process.argv.find(a => a.startsWith('---system_index='));
+    if (sysArg) {
+        try {
+            const val = sysArg.split('=')[1];
+            if (val !== undefined && /^-?\d+$/.test(val)) {
+                const sysIndexPath = getSystemFile('_sysindex', true);
+                fs.writeFileSync(sysIndexPath, val.toString(), 'utf8');
+                console.log(`Wrote system index override ${val} to ${sysIndexPath}`);
+            } else {
+                console.warn('Invalid ---system_index value:', val);
+            }
+        } catch (e) {
+            console.error('Failed to write system index override:', e);
+        }
+    }
     if (fs.existsSync(partOverride)) {
         var overrideData = fs.readFileSync(partOverride, 'utf8');
         if (parseInt(overrideData) < 0) {
@@ -513,6 +530,39 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('createInstallLink', async (event, args) => {
+        if (process.platform !== 'win32') {
+            dialog.showErrorBox('Unsupported OS', 'Creating installation links is only supported on Windows.');
+            return;
+        }
+
+        if (!args[0]) {
+            dialog.showErrorBox('Invalid Argument', 'Please provide a valid system index.');
+            return;
+        }
+
+        var thisProgramEXE = process.execPath;
+        console.log('This program EXE: ' + thisProgramEXE); 
+
+        var lnkPath = path.join(require('os').homedir(), 'Desktop', args[1] + '.lnk');
+
+        winShortcuts.create(lnkPath, {
+            target : thisProgramEXE,
+            args : '---system_index=' + args[0] + '',
+            desc : "Boots Deltamod with the " + args[1] + " installation of Deltarune.",
+        }, function(err) {
+            if (err)
+                dialog.showErrorBox('Error', 'An error occurred while creating the shortcut: ' + err);
+            else
+                console.log("Shortcut created!");
+                dialog.showMessageBox(win, {
+                    type: 'info',
+                    title: 'Shortcut Created',
+                    message: 'The installation shortcut has been created on your desktop.',
+                });
+        });
     });
 
     ipcMain.handle('isBaked', async (event, args) => {
