@@ -20,7 +20,7 @@ tr {
         height: 20px;
         cursor: pointer;
     }
-    button:not(.back) {
+    .cat > button:not(.back) {
         cursor: pointer;
         width: 100%;
     }
