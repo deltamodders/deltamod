@@ -89,6 +89,17 @@ async function createMod(mod) {
     imageContainer.style.margin = '4px';
     imageContainer.style.marginLeft = '2px';
 
+    tippy(imageContainer, {
+        content: 'Right click to view in mod manager',
+        placement: 'right',
+        delay: [100, 0],
+        onMount(instance) {
+            const box = instance.popper.querySelector('.tippy-box');
+            box.classList.add('calibri');
+            if (box) box.style.border = '3px solid #ffffffff';
+        }
+    });
+
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
     if (!imeta.path) {
         imeta.path = 'deltapack://web/mod-placeholder.png';
