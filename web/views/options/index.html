@@ -1,57 +1,33 @@
 <div>
     <h1>Options</h1>
-    <div style="overflow-y: scroll; height: 450px; overflow-x: hidden;">
-        <table style="width: 100%; max-height: 200px; overflow-y: scroll;" id="modtable">
-            <colgroup>
-                <col style="width: 80%;">
-                <col style="width: 20%;">
-            </colgroup>
-            <thead style="position: sticky; top: -2px;">
-                <tr>
-                    <th>Option</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="options">
-                
-            </tbody>
-        </table>
+    <div style="overflow-y: scroll; height: 100%; overflow-x: hidden; display: flex; justify-content: left; align-items: baseline; gap: 20px;">
+        <div class="cat" style="width: 20%; display: unset;">
+            <button onclick="window.currentPageStack.cat('gen')">General</button>
+            <button onclick="window.currentPageStack.cat('ui')">UI</button>
+            <button onclick="window.currentPageStack.cat('inst')">Installation</button>
+            <button onclick="window.currentPageStack.cat('adv')">Advanced</button>
+        </div>
+        <div class="opt" style="width: 80%; display: unset;">
+            <table style="width: 100%; max-height: 200px; overflow-y: scroll;" id="modtable">
+                <colgroup>
+                    <col style="width: 80%;">
+                    <col style="width: 20%;">
+                </colgroup>
+                <thead style="position: sticky; top: -2px;">
+                    <tr>
+                        <th>Option</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="options">
+                    <tr>
+                        <td colspan="2" style="text-align: center;">Select a category on the left to view the options.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<style>
-    tr {
-       transition: 0.1s all; 
-    }
-    tr:hover {
-        background-color: rgba(124,124,124, 0.2);
-    }
-    td, th:not(.center) {
-        text-align: left;
-    }
-    .center {
-        text-align: center;
-    }
-    .input {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-    }
-    button:not(.back) {
-        cursor: pointer;
-        width: 100%;
-    }
-    th {
-        height: 100%;
-    }
-    /* No seriously, why doesn't b work??? */
-    b {
-        font-weight: bold !important;
-    }
-</style>
+STYLESHEET[options]
 JSL

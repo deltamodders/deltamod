@@ -11,9 +11,14 @@ window.currentPageStack.next = function () {
 }
 
 window.currentPageStack.fp = function () {
-    document.getElementById("patchingTXT").innerHTML = icon('check') + " Patching complete!";
-    document.getElementById("patchingTXT").classList.add("success");
-    document.getElementById("next").style.display = "block";
+    if (!baker) {
+        document.getElementById("patchingTXT").innerHTML = icon('check') + " Patching complete!";
+        document.getElementById("patchingTXT").classList.add("success");
+        document.getElementById("next").style.display = "block";
+    }
+    else {
+        document.getElementById("patchingTXT").innerHTML = "<span class=\"material-symbols-outlined rotate\">cycle</span>" + " Finishing baking...";
+    }
 }
 
 
@@ -26,6 +31,8 @@ window.currentPageStack.toggleGM3P = function () {
             gplElement.style.display = "none";
         }
 };
+
+let baker = false;
 
 (async() => {
     const THEME = await window.electronAPI.invoke('getSponsor',[]);
@@ -68,6 +75,8 @@ window.currentPageStack.toggleGM3P = function () {
     if (window._pageArguments.customPatchingDesc) {
         document.getElementById("patchingDesc").innerHTML = window._pageArguments.customPatchingDesc;
     }
+
+    baker = window._pageArguments && window._pageArguments.baker;
 
     window._pageArguments = {};
 })();

@@ -1,9 +1,17 @@
 function purifyDescription(desc) {
-    var final = desc;
-    final = desc.replace(/\n/g, ' ').substring(0, 100);
-    if (desc.length > 100) final += '...';
-    return final;
+    if (desc === null || desc === undefined) return '';
+    let text = String(desc);
+    // Remove any HTML tags first
+    text = purify(text);
+    // Normalize whitespace/newlines to single spaces
+    text = text.replace(/\s+/g, ' ').trim();
+    // Truncate safely
+    const max = 100;
+    if (text.length > max) return text.substring(0, max) + '...';
+    return text;
 }
+
+var baking = false;
 
 function adaptForIconsA(elem) {
     elem.style.display = 'inline-flex';
@@ -81,6 +89,17 @@ async function createMod(mod) {
     imageContainer.style.margin = '4px';
     imageContainer.style.marginLeft = '2px';
 
+    tippy(imageContainer, {
+        content: 'Right click to view in mod manager',
+        placement: 'right',
+        delay: [100, 0],
+        onMount(instance) {
+            const box = instance.popper.querySelector('.tippy-box');
+            box.classList.add('calibri');
+            if (box) box.style.border = '3px solid #ffffffff';
+        }
+    });
+
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
     if (!imeta.path) {
         imeta.path = 'deltapack://web/mod-placeholder.png';
@@ -93,6 +112,15 @@ async function createMod(mod) {
     img.classList.add('mod-image');
     imageContainer.appendChild(img);
 
+    imageContainer.oncontextmenu = e => {
+        htmlAlert(mod.name,"Do you wish to view this mod in the Mod Manager?",[{text:'Yes',resolveWith:'accept'},{text:'No',rejectWith:'close'}]).then(result => {
+            if (result === 'accept') {
+                window._pageArguments = { highlightMod: mod.uid };
+                page('allmods');
+            }
+        }).catch(() => {});
+    };
+
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
@@ -103,9 +131,6 @@ async function createMod(mod) {
     }
     titleSpan.id = `modtitle-${mod.uid}`;
     infoContainer.appendChild(titleSpan);
-    if (!mod.new) {
-        infoContainer.appendChild(document.createElement('br'));
-    }
 
     infoContainer.appendChild(document.createElement('br'));
 
@@ -161,24 +186,6 @@ async function createMod(mod) {
 
     modNameContainer.appendChild(bigAhhContainer);
 
-    let actionContainer = document.createElement('td');
-    actionContainer.style.textAlign = 'center';
-    actionContainer.className = 'modlist-actions-column';
-
-    let bdiv = document.createElement('div');
-    bdiv.className = 'modlist-actions-column-bdiv';
-    actionContainer.appendChild(bdiv);
-
-    let exploreModButton = document.createElement('button');
-    exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
-    exploreModButton.innerHTML = icon('folder_eye', '20px');
-    bdiv.appendChild(exploreModButton);
-
-    let deleteModButton = document.createElement('button');
-    deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-    deleteModButton.innerHTML = icon('delete_forever', '20px');
-    bdiv.appendChild(deleteModButton);
-
     // Column 2 (Actions)
     let enabledContainer = document.createElement('td');
     enabledContainer.style.textAlign = 'center';
@@ -203,7 +210,6 @@ async function createMod(mod) {
     modNameContainer.style.background = `${cssStyle}`;
     modRow.appendChild(modNameContainer);
     modRow.appendChild(enabledContainer);
-    modRow.appendChild(actionContainer);
 
     document.getElementById('modlist').appendChild(modRow);
     return modRow;
@@ -287,14 +293,38 @@ function loadInst(index) {
 
         //document.getElementById('par').innerText = 'Run without patches';
     }
+
+    baking = window._pageArguments && window._pageArguments.baker;
+    if (baking) {
+        document.getElementById('ptitle').innerText = 'Select mods to bake';
+        document.getElementById('importModBtn').disabled = true;
+        document.getElementById('importModBtn').style.opacity = 0.3;
+    }
+    window._pageArguments = null;
 })();
 
 function patchAndRun() {
     var allChecks = Array.from(document.querySelectorAll('input[type="checkbox"]')).filter(cb => cb.id.startsWith('modcheck-'));
     var selectedMods = allChecks.filter(cb => cb.checked).map(cb => cb.id.replace('modcheck-', ''));
     console.log('Selected mods:', selectedMods);
+    if (baking && selectedMods.length === 0) {
+        htmlAlert('No mods selected', 'You need to select at least one mod to bake into the game.', [{ text: 'Close', resolveWith: 'close' }]);
+        return;
+    }
+    if (baking) {
+        window._pageArguments = { baker: true, customPatchingText: 'Baking installation...', customPatchingDesc: 'Please wait while the installation is baked.' };
+        var msg = [
+            'You are about to bake the selected mods into the game installation.',
+            'This installation will not be able to use any other mods apart from the ones you selected now.',
+            'You can still add a new installation and it will be unaffected by this.',
+            'Are you sure you want to continue?'
+        ]
+        if (!window.confirm(msg.join('\n'))) {
+            return;
+        }
+    }
     page('patching');
-    window.electronAPI.invoke('patchAndRun', [selectedMods]);
+    window.electronAPI.invoke('patchAndRun', [selectedMods, (baking ? 'baker' : '')]);
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;

@@ -44,7 +44,7 @@
         boldName.style.marginBottom = '6px';
         boldName.style.justifyContent = 'left';
         boldName.style.fontWeight = 'normal';
-        boldName.innerHTML = icon('snippet_folder');
+        boldName.innerHTML = icon((install.bakedInstallation ? 'skillet' : 'snippet_folder'));
         boldName.appendChild(editablespan);
 
         nameContainer.appendChild(boldName);
@@ -54,6 +54,12 @@
             const gameType = document.createTextNode(` Game type: ${uppercaseFirst(install.type)}`);
             const lineBreak = document.createElement('br');
             const gameSource = document.createTextNode(`Game source: ${(install.steam ? 'Steam' : 'Manual')}`);
+            if (install.bakedInstallation) {
+                const bakedInfo = document.createElement('i');
+                bakedInfo.textContent = 'Baked installation';
+                details.appendChild(bakedInfo);
+                details.appendChild(lineBreak.cloneNode());
+            }
             details.appendChild(gameType);
             details.appendChild(lineBreak);
             details.appendChild(gameSource);
@@ -78,6 +84,12 @@
         }
         buttonsDiv.appendChild(goBtn);
 
+        tippy(goBtn, {
+            content: index == install.index ? "Current installation" : "Switch to this installation",
+            placement: 'top',
+            delay: [500, 0],
+        });
+
         let deleteBtn = document.createElement('button');
         deleteBtn.style.padding = '4px';
         deleteBtn.style.textAlign = 'center';
@@ -90,6 +102,12 @@
         };
         buttonsDiv.appendChild(deleteBtn);
 
+        tippy(deleteBtn, {
+            content: "Delete this installation",
+            placement: 'top',
+            delay: [500, 0],
+        });
+
         let openBtn = document.createElement('button');
         openBtn.style.padding = '4px';
         openBtn.style.textAlign = 'center';
@@ -98,6 +116,27 @@
         openBtn.onclick = () => {
             window.electronAPI.invoke('openInstallationFolder', [install.index.toString()]);
         }
+        tippy(openBtn, {
+            content: "Open installation folder",
+            placement: 'top',
+            delay: [500, 0],
+        });
+
+        let shortcutBtn = document.createElement('button');
+        shortcutBtn.style.padding = '4px';
+        shortcutBtn.style.textAlign = 'center';
+        shortcutBtn = adaptForIcons(shortcutBtn);
+        shortcutBtn.innerHTML = icon('forward', '18px');
+        shortcutBtn.title = 'Create shortcut';
+        shortcutBtn.onclick = () => {
+            window.electronAPI.invoke('createInstallLink', [install.index.toString(), install.name || `Install #${install.index + 1}`]);
+        };
+        tippy(shortcutBtn, {
+            content: "Create desktop shortcut to launch this installation",
+            placement: 'top',
+            delay: [500, 0],
+        });
+        buttonsDiv.appendChild(shortcutBtn);
         buttonsDiv.appendChild(openBtn);
 
         goCell.appendChild(buttonsDiv);

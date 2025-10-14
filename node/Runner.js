@@ -4,6 +4,7 @@ const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const mime = require('mime-types');
+const winShortcuts = require('windows-shortcuts');
 const _7z = require("7zip-min");
 const {Downloader} = require("nodejs-file-downloader");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
@@ -120,6 +121,7 @@ async function getInstallations(suppressWarnings = false) {
             steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
             type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1])),
             appid: KeyValue.readKVSOfIndex('steamAppId', parseInt(file.split('-')[1])),
+            bakedInstallation: KeyValue.readKVSOfIndex('baked', parseInt(file.split('-')[1])) === true,
         });
     });
 
@@ -291,6 +293,22 @@ function createWindow() {
     // lets check if we need to change part
     var threrror = "";
     var partOverride = getSystemFile('_sysindex',true);
+    // if caller passed ---system_index=<n> on CLI, persist it to the _sysindex file
+    const sysArg = process.argv.find(a => a.startsWith('---system_index='));
+    if (sysArg) {
+        try {
+            const val = sysArg.split('=')[1];
+            if (val !== undefined && /^-?\d+$/.test(val)) {
+                const sysIndexPath = getSystemFile('_sysindex', true);
+                fs.writeFileSync(sysIndexPath, val.toString(), 'utf8');
+                console.log(`Wrote system index override ${val} to ${sysIndexPath}`);
+            } else {
+                console.warn('Invalid ---system_index value:', val);
+            }
+        } catch (e) {
+            console.error('Failed to write system index override:', e);
+        }
+    }
     if (fs.existsSync(partOverride)) {
         var overrideData = fs.readFileSync(partOverride, 'utf8');
         if (parseInt(overrideData) < 0) {
@@ -479,23 +497,6 @@ function createWindow() {
     win.webContents.on('devtools-opened', () => {
         if (!devToolsEnabled) {
             win.webContents.closeDevTools();
-            
-            dialog.showMessageBox(win, {
-                type: 'warning',
-                title: 'DevTools Warning',
-                message: 'Are you sure you want to open the DevTools? This is not recommended for normal users.\n\nIf you were told by someone to open the DevTools, please make sure you trust them! You can possibly hack your PC if you don\'t know what you are doing.',
-                buttons: ['Yes', 'No'],
-                defaultId: 1,
-            }).then((choice) => {
-                if (choice.response === 0) {
-                    devToolsEnabled = true;
-                    win.webContents.send('warn', 'Please be careful when using the DevTools! You can possibly hack your PC if you don\'t know what you are doing.');
-                    win.webContents.openDevTools({ mode: 'detach' });
-                }
-                else {
-                    win.webContents.closeDevTools();
-                }
-            });    
         }
     });
 
@@ -512,6 +513,61 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('rebootDev', async () => {
+        if (process.argv.includes('--developer')) {
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Already running in dev mode.',
+                message: 'The app is already running in developer mode.',
+            });
+            return;
+        }
+        var existingArgs = process.argv.slice(1).filter(a => !a.startsWith('---system_index=') || a === '---initialize_deltamod' || a.startsWith('deltamod:') );
+        app.relaunch({ args: [...existingArgs, '--developer'] });
+        app.exit(0);
+    });
+
+    ipcMain.handle('createInstallLink', async (event, args) => {
+        if (process.platform !== 'win32') {
+            dialog.showErrorBox('Unsupported OS', 'Creating installation links is only supported on Windows.');
+            return;
+        }
+
+        if (!args[0]) {
+            dialog.showErrorBox('Invalid Argument', 'Please provide a valid system index.');
+            return;
+        }
+
+        var thisProgramEXE = process.execPath;
+        console.log('This program EXE: ' + thisProgramEXE); 
+
+        var lnkPath = path.join(require('os').homedir(), 'Desktop', args[1] + '.lnk');
+
+        winShortcuts.create(lnkPath, {
+            target : thisProgramEXE,
+            args : '---system_index=' + args[0] + '',
+            desc : "Boots Deltamod with the " + args[1] + " installation of Deltarune.",
+        }, function(err) {
+            if (err)
+                dialog.showErrorBox('Error', 'An error occurred while creating the shortcut: ' + err);
+            else
+                console.log("Shortcut created!");
+                dialog.showMessageBox(win, {
+                    type: 'info',
+                    title: 'Shortcut Created',
+                    message: 'The installation shortcut has been created on your desktop.',
+                });
+        });
+    });
+
+    ipcMain.handle('isBaked', async (event, args) => {
+        return KeyValue.readKVS('baked');
+    });
+
+    ipcMain.handle('getBakedMods', async (event, args) => {
+        return {modList: KeyValue.readKVS("bakeList"), errors: [] };
     });
 
     // NPS callbacks can be used for everything, so feel free.
@@ -642,18 +698,35 @@ function createWindow() {
         }
     });
 
-    ipcMain.handle('myCommitInfo', (event, args) => {
+    ipcMain.handle('myCommitInfo', async (event, args) => {
+        var toreturn = "";
+        var dontcheckgit = false;
         if (!fs.existsSync(path.join(__dirname, '..', '.git'))) {
-            return "";
+            dontcheckgit = true;
         }
-        try {
-            const commitId = execSync('git rev-parse HEAD', { cwd: path.join(__dirname, '..') }).toString().trim();
-            const commitTitle = execSync('git log -1 --pretty=%s', { cwd: path.join(__dirname, '..') }).toString().trim();
-            return `<br>(Commit ${commitId.substring(0,5)} "${commitTitle}")`;
-        } catch (error) {
-            console.error('Failed to retrieve commit info:', error);
-            return 'Failed to retrieve commit info';
+        if (!dontcheckgit) {
+            try {
+                const commitId = execSync('git rev-parse HEAD', { cwd: path.join(__dirname, '..') }).toString().trim();
+                const commitTitle = execSync('git log -1 --pretty=%s', { cwd: path.join(__dirname, '..') }).toString().trim();
+                toreturn += `<br>(Commit ${commitId.substring(0,5)} "${commitTitle}")`;
+            } catch (error) {
+                console.error('Failed to retrieve commit info:', error);
+                toreturn += '';
+            }
         }
+
+        var gm3ppath = path.join(__dirname, '..', 'gm3p', 'GM3P.exe');
+        if (fs.existsSync(gm3ppath)) {
+            var attributes = await require('./WMIC.js').getFileAttributes(gm3ppath);
+            if (attributes.Version) {
+                toreturn += `<br>(Using GM3P version ${attributes.Version})`;
+            }
+            else {
+                toreturn += `<br>(Using GM3P, version unknown)`;
+            }
+        }
+
+        return toreturn;
     });
 
     ipcMain.handle('showWindow', (event) => {
@@ -1188,6 +1261,94 @@ function createWindow() {
         return Modstore.modList();
     });
 
+    // Used as a relay to allow async handling
+    ipcMain.handle('startGame', async (event, args) => {
+        ipcMain.emit('startGame', event, args);
+    });
+
+    ipcMain.on('startGame', async (event, args) => {
+        console.log('Starting game...');
+        var pathname = path.join(app.getPath('userData'), 'deltamod_system-' + System.getCurrentSystemIndex(), 'deltaruneInstall');
+        if (!fs.existsSync(pathname)) {
+            dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
+            return false;
+        }
+
+        // Hide UI and stop audio before launching
+        win.hide();
+        win.webContents.send('audio', false);
+
+        const exeCandidate = KeyValue.readKVS('deltaruneExecutable');
+        const exe = (exeCandidate && fs.existsSync(exeCandidate))
+            ? exeCandidate
+            : (fs.existsSync(path.join(pathname, 'DELTARUNE.exe')) ? path.join(pathname, 'DELTARUNE.exe') : null);
+
+        if (!exe) {
+            errorWin('Could not find a Deltarune executable to run.');
+            win.show();
+            win.webContents.send('audio', true);
+            win.webContents.send('page', 'main');
+            return false;
+        }
+
+        // Build args
+        let argsStr = '';
+        if (KeyValue.readUniqueFlag('outputDelta')) {
+            const consoleFile = path.join(path.dirname(exe), '_console.txt');
+            try {
+                if (fs.existsSync(consoleFile)) fs.unlinkSync(consoleFile);
+            } catch (e) {
+                console.warn('Could not remove previous console file:', e);
+            }
+            argsStr = '-output _console.txt';
+        }
+
+        // If this install is steam-managed, launch via steam protocol and quit
+        if (KeyValue.readKVS('isSteam')) {
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Launching via Steam',
+                message: 'Deltarune will now be launched via Steam. Deltamod will close.',
+            });
+            shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
+            app.quit();
+            process.exit(0);
+            return true;
+        }
+
+        // Launch executable
+        exec(`"${exe}" ${argsStr}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
+            // Always restore originals after the game closes
+            try {
+                GamePatching.restoreOriginalsIfAny(pathname);
+            } catch (e) {
+                console.error('Failed to restore originals after run:', e);
+            }
+
+            win.show();
+
+            if (error) {
+                errorWin(error);
+            }
+
+            if (KeyValue.readUniqueFlag('outputDelta')) {
+                try {
+                    const consoleFile = path.join(path.dirname(exe), '_console.txt');
+                    const consoleContent = fs.readFileSync(consoleFile, 'utf8');
+                    fs.unlinkSync(consoleFile);
+                    setSharedVar('deltaruneLogs', consoleContent);
+                } catch (e) {
+                    console.error('Failed to read or remove console file:', e);
+                }
+            }
+
+            win.webContents.send('audio', true);
+            win.webContents.send('page', KeyValue.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main');
+        });
+
+        return true;
+    });
+
     /*
      * patchAndRun
      * Patches the Deltarune install and runs the game.
@@ -1195,6 +1356,7 @@ function createWindow() {
     */
     ipcMain.handle('patchAndRun', async (event, args) => {
         try {
+            var baking = args[1] == 'baker';
             var pathname = KeyValue.readKVS('deltarunePath');
             if (!pathname) {
                 dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
@@ -1249,65 +1411,25 @@ function createWindow() {
             });
 
             callbackNPS = function(pathname) {
-                // Launch the game from the install (no temp copy)
-                win.hide();
-                win.webContents.send('audio', false); // Stop audio before launching the game
-                //win.webContents.executeJavaScript('closeAudio();');
-
-                const exeCandidate = KeyValue.readKVS('deltaruneExecutable');
-                const exe = exeCandidate && fs.existsSync(exeCandidate)
-                    ? exeCandidate
-                    : (fs.existsSync(path.join(pathname, 'DELTARUNE.exe'))
-                        ? path.join(pathname, 'DELTARUNE.exe')
-                        : null);
-
-                if (!exe) {
-                    errorWin('Could not find a Deltarune executable to run.');
-                    win.show();
-                    win.webContents.send('audio', true);
-                    win.webContents.send('page', 'main');
-                    //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
-                    return false;
-                }
-
-                var args = "";
-                if (KeyValue.readUniqueFlag("outputDelta")) {
-                    if (fs.existsSync(path.join(path.dirname(exe), '_console.txt'))) {
-                        fs.unlinkSync(path.join(path.dirname(exe), '_console.txt'));
-                    }
-                    args += '-output _console.txt';
-                }
-                if (KeyValue.readKVS('isSteam')) {
-                    dialog.showMessageBoxSync({
-                        type: 'info',
-                        title: 'Launching via Steam',
-                        message: 'Deltarune will now be launched via Steam. Deltamod will close.',
-                    });
-                    shell.openExternal(`steam://rungameid/` + KeyValue.readKVS('steamAppId'));
-                    app.quit();
-                    process.exit(0);
-                } else {
-                    exec(`"${exe}" ${args}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
-                        // Always restore originals after the game closes
-                        GamePatching.restoreOriginalsIfAny(pathname);
-                        win.show();
-                        if (error != null) {
-                            errorWin(error);
-                        }
-
-                        if (KeyValue.readUniqueFlag('outputDelta')) {
-                            var consoleFile = path.join(path.dirname(exe), '_console.txt');
-                            var consoleContent = fs.readFileSync(consoleFile, 'utf8');
-                            fs.unlinkSync(consoleFile);
-                            setSharedVar('deltaruneLogs', consoleContent);
-                        }
-                        win.webContents.send('audio', true);
-                        win.webContents.send('page', (KeyValue.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main'));
-                    });
-                }
+                ipcMain.emit('startGame', null, []);
             };
-            callbackNPSPassWith = [pathname];
-            win.webContents.send('finishedPatch',[]);
+            if (!baking) {
+                callbackNPSPassWith = [pathname];
+                win.webContents.send('finishedPatch',mods);
+            }
+            else {
+                KeyValue.setKVS('baked', true);
+                var allMods = Modstore.modList().modList.filter(m => (args[0].includes(m.uniqueId))).map(m => ({
+                    name: m.name,
+                    description: m.description,
+                    author: m.author,
+                    version: m.version,
+                }));
+                KeyValue.setKVS('bakeList', allMods);
+                GamePatching.deleteOriginals(pathname);
+                app.relaunch(properRelaunch());
+                app.exit();
+            }
         } catch (err) {
             errorWin('Coudn\'t patch and run Deltarune: ' + err.toString());
             return false;

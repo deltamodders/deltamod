@@ -1,5 +1,5 @@
 async function addCheckboxOption(name, description, flagid) {
-    const table = document.querySelector('table');
+    const table = document.querySelector('tbody');
     const tr = document.createElement('tr');
 
     const tdLabel = document.createElement('td');
@@ -34,8 +34,8 @@ async function addCheckboxOption(name, description, flagid) {
 }
 
 
-async function addButton(name, description, click, buttonText) {
-    const table = document.querySelector('table');
+async function addButton(name, description, click, buttonText, enabled = true, disabledReason = '') {
+    const table = document.querySelector('tbody');
     const tr = document.createElement('tr');
 
     const tdLabel = document.createElement('td');
@@ -57,6 +57,18 @@ async function addButton(name, description, click, buttonText) {
     button.innerText = buttonText;
     button.addEventListener('click', click);
     tdInput.appendChild(button);
+    if (!enabled) {
+        button.disabled = true;
+        button.style.opacity = 0.5;
+        button.style.cursor = 'not-allowed';
+        span.style.opacity = 0.5;
+        small.style.opacity = 0.5;
+        span.style.fontStyle = 'italic';
+        small.style.fontStyle = 'italic';
+        if (disabledReason != '') {
+            small.innerText = '(' + disabledReason + ')';
+        }
+    }
 
     tr.appendChild(tdLabel);
     tr.appendChild(tdInput);
@@ -65,31 +77,58 @@ async function addButton(name, description, click, buttonText) {
 }
 
 (async() => {
-    addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background. The dogcheck will still have music.', 'audio');
-    addButton('Open mod folder', 'Open the folder where mods are stored. You can drag mod folders in Deltamod format there.', async () => {
-        await window.electronAPI.invoke('openSysFolder', ['mods']);
-    }, 'Open');
-    addButton('Open Deltarune installation folder', 'Open the folder where Deltarune is installed.', async () => {
-        await window.electronAPI.invoke('openSysFolder', ['delta']);
-    }, 'Open');
-    addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. Will not work on Steam based installs.', 'outputDelta');
-
-    addButton('Select a theme', 'Opens the theme selection menu.', async () => {
-        await window.electronAPI.invoke('chooseTheme', []);
-    }, 'Open');
-
-    addButton('Select a patching character', 'Open the patching character selection menu.', async () => {
-        await window.electronAPI.invoke('setSponsor', []);
-    }, 'Open');
-
-    addButton('Change GM3P version', 'Allows you to change your GM3P version. Only for advanced users!', async () => {
-        page('gm3p-selector');
-    }, 'Open');
-
-    var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
-    if (isSteam) {
-        addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.', async () => {
-            await window.electronAPI.invoke('removeSteamIntegration', []);
-        }, 'Disconnect');
-    }
+    /*
+        */
 })();
+
+window.currentPageStack.cat = async function(cat) {
+    let tbody = document.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    switch (cat) {
+        case 'gen':
+            await addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. Will not work on Steam based installs.', 'outputDelta');
+            await addButton('Open mod folder', 'Open the folder where mods are stored. You can drag mod folders in Deltamod format there.', async () => {
+                await window.electronAPI.invoke('openSysFolder', ['mods']);
+            }, 'Open');
+            break;
+        case 'ui':
+            await addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background. The dogcheck will still have music.', 'audio');
+
+            await addButton('Select a theme', 'Opens the theme selection menu.', async () => {
+                await window.electronAPI.invoke('chooseTheme', []);
+            }, 'Open');
+
+            await addButton('Select a patching character', 'Open the patching character selection menu.', async () => {
+                await window.electronAPI.invoke('setSponsor', []);
+            }, 'Open');
+
+            break;
+        case 'inst':
+            var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
+
+            await addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.', async () => {
+                await window.electronAPI.invoke('removeSteamIntegration', []);
+            }, 'Disconnect', isSteam, 'Only available on Steam based installs.');
+
+            await addButton('Bake this install', 'Allows you to select mods to bake into the game (so you don\'t have to patch everytime)', async () => {
+                window._pageArguments = { baker: true };
+                page('main');
+            }, 'Open', !await window.electronAPI.invoke('isBaked', []), 'Not available when current installation has been already baked'); // Disable if install is invalid
+
+            await addButton('Open the Install Manager', 'Opens the install manager menu, which allows you to delete/create installations and create shortcuts for them.', async () => {
+                page('installmanager');
+            }, 'Open');
+
+            break;
+        case 'adv':
+            await addButton('Change GM3P version', 'Allows you to change your GM3P version. Only for advanced users!', async () => {
+                page('gm3p-selector');
+            }, 'Open');
+
+            await addButton('Reboot in Developer Mode', 'Reboots in developer mode, a mode which allows you to use the DevTools.', async () => {
+                await window.electronAPI.invoke('rebootDev', []);
+            }, 'Open');
+            break;
+    }
+}

@@ -4,9 +4,6 @@ var theme = null;
 var pageN = null;
 var addedStyle = null;
 var update = false;
-var lockFunnyCredits = false;
-var pressCredits = 0;
-
 async function htmlAlert(title, message, buttons) {
     return new Promise((resolve, reject) => {
         var alertMain = document.getElementsByClassName('alertMain')[0];
@@ -48,21 +45,7 @@ async function htmlAlert(title, message, buttons) {
 }
 
 function credits(funny) {
-    pressCredits++;
-    if (!funny) funny = false;
-
-    var random = Math.floor(Math.random() * 100);
-
-    var range = [98, 99]; // 5% chance
-
-    if (random >= range[0] && random <= range[1]) funny = true;
-    if (lockFunnyCredits || pressCredits >= 25) funny = false;
-    
-    page('credits' + (funny ? '-funny' : ''));
-
-    if (funny) {
-        lockFunnyCredits = true;
-    }
+    page('credits');
 }
 
 window.preloadAPI.onUpdateAvailable((info) => {
@@ -70,7 +53,15 @@ window.preloadAPI.onUpdateAvailable((info) => {
     update = true;
     window.ustack = {};
     window.ustack.updateInfo = info;
-    page('update');
+
+    htmlAlert('Update available', `A new version of Deltamod (${info.version}) is available for download. Do you wish to update?`, [
+        { text: 'Yes', resolveWith: "a" },
+        { text: 'No', rejectWith: "a" }
+    ]).then(async (result) => {
+        await window.electronAPI.invoke('start-update', [window.ustack.updateInfo]);
+    }).catch(async (result) => {
+        await window.electronAPI.invoke('ignore-update', []);
+    });
 });
 
 window.preloadAPI.onDDS((info) => {
@@ -153,6 +144,10 @@ let lockRandoms = false;
 async function page(name) {
     if (name == "") {
         name = pageN;
+    }
+    // make sure nobody can escape to home
+    if (await window.electronAPI.invoke('isBaked', []) && name == 'main') {
+        name = 'bakedhome';
     }
     window.electronAPI.invoke('showWindow', []);
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
@@ -253,6 +248,16 @@ async function page(name) {
             button.classList.remove('active');
         }
     });
+    try {
+        const vp = document.getElementsByClassName('viewport')[0];
+        if (vp && typeof vp.scrollTo === 'function') {
+            vp.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }
+    } catch (e) {
+        window.scrollTo(0, 0);
+    }
     pageN = name;
     if (runScripts)
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
@@ -289,12 +294,8 @@ if (!window.electronAPI) {
     if (loaded.loaded) {
         var available = await window.electronAPI.invoke('fireUpdate', []);
         console.log('Update check complete. Update available:', available);
-        if (!available) {
-            await page('main');
-        }
-        else {
-            await page('update');
-        }
+
+        await page('main');
 
         window.electronAPI.invoke('executeArgumentCmd',[]);
     } else {

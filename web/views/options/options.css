@@ -1,0 +1,47 @@
+tr {
+       transition: 0.1s all; 
+    }
+    tr:hover {
+        background-color: rgba(124,124,124, 0.2);
+    }
+    td, th:not(.center) {
+        text-align: left;
+    }
+    .center {
+        text-align: center;
+    }
+    .input {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+    .cat > button:not(.back) {
+        cursor: pointer;
+        width: 100%;
+    }
+    th {
+        height: 100%;
+    }
+    /* No seriously, why doesn't b work??? */
+    b {
+        font-weight: bold !important;
+    }
+
+    .cat {
+        background: rgba(52, 52, 52, 0.5);
+        width: 20%;
+        height: 100%;
+        padding: 10px;
+        border: 2px solid rgba(124,124,124, 0.2);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+
+    .cat > button {
+        margin-bottom: 10px;
+    }
