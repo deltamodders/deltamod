@@ -82,6 +82,10 @@ async function addButton(name, description, click, buttonText) {
         await window.electronAPI.invoke('setSponsor', []);
     }, 'Open');
 
+    addButton('Change GM3P version', 'Allows you to change your GM3P version. Only for advanced users!', async () => {
+        page('gm3p-selector');
+    }, 'Open');
+
     var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
     if (isSteam) {
         addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.', async () => {

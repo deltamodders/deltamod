@@ -1,10 +1,12 @@
 @keyframes scale {
     0% {
-        transform: translateX(-80vw);
+        transform: rotate(20deg);
     }
-
+    50% {
+        transform: rotate(-20deg);
+    }
     100% {
-        transform: translateX(70vw);
+        transform: rotate(20deg);
     }
 }
 

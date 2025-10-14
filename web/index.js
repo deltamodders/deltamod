@@ -89,6 +89,12 @@ window.preloadAPI.onUpdateProgress((info) => {
     }
 });
 
+window.preloadAPI.onFinishedPatch(() => {
+    if (window.currentPageStack.fp) {
+        window.currentPageStack.fp();
+    }
+});
+
 function sanitizeHTML(str) {
     var temp = document.createElement('div');
     temp.textContent = str;
@@ -145,6 +151,9 @@ window.preloadAPI.onThemeChange(refreshTheme);
 let lockRandoms = false;
 
 async function page(name) {
+    if (name == "") {
+        name = pageN;
+    }
     window.electronAPI.invoke('showWindow', []);
     theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     // first render the fantastidynamic
@@ -286,8 +295,11 @@ if (!window.electronAPI) {
         else {
             await page('update');
         }
+
+        window.electronAPI.invoke('executeArgumentCmd',[]);
     } else {
         await page('locate');
+        window.electronAPI.invoke('executeArgumentCmd',[]);
     }
 
 })();

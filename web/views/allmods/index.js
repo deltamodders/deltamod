@@ -34,7 +34,7 @@ async function createMod(mod) {
     authorSpan.className = 'calibri';
     authorSpan.style.fontSize = 'smaller';
     authorSpan.style.color = '#888';
-    authorSpan.innerHTML = `${icon('person', 'small')} ${purify(mod.author.join(', '))}`;
+    authorSpan.innerHTML = `${icon('attribution', 'small')} ${purify(mod.author.join(', '))}`;
     authorSpan.id = `modauthor-${mod.uid}`;
     modNameContainer.appendChild(document.createElement('br'));
     modNameContainer.appendChild(authorSpan);
@@ -50,19 +50,35 @@ async function createMod(mod) {
     sizeSpan.id = `modsize-${mod.uid}`;
     modNameContainer.appendChild(sizeSpan);
 
+    let compatibilitySpan = document.createElement('p');
+    compatibilitySpan = adaptForIcons(compatibilitySpan);
+    compatibilitySpan.style.margin = '0px';
+    compatibilitySpan.style.marginTop = '4px';
+    compatibilitySpan.className = 'calibri';
+    compatibilitySpan.style.fontSize = 'smaller';
+    compatibilitySpan.style.color = '#888';
+    compatibilitySpan.innerHTML = `${icon('task_alt', 'small')} Compatible with ${mod.demo ? 'demo version' : 'full version'}`;
+    compatibilitySpan.id = `modcompat-${mod.uid}`;
+    modNameContainer.appendChild(compatibilitySpan);
+
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
+    actionContainer.style.textAlign = 'center';
     actionContainer.className = 'modlist-actions-column';
     {
+        let bdiv = document.createElement('div');
+        bdiv.className = 'modlist-actions-column-bdiv';
+        actionContainer.appendChild(bdiv);
+
         const exploreModButton = document.createElement('button');
         exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
         exploreModButton.innerHTML = icon('folder_eye', '20px');
-        actionContainer.appendChild(exploreModButton);
+        bdiv.appendChild(exploreModButton);
 
         const deleteModButton = document.createElement('button');
         deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
         deleteModButton.innerHTML = icon('delete_forever', '20px');
-        actionContainer.appendChild(deleteModButton);
+        bdiv.appendChild(deleteModButton);
     }
 
     modRow.appendChild(modNameContainer);

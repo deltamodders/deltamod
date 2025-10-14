@@ -33,8 +33,9 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
 
         group._aAuthors.forEach(credit => {
             var personname = document.createElement('span');
+            console.log(JSON.stringify(credit));
             personname.onclick = () => window.open(credit._sProfileUrl);
-            personname.innerHTML = `${credit._sName}`;
+            personname.innerHTML = `<img src="${credit._sAvatarUrl}" alt="${credit._sName}" class="credits-avatar"> ${credit._sName}`;
             personname.className = 'credits-author';
 
             if (credit._sRole) {

@@ -1,0 +1,119 @@
+/* Animations */
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes spawn {
+    0% { opacity: 0; transform: translateY(-20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Layout / Tabs */
+.tab1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin-left: 10px;
+}
+
+.tab2 {
+    margin-right: 20px;
+}
+
+.tabs {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+/* Icons / Sponsor */
+.iconhoster {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.sponsor-image {
+    display: block;
+    width: 90px;
+    height: auto;
+}
+
+/* Spinner */
+.rotate {
+    display: inline-block;
+    animation: rotate 2s linear infinite;
+    user-select: none;
+    transform-origin: center;
+}
+
+/* Messages / Logs */
+.success {
+    color: #14ab09;
+}
+
+.logs {
+    height: 30vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: rgba(0, 0, 0, 0.155);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    padding: 10px;
+    font-size: 12px;
+    font-family: 'Consolas', monospace;
+    text-align: left;
+    margin: 10px;
+    border: 1px solid #fff;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+/* Buttons */
+.buttons {
+    position: fixed;
+    bottom: 20px;
+    left: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: calc(100% - 125px);
+}
+
+#next {
+    padding: 20px;
+    background-color: rgb(14, 87, 0);
+    border: 4px solid rgb(16, 77, 0);
+    cursor: pointer;
+}
+
+#next:hover {
+    background-color: rgb(22, 132, 0);
+    color: #fff !important;
+    transform: scale(1.2);
+}
+
+/* Small text */
+small {
+    color: #888;
+    font-size: 0.8em;
+    font-family: "Calibri", sans-serif;
+}
+
+/* Island container */
+.patchingIsland {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgb(101, 101, 101);
+    padding: 10px;
+    border-radius: 10px;
+    overflow: hidden;
+    animation: spawn 0.5s ease-in-out;
+    box-sizing: border-box;
+}
