@@ -169,24 +169,6 @@ async function createMod(mod) {
 
     modNameContainer.appendChild(bigAhhContainer);
 
-    let actionContainer = document.createElement('td');
-    actionContainer.style.textAlign = 'center';
-    actionContainer.className = 'modlist-actions-column';
-
-    let bdiv = document.createElement('div');
-    bdiv.className = 'modlist-actions-column-bdiv';
-    actionContainer.appendChild(bdiv);
-
-    let exploreModButton = document.createElement('button');
-    exploreModButton.onclick = () => window.electronAPI.invoke('openModFolder', [mod.folder]);
-    exploreModButton.innerHTML = icon('folder_eye', '20px');
-    bdiv.appendChild(exploreModButton);
-
-    let deleteModButton = document.createElement('button');
-    deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
-    deleteModButton.innerHTML = icon('delete_forever', '20px');
-    bdiv.appendChild(deleteModButton);
-
     // Column 2 (Actions)
     let enabledContainer = document.createElement('td');
     enabledContainer.style.textAlign = 'center';
@@ -211,7 +193,6 @@ async function createMod(mod) {
     modNameContainer.style.background = `${cssStyle}`;
     modRow.appendChild(modNameContainer);
     modRow.appendChild(enabledContainer);
-    modRow.appendChild(actionContainer);
 
     document.getElementById('modlist').appendChild(modRow);
     return modRow;
