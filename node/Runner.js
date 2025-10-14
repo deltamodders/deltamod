@@ -636,7 +636,7 @@ function createWindow() {
             dialog.showMessageBoxSync(win, {
                 type: 'info',
                 title: 'Download Complete',
-                message: 'GM3P package downloaded and extracted successfully.',
+                message: 'Patcher package downloaded and extracted successfully.',
             });
             app.relaunch(properRelaunch());
             app.quit();
@@ -645,7 +645,7 @@ function createWindow() {
 
         writer.on('error', (err) => {
             console.error('Error downloading file:', err);
-            dialog.showErrorBoxSync('Download Error', 'An error occurred while downloading the GM3P package. The app will now reboot.');
+            dialog.showErrorBoxSync('Download Error', 'An error occurred while downloading the Patcher package. The app will now reboot.');
             app.relaunch(properRelaunch());
             app.quit();
             process.exit(1);
@@ -716,13 +716,24 @@ function createWindow() {
         }
 
         var gm3ppath = path.join(__dirname, '..', 'gm3p', 'GM3P.exe');
-        if (fs.existsSync(gm3ppath)) {
+        var devicefusionpath = path.join(__dirname, '..', 'gm3p', 'GamemakerModMerger.exe');
+        if (fs.existsSync(gm3ppath) && !fs.existsSync(devicefusionpath)) {
             var attributes = await require('./WMIC.js').getFileAttributes(gm3ppath);
             if (attributes.Version) {
                 toreturn += `<br>(Using GM3P version ${attributes.Version})`;
             }
             else {
                 toreturn += `<br>(Using GM3P, version unknown)`;
+            }
+        }
+
+        if (fs.existsSync(devicefusionpath)) {
+            var attributes = await require('./WMIC.js').getFileAttributes(devicefusionpath);
+            if (attributes.Version) {
+                toreturn += `<br>(Using DEVICE_FUSION version ${attributes.Version})`;
+            }
+            else {
+                toreturn += `<br>(Using DEVICE_FUSION, version unknown)`;
             }
         }
 
@@ -1361,6 +1372,11 @@ function createWindow() {
             if (!pathname) {
                 dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
                 return false;
+            }
+
+            // Fix for DEVICE_FUSION not creating output folder
+            if (fs.existsSync(path.join(__dirname, '..', 'gm3p', 'GamemakerModMerger.exe')) && !fs.existsSync(path.join(__dirname, '..', 'gm3p', 'output'))) {
+                fs.mkdirSync(path.join(__dirname, '..', 'gm3p', 'output'));
             }
 
             // In case a previous run crashed mid-restore

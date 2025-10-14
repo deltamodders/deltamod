@@ -126,6 +126,12 @@ window.currentPageStack.cat = async function(cat) {
                 page('gm3p-selector');
             }, 'Open');
 
+            await addButton('Install DEVICE_FUSION', 'Uses DEVICE_FUSION to patch instead of GM3P. (In beta)', async () => {
+                var releases = await fetch('https://api.github.com/repos/Egochka11/DEVICE-FUSION/releases').then(res => res.json());
+                var asset = releases[0].assets.find(a => a.name.endsWith('.zip'));
+                await window.electronAPI.invoke('downloadGM3P', [asset.browser_download_url]);
+            }, 'Open');
+
             await addButton('Reboot in Developer Mode', 'Reboots in developer mode, a mode which allows you to use the DevTools.', async () => {
                 await window.electronAPI.invoke('rebootDev', []);
             }, 'Open');
