@@ -70,7 +70,15 @@ window.preloadAPI.onUpdateAvailable((info) => {
     update = true;
     window.ustack = {};
     window.ustack.updateInfo = info;
-    page('update');
+
+    htmlAlert('Update available', `A new version of Deltamod (${info.version}) is available for download. Do you wish to update?`, [
+        { text: 'Yes', resolveWith: "a" },
+        { text: 'No', rejectWith: "a" }
+    ]).then(async (result) => {
+        await window.electronAPI.invoke('start-update', [window.ustack.updateInfo]);
+    }).catch(async (result) => {
+        await window.electronAPI.invoke('ignore-update', []);
+    });
 });
 
 window.preloadAPI.onDDS((info) => {
@@ -293,12 +301,8 @@ if (!window.electronAPI) {
     if (loaded.loaded) {
         var available = await window.electronAPI.invoke('fireUpdate', []);
         console.log('Update check complete. Update available:', available);
-        if (!available) {
-            await page('main');
-        }
-        else {
-            await page('update');
-        }
+
+        await page('main');
 
         window.electronAPI.invoke('executeArgumentCmd',[]);
     } else {

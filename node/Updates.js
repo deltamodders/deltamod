@@ -40,7 +40,7 @@ async function checkUpdates() {
 
     if (versionOffline.toLowerCase() !== versionOnline._sVersion.toLowerCase()) {
         console.warn(`A new version is available: ${versionOnline._sVersion} (You have ${versionOffline})`);
-        return {update: true, newVersionLink: versionOnline._sDownloadUrl.replace("/dl/", "/mmdl/"), version: versionOnline._sVersion};
+        return {update: true, newVersionLink: versionOnline._sDownloadUrl.replace("/dl/", "/mmdl/"), version: versionOnline._sVersion.replace(ARTIFACT_NEEDED, '')};
     }
 
     return {update: false, newVersionLink: null, version: null};
