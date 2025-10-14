@@ -4,9 +4,6 @@ var theme = null;
 var pageN = null;
 var addedStyle = null;
 var update = false;
-var lockFunnyCredits = false;
-var pressCredits = 0;
-
 async function htmlAlert(title, message, buttons) {
     return new Promise((resolve, reject) => {
         var alertMain = document.getElementsByClassName('alertMain')[0];
@@ -48,21 +45,7 @@ async function htmlAlert(title, message, buttons) {
 }
 
 function credits(funny) {
-    pressCredits++;
-    if (!funny) funny = false;
-
-    var random = Math.floor(Math.random() * 100);
-
-    var range = [98, 99]; // 5% chance
-
-    if (random >= range[0] && random <= range[1]) funny = true;
-    if (lockFunnyCredits || pressCredits >= 25) funny = false;
-    
-    page('credits' + (funny ? '-funny' : ''));
-
-    if (funny) {
-        lockFunnyCredits = true;
-    }
+    page('credits');
 }
 
 window.preloadAPI.onUpdateAvailable((info) => {
