@@ -131,9 +131,8 @@ async function createMod(mod) {
     }
     titleSpan.id = `modtitle-${mod.uid}`;
     infoContainer.appendChild(titleSpan);
-    if (!mod.new) {
-        infoContainer.appendChild(document.createElement('br'));
-    }
+
+    infoContainer.appendChild(document.createElement('br'));
 
     let descSpan = document.createElement('span');
     descSpan.className = 'calibri';
