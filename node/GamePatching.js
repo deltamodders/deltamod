@@ -474,7 +474,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
             } else {
                 for (var i = 0; i < 5; i++) {
                     if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1'))) {
-                        fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '1'));
+                        fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '1'), {recursive: true});
                     }
                     clog('Patching chapter', i, 'with', (perChapterPatches.map(list => list.length ? (list.join('::')) : ''))[i]);
                     await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + path.join(gamePath, 'chapter' + String(i) + '_windows', 'data.win') + ' ' + (perChapterPatches.map(list => list.length ? (list.join('::')) : ''))[i] + ' ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '1', 'data.win'));
