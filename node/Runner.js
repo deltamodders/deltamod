@@ -497,23 +497,6 @@ function createWindow() {
     win.webContents.on('devtools-opened', () => {
         if (!devToolsEnabled) {
             win.webContents.closeDevTools();
-            
-            dialog.showMessageBox(win, {
-                type: 'warning',
-                title: 'DevTools Warning',
-                message: 'Are you sure you want to open the DevTools? This is not recommended for normal users.\n\nIf you were told by someone to open the DevTools, please make sure you trust them! You can possibly hack your PC if you don\'t know what you are doing.',
-                buttons: ['Yes', 'No'],
-                defaultId: 1,
-            }).then((choice) => {
-                if (choice.response === 0) {
-                    devToolsEnabled = true;
-                    win.webContents.send('warn', 'Please be careful when using the DevTools! You can possibly hack your PC if you don\'t know what you are doing.');
-                    win.webContents.openDevTools({ mode: 'detach' });
-                }
-                else {
-                    win.webContents.closeDevTools();
-                }
-            });    
         }
     });
 
@@ -530,6 +513,20 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('rebootDev', async () => {
+        if (process.argv.includes('--developer')) {
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Already running in dev mode.',
+                message: 'The app is already running in developer mode.',
+            });
+            return;
+        }
+        var existingArgs = process.argv.slice(1).filter(a => !a.startsWith('---system_index=') || a === '---initialize_deltamod' || a.startsWith('deltamod:') );
+        app.relaunch({ args: [...existingArgs, '--developer'] });
+        app.exit(0);
     });
 
     ipcMain.handle('createInstallLink', async (event, args) => {
