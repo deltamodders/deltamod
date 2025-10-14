@@ -26,6 +26,18 @@ async function createMod(mod) {
     modNameContainer.appendChild(titleSpan);
     modNameContainer.appendChild(document.createElement('br'));
 
+    if (window._pageArguments && window._pageArguments.highlightMod === mod.uid) {
+        modNameContainer.style.backgroundColor = '#b5b5b544';
+        setTimeout(() => {
+            try {
+                modNameContainer.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+            } catch (e) {
+                modNameContainer.scrollIntoView();
+            }
+        }, 50);
+        window._pageArguments = null; // Clear it so it doesn't affect other mods
+    }
+
     const descSpan = document.createElement('span');
     descSpan.className = 'calibri';
     descSpan.style = 'font-size: 10px; color: #ffffffdd;';

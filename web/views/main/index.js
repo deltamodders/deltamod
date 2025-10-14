@@ -101,6 +101,15 @@ async function createMod(mod) {
     img.classList.add('mod-image');
     imageContainer.appendChild(img);
 
+    imageContainer.oncontextmenu = e => {
+        htmlAlert(mod.name,"Do you wish to view this mod in the Mod Manager?",[{text:'Yes',resolveWith:'accept'},{text:'No',rejectWith:'close'}]).then(result => {
+            if (result === 'accept') {
+                window._pageArguments = { highlightMod: mod.uid };
+                page('allmods');
+            }
+        }).catch(() => {});
+    };
+
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
@@ -114,8 +123,6 @@ async function createMod(mod) {
     if (!mod.new) {
         infoContainer.appendChild(document.createElement('br'));
     }
-
-    infoContainer.appendChild(document.createElement('br'));
 
     let descSpan = document.createElement('span');
     descSpan.className = 'calibri';

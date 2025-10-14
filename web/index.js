@@ -265,6 +265,16 @@ async function page(name) {
             button.classList.remove('active');
         }
     });
+    try {
+        const vp = document.getElementsByClassName('viewport')[0];
+        if (vp && typeof vp.scrollTo === 'function') {
+            vp.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }
+    } catch (e) {
+        window.scrollTo(0, 0);
+    }
     pageN = name;
     if (runScripts)
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
