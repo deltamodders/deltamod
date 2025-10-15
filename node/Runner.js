@@ -284,6 +284,49 @@ function createWindow() {
         KeyValue.writeUniqueFlag('audio', 'true');
     }
 
+    try {
+        if (process.platform === 'win32') {
+            try {
+                const procs = execSync('tasklist', { encoding: 'utf8' }).toLowerCase();
+                const found = [];
+                if (procs.includes('gm3p.exe')) found.push('GM3P.exe');
+                if (procs.includes('gamemakermodmerger.exe')) found.push('GamemakerModMerger.exe');
+
+                if (found.length > 0) {
+                    var res = dialog.showMessageBoxSync({
+                        type: 'warning',
+                        title: 'Close running processes',
+                        message: `Deltamod detected these running process${found.length > 1 ? 'es' : ''}: ${found.join(', ')}.\n\nPlease close them before opening Deltamod as when the app closes these may terminate.`,
+                        buttons: ['Kill them for me', 'Close the app', 'Ignore (may cause issues)'],
+                    });
+                    if (res === 0) {
+                        try {
+                            if (found.includes('GM3P.exe')) {
+                                console.log('Killing GM3P.exe processes...');
+                                execSync('taskkill /IM GM3P.exe /F', { stdio: 'ignore' });
+                            }
+                            if (found.includes('GamemakerModMerger.exe')) {
+                                console.log('Killing DEVICE_FUSION.exe processes...');
+                                execSync('taskkill /IM GamemakerModMerger.exe /F', { stdio: 'ignore' });
+                            }
+                            console.log('Processes terminated.');
+                        } catch (e) {
+                            console.warn('Failed to kill processes:', e && e.message ? e.message : e);
+                        }
+                    } else if (res === 1) {
+                        app.quit();
+                        return;
+                    }
+                    // if 2, ignore
+                }
+            } catch (e) {
+                console.warn('Could not enumerate processes to check for GM3P/Device Fusion:', e && e.message ? e.message : e);
+            }
+        }
+    } catch (e) {
+        console.warn('Process-check wrapper failed:', e && e.message ? e.message : e);
+    }
+
     // 7-zip fix for electron
     config({ ...getConfig(), binaryPath: path7za });
 
@@ -1780,6 +1823,10 @@ function createWindow() {
         shell.openExternal(getSystemFolderOfIndex('deltaruneInstall', args[0]));
     });
 
+    ipcMain.handle('isDevMode', async (event, args) => {
+        return (ignoreUpdate || process.argv.includes('--developer'));
+    });
+
 
     setWindow(win);
 }
@@ -1821,6 +1868,16 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+    try {
+        if (process.platform === 'win32') {
+            console.log('Killing GM3P.exe processes...');
+            execSync('taskkill /IM GM3P.exe /F', { stdio: 'ignore' });
+            console.log('Killing DEVICE_FUSION.exe processes...');
+            execSync('taskkill /IM GamemakerModMerger.exe /F', { stdio: 'ignore' });
+        }
+    } catch (e) {
+        console.warn('Failed to terminate GM3P processes:', e && e.message ? e.message : e);
+    }
     if (process.platform !== 'darwin') app.quit();
 });
 

@@ -7,3 +7,6 @@ Added shortcuts for installations, Addition
 Added support for baking installs, Addition
 Patching times now down by 50%, Optimization
 Added option to see the GM3P version, Addition
+Added 2 new themes, Addition
+Removed Green Room theme, Removal
+Changed UI for patching and allows you to change patching characters, Amendment

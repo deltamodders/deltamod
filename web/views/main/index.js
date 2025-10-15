@@ -186,6 +186,18 @@ async function createMod(mod) {
 
     modNameContainer.appendChild(bigAhhContainer);
 
+    var developermode = await window.electronAPI.invoke('isDevMode', [""]);
+    if (developermode) {
+        let idSpan = document.createElement('p');
+        idSpan = adaptForIconsA(idSpan);
+        idSpan.className = 'calibri';
+        idSpan.style.fontSize = fontSize + 'px';
+        idSpan.style.color = '#888';
+        idSpan.innerHTML = `${icon('tag', fontSize + 'px')} ${mod.packageID}`;
+        idSpan.style.margin = '0px';
+        flexContnainer.appendChild(idSpan);
+    }
+
     // Column 2 (Actions)
     let enabledContainer = document.createElement('td');
     enabledContainer.style.textAlign = 'center';
