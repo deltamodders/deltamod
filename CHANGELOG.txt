@@ -1,0 +1,9 @@
+Changed the sidebar style, Overhaul
+Now supports changing GM3P version, Addition
+Now supports using DEVICE_MAKER as patcher, Addition
+Changed theme selection UI, Overhaul
+More feature-fletched mod manager, Overhaul
+Added shortcuts for installations, Addition
+Added support for baking installs, Addition
+Patching times now down by 50%, Optimization
+Added option to see the GM3P version, Addition
