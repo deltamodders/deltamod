@@ -812,6 +812,16 @@ function createWindow() {
             return 'cd';
         }
     });
+    ipcMain.handle('setTheme', async (event, args) => {
+        var themeHost = System.getSystemFile('_theme', true);
+        fs.writeFileSync(themeHost, args[0]);
+    });
+    ipcMain.handle('getThemes', async () => {
+        var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes')).filter(f => f.endsWith('.theme.json'));
+        return available.map(f => {
+            return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', f), 'utf8'));
+        });
+    });
     /*
      * getTheme
      * returns theme name as specified in the themes folder.

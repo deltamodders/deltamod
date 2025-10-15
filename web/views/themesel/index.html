@@ -1,0 +1,17 @@
+<button onclick="page('options')">Back</button>
+<br><br>
+<h1>Select a theme</h1>
+<table>
+    <colgroup>
+        <col style="width: 90%;">
+        <col style="width: 10%;">
+    </colgroup>
+    <tr>
+        <th>Theme name</th>
+        <th>Actions</th>
+    </tr>
+    <tbody id="themes"></tbody>
+</table>
+<br>
+<button onclick="window.electronAPI.invoke('importTheme', [])">Import your custom theme</button>
+JSL
