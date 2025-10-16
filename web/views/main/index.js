@@ -335,8 +335,13 @@ function patchAndRun() {
             return;
         }
     }
-    page('patching');
-    window.electronAPI.invoke('patchAndRun', [selectedMods, (baking ? 'baker' : '')]);
+    if (selectedMods.length === 0) {
+        window.electronAPI.invoke('startGame', []);
+    }
+    else {
+        window.electronAPI.invoke('patchAndRun', [selectedMods, (baking ? 'baker' : '')]);
+        page('patching');
+    }
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
