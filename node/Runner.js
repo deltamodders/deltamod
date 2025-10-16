@@ -761,9 +761,9 @@ function createWindow() {
         var gm3ppath = path.join(__dirname, '..', 'gm3p', 'GM3P.exe');
         var devicefusionpath = path.join(__dirname, '..', 'gm3p', 'GamemakerModMerger.exe');
         if (fs.existsSync(gm3ppath) && !fs.existsSync(devicefusionpath)) {
-            var attributes = await require('./WMIC.js').getFileAttributes(gm3ppath);
-            if (attributes.Version) {
-                toreturn += `<br>(Using GM3P version ${attributes.Version})`;
+            var attributes = require('./Utils.js').getFileVersion(gm3ppath);
+            if (attributes) {
+                toreturn += `<br>(Using GM3P version ${attributes})`;
             }
             else {
                 toreturn += `<br>(Using GM3P, version unknown)`;
@@ -771,9 +771,9 @@ function createWindow() {
         }
 
         if (fs.existsSync(devicefusionpath)) {
-            var attributes = await require('./WMIC.js').getFileAttributes(devicefusionpath);
-            if (attributes.Version) {
-                toreturn += `<br>(Using DEVICE_FUSION version ${attributes.Version})`;
+            var attributes = require('./Utils.js').getFileVersion(devicefusionpath);
+            if (attributes) {
+                toreturn += `<br>(Using DEVICE_FUSION version ${attributes})`;
             }
             else {
                 toreturn += `<br>(Using DEVICE_FUSION, version unknown)`;

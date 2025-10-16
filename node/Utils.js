@@ -11,6 +11,14 @@ function timeoutPromise(ms) {
   });
 }
 
+function getFileVersion(filePath) {
+  var basecmd = `powershell -command "(Get-Item '${filePath}').VersionInfo.FileVersion"`;
+  var execSync = require('child_process').execSync;
+  var c = execSync(basecmd).toString().trim();
+  console.log(`File version of ${filePath} is ${c}`);
+  return c;
+}
+
 function randomString(length) {
   return crypto.randomBytes(length).toString('hex').slice(0, length);
 }
@@ -65,4 +73,4 @@ function between(string, start, end) {
   return string.split(start)[1].split(end)[0];
 }
 
-module.exports = {timeoutPromise, between, logOnAccess, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning, setSharedVar, getSharedVar, properRelaunch};
+module.exports = {timeoutPromise, between, logOnAccess, getFileVersion, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning, setSharedVar, getSharedVar, properRelaunch};
