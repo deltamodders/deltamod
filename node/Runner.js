@@ -1428,9 +1428,7 @@ function createWindow() {
             }
 
             // Fix for DEVICE_FUSION not creating output folder
-            if (fs.existsSync(path.join(__dirname, '..', 'gm3p', 'GamemakerModMerger.exe')) && !fs.existsSync(path.join(__dirname, '..', 'gm3p', 'output'))) {
-                fs.mkdirSync(path.join(__dirname, '..', 'gm3p', 'output'));
-            }
+            // techy here: this code was redundant because GamePatching.js already creates the output folder if it doesn't exist. The reason why that error appeared was due to a misconfiguration on Ego's end (which has been fixed and we are now just waiting for a build with the fix)
 
             // In case a previous run crashed mid-restore
             GamePatching.restoreOriginalsIfAny(pathname);
