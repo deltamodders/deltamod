@@ -476,11 +476,12 @@ function createWindow() {
         height: h,
         titleBarStyle: 'hidden',
         resizable: true,
+        maximizable: false,
         show: false,
         titleBarOverlay: {
             color: 'rgba(249,249,249,0)',
             symbolColor: 'rgb(255, 255, 255)',
-            height: 28
+            height: 35
         },
         webPreferences: {
             nodeIntegration: true,
