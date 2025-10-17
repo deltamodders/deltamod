@@ -29,36 +29,54 @@ setTimeout(() => {
 }, 500);
 
 function getPredominantColor(img) {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
-  const width = canvas.width = 256;
-  const height = canvas.height = 256;
+    const width = canvas.width = 256;
+    const height = canvas.height = 256;
 
-  ctx.drawImage(img, 0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
 
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const data = imageData.data;
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
 
-  const colorCount = {};
-  let maxCount = 0;
-  let dominantColor = { r: 0, g: 0, b: 0 };
-
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    const key = `${r},${g},${b}`;
-
-    colorCount[key] = (colorCount[key] || 0) + 1;
-
-    if (colorCount[key] > maxCount) {
-      maxCount = colorCount[key];
-      dominantColor = { r, g, b };
+    const colorCount = {};
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const key = `${r},${g},${b}`;
+        colorCount[key] = (colorCount[key] || 0) + 1;
     }
-  }
 
-  return dominantColor;
+    let top = null;
+    let second = null;
+    for (const [key, count] of Object.entries(colorCount)) {
+        if (!top || count > top.count) {
+            second = top;
+            top = { key, count };
+        } else if (!second || count > second.count) {
+            second = { key, count };
+        }
+    }
+
+    const parseKey = (k) => {
+        const [r, g, b] = k.split(',').map(Number);
+        return { r, g, b };
+    };
+
+    const isBlackOrWhite = ({ r, g, b }, tol = 16) => {
+        const isBlack = r <= tol && g <= tol && b <= tol;
+        const isWhite = r >= 255 - tol && g >= 255 - tol && b >= 255 - tol;
+        return isBlack || isWhite;
+    };
+
+    let dominantColor = top ? parseKey(top.key) : { r: 0, g: 0, b: 0 };
+    if (top && isBlackOrWhite(dominantColor) && second) {
+        dominantColor = parseKey(second.key);
+    }
+
+    return dominantColor;
 }
 
 function noHTML(elem) {
@@ -218,7 +236,7 @@ async function createMod(mod) {
     }
 
     var prevalColor = getPredominantColor(img);
-    var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40,40,40, 1) 100px)`;
+    var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40, 40, 40, 0) 100px)`;
     modNameContainer.style.background = `${cssStyle}`;
     modRow.appendChild(modNameContainer);
     modRow.appendChild(enabledContainer);

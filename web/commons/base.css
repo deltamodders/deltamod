@@ -115,9 +115,10 @@ h1 {
 table {
     width: 100%;
     border-radius: 5px;
-    border: 2px solid rgb(66, 66, 66);
-    padding: 2px;
-    background-color: rgb(40, 40, 40);
+    border: 1px solid rgb(66, 66, 66);
+    padding: 10px;
+    background-color: rgba(40, 40, 40, 0.5);
+    backdrop-filter: blur(5px);
     color: white;
     font-family: "Pixel", sans-serif;
     font-size: 16px;
@@ -130,11 +131,25 @@ table:hover {
 th,
 td {
     border: 1px solid rgb(66, 66, 66);
+    border-radius: 4px;
     padding: 8px 12px;
     text-align: left;
+    animation: 0.2s spawn ease-in-out;
+    transition: 0.3s all;
 }
 
+
+@keyframes spawn {
+    0% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 1;
+    }
+}
 th {
-    background-color: rgb(30, 30, 30);
+    background-color: rgba(16, 16, 16, 0.6);
     color: rgb(200, 200, 200);
+    border-radius: 4px;
+    animation: 0.5s spawn ease-in-out;
 }
