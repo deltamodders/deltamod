@@ -4,6 +4,7 @@ var theme = null;
 var pageN = null;
 var addedStyle = null;
 var update = false;
+
 async function htmlAlert(title, message, buttons) {
     return new Promise((resolve, reject) => {
         var alertMain = document.getElementsByClassName('alertMain')[0];

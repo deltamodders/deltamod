@@ -296,7 +296,36 @@ function loadInst(index) {
     const errorBanner = document.getElementById("error-banner");
 
     var { modList, errors } = await window.electronAPI.invoke('getModList', []);
+    if (window._pageArguments && window._pageArguments.sortfunc && window._pageArguments.sortid) {
+        modList = modList.sort(window._pageArguments.sortfunc);
+        document.getElementById('sortWay').value = window._pageArguments.sortid;
+    }
+    else {
+        // sort by name ascending by default
+        modList = modList.sort((a, b) => a.name.localeCompare(b.name));
+    }
     modList.forEach(x => createMod(x));
+
+    document.getElementById('sortWay').onchange = (e) => {
+        switch (e.target.value) {
+            case 'asc':
+                window._pageArguments = { sortfunc: (a, b) => a.name.localeCompare(b.name), sortid: 'asc' };
+                page('');
+                break;
+            case 'desc':
+                window._pageArguments = { sortfunc: (a, b) => b.name.localeCompare(a.name), sortid: 'desc' };
+                page('');
+                break;
+            case 'size-asc':
+                window._pageArguments = { sortfunc: (a, b) => (a.size || 0) - (b.size || 0), sortid: 'size-asc' };
+                page('');
+                break;
+            case 'size-desc':
+                window._pageArguments = { sortfunc: (a, b) => (b.size || 0) - (a.size || 0), sortid: 'size-desc' };
+                page('');
+                break;
+        }
+    };
 
     if (errors.length > 0) {
         errorBanner.onclick = () => createErroringMods(errors);
