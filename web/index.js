@@ -284,6 +284,10 @@ if (!window.electronAPI) {
 }
 
 (async function() {
+    var os = await window.electronAPI.invoke('getOS',[]);
+    if (os.platform == 'win32' && os.version.startsWith('Windows 11')) {
+        document.getElementsByClassName('winb')[0].style.borderRadius = "8px";
+    }
     // Check if deltarune is loaded
     var loaded = await window.electronAPI.invoke('loadedDeltarune',[]);
 

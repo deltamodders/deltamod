@@ -558,6 +558,13 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('getOS', () => {
+        return {
+            platform: process.platform,
+            release: require('os').release(),
+            version: require('os').version()
+        };
+    });
     ipcMain.handle('rebootDev', async () => {
         if (process.argv.includes('--developer')) {
             dialog.showMessageBoxSync({
