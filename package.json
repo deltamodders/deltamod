@@ -55,12 +55,12 @@
     "@chainsafe/xdelta3-node": "^1.0.2",
     "7zip-min": "^2.1.0",
     "axios": "^1.12.0",
+    "create-desktop-shortcuts": "^1.11.1",
     "emit-keypress": "^1.0.1",
     "mime-types": "^3.0.1",
     "node-html-parser": "^7.0.1",
     "nodejs": "^0.0.0",
     "nodejs-file-downloader": "^4.13.0",
-    "windows-shortcuts": "^0.1.6",
     "xml-js": "^1.6.11",
     "yoctocolors-cjs": "^2.1.3"
   }

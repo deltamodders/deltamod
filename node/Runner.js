@@ -4,7 +4,7 @@ const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const mime = require('mime-types');
-const winShortcuts = require('windows-shortcuts');
+const createDesktopShortcut = require('create-desktop-shortcuts');
 const _7z = require("7zip-min");
 const {Downloader} = require("nodejs-file-downloader");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
@@ -590,26 +590,23 @@ function createWindow() {
             return;
         }
 
+        var iName = fs.readFileSync(System.getSystemFileOfIndex('_cname', args[0]), 'utf8');
         var thisProgramEXE = process.execPath;
         console.log('This program EXE: ' + thisProgramEXE); 
 
-        var lnkPath = path.join(require('os').homedir(), 'Desktop', args[1] + '.lnk');
-
-        winShortcuts.create(lnkPath, {
-            target : thisProgramEXE,
-            args : '---system_index=' + args[0] + '',
-            desc : "Boots Deltamod with the " + args[1] + " installation of Deltarune.",
-        }, function(err) {
-            if (err)
-                dialog.showErrorBox('Error', 'An error occurred while creating the shortcut: ' + err);
-            else
-                console.log("Shortcut created!");
-                dialog.showMessageBox(win, {
-                    type: 'info',
-                    title: 'Shortcut Created',
-                    message: 'The installation shortcut has been created on your desktop.',
-                });
+        const shortcutsCreated = createDesktopShortcut({
+            windows: { filePath: thisProgramEXE.replaceAll('\\','\\\\'), name: 'Deltamod (' + iName + ')', arguments: '---system_index=' + args[0]  },
         });
+
+        if (shortcutsCreated) {
+            dialog.showMessageBox(win, {
+                type: 'info',
+                title: 'Shortcut Created',
+                message: 'The installation shortcut has been created on your desktop.',
+            });
+        } else {
+            dialog.showErrorBox('Shortcut Creation Failed', 'Failed to create the installation shortcut.');
+        }
     });
 
     ipcMain.handle('isBaked', async (event, args) => {
