@@ -15,7 +15,7 @@ function purify(text) {
     return text.replace(/<[^>]*>/g, '');
 }
 
-async function createMod(mod) {
+async function createMod(mod, compatible) {
     const modRow = document.createElement('tr');
 
     // Column 1 (Mod)
@@ -74,8 +74,8 @@ async function createMod(mod) {
     compatibilitySpan.style.marginTop = '4px';
     compatibilitySpan.className = 'calibri';
     compatibilitySpan.style.fontSize = 'smaller';
-    compatibilitySpan.style.color = '#888';
-    compatibilitySpan.innerHTML = `${icon('task_alt', 'small')} Compatible with ${mod.demo ? 'demo version' : 'full version'}`;
+    compatibilitySpan.style.color = (compatible ? '#97cb85ff' : '#be8383ff');
+    compatibilitySpan.innerHTML = `${icon((compatible ? 'task_alt' : 'warning'), 'small')} ${compatible ? 'Compatible' : 'Incompatible'}`;
     compatibilitySpan.id = `modcompat-${mod.uid}`;
     modNameContainer.appendChild(compatibilitySpan);
 
@@ -153,7 +153,9 @@ function createErroringMods(errors) {
     const errorBanner = document.getElementById("error-banner");
 
     var { modList, errors } = await window.electronAPI.invoke('getModListFull', []);
-    modList.forEach(x => createMod(x));
+    var fmodList = await window.electronAPI.invoke('getModList', []);
+    fmodList = fmodList.modList;
+    modList.forEach(x => createMod(x, fmodList.map(f => f.uid).includes(x.uid)));
 
     if (errors.length > 0) {
         errorBanner.onclick = () => createErroringMods(errors);

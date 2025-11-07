@@ -111,11 +111,6 @@ window.currentPageStack.cat = async function(cat) {
                 await window.electronAPI.invoke('removeSteamIntegration', []);
             }, 'Disconnect', isSteam, 'Only available on Steam based installs.');
 
-            await addButton('Bake this install', 'Allows you to select mods to bake into the game (so you don\'t have to patch everytime)', async () => {
-                window._pageArguments = { baker: true };
-                page('main');
-            }, 'Open', !await window.electronAPI.invoke('isBaked', []), 'Not available when current installation has been already baked'); // Disable if install is invalid
-
             await addButton('Open the Install Manager', 'Opens the install manager menu, which allows you to delete/create installations and create shortcuts for them.', async () => {
                 page('installmanager');
             }, 'Open');

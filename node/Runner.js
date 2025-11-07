@@ -1829,6 +1829,11 @@ function createWindow() {
         return (ignoreUpdate || process.argv.includes('--developer'));
     });
 
+    ipcMain.handle('isCurrentInstallDemo', async (event, args) => {
+        var currentIndex = require('./System.js').getCurrentSystemIndex();
+        return (KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(currentIndex)) === 'demo');
+    });
+
 
     setWindow(win);
 }
