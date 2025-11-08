@@ -43,8 +43,6 @@ tr {
         backdrop-filter: blur(10px);
     }
 
-    .cat > button {
+    .cat > button:not(:last-child) {
         margin-bottom: 10px;
-        width: calc(100% + 20px);
-        border-radius: 0;
     }
