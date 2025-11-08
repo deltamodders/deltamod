@@ -1,6 +1,7 @@
 {
     "name": "Blast to the Past",
     "background": "commons/backgrounds/undertale.png",
+    "description": "A theme based on UNDERTALE.",
     "mainSong": "mainTheme4.mp3",
     "id": "undertale"
 }

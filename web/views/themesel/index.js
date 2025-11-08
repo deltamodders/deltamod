@@ -7,13 +7,27 @@
 
         var tr = document.createElement('tr');
         document.querySelector('tbody').appendChild(tr);
+
+        var td0 = document.createElement('td');
+        td0.classList.add('theme-entry');
+        td0.style.backgroundImage = `url('${theme.background}')`;
+        td0.style.backgroundSize = 'cover';
+        td0.style.backgroundRepeat = 'no-repeat';
+        tr.appendChild(td0);
         
         var td1 = document.createElement('td');
         td1.classList.add('theme-entry');
 
         var name = document.createElement('span');
         name.innerText = theme.name;
+        name.style.fontSize = '1.2em';
         td1.appendChild(name);
+
+        var desc = document.createElement('span');
+        desc.innerText = `\n${theme.description}`;
+        desc.classList.add('calibri');
+        desc.style.fontSize = '0.9em';
+        td1.appendChild(desc);
 
         var td2 = document.createElement('td');
         td2.classList.add('theme-entry');

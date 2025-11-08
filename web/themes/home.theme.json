@@ -2,5 +2,6 @@
     "name": "Hometown",
     "background": "commons/backgrounds/home.png",
     "mainSong": "hometown.mp3",
+    "description": "A theme based on the Light World hometown area.",
     "id": "home"
 }

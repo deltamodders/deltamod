@@ -2,5 +2,6 @@
     "name": "Cyber Theme",
     "background": "commons/backgrounds/cyberfield.png",
     "mainSong": "mainTheme2.mp3",
+    "description": "A theme based on Cyber City from Chapter 2.",
     "id": "cyber"
 }
