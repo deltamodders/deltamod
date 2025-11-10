@@ -1,13 +1,12 @@
 <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-    <div style="text-align: center;">
-        <img src="./views/patching/ledog.webp" alt="" srcset="" class="mike">
-        <p>Downloading Deltamod update...</p>
-        <small><i>The dog is transporting the new Deltamod version in his trunk.</i></small>
-        <br><br>
+    <div style="text-align: center;" class="island">
+        <span class="material-symbols-outlined" style="font-size: 30px;">download</span>
+        <p>Deltamod is downloading the update...</p>
         <progress id="up" max="100"></progress>
+        <br><br>
+        <small>Estimated time remaining: <span id="time">00:00</span></small>
     </div>
 </div>
-AUDIO[patching.ogg]
 STYLESHEET[autoupdate]
 NO-SIDEBAR
 JSL

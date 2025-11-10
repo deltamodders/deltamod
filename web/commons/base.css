@@ -15,6 +15,12 @@
     /* bold fucks shit up the entire font */
 }
 
+@font-face {
+    font-family: "Calibri";
+    src: url("./ubuntu.ttf") format("truetype");
+}
+
+
 /* Hide scrollbar for all browsers */
 * {
     scrollbar-width: none;

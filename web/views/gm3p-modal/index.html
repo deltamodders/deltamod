@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Downloading...</title>
 </head>
-<body>
+<body style="text-align: center;">
+    <p style="text-align: center;">Downloading the patcher...</p>
     <progress id="prog" max="100"></progress>
 </body>
 <script>
-    window.api.onProgress((data) => {
+    function updateProgress(percent) {
         const progressBar = document.getElementById('prog');
-        progressBar.value = Math.round(data);
-    });
+        progressBar.value = percent;
+    }
 </script>
 </html>

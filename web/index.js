@@ -249,9 +249,15 @@ async function page(name) {
     Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
         if (button.getAttribute('data-page') === name) {
             button.classList.add('active');
+            if (button.getAttribute('data-page') == 'allmods') {
+                document.getElementById('specialBookEffect').innerHTML = icon('book_5', '24px');
+            }
         }
         else {
             button.classList.remove('active');
+            if (button.getAttribute('data-page') == 'allmods') {
+                document.getElementById('specialBookEffect').innerHTML = icon('book_4', '24px');
+            }
         }
     });
     try {

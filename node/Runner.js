@@ -628,8 +628,8 @@ function createWindow() {
         var url = args[0];
 
         var modal = new BrowserWindow({
-            width: 200,
-            height: 100,
+            width: 300,
+            height: 130,
             resizable: false,
             maximizable: false,
             minimizable: false,
@@ -667,7 +667,7 @@ function createWindow() {
             if (totalLength) {
                 const percent = ((downloaded / totalLength) * 100).toFixed(2);
                 console.log(`Downloaded ${percent}%`);
-                modal.webContents.send('progress', percent);
+                modal.webContents.executeJavaScript(`updateProgress(${percent});`); // i hate this workaround
             } else {
                 console.log(`Downloaded ${downloaded} bytes`);
             }

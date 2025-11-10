@@ -108,7 +108,7 @@ async function createMod(mod) {
     imageContainer.style.marginLeft = '2px';
 
     tippy(imageContainer, {
-        content: 'Right click to view in mod manager',
+        content: 'Right click to view in library',
         placement: 'right',
         delay: [100, 0],
         onMount(instance) {
@@ -131,7 +131,7 @@ async function createMod(mod) {
     imageContainer.appendChild(img);
 
     imageContainer.oncontextmenu = e => {
-        htmlAlert(mod.name,"Do you wish to view this mod in the Mod Manager?",[{text:'Yes',resolveWith:'accept'},{text:'No',rejectWith:'close'}]).then(result => {
+        htmlAlert(mod.name,"Do you wish to view this mod in the Library?",[{text:'Yes',resolveWith:'accept'},{text:'No',rejectWith:'close'}]).then(result => {
             if (result === 'accept') {
                 window._pageArguments = { highlightMod: mod.uid };
                 page('allmods');
