@@ -5,6 +5,10 @@ var pageN = null;
 var addedStyle = null;
 var update = false;
 
+function error() {
+    fetch('http://google.com');
+}
+
 async function htmlAlert(title, message, buttons) {
     return new Promise((resolve, reject) => {
         var alertMain = document.getElementsByClassName('alertMain')[0];
@@ -21,6 +25,7 @@ async function htmlAlert(title, message, buttons) {
 
         var buttonsHTML = document.createElement('div');
         buttonsHTML.style.textAlign = 'right';
+        buttonsHTML.classList.add('alertButtons');
         buttons.forEach((button, index) => {
             var btn = document.createElement('button');
             btn.textContent = button.text;
@@ -332,3 +337,13 @@ window.preloadAPI.onAudio((stat) => {
     if (stat) openAudio();
     else closeAudio();
 });
+
+document.getElementsByClassName('sidebar')[0].addEventListener('mouseenter', () => {
+    document.getElementsByClassName('sidebar-backdrop')[0].style.opacity = 1;
+});
+
+document.getElementsByClassName('sidebar')[0].addEventListener('mouseleave', () => {
+    document.getElementsByClassName('sidebar-backdrop')[0].style.opacity = 0;
+});
+
+document.getElementsByClassName('sidebar-backdrop')[0].style.opacity = 0;

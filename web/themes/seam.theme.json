@@ -3,5 +3,6 @@
     "background": "commons/backgrounds/shop.png",
     "description": "A theme based on Seam's Shop.",
     "mainSong": "seam.mp3",
+    "musicTrack": "Lantern - Toby Fox",
     "id": "seam"
 }

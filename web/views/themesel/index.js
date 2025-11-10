@@ -29,6 +29,14 @@
         desc.style.fontSize = '0.9em';
         td1.appendChild(desc);
 
+        var mfxTag = document.createElement('span');
+        mfxTag.style.display = 'block';
+        mfxTag.style.marginTop = '0.5em';
+        mfxTag.innerHTML = icon('audio_file', '0.8em') + ` ${theme.musicTrack}`;
+        mfxTag.classList.add('calibri');
+        mfxTag.style.fontSize = '0.8em';
+        td1.appendChild(mfxTag);
+
         var td2 = document.createElement('td');
         td2.classList.add('theme-entry');
 

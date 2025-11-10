@@ -3,6 +3,7 @@
     "background": "commons/backgrounds/fountain.gif",
     "mainSong": "mainTheme1Alt.mp3",
     "id": "base",
+    "musicTrack": "My Castle Town - Toby Fox",
     "description": "The default theme for the program.",
     "dynamic": [
         {
