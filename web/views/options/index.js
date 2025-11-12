@@ -99,10 +99,6 @@ window.currentPageStack.cat = async function(cat) {
                 page('themesel');
             }, 'Open');
 
-            await addButton('Select a patching character', 'Open the patching character selection menu.', async () => {
-                await window.electronAPI.invoke('setSponsor', []);
-            }, 'Open');
-
             break;
         case 'inst':
             var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);

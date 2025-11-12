@@ -22,6 +22,18 @@
     padding: 12px;
 }
 
+.sinfo-group {
+    border: 2px solid white;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    backdrop-filter: blur(5px);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    gap: 12px;
+}
+
 .credits-header {
     font-size: medium;
     color: gray;
