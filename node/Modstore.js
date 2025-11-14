@@ -22,13 +22,23 @@ async function importMod(filePath) {
         // fs.unlinkSync (filePath); // delete the zip file after extraction, I (Zork) commented this out temporarily to keep the zip file for debugging.
 
         // Normalize: pull contents out of wrapper folder so mod is flat
+
+        // Legacy support: rename _deltamodInfo.json to meta.json if needed
+        if (fs.existsSync(path.join(modPath, '_deltamodInfo.json'))) {
+            fs.copyFileSync(path.join(modPath, '_deltamodInfo.json'), path.join(modPath, 'meta.json'));
+            fs.unlinkSync(path.join(modPath, '_deltamodInfo.json'));
+        }
+        if (fs.existsSync(path.join(modPath, '_icon.png'))) {
+            fs.copyFileSync(path.join(modPath, '_icon.png'), path.join(modPath, 'icon.png'));
+            fs.unlinkSync(path.join(modPath, '_icon.png'));
+        }
         const realRoot = findModRoot(modPath);
         if (realRoot && path.resolve(realRoot) !== path.resolve(modPath)) {
             flattenInto(modPath, realRoot);
         }
 
         // Check manifest anywhere in the tree (now usually at root after flatten)
-        const manifestPath = findFirstByName(modPath, '_deltamodInfo.json') || path.join(modPath, '_deltamodInfo.json');
+        const manifestPath = findFirstByName(modPath, 'meta.json') || path.join(modPath, 'meta.json');
         if (!fs.existsSync(manifestPath)) {
             fs.rmdirSync(modPath, { recursive: true, force: true });
             throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
@@ -117,11 +127,11 @@ function modList() {
 
             // Zork's Patch: Find manifest anywhere in the mod folder, not only at root (safe)
             const manifestPath =
-                findFirstByName(modPath, '_deltamodInfo.json') ||
-                path.join(modPath, '_deltamodInfo.json');
+                findFirstByName(modPath, 'meta.json') ||
+                path.join(modPath, 'meta.json');
 
             // Zork's Patch: Read defensively; synthesize defaults if missing
-            failureReason = "Failed to read _deltamodInfo JSON.";
+            failureReason = "Failed to read meta.json.";
             var modInfo = safeReadJSON(manifestPath) || {
                 metadata: { name: mod, version: '1.0.0', demoMod: false, packageID: 'und.und.und' },
                 dependencies: []
@@ -169,14 +179,14 @@ function modList() {
             uniqueIdSet.add(uid);
 
             // sanity for required fields
-            failureReason = "_deltamodInfo.json is missing required fields `name`, `description` or `demoMod`.";
+            failureReason = "meta.json is missing required fields `name`, `description` or `demoMod`.";
             if (
                 !meta ||
                 typeof meta.name !== 'string' ||
                 typeof meta.description !== 'string' ||
                 typeof meta.demoMod === 'undefined'
             ) {
-                throw new Error(`Missing required fields in _deltamodInfo.json for mod: ${mod}`);
+                throw new Error(`Missing required fields in meta.json for mod: ${mod}`);
             }
 
             var modSize = 0;
@@ -242,7 +252,7 @@ function getModImage(moduid) {
         var deltaID = safeReadJSON(path.join(system.getPacketDatabase(), mod, '__deltaID.json'));
         if (deltaID && deltaID.uniqueId === moduid) {
             try {
-                const imgPath = ((mod + '/_icon.png'));
+                const imgPath = ((mod + '/icon.png'));
                 if (fs.existsSync(path.join(system.getPacketDatabase(), imgPath))) {
                     return { exists: true, path: imgPath };
                 }

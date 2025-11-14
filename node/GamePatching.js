@@ -181,7 +181,7 @@ function findModRoot(root) {
         const dir = stack.pop();
         const hasXml  = fs.existsSync(path.join(dir, 'modding.xml'));
         const hasId   = fs.existsSync(path.join(dir, '__deltaID.json'));
-        const hasInfo = fs.existsSync(path.join(dir, '_deltamodInfo.json'));
+        const hasInfo = fs.existsSync(path.join(dir, 'meta.json'));
         if (hasXml && hasId) return dir;
         if (!fallback && (hasXml || hasId || hasInfo)) fallback = dir;
 
@@ -299,7 +299,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
         try {
             const modRoot = findModRoot(modDir);
             const idf   = findFirstByName(modRoot, '__deltaID.json');
-            const infof = findFirstByName(modRoot, '_deltamodInfo.json');
+            const infof = findFirstByName(modRoot, 'meta.json');
             const xmlf  = findFirstByName(modRoot, 'modding.xml');
             
             if (!idf || !xmlf) continue;

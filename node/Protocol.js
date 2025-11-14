@@ -56,8 +56,8 @@ async function handleProtocolLaunch(url) {
 
             log("Download successful -- extracting using 7zip");
             const items = await _7z.list(filepath);
-            if (!items.find(x => x.name === "_deltamodInfo.json") || !items.find(x => x.name === "modding.xml")) {
-                error("Invalid archive -- couldn't find _deltamodInfo.json or modding.xml");
+            if ((!items.find(x => x.name === "meta.json") && !items.find(x => x.name === "_deltamodInfo.json")) || !items.find(x => x.name === "modding.xml")) {
+                error("Invalid archive -- couldn't find meta.json/deltamodInfo.json or modding.xml");
                 rmSync(filepath);
 
                 dialog.showErrorBox('Import failed', 'The mod you\'re attempting to download from GameBanana does not support the Deltamod format.');
@@ -65,7 +65,7 @@ async function handleProtocolLaunch(url) {
                 break;
             }
 
-            log("Archive valid -- found _deltamodInfo.json and modding.xml");
+            log("Archive valid -- found meta.json and modding.xml");
             //await _7z.unpack(filepath, join(dirname(filepath), itemid));
             await importMod(filepath);
 
