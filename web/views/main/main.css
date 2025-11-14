@@ -105,6 +105,9 @@ select {
   }
 }
 .checkmod > input:checked {
+  /* For browsers that don't support accent-color, fallback: */
+  background-color: black;
+  color: white;
   animation: 1s accentuate;
 }
 
@@ -141,7 +144,7 @@ th {
       width: 40px;
       height: 25px;
       cursor: pointer;
-      accent-color: rgb(29, 133, 0);
+      accent-color: rgba(57, 57, 57, 0.455);
       border: 6px solid white;
       scale: 1.1;
     }
