@@ -15,11 +15,15 @@
     /* bold fucks shit up the entire font */
 }
 
+/* I did everything to use Calibri but I realized I actually want a font from my library.... */
 @font-face {
     font-family: "Calibri";
     src: url("./ubuntu.ttf") format("truetype");
 }
 
+input, progress {
+    accent-color: rgb(0, 123, 121) !important;
+}
 
 /* Hide scrollbar for all browsers */
 * {

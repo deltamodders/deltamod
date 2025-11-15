@@ -17,6 +17,18 @@ function plusPage(ind) {
     page('gamebanana-browse');
 }
 
+function search() {
+    let query = document.getElementById('searchInput').value;
+    window._pageArguments = {};
+    window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Util/Search/Results?_sModelName=Mod&_sOrder=best_match&_sSearchString=' + encodeURIComponent(query) + '&_csvFields=name%2Cdescription%2Carticle%2Cattribs%2Cstudio%2Cowner%2Ccredits&_idGameRow=6755&_nPage=1';
+    window._pageArguments.gbAPIFilter = async function(data) {
+        return data;
+    };
+    page('gamebanana-browse');
+}
+
+window.currentPageStack.search = search;
+
 window.currentPageStack.plusPage = plusPage;
 
 (async () => {
@@ -27,14 +39,32 @@ window.currentPageStack.plusPage = plusPage;
     }
     let GB_API = 'https://gamebanana.com/apiv11/Game/6755/Subfeed?_sSort=default&_nPage=' + PAGE;
     let table = document.getElementById('modsBody');
+    let filter = async function(a) {
+        return a;
+    };
+
+    if (window._pageArguments && window._pageArguments.gbAPI && window._pageArguments.gbAPIFilter) {
+        GB_API = window._pageArguments.gbAPI;
+        filter = window._pageArguments.gbAPIFilter;
+    }
 
     window._pageArguments = {}; // reset page arguments
 
     var response = await fetch(GB_API);
-    var data = await response.json();
+    var data = await filter(await response.json());
 
     table.innerHTML = '';
 
+    if (data._aRecords.length === 0) {
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.colSpan = 2;
+        td.style.textAlign = 'center';
+        td.innerText = 'No mods found.';
+        tr.appendChild(td);
+        table.appendChild(tr);
+        return;
+    }
     data._aRecords.forEach(mod => {
         if (mod._sModelName !== 'Mod') return;
 
@@ -91,12 +121,21 @@ window.currentPageStack.plusPage = plusPage;
             };
             authorSpan.style.cursor = 'pointer';
 
+            var categorySpan = document.createElement('span');
+            categorySpan.className = 'modCategorySpan';
+            categorySpan.style.display = 'block';
+            categorySpan.style.marginBottom = '8px';
+            categorySpan.style.marginRight = '12px';
+            categorySpan.innerHTML = `${icon('folder','0.9em')} ${mod._aRootCategory._sName}`;
+            
+
             var dateSpan = document.createElement('span');
             dateSpan.className = 'modDateSpan';
             dateSpan.style.display = 'block';
             dateSpan.innerHTML = `${icon('calendar_clock','0.9em')} ${new Date(mod._tsDateAdded*1000).toLocaleDateString()}`;
 
             otherInfoSpan.appendChild(authorSpan);
+            otherInfoSpan.appendChild(categorySpan);
             otherInfoSpan.appendChild(dateSpan);
             div1.appendChild(otherInfoSpan);
         }
@@ -130,7 +169,10 @@ window.currentPageStack.plusPage = plusPage;
 
                 if (eligibleDownloads.length === 0) {
                     viewButton.innerHTML = icon('cancel', '0.9em') + ' Cannot download';
-                    await htmlAlert('No compatible files','This mod cannot be downloaded via Deltamod. Ask the owner to make it compatible with Deltamod!',[{text:'Ok',resolveWith:'ok'}]);
+                    var open = await htmlAlert('No compatible files','This mod cannot be downloaded via Deltamod. Ask the owner to make it compatible with Deltamod!',[{text:'Ok',resolveWith:'no',},{text:'Open mod page on GameBanana',resolveWith:'yes'}]);
+                    if (open === 'yes') {
+                        window.open(mod._sProfileUrl, '_blank');
+                    }
                     return;
                 }
 

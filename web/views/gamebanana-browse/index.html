@@ -1,13 +1,19 @@
 <div>
     <div class="tspandiv">
-        <h1 style="text-align: center; margin-bottom: 0;">
-            <span class="material-symbols-outlined">shopping_bag_speed</span>
-            Download mods
-        </h1>
-        <div class="navigator" style="margin-bottom: 5px; margin-top: 5px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 10px;">
-            <button onclick="window.currentPageStack.plusPage(-1)">Previous page</button>
-            <button onclick="window.currentPageStack.plusPage(1)">Next page</button>
-        </div>
+        <br>
+        <span class="material-symbols-outlined">shopping_bag_speed</span>
+        <span>The Mod Shop</span>
+        <br>
+        <button onclick="window.currentPageStack.plusPage(-1)">
+            <span class="material-symbols-outlined smicon">arrow_back</span>
+        </button>
+        <button onclick="window.currentPageStack.plusPage(1)">
+            <span class="material-symbols-outlined smicon">arrow_forward</span>
+        </button>
+        <input type="text" id="searchInput" placeholder="Search mods...">
+        <button onclick="window.currentPageStack.search()">
+            <span class="material-symbols-outlined smicon">search</span>
+        </button>
     </div>
     <table>
         <colgroup>
@@ -29,3 +35,4 @@
 </div>
 JSL
 STYLESHEET[indx]
+AUDIO[views/gamebanana-browse/leshop.mp3]

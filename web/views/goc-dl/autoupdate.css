@@ -1,0 +1,29 @@
+.logs {
+  width: 600px;
+  margin-top: 15px !important;
+  height: 200px;
+  overflow-y: scroll;
+  overflow-x: scroll;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-family: "Calibri", monospace;
+  text-align: left;
+  padding: 5px;
+  font-size: 12px;
+  margin: 0;
+  border: 2px solid white;
+  border-radius: 10px;
+}
+small {
+  color: #ffffff;
+  font-size: 0.8em;
+  font-family: "Calibri", sans-serif;
+}
+
+.island {
+  background: rgba(0, 0, 0, 0.267);
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}

@@ -4,12 +4,24 @@
     padding-bottom: 10px;
     position: sticky;
     top: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    gap: 10px;
     left: 60px;
     z-index: 99;
     margin-bottom: 10px;
     border-radius: 5px;
     backdrop-filter: blur(5px);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.smicon {
+    font-size: 15px;
+}
+
+input {
+    margin-bottom: 0 !important;
 }
 
 .modAuthorAvatar {
