@@ -112,11 +112,14 @@
         }
     });
 
-    document.querySelector('img').addEventListener('animationend', () => {
+    document.querySelector('img').addEventListener('animationend', async () => {
         var laughAudio = new Audio('laugh.mp3');
-        laughAudio.play().catch((e) => {
-            console.error("Audio playback failed:", e);
-        });
+        let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
+        if (shouldPlayAudio) {
+            laughAudio.play().catch((e) => {
+                console.error("Audio playback failed:", e);
+            });
+        }
         document.querySelector('img').style.transform = 'translateX(0%) rotate(0deg)';
     });
 
@@ -124,11 +127,16 @@
         return Math.random() * (max - min) + min;
     }
 
-    var a = new Audio('dogcheck.mp3');
-    a.playbackRate = 1;
-    a.loop = true;
-    a.play().catch((e) => {
-        console.error("Audio playback failed:", e);
-    });
+    (async () => {
+        var a = new Audio('dogcheck.mp3');
+        a.playbackRate = 1;
+        a.loop = true;
+        let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
+        if (shouldPlayAudio) {
+            a.play().catch((e) => {
+                console.error("Audio playback failed:", e);
+            });
+        }
+    })();
 </script>
 </html>

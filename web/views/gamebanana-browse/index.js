@@ -136,7 +136,7 @@ window.currentPageStack.plusPage = plusPage;
 
                 if (eligibleDownloads.length > 1) {
                     viewButton.innerHTML = icon('cancel', '0.9em') + ' Multiple files found';
-                    var res = await htmlAlert('Multiple compatible files','This mod has multiple files compatible with Deltamod. Please choose the one to download.',eligibleDownloads.map(x => {return {text:x._sName,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}));
+                    var res = await htmlAlert('Multiple compatible files','This mod has multiple files compatible with Deltamod. Please choose the one to download.',eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}));
                     if (!res) {
                         return;
                     }
