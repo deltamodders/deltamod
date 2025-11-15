@@ -29,6 +29,7 @@ To package Deltamod 1.2 and upwards using the reccomended project file, you will
 ## OS support
 |               | Windows       | Native Linux  | Native macOS | _macOS/Linux_ (w/ CrossOver or Wine) | _All OSes_ (w/ Windows emulation) |
 | ------------- |:-------------:|:-----:|:--------:|:--------------:|:-----------------:|
+| Officially released | ✅ | All versions before 1.2 | ❌ | ❌ | ✅ |
 | Tested by devs | ✅ | ⚠️ Only one dev | ❌ | ❌ | ⚠️ Should work |
 | Devs provide support | ✅ | ❌ | ❌ | ❌ | ✅ _(Specify if you are using emulation when reporting issues)_ |
 | Usable | ✅ | ⚠️ Requires Proton | ❌ | ✅ | ✅ |
