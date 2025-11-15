@@ -180,14 +180,21 @@ function modList() {
             uniqueIdSet.add(uid);
 
             // sanity for required fields
-            failureReason = "meta.json is missing required fields `name`, `description` or `demoMod`.";
             if (
                 !meta ||
                 typeof meta.name !== 'string' ||
                 typeof meta.description !== 'string' ||
                 typeof meta.demoMod === 'undefined'
             ) {
+                failureReason = "meta.json is missing required fields `name`, `description` or `demoMod`.";
                 throw new Error(`Missing required fields in meta.json for mod: ${mod}`);
+            }
+
+            if (fs.readdirSync(modPath).filter(x => x.endsWith('.js')).length !== 0
+            || fs.readdirSync(modPath).filter(x => x.endsWith('.ts')).length !== 0
+            || fs.readdirSync(modPath).filter(x => x.endsWith('.exe')).length !== 0) {
+                failureReason = "Mod contains executable files which are not allowed.";
+                throw new Error(`Mod contains executable files which are not allowed: ${mod}`);
             }
 
             var modSize = 0;

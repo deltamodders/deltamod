@@ -73,13 +73,31 @@ window.currentPageStack.plusPage = plusPage;
             biggerSpan.innerText = mod._sName;
             div1.appendChild(biggerSpan);
 
-            var otherInfoSpan = document.createElement('span');
+            var otherInfoSpan = document.createElement('div');
             otherInfoSpan.className = 'modOtherInfoSpan';
             otherInfoSpan.style.display = 'block';
             otherInfoSpan.style.fontSize = '0.8em';
             otherInfoSpan.style.color = '#888888';
             otherInfoSpan.style.marginTop = '4px';
-            otherInfoSpan.innerHTML = `${icon('attribution','0.9em')} ${mod._aSubmitter._sName}`;
+
+            var authorSpan = document.createElement('span');
+            authorSpan.className = 'modAuthorSpan';
+            authorSpan.style.display = 'block';
+            authorSpan.style.marginRight = '12px';
+            authorSpan.style.marginBottom = '8px';
+            authorSpan.innerHTML = `<img src="${mod._aSubmitter._sAvatarUrl}" alt="${mod._aSubmitter._sName}" class="modAuthorAvatar"> ${mod._aSubmitter._sName}`;
+            authorSpan.onclick = () => {
+                window.open(mod._aSubmitter._sProfileUrl, '_blank');
+            };
+            authorSpan.style.cursor = 'pointer';
+
+            var dateSpan = document.createElement('span');
+            dateSpan.className = 'modDateSpan';
+            dateSpan.style.display = 'block';
+            dateSpan.innerHTML = `${icon('calendar_clock','0.9em')} ${new Date(mod._tsDateAdded*1000).toLocaleDateString()}`;
+
+            otherInfoSpan.appendChild(authorSpan);
+            otherInfoSpan.appendChild(dateSpan);
             div1.appendChild(otherInfoSpan);
         }
 
@@ -87,9 +105,48 @@ window.currentPageStack.plusPage = plusPage;
         // Rendering of td1
         {
             var viewButton = document.createElement('button');
-            viewButton.innerHTML = icon('download', '0.9em') + ' View this mod';
-            viewButton.onclick = () => {
-                window.open(mod._sUrl, '_blank');
+            viewButton.innerHTML = icon('download', '0.9em') + ' Download this mod';
+            viewButton.onclick = async () => {
+                viewButton.disabled = true;
+                viewButton.innerHTML = icon('downloading', '0.9em') + ' Loading...';
+                viewButton.style.opacity = '0.6';
+
+                var dlpage = await fetch(`https://gamebanana.com/apiv11/Mod/${mod._idRow}/ProfilePage`);
+                dlpage = await dlpage.json();
+
+                var eligibleDownloads = [];
+
+                dlpage._aFiles.forEach(file => {
+                    try {
+                        var mmo = file._aModManagerIntegrations.map(x => x._idToolRow);
+                        if (mmo.includes(20575)) {
+                            eligibleDownloads.push(file);
+                        }
+                    }
+                    catch {
+                        //nothing, file is just not compatible
+                    }
+                });
+
+                if (eligibleDownloads.length === 0) {
+                    viewButton.innerHTML = icon('cancel', '0.9em') + ' Cannot download';
+                    await htmlAlert('No compatible files','This mod cannot be downloaded via Deltamod. Ask the owner to make it compatible with Deltamod!',[{text:'Ok',resolveWith:'ok'}]);
+                    return;
+                }
+
+                if (eligibleDownloads.length > 1) {
+                    viewButton.innerHTML = icon('cancel', '0.9em') + ' Multiple files found';
+                    var res = await htmlAlert('Multiple compatible files','This mod has multiple files compatible with Deltamod. Please choose the one to download.',eligibleDownloads.map(x => {return {text:x._sName,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}));
+                    if (!res) {
+                        return;
+                    }
+                    else {
+                        window.electronAPI.invoke('dlmodURL',[res]);
+                    }
+                    return;
+                }
+
+                window.electronAPI.invoke('dlmodURL',[eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl')]);
             };
             td1.appendChild(viewButton);
         }

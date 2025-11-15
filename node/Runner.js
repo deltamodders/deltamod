@@ -558,6 +558,15 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('dlmodURL', async (event, args) => {
+        const url = args[0];
+        page('goc-dl');
+        axios.get(url, { responseType: 'arraybuffer' }).then(response => {
+            var savepath = path.join(System.getTemporary(), 'modarchive_' + Date.now() + '.zip');
+            fs.writeFileSync(savepath, response.data);
+            Modstore.importMod(savepath);
+        });
+    });
     ipcMain.handle('getOS', () => {
         return {
             platform: process.platform,
