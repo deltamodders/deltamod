@@ -353,3 +353,11 @@ document.getElementsByClassName('sidebar')[0].addEventListener('mouseleave', () 
 });
 
 document.getElementsByClassName('sidebar-backdrop')[0].style.opacity = 0;
+
+Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
+    tippy(button, {
+        content: button.getAttribute('data-label') || uppercaseFirst(button.getAttribute('data-page')),
+        placement: 'right',
+        delay: [0, 0],
+    });
+});

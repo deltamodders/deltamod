@@ -7,6 +7,7 @@ const _7z = require('7zip-min');
 const { randomString, page } = require('./Utils');
 const { findModRoot } = require('./GamePatching');
 const { dialog } = require('electron');
+const { url } = require('inspector');
 
 const computerName = os.hostname();
 
@@ -214,6 +215,7 @@ function modList() {
                 folder:      mod,
                 size:        modSize, // New in 1.1.2
                 demo:        !!meta.demoMod,
+                url:         meta.url || null,
                 dependencies: modInfo.dependencies || [],
                 packageID: validatePID(meta.packageID),
                 // NEW: give the renderer stable identifiers

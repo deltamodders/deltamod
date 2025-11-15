@@ -156,10 +156,6 @@ async function createMod(mod) {
     descSpan.className = 'calibri';
     descSpan.style = 'font-size: 10px; color: #ffffffdd;';
     descSpan.innerText = purifyDescription(mod.description);
-    descSpan.onclick = () => {
-        htmlAlert(mod.name,(mod.description),[{text:'Close',resolveWith:'close'}]);
-    };
-    descSpan.style.cursor = 'pointer';
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
 
@@ -203,18 +199,6 @@ async function createMod(mod) {
     bigAhhContainer.appendChild(infoContainer);
 
     modNameContainer.appendChild(bigAhhContainer);
-
-    var developermode = await window.electronAPI.invoke('isDevMode', [""]);
-    if (developermode) {
-        let idSpan = document.createElement('p');
-        idSpan = adaptForIconsA(idSpan);
-        idSpan.className = 'calibri';
-        idSpan.style.fontSize = fontSize + 'px';
-        idSpan.style.color = '#888';
-        idSpan.innerHTML = `${icon('tag', fontSize + 'px')} ${mod.packageID}`;
-        idSpan.style.margin = '0px';
-        flexContnainer.appendChild(idSpan);
-    }
 
     // Column 2 (Actions)
     let enabledContainer = document.createElement('td');

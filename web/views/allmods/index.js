@@ -68,6 +68,17 @@ async function createMod(mod, compatible) {
     sizeSpan.id = `modsize-${mod.uid}`;
     modNameContainer.appendChild(sizeSpan);
 
+    let idSpan = document.createElement('p');
+    idSpan = adaptForIcons(idSpan);
+    idSpan.style.margin = '0px';
+    idSpan.style.marginTop = '4px';
+    idSpan.className = 'calibri';
+    idSpan.style.fontSize = 'smaller';
+    idSpan.style.color = '#888';
+    idSpan.innerHTML = `${icon('sell', 'small')} ${mod.packageID}`;
+    idSpan.id = `modid-${mod.uid}`;
+    modNameContainer.appendChild(idSpan);
+
     let compatibilitySpan = document.createElement('p');
     compatibilitySpan = adaptForIcons(compatibilitySpan);
     compatibilitySpan.style.margin = '0px';

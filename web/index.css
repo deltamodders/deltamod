@@ -136,6 +136,7 @@ body {
     border: 2px solid gray;
     height: fit-content;
     padding-top: 15px;
+    box-shadow: unset;
     padding-bottom: 15px;
     backdrop-filter: blur(7px);
     background-color: rgba(0, 0, 0, 0.3);
@@ -165,10 +166,9 @@ body {
 }
 
 .sidebar:hover {
-    border-radius: 20px;
-    width: calc(var(--sidebar-size) * 3.2 + 10px);
-    transform: translateY(-50%) translateX(5px);
-    scale: 1.06;
+    transform: translateY(-50%) translateX(15px);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.527);
+    border: 2px solid white;
     background-color: rgba(0, 0, 0, 0.5);
     opacity: 1;
 }
