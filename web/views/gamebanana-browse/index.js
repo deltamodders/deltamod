@@ -1,6 +1,6 @@
 function getThumbURL(mod) {
     try {
-        return mod._aPreviewMedia._aImages[0]?._sBaseUrl + "/" + mod._aPreviewMedia._aImages[0]._sFile100;
+        return mod._aPreviewMedia._aImages[0]?._sBaseUrl + "/" + mod._aPreviewMedia._aImages[0]._sFile530;
     }
     catch {
         return 'https://gamebanana.com/img/gblogo.png';
@@ -52,8 +52,9 @@ window.currentPageStack.plusPage = plusPage;
             var img = document.createElement('img');
             img.className = 'modThumbImg';
             img.src = getThumbURL(mod);
-            img.style.width = '64px';
-            img.style.height = '64px';
+            img.style.width = '120px';
+            img.style.aspectRatio = '16 / 9';
+            img.style.height = 'auto';
             img.style.objectFit = 'cover';
             img.style.objectPosition = 'center';
             div0.appendChild(img);
