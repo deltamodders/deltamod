@@ -11,7 +11,7 @@ const { url } = require('inspector');
 
 const computerName = os.hostname();
 
-async function importMod(filePath) {
+async function importMod(filePath, nextPage = "main") {
     // create unique mod folder
     const modPath = path.join(system.getPacketDatabase(), randomString(32));
     fs.mkdirSync(modPath, { recursive: true });
@@ -53,7 +53,7 @@ async function importMod(filePath) {
         });*/
 
         // simpler way to refresh the list
-        page("main");
+        if (nextPage && nextPage !== "donothing") page(nextPage);
 
         // Simple way to refresh the list
         // app.relaunch(properRelaunch());
@@ -61,7 +61,14 @@ async function importMod(filePath) {
         // process.exit();
     } catch (err) {
         console.error('Error importing mod:', err);
-        dialog.showErrorBox('Import failed', String(err));
+        dialog.showErrorBox('Import failed', String(err) + "\nThe mod was not imported.");
+        // clean up
+        try {
+            fs.rmdirSync(modPath, { recursive: true, force: true });
+        }
+        catch (_) {
+            console.warn('Failed to clean up mod folder after failed import:', modPath);
+        }
     }
 }
 

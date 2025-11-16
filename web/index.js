@@ -70,6 +70,12 @@ window.preloadAPI.onUpdateAvailable((info) => {
     });
 });
 
+window.preloadAPI.onDLMODProgress((info) => {
+    if (window.currentPageStack.dlmod) {
+        window.currentPageStack.dlmod(info);
+    }
+});
+
 window.preloadAPI.onDDS((info) => {
     if (window.currentPageStack.du) {
         window.currentPageStack.du(info.percentage);

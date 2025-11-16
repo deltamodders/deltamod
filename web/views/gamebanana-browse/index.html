@@ -4,6 +4,9 @@
         <span class="material-symbols-outlined">shopping_bag_speed</span>
         <span>The Mod Shop</span>
         <br>
+        <button onclick="page('')">
+            <span class="material-symbols-outlined smicon">home</span>
+        </button>
         <button onclick="window.currentPageStack.plusPage(-1)">
             <span class="material-symbols-outlined smicon">arrow_back</span>
         </button>
@@ -15,6 +18,7 @@
             <span class="material-symbols-outlined smicon">search</span>
         </button>
     </div>
+    <p id="searchInd" style="display: none;">Currently showing results for "gendered"</p>
     <table>
         <colgroup>
             <col style="width: 80%;">
@@ -29,7 +33,9 @@
             </th>
         </tr>
         <tbody id="modsBody">
-
+            <tr>
+                <td colspan="2" style="text-align: center;">Loading...</td>
+            </tr>
         </tbody>
     </table>
 </div>

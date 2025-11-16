@@ -560,12 +560,45 @@ function createWindow() {
 
     ipcMain.handle('dlmodURL', async (event, args) => {
         const url = args[0];
-        page('goc-dl');
-        axios.get(url, { responseType: 'arraybuffer' }).then(response => {
-            var savepath = path.join(System.getTemporary(), 'modarchive_' + Date.now() + '.zip');
-            fs.writeFileSync(savepath, response.data);
-            Modstore.importMod(savepath);
-        });
+        try {
+            const response = await axios({ method: 'get', url, responseType: 'stream' });
+            const savepath = path.join(System.getTemporary(), 'modarchive_' + Date.now() + '.zip');
+            const writer = fs.createWriteStream(savepath);
+
+            const totalLength = response.headers['content-length'] ? parseInt(response.headers['content-length'], 10) : null;
+            let downloaded = 0;
+
+            response.data.on('data', (chunk) => {
+                downloaded += chunk.length;
+                if (totalLength) {
+                    const percent = Math.round((downloaded / totalLength) * 100);
+                    event.sender.send('dlmodURL-progress', { percent, downloaded, queryme: args[1], error: false });
+                } else {
+                    event.sender.send('dlmodURL-progress', { queryme: args[1], error: false });
+                }
+            });
+
+            response.data.on('error', (err) => {
+                writer.close();
+                event.sender.send('dlmodURL-progress', { message: err.message || String(err), queryme: args[1], error: true });
+            });
+
+            response.data.pipe(writer);
+
+            await new Promise((resolve, reject) => {
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });
+
+            // final progress update
+            event.sender.send('dlmodURL-progress', { percent: 100, queryme: args[1], error: false });
+
+            Modstore.importMod(savepath, "donothing");
+            return savepath;
+        } catch (err) {
+            event.sender.send('dlmodURL-progress', { message: err.message || String(err), queryme: args[1], error: true, percent: 0 });
+            throw err;
+        }
     });
     ipcMain.handle('getOS', () => {
         return {
