@@ -131,7 +131,16 @@ function modList() {
     for (var mod of mods) {
         try {
             failureReason = "Unknown. Contact a developer!";
-            var modPath = path.join(system.getPacketDatabase(), mod);
+            var modPath = path.join(system.getPacketDatabase(), mod)
+            
+            if (fs.existsSync(path.join(modPath, '_deltamodInfo.json'))) {
+                fs.copyFileSync(path.join(modPath, '_deltamodInfo.json'), path.join(modPath, 'meta.json'));
+                fs.unlinkSync(path.join(modPath, '_deltamodInfo.json'));
+            }
+            if (fs.existsSync(path.join(modPath, '_icon.png'))) {
+                fs.copyFileSync(path.join(modPath, '_icon.png'), path.join(modPath, 'icon.png'));
+                fs.unlinkSync(path.join(modPath, '_icon.png'));
+            };
 
             // Zork's Patch: Find manifest anywhere in the mod folder, not only at root (safe)
             const manifestPath =
