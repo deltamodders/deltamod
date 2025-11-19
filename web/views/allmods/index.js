@@ -5,8 +5,12 @@ function purifyDescription(desc) {
     text = purify(text);
     // Normalize whitespace/newlines to single spaces
     text = text.replace(/\s+/g, ' ').trim();
-    // Truncate safely
-    const max = 100;
+    // Only add some words
+    const maxWords = 25;
+    const words = text.split(' ').slice(0, maxWords);
+    text = words.join(' ') + (words.length >= maxWords ? '...' : '');
+    // If too long, truncate as last resort
+    const max = 150;
     if (text.length > max) return text.substring(0, max) + '...';
     return text;
 }
@@ -42,6 +46,12 @@ async function createMod(mod, compatible) {
     descSpan.className = 'calibri';
     descSpan.style = 'font-size: 10px; color: #ffffffdd;';
     descSpan.innerText = purifyDescription(mod.description);
+    descSpan.style.cursor = 'pointer';
+    descSpan.onclick = () => {
+        const fullDesc = purify(mod.description);
+        if (fullDesc.length === 0) return;
+        htmlAlert(mod.name, fullDesc, [{ text: 'Close', resolveWith: 'Ok' }]);
+    }
     descSpan.id = `moddesc-${mod.uid}`;
     modNameContainer.appendChild(descSpan);
 

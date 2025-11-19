@@ -239,6 +239,7 @@ function modList() {
                 size:        modSize, // New in 1.1.2
                 demo:        !!meta.demoMod,
                 url:         meta.url || null,
+                customRGB:   meta.color || null,
                 dependencies: modInfo.dependencies || [],
                 packageID: validatePID(meta.packageID),
                 // NEW: give the renderer stable identifiers

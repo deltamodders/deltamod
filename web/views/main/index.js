@@ -5,8 +5,12 @@ function purifyDescription(desc) {
     text = purify(text);
     // Normalize whitespace/newlines to single spaces
     text = text.replace(/\s+/g, ' ').trim();
-    // Truncate safely
-    const max = 100;
+    // Only add some words
+    const maxWords = 25;
+    const words = text.split(' ').slice(0, maxWords);
+    text = words.join(' ') + (words.length >= maxWords ? '...' : '');
+    // If too long, truncate as last resort
+    const max = 150;
     if (text.length > max) return text.substring(0, max) + '...';
     return text;
 }
@@ -165,8 +169,8 @@ async function createMod(mod) {
     flexContnainer.style.justifyContent = 'left';
     flexContnainer.style.gap = '6px';
     flexContnainer.style.marginTop = '4px';
-    flexContnainer.style.border = '3px solid #474747a0';
-    flexContnainer.style.backgroundColor = '#1a1a1a54';
+    flexContnainer.style.backgroundColor = '#1d1d1dff';
+    flexContnainer.style.boxShadow = '0 0 5px #ffffff34';
     flexContnainer.style.borderRadius = '5px';
     flexContnainer.style.width = 'fit-content';
     flexContnainer.style.padding = '4px';
@@ -219,11 +223,19 @@ async function createMod(mod) {
         enabledContainer.appendChild(enabled);
     }
 
-    var prevalColor = getPredominantColor(img);
-    var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40, 40, 40, 0) 100px)`;
-    modNameContainer.style.background = `${cssStyle}`;
-    modRow.appendChild(modNameContainer);
-    modRow.appendChild(enabledContainer);
+    if (!mod.customRGB)
+    {
+        var prevalColor = getPredominantColor(img);
+        var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40, 40, 40, 0) 100px)`;
+        modNameContainer.style.background = `${cssStyle}`;
+        modRow.appendChild(modNameContainer);
+        modRow.appendChild(enabledContainer);
+    }
+    else {
+        modNameContainer.style.background = `linear-gradient(90deg, rgba(${mod.customRGB.r}, ${mod.customRGB.g}, ${mod.customRGB.b}, 0.5) 0%, rgba(40, 40, 40, 0) 100px)`;
+        modRow.appendChild(modNameContainer);
+        modRow.appendChild(enabledContainer);
+    }
 
     document.getElementById('modlist').appendChild(modRow);
     return modRow;
