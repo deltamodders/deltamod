@@ -9,8 +9,10 @@
 <body>
     <div class="win">
         <div class="organizer">
-            <img src="lancer.gif" alt="Lancer" width="130" style="margin-bottom: 10px;">
-            <h1><i>Deltamod encountered an error!</i></h1>
+            <img src="dog-maraca.gif" alt="Dog Maraca" width="130" style="margin-bottom: 10px;">
+            <h1>
+                <marquee behavior="scroll" direction="left" scrollamount="10">Deltamod reportedly crashed, according to recent findings made by the error screen.</marquee>
+            </h1>
             <p>If you want to report it, go to "Documents" > "deltamod" and find the file named <code id="errorfilename">(shit)</code>. You can then send its contents to a Deltamod dev.</p>
             <div class="button-container">
                 <button id="showerror">Show error file</button>
@@ -62,19 +64,17 @@
         align-items: center;
         width: 100%;
     }
-    @keyframes dogAppear {
-        0% {
-            transform: translateX(400%) rotate(20deg);
-        }
-        100% {
-            transform: translateX(0%) rotate(0deg);
-
-            
-        }
-    }
     img {
-        animation: dogAppear 2s linear forwards;
-    }
+            image-rendering: -webkit-optimize-contrast; /* Safari */
+            image-rendering: -moz-crisp-edges;         /* Firefox */
+            image-rendering: -o-crisp-edges;
+            image-rendering: pixelated;                /* Chrome / modern */
+            image-rendering: crisp-edges;
+            -ms-interpolation-mode: nearest-neighbor;  /* IE */
+            transform-origin: center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
     .organizer {
 
     }
@@ -111,24 +111,12 @@
             }
         }
     });
-
-    document.querySelector('img').addEventListener('animationend', async () => {
-        var laughAudio = new Audio('laugh.mp3');
-        let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
-        if (shouldPlayAudio) {
-            laughAudio.play().catch((e) => {
-                console.error("Audio playback failed:", e);
-            });
-        }
-        document.querySelector('img').style.transform = 'translateX(0%) rotate(0deg)';
-    });
-
     function randomFloatInRange(min, max) {
         return Math.random() * (max - min) + min;
     }
 
     (async () => {
-        var a = new Audio('dogcheck.mp3');
+        var a = new Audio('ost.mp3');
         a.playbackRate = 1;
         a.loop = true;
         let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);

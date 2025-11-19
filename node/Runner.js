@@ -512,6 +512,20 @@ function createWindow() {
                 dialog.showErrorBox('Screenshot Error', 'Failed to take screenshot.');
             }
         });
+        globalShortcut.register('Control+Alt+Shift+M', () => {
+            const snapshot = require('v8').getHeapSnapshot();
+            const filePath = path.join(app.getPath('desktop'), `DeltamodHeap-${Date.now()}.heapsnapshot`);
+            const fileStream = fs.createWriteStream(filePath);
+
+            snapshot.pipe(fileStream);
+
+            dialog.showMessageBox(win, {
+                type: 'info',
+                title: 'Heap Snapshot Saved',
+                message: `Heap snapshot saved to: ${filePath}`,
+                buttons: ['OK']
+            });
+        });
     });
 
     win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
@@ -1118,10 +1132,10 @@ function createWindow() {
     ipcMain.handle('writeToDocuments', async (event, args) => {
         try {
             const desktopPath = app.getPath('documents');
-            if (!fs.existsSync(path.join(desktopPath, 'deltamod'))) {
-                fs.mkdirSync(desktopPath + "/deltamod");
+            if (!fs.existsSync(path.join(desktopPath, 'deltamodErrors'))) {
+                fs.mkdirSync(desktopPath + "/deltamodErrors");
             }
-            const filePath = path.join(desktopPath, 'deltamod', args[1]);
+            const filePath = path.join(desktopPath, 'deltamodErrors', args[1]);
             await fs.promises.writeFile(filePath, args[0], 'utf8');
             console.log(`File written to documents: ${filePath}`);
         }

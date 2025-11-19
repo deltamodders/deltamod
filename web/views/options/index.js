@@ -93,7 +93,7 @@ window.currentPageStack.cat = async function(cat) {
             }, 'Open');
             break;
         case 'ui':
-            await addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background. The dogcheck will still have music.', 'audio');
+            await addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background.', 'audio');
 
             await addButton('Select a theme', 'Opens the theme selection menu.', async () => {
                 page('themesel');
