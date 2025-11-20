@@ -51,7 +51,14 @@ async function handleProtocolLaunch(url) {
 
             mkdirSync(dirname(filepath), { recursive: true });
 
-            var archiveData = await fetch(modArchive).then(x => x.bytes());
+            try {
+                var archiveData = await fetch(modArchive).then(x => x.bytes());
+            }
+            catch (e) {
+                page("main");
+                dialog.showErrorBox('Download failed', 'The mod you\'re attempting to download from GameBanana could not be reached. Please check your internet connection and try again.');
+                return;
+            }
             writeFileSync(filepath, archiveData);
 
             log("Download successful -- extracting using 7zip");

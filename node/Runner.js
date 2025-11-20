@@ -133,11 +133,19 @@ async function getInstallations(suppressWarnings = false) {
  * @param {Error} err The error to show
  */
 function errorWin(err) {
-    if (err.stack == null) {
-        setSharedVar('error', err.toString() + "\n No stack trace available");
-    } else {
-        setSharedVar('error', err.stack);
-    }
+    var filename = 'error_' + Date.now() + '.log';
+    var whereWrite = path.join(app.getPath('documents'), 'deltamodErrors', filename);
+    var heapScreenshot = require('v8').getHeapSnapshot();
+    var heapFile = fs.createWriteStream(whereWrite.replace('.log', '.heapsnapshot'));
+    var error = (err.stack || err.toString());
+
+    setSharedVar('error', error);
+    setSharedVar('filename', filename);
+    setSharedVar('filepath', whereWrite);
+
+    fs.writeFileSync(whereWrite, error, 'utf8');
+    heapScreenshot.pipe(heapFile);
+
     win.loadURL('deltapack://web/views/errorWrt/index.html');
 }
 
@@ -417,8 +425,7 @@ function createWindow() {
     */
 
     ses.protocol.handle('http', async (request) => {
-        setSharedVar('error', 'HTTP is not supported, please use HTTPS instead.');
-        win.loadURL('deltapack://web/views/errorWrt/index.html');
+        errorWin(new Error('HTTP protocol is not supported. Please use HTTPS for secure connections.'));
     });
 
     ses.protocol.handle('packet', async (request) => {
@@ -570,6 +577,10 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+    
+    ipcMain.handle('showItem', (event, args) => {
+        shell.showItemInFolder(args[0]);
     });
 
     ipcMain.handle('dlmodURL', async (event, args) => {
@@ -1124,55 +1135,6 @@ function createWindow() {
     });
 
     /*
-     * writeToDocuments
-     * Writes a file to the documents folder.
-     * args[0] is the content of the file.
-     * args[1] is the name of the file.
-     */
-    ipcMain.handle('writeToDocuments', async (event, args) => {
-        try {
-            const desktopPath = app.getPath('documents');
-            if (!fs.existsSync(path.join(desktopPath, 'deltamodErrors'))) {
-                fs.mkdirSync(desktopPath + "/deltamodErrors");
-            }
-            const filePath = path.join(desktopPath, 'deltamodErrors', args[1]);
-            await fs.promises.writeFile(filePath, args[0], 'utf8');
-            console.log(`File written to documents: ${filePath}`);
-        }
-        catch (err) {
-            console.error('Error writing to documents:', err);
-        }
-    });
-
-    /*
-     * showFileInDocuments
-     * Shows a file in the OS's file browser.
-     * args[0] is the name of the file.
-     */
-    ipcMain.handle('showFileInDocuments', async (event, args) => {
-        const desktopPath = app.getPath('documents');
-        if (!fs.existsSync(path.join(desktopPath, 'deltamod'))) {
-            return;
-        }
-        const filePath = path.join(desktopPath, 'deltamod', args[0]);
-        shell.showItemInFolder(filePath.toString());
-    });
-
-    /*
-     * openFileInDocuments
-     * Opens a file in the OS's file browser.
-     * args[0] is the name of the file.
-     */
-    ipcMain.handle('openFileInDocuments', async (event, args) => {
-        const desktopPath = app.getPath('documents');
-        if (!fs.existsSync(path.join(desktopPath, 'deltamod'))) {
-            return;
-        }
-        const filePath = path.join(desktopPath, 'deltamod', args[0]);
-        shell.openPath(filePath.toString());
-    });
-
-    /*
      * getUniqueFlag
      * Returns the value of a unique flag.
      * args[0] is the name of the flag.
@@ -1436,10 +1398,6 @@ function createWindow() {
             }
 
             win.show();
-
-            if (error) {
-                errorWin(error);
-            }
 
             if (KeyValue.readUniqueFlag('outputDelta')) {
                 try {
