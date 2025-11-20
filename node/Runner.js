@@ -579,6 +579,11 @@ function createWindow() {
         return { action: 'allow' };
     });
     
+    ipcMain.handle('fullscreenMe', (event, args) => {
+        const senderWin = BrowserWindow.fromWebContents(event.sender);
+        senderWin.setFullScreen(true);
+    });
+
     ipcMain.handle('showItem', (event, args) => {
         shell.showItemInFolder(args[0]);
     });

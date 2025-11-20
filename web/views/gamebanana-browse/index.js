@@ -7,6 +7,12 @@ function getThumbURL(mod) {
     }
 }
 
+function roundViews(views) {
+    const n = Number(views) || 0;
+    if (n >= 1000) return Math.round(n / 1000) + 'k';
+    return String(n);
+}
+
 let capi = '';
 let csearch = '';
 
@@ -119,6 +125,10 @@ window.currentPageStack.plusPage = plusPage;
     var response = await fetch(furl);
     var data = await filter(await response.json());
 
+    var featured = await fetch("https://gamebanana.com/apiv11/Game/6755/TopSubs");
+    var featuredData = await featured.json();
+    var featuredIDs = featuredData.map(x => {return {id: x._idRow, period: x._sPeriod};});
+
     table.innerHTML = '';
 
     try {
@@ -151,6 +161,8 @@ window.currentPageStack.plusPage = plusPage;
                 img.src = getThumbURL(mod);
                 img.style.width = '120px';
                 img.style.aspectRatio = '16 / 9';
+                img.style.borderRadius = '4px';
+                img.style.border = '1px solid #ccc';
                 img.style.height = 'auto';
                 img.style.objectFit = 'cover';
                 img.style.objectPosition = 'center';
@@ -172,16 +184,20 @@ window.currentPageStack.plusPage = plusPage;
 
                 var otherInfoSpan = document.createElement('div');
                 otherInfoSpan.className = 'modOtherInfoSpan';
-                otherInfoSpan.style.display = 'block';
+                otherInfoSpan.style.display = 'grid';
+                otherInfoSpan.style.gridTemplateColumns = 'repeat(3, 1fr)'; // 3 columns
+                otherInfoSpan.style.gridAutoRows = 'auto'; // allow multiple rows (up to 3 rows if needed)
+                otherInfoSpan.style.gap = '6px';
                 otherInfoSpan.style.fontSize = '0.8em';
                 otherInfoSpan.style.color = '#888888';
-                otherInfoSpan.style.marginTop = '4px';
+                otherInfoSpan.style.marginTop = '8px';
+                otherInfoSpan.style.width = '100%';
+                otherInfoSpan.style.alignItems = 'center';
 
                 var authorSpan = document.createElement('span');
                 authorSpan.className = 'modAuthorSpan';
                 authorSpan.style.display = 'block';
                 authorSpan.style.marginRight = '12px';
-                authorSpan.style.marginBottom = '8px';
                 authorSpan.innerHTML = `<img src="${mod._aSubmitter._sAvatarUrl}" alt="${mod._aSubmitter._sName}" class="modAuthorAvatar"> ${mod._aSubmitter._sName}`;
                 authorSpan.onclick = () => {
                     window.open(mod._aSubmitter._sProfileUrl, '_blank');
@@ -191,19 +207,51 @@ window.currentPageStack.plusPage = plusPage;
                 var categorySpan = document.createElement('span');
                 categorySpan.className = 'modCategorySpan';
                 categorySpan.style.display = 'block';
-                categorySpan.style.marginBottom = '8px';
                 categorySpan.style.marginRight = '12px';
                 categorySpan.innerHTML = `${icon('folder','0.9em')} ${mod._aRootCategory._sName}`;
-                
 
                 var dateSpan = document.createElement('span');
                 dateSpan.className = 'modDateSpan';
                 dateSpan.style.display = 'block';
                 dateSpan.innerHTML = `${icon('calendar_clock','0.9em')} ${new Date(mod._tsDateAdded*1000).toLocaleDateString()}`;
 
+                var viewsSpan = document.createElement('span');
+                viewsSpan.className = 'modViewsSpan';
+                viewsSpan.style.display = 'block';
+                viewsSpan.innerHTML = `${icon('visibility','0.9em')} ${roundViews(mod._nViewCount)}`;
+
+                var e = null;
+                if (featuredIDs.find(x => x.id === mod._idRow)) {
+                    biggerSpan.style.color = 'gold';
+                    img.style.border = '1px solid gold';
+                    var periodsDesc = [
+                        ["today","Best of today"],
+                        ["week","Best of this week"],
+                        ["month","Best of this month"],
+                        ["3month","Best of last 3 months"],
+                        ["6month","Best of last 6 months"],
+                        ["year","Best of this year"],
+                        ["alltime","All-Time Best"]
+                    ]
+                    var featSpan = document.createElement('span');
+                    featSpan.className = 'modFeaturedSpan';
+                    featSpan.style.display = 'inline-block';
+                    for (let pd of periodsDesc) {
+                        if (featuredIDs.find(x => x.id === mod._idRow && x.period === pd[0])) {
+                            featSpan.innerHTML = `${icon((pd[0] == 'alltime' ? "award_star" : "editor_choice"),'0.9em')} ${pd[1]}`;
+                            break;
+                        }
+                    }
+                    featSpan.style.color = 'gold';
+                    featSpan.style.marginRight = '12px';
+                    e = featSpan;
+                }
+
                 otherInfoSpan.appendChild(authorSpan);
                 otherInfoSpan.appendChild(categorySpan);
                 otherInfoSpan.appendChild(dateSpan);
+                otherInfoSpan.appendChild(viewsSpan);
+                if (e) otherInfoSpan.appendChild(e);
                 div1.appendChild(otherInfoSpan);
             }
 

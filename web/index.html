@@ -52,7 +52,8 @@
                 </button>
             </div>
 
-            <div class="sidebar-ribbon">
+            <!-- JS should display this if user toggled GameBanana specific features -->
+            <div class="sidebar-ribbon" style="display: none;" id="shopRibbon">
                 <button onclick="page('gamebanana-browse')" class="sidebar-button" data-page="gamebanana-browse" data-label="Browse GameBanana for new mods">
                     <span class="material-symbols-outlined">shopping_bag_speed</span>
                 </button>
@@ -79,4 +80,5 @@
     
 </div>
 <script src="index.js"></script>
+<script src="controllers.js"></script>
 </html>

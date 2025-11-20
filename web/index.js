@@ -367,3 +367,22 @@ Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => 
         delay: [0, 0],
     });
 });
+
+(async () => {
+    var gbflag = await window.electronAPI.invoke('getUniqueFlag', ['SHOP']);
+    if (gbflag && navigator.onLine) {
+        document.getElementById('shopRibbon').style.display = 'block';
+    }
+
+    if (!localStorage.getItem('seenShopAlert') && !gbflag && navigator.onLine) {
+        localStorage.setItem('seenShopAlert', 'true');
+        var res = await htmlAlert('Deltamod Mod Shop', 'Do you wish to enable the Mod Shop? A brand new way to get your mods directly from this app. This service uses GameBanana. (You can always toggle this setting in the Options)', [
+            { text: 'Yes', resolveWith: true },
+            { text: 'No', resolveWith: false }
+        ]);
+        await window.electronAPI.invoke('setUniqueFlag', ['SHOP', res]);
+        if (res) {
+            window.location.reload();
+        }
+    }
+})();
