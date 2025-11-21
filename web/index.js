@@ -162,14 +162,14 @@ function icon(name, fontSize) {
     return "<span class=\"material-symbols-outlined\" style=\"font-size: " + fontSize + "\">" + name + "</span>";
 }
 async function refreshTheme(refreshAudio = true) {
-    theme = await fetch('themeprot://' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
-    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://' + theme.background + ')';
+    theme = await fetch('themeprot://data/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
     if (refreshAudio) {
         audio.pause();
         audio.currentTime = 0;
         audio.loop = true;
         audio.volume = 0.7;
-        audio.src = 'themeprot://' + theme.mainSong;
+        audio.src = 'themeprot://mus/' + theme.mainSong;
         audio.play();
         page(pageN);
     }
@@ -187,8 +187,8 @@ async function page(name) {
         name = 'bakedhome';
     }
     window.electronAPI.invoke('showWindow', []);
-    theme = await fetch('themeprot://' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
-    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://' + theme.background + ')';
+    theme = await fetch('themeprot://data/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
     // first render the fantastidynamic
     try {
         theme.dynamic.forEach(dynamicEvent => {
@@ -258,7 +258,7 @@ async function page(name) {
             audio.pause();
             audio.currentTime = 0;
             if (audioSrc[1] == 'mainTheme.mp3') {
-                audio.src = 'themeprot://' + theme.mainSong;
+                audio.src = 'themeprot://mus/' + theme.mainSong;
             }
             else {
                 audio.src = './' + audioSrc[1];

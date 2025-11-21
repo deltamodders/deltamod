@@ -432,6 +432,9 @@ function createWindow() {
         }
         if (!fs.existsSync(path.join(app.getPath('userData'), 'customThemes'))) {
             fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes'), { recursive: true });
+            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'data'), { recursive: true });
+            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'img'), { recursive: true });
+            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'mus'), { recursive: true });
         }
         let pospath1 = path.join(__dirname, '..', 'web/themes', url.hostname + url.pathname);
         let pospath2 = path.join(app.getPath('userData'), 'customThemes', url.hostname + url.pathname);
@@ -936,16 +939,16 @@ function createWindow() {
         fs.writeFileSync(themeHost, args[0]);
     });
     ipcMain.handle('getThemes', async () => {
-        var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes')).filter(f => f.endsWith('.theme.json'));
-        var available2 = fs.readdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes')).filter(f => f.endsWith('.theme.json'));
+        var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes', 'data')).filter(f => f.endsWith('.theme.json'));
+        var available2 = fs.readdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data')).filter(f => f.endsWith('.theme.json'));
         return [...available.map(f => {
             return {
-                ...JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', f), 'utf8')),
+                ...JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', 'data', f), 'utf8')),
                 builtIn: true
             };
         }), ...available2.map(f => {
             return {
-                ...JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', f), 'utf8')),
+                ...JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', f), 'utf8')),
                 builtIn: false
             };
         }).filter(x => {
@@ -962,17 +965,8 @@ function createWindow() {
     */
     ipcMain.handle('getTheme', async () => {
         var themeHost = System.getSystemFile('_theme', true);
-        if (fs.existsSync(themeHost)) {
-            var theme = fs.readFileSync(themeHost, 'utf8');
-            if (!fs.existsSync(path.join(__dirname, '..', 'web', 'themes', theme + '.theme.json'))) {
-                //errorWin('The theme "' + theme + '" does not exist. Please select a valid theme.');
-                return 'base';
-            }
-            return theme;
-        } else {
-            fs.writeFileSync(themeHost, 'base');
-            return 'base';
-        }
+        var theme = fs.readFileSync(themeHost, 'utf8');
+        return theme;
     });
 
     /*
