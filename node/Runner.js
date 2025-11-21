@@ -150,6 +150,7 @@ function errorWin(err) {
 }
 
 process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
     if (win) {
         setSharedVar('error', err.toString() + "\n" + (err.stack || 'No stack trace available'));
         win.loadURL('deltapack://web/views/errorWrt/index.html');

@@ -9,8 +9,21 @@ function error() {
     fetch('http://google.com');
 }
 
-async function htmlAlert(title, message, buttons) {
+var alertCache = [];
+var isAlertShowing = false;
+async function htmlAlert(t,m,b) {
+    if (isAlertShowing) {
+        return new Promise((resolve, reject) => {
+            alertCache.push({title: t, message: m, buttons: b, resolve: resolve, reject: reject});
+        });
+    }
+    else {
+        return htmlAlertRaw(t, m, b);
+    }
+}
+async function htmlAlertRaw(title, message, buttons) {
     return new Promise((resolve, reject) => {
+        isAlertShowing = true;
         var alertMain = document.getElementsByClassName('alertMain')[0];
         var alertMsg = alertMain.getElementsByClassName('alertMsg')[0];
 
@@ -31,6 +44,7 @@ async function htmlAlert(title, message, buttons) {
             btn.textContent = button.text;
             btn.onclick = function() {
                 alertMain.style.display = 'none';
+                isAlertShowing = false;
                 if (button.resolveWith) {
                     resolve(button.resolveWith);
                     return;
@@ -40,6 +54,14 @@ async function htmlAlert(title, message, buttons) {
                     return;
                 }
                 if (button.onClick) button.onClick();
+
+                // Check if there are more alerts in the cache
+                if (alertCache.length > 0) {
+                    setTimeout(() => {
+                        var nextAlert = alertCache.shift();
+                        htmlAlertRaw(nextAlert.title, nextAlert.message, nextAlert.buttons).then(nextAlert.resolve).catch(nextAlert.reject);
+                    }, 100);
+                }
                 return;
             }
             buttonsHTML.appendChild(btn);
@@ -320,6 +342,22 @@ if (!window.electronAPI) {
         await page('main');
 
         window.electronAPI.invoke('executeArgumentCmd',[]);
+        
+        
+        try {
+            var anyMSG = await fetch('https://deltamodders.github.io/deltamod-msgrepo/msg.json?' + Date.now()).then(res => res.json());
+            anyMSG.availableMsg.forEach(async (msg) => {
+                if (localStorage.getItem('seenMSG_' + msg.id) != 'true' || msg.showEveryBoot) {
+                    localStorage.setItem('seenMSG_' + msg.id, 'true');
+                    await htmlAlert(msg.title, msg.message + "\n" + msg.sender, [
+                        { text: 'OK' }
+                    ]);
+                }
+            });
+        }
+        catch (e) {
+            console.log('No MSGs found or error fetching them.');
+        }
     } else {
         await page('locate');
         window.electronAPI.invoke('executeArgumentCmd',[]);
