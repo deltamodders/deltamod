@@ -1,6 +1,6 @@
 {
     "name": "ANOTHER HIM",
-    "background": "commons/backgrounds/HIM.webp",
+    "background": "HIM.webp",
     "description": "A theme based on the starting screen from Chapter 1.",
     "mainSong": "mainTheme1.mp3",
     "id": "anotherhim",

@@ -1,6 +1,6 @@
 {
     "name": "Base Theme",
-    "background": "commons/backgrounds/fountain.gif",
+    "background": "fountain.gif",
     "mainSong": "mainTheme1Alt.mp3",
     "id": "base",
     "musicTrack": "My Castle Town - Toby Fox",
@@ -9,7 +9,7 @@
         {
             "type": "RANDOM_OCCURENCE",
             "override": {
-                "background": "commons/backgrounds/picazzo.png"
+                "background": "picazzo.png"
             }
         }
     ]

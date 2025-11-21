@@ -30,6 +30,7 @@ const console = require('./Console.js');
 const { handleProtocolLaunch } = require('./Protocol.js');
 const { isFeatureEnabled } = require('./FeatureFlags.js');
 const { valid } = require('node-html-parser');
+const { error } = require('console');
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
@@ -185,6 +186,22 @@ protocol.registerSchemesAsPrivileged([
       standard: true,
       secure: true,
       supportFetchAPI: true
+    }
+  },
+  {
+    scheme: 'packet',
+    privileges: {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true
+    }
+  },
+  {
+    scheme: 'themeprot',
+    privileges: {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true
     }
   },
   {
@@ -399,6 +416,41 @@ function createWindow() {
         return new Response(data, {
             headers: {
                 'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
+                'Content-Length': data.length,
+                'Cache-Control': 'no-cache'
+            }
+        });
+    });
+
+    ses.protocol.handle('themeprot', async (request) => {
+        const url = new URL(request.url);
+        // security
+        var combined = url.hostname+url.pathname;
+        if (combined.includes('..')) {
+            errorWin(new Error('Unsecure request made to themes protocol.'));
+            return new Response("bad");
+        }
+        if (!fs.existsSync(path.join(app.getPath('userData'), 'customThemes'))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes'), { recursive: true });
+        }
+        let pospath1 = path.join(__dirname, '..', 'web/themes', url.hostname + url.pathname);
+        let pospath2 = path.join(app.getPath('userData'), 'customThemes', url.hostname + url.pathname);
+        let finalPath = null;
+        if (fs.existsSync(pospath2)) {
+            finalPath = pospath2;
+        }
+        else {
+            finalPath = pospath1;
+        }
+
+        if (fs.existsSync(pospath1) && fs.existsSync(pospath2)) {
+            finalPath = pospath1; // prefer built-in theme files
+        }
+
+        const data = await fs.promises.readFile(finalPath);
+        return new Response(data, {
+            headers: {
+                'Content-Type': mime.lookup(finalPath.split('.')[finalPath.split('.').length - 1]) || 'application/octet-stream',
                 'Content-Length': data.length,
                 'Cache-Control': 'no-cache'
             }
@@ -885,9 +937,24 @@ function createWindow() {
     });
     ipcMain.handle('getThemes', async () => {
         var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes')).filter(f => f.endsWith('.theme.json'));
-        return available.map(f => {
-            return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', f), 'utf8'));
-        });
+        var available2 = fs.readdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes')).filter(f => f.endsWith('.theme.json'));
+        return [...available.map(f => {
+            return {
+                ...JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', f), 'utf8')),
+                builtIn: true
+            };
+        }), ...available2.map(f => {
+            return {
+                ...JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', f), 'utf8')),
+                builtIn: false
+            };
+        }).filter(x => {
+            var include = !available.map(n => n.replace('.theme.json','')).includes(x.id);
+            if (!include) {
+                console.log('Custom theme "' + x.id + '" ignored because a built-in theme with the same ID exists.');
+            }
+            return include;
+        })];
     });
     /*
      * getTheme

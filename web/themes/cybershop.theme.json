@@ -1,6 +1,6 @@
 {
     "name": "Cyber Shop",
-    "background": "commons/backgrounds/mshop.gif",
+    "background": "mshop.gif",
     "mainSong": "mshop.mp3",
     "description": "A theme based on the Shop in the Cyber World.",
     "musicTrack": "Sound Studio - Toby Fox",

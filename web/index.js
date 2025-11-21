@@ -161,15 +161,18 @@ function adaptForIcons(element) {
 function icon(name, fontSize) {
     return "<span class=\"material-symbols-outlined\" style=\"font-size: " + fontSize + "\">" + name + "</span>";
 }
-async function refreshTheme() {
-    theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
-    audio.pause();
-    audio.currentTime = 0;
-    audio.loop = true;
-    audio.volume = 0.7;
-    audio.src = './' + theme.mainSong;
-    audio.play();
-    page(pageN);
+async function refreshTheme(refreshAudio = true) {
+    theme = await fetch('themeprot://' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://' + theme.background + ')';
+    if (refreshAudio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.loop = true;
+        audio.volume = 0.7;
+        audio.src = 'themeprot://' + theme.mainSong;
+        audio.play();
+        page(pageN);
+    }
 }
 window.preloadAPI.onThemeChange(refreshTheme);
 
@@ -184,7 +187,8 @@ async function page(name) {
         name = 'bakedhome';
     }
     window.electronAPI.invoke('showWindow', []);
-    theme = await fetch('./themes/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    theme = await fetch('themeprot://' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://' + theme.background + ')';
     // first render the fantastidynamic
     try {
         theme.dynamic.forEach(dynamicEvent => {
@@ -208,7 +212,7 @@ async function page(name) {
     catch(e) {
         console.log('no dynamic theme');
     }
-    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(./' + theme.background + ')';
+
     window.currentPageStack = {};
     var purifiedHTML =  await fetch('./views/' + name + '/index.html').then(response => response.text());
     var runScripts = false;
@@ -254,7 +258,7 @@ async function page(name) {
             audio.pause();
             audio.currentTime = 0;
             if (audioSrc[1] == 'mainTheme.mp3') {
-                audio.src = './' + theme.mainSong;
+                audio.src = 'themeprot://' + theme.mainSong;
             }
             else {
                 audio.src = './' + audioSrc[1];

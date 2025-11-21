@@ -10,7 +10,7 @@
 
         var td0 = document.createElement('td');
         td0.classList.add('theme-entry');
-        td0.style.backgroundImage = `url('${theme.background}')`;
+        td0.style.backgroundImage = `url('themeprot://${theme.background}')`;
         td0.style.backgroundSize = 'cover';
         td0.style.backgroundRepeat = 'no-repeat';
         tr.appendChild(td0);

@@ -1,6 +1,6 @@
 {
     "name": "Hometown",
-    "background": "commons/backgrounds/home.png",
+    "background": "home.png",
     "mainSong": "hometown.mp3",
     "description": "A theme based on the Light World hometown area.",
     "musicTrack": "Another day in hometown - Toby Fox",
