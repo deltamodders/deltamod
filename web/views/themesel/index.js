@@ -1,5 +1,9 @@
 (async() => {
-    var themes = await window.electronAPI.invoke('getThemes', []);
+    var themes = (await window.electronAPI.invoke('getThemes', [])).sort((a, b) => {
+        if (a.builtIn && !b.builtIn) return -1;
+        if (!a.builtIn && b.builtIn) return 1;
+        return a.name.localeCompare(b.name);
+    });
     var currentTheme = await window.electronAPI.invoke('getTheme', []);
 
     for (let i = 0; i < themes.length; i++) {
@@ -10,7 +14,7 @@
 
         var td0 = document.createElement('td');
         td0.classList.add('theme-entry');
-        td0.style.backgroundImage = `url('themeprot://${theme.background}')`;
+        td0.style.backgroundImage = `url('themeprot://img/${theme.background}')`;
         td0.style.backgroundSize = 'cover';
         td0.style.backgroundRepeat = 'no-repeat';
         tr.appendChild(td0);
@@ -36,6 +40,14 @@
         mfxTag.classList.add('calibri');
         mfxTag.style.fontSize = '0.8em';
         td1.appendChild(mfxTag);
+
+        var ogTag = document.createElement('span');
+        ogTag.style.display = 'block';
+        ogTag.style.marginTop = '0.5em';
+        ogTag.innerHTML = icon('where_to_vote', '0.8em') + ` ${theme.builtIn ? 'Built-In Theme' : 'Custom Theme'}`;
+        ogTag.classList.add('calibri');
+        ogTag.style.fontSize = '0.8em';
+        td1.appendChild(ogTag);
 
         var td2 = document.createElement('td');
         td2.classList.add('theme-entry');
