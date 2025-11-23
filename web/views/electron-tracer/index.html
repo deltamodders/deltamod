@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electron IPC console</title>
+</head>
+<body>
+    <table>
+        <colgroup>
+            <col style="width: 30%;">
+            <col style="width: 30%;">
+            <col style="width: 40%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>Message</th>
+                <th>Arguments</th>
+                <th>IPC response</th>
+            </tr>
+        </thead>
+        <tbody id="msg"></tbody>
+    </table>
+</body>
+<script>
+    window.preloadAPI.onLog((args) => {
+        const tableBody = document.getElementById('msg');
+        const newRow = document.createElement('tr');
+        const newCell = document.createElement('td');
+        newCell.textContent = args.channel;
+        const evenNewerCell = document.createElement('td');
+        evenNewerCell.textContent = JSON.stringify(args.args.join(', '));
+        const evenNewerCell2 = document.createElement('td');
+        evenNewerCell2.textContent = JSON.stringify(args.leResponse);
+    
+        newRow.appendChild(newCell);
+        newRow.appendChild(evenNewerCell);
+        newRow.appendChild(evenNewerCell2);
+        tableBody.appendChild(newRow);
+
+        window.scrollTo(0, document.body.scrollHeight);
+    });
+</script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+</style>
+</html>

@@ -2,7 +2,13 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
     invoke: (channel, data) => {
-        return ipcRenderer.invoke(channel, data);
+        var leResponse = ipcRenderer.invoke(channel, data);
+        if (channel != 'log') {
+          leResponse.then((response) => {
+            ipcRenderer.invoke('logElectronAPI', [{ channel, args: data, leResponse: (response) }]);
+          });
+        }
+        return leResponse;
     }
 });
 

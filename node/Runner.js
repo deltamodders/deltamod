@@ -200,6 +200,8 @@ function asyncTimeout(amount) {
     })
 }
 
+let elecTracer;
+
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'deltapack',
@@ -616,10 +618,51 @@ function createWindow() {
         }
         return { action: 'allow' };
     });
+
+    ipcMain.handle('openElectronTracer', (event, args) => {
+        if (elecTracer) {
+            return;
+        }
+
+        elecTracer = new BrowserWindow({
+            width: 500,
+            height: 300,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: true,
+                partition: partition,
+                preload: path.join(__dirname, '..', 'web', 'views', 'electron-tracer', 'preload.js'),
+            }
+        });
+
+        elecTracer.setAlwaysOnTop(true);
+        elecTracer.setMenuBarVisibility(false);
+
+        elecTracer.loadURL('deltapack://web/views/electron-tracer/index.html');
+    });
+    ipcMain.handle('logElectronAPI' , (event, args) => {
+        try {
+            if (elecTracer) {
+                elecTracer.webContents.send('log', args[0]);
+            }
+        }
+        catch (e) {
+            console.error('Failed to log to Electron Tracer:', e);
+            elecTracer = null;
+        }
+    });
     
     ipcMain.handle('fullscreenMe', (event, args) => {
         const senderWin = BrowserWindow.fromWebContents(event.sender);
         senderWin.setFullScreen(true);
+    });
+
+    ipcMain.handle('deltamoddersDiscord', async (event, args) => {
+        var guildAPI = require('../package.json').discordAPI;
+        var get = await axios.get(guildAPI);
+        var data = get.data;
+
+        shell.openExternal(data.instant_invite);
     });
 
     ipcMain.handle('showItem', (event, args) => {
@@ -863,20 +906,20 @@ function createWindow() {
         if (fs.existsSync(gm3ppath) && !fs.existsSync(devicefusionpath)) {
             var attributes = require('./Utils.js').getFileVersion(gm3ppath);
             if (attributes) {
-                toreturn += `<br>(Using GM3P version ${attributes})`;
+                toreturn += `<br>GM3P version ${attributes}`;
             }
             else {
-                toreturn += `<br>(Using GM3P, version unknown)`;
+                toreturn += `<br>GM3P, version unknown`;
             }
         }
 
         if (fs.existsSync(devicefusionpath)) {
             var attributes = require('./Utils.js').getFileVersion(devicefusionpath);
             if (attributes) {
-                toreturn += `<br>(Using DEVICE_FUSION version ${attributes})`;
+                toreturn += `<br>DEVICE_FUSION ${attributes}`;
             }
             else {
-                toreturn += `<br>(Using DEVICE_FUSION, version unknown)`;
+                toreturn += `<br>DEVICE_FUSION, version unknown`;
             }
         }
 
