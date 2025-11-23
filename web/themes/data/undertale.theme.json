@@ -4,5 +4,6 @@
     "description": "A theme based on UNDERTALE.",
     "mainSong": "mainTheme4.mp3",
     "musicTrack": "RUINS - Toby Fox",
-    "id": "undertale"
+    "id": "undertale",
+    "color": "rgb(0, 98, 137)"
 }

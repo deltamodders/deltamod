@@ -4,5 +4,6 @@
     "mainSong": "mshop.mp3",
     "description": "A theme based on the Shop in the Cyber World.",
     "musicTrack": "Sound Studio - Toby Fox",
-    "id": "cybershop"
+    "id": "cybershop",
+    "color": "rgba(30, 10, 90, 1)"
 }

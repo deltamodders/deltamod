@@ -34,6 +34,27 @@ const { error } = require('console');
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
+function obtainThemes() {
+    var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes', 'data')).filter(f => f.endsWith('.theme.json'));
+        var available2 = fs.readdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data')).filter(f => f.endsWith('.theme.json'));
+        return [...available.map(f => {
+            return {
+                ...JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', 'data', f), 'utf8')),
+                builtIn: true
+            };
+        }), ...available2.map(f => {
+            return {
+                ...JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', f), 'utf8')),
+                builtIn: false
+            };
+        }).filter(x => {
+            var include = !available.map(n => n.replace('.theme.json','')).includes(x.id);
+            if (!include) {
+                console.log('Custom theme "' + x.id + '" ignored because a built-in theme with the same ID exists.');
+            }
+            return include;
+        })];
+}
 function validateDeltarune(deltapath) {
     const keyItems = ['data.win', 'DELTARUNE.exe'];
     const missingItems = [];
@@ -939,25 +960,7 @@ function createWindow() {
         fs.writeFileSync(themeHost, args[0]);
     });
     ipcMain.handle('getThemes', async () => {
-        var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes', 'data')).filter(f => f.endsWith('.theme.json'));
-        var available2 = fs.readdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data')).filter(f => f.endsWith('.theme.json'));
-        return [...available.map(f => {
-            return {
-                ...JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', 'data', f), 'utf8')),
-                builtIn: true
-            };
-        }), ...available2.map(f => {
-            return {
-                ...JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', f), 'utf8')),
-                builtIn: false
-            };
-        }).filter(x => {
-            var include = !available.map(n => n.replace('.theme.json','')).includes(x.id);
-            if (!include) {
-                console.log('Custom theme "' + x.id + '" ignored because a built-in theme with the same ID exists.');
-            }
-            return include;
-        })];
+        return obtainThemes();
     });
     /*
      * getTheme
@@ -966,6 +969,10 @@ function createWindow() {
     ipcMain.handle('getTheme', async () => {
         var themeHost = System.getSystemFile('_theme', true);
         var theme = fs.readFileSync(themeHost, 'utf8');
+        if (obtainThemes().filter(t => t.id === theme).length === 0) {
+            theme = 'base';
+            fs.writeFileSync(themeHost, theme);
+        }
         return theme;
     });
 
@@ -1359,6 +1366,10 @@ function createWindow() {
     */
     ipcMain.handle('getModListFull', async (event, args) => {
         return Modstore.modList();
+    });
+
+    ipcMain.handle('howManyMods', async (event, args) => {
+        return Modstore.howmany();
     });
 
     // Used as a relay to allow async handling

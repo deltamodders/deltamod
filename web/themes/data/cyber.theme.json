@@ -4,5 +4,6 @@
     "mainSong": "mainTheme2.mp3",
     "description": "A theme based on Cyber City from Chapter 2.",
     "musicTrack": "WELCOME TO THE CITY - Toby Fox",
-    "id": "cyber"
+    "id": "cyber",
+    "color": "rgba(6, 77, 43, 1)"
 }

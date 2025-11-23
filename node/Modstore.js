@@ -120,6 +120,10 @@ function validatePID(pid) {
     return pid.toLowerCase();
 }
 
+function howmany() {
+    return fs.readdirSync(system.getPacketDatabase()).length;
+}
+
 function modList() {
     var mods = fs.readdirSync(system.getPacketDatabase());
     var modList = [];
@@ -299,6 +303,7 @@ if (!fs.existsSync(system.getPacketDatabase())) {
 module.exports = {
     modList,
     importMod,
+    howmany,
     removeModSafe,
     getModImage
 };

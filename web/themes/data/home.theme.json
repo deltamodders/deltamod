@@ -4,5 +4,6 @@
     "mainSong": "hometown.mp3",
     "description": "A theme based on the Light World hometown area.",
     "musicTrack": "Another day in hometown - Toby Fox",
-    "id": "home"
+    "id": "home",
+    "color": "rgba(74, 40, 3, 1)"
 }

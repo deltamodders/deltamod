@@ -303,6 +303,9 @@ async function page(name) {
         window.scrollTo(0, 0);
     }
     pageN = name;
+    Array.from(document.querySelectorAll('th')).forEach(th => {
+        th.style.backgroundColor = theme.color;
+    });
     if (runScripts)
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
 }
