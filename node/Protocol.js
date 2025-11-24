@@ -6,6 +6,8 @@ const system = require("./System");
 const _7z = require("7zip-min");
 const { error } = require("console");
 const { importMod } = require("./Modstore");
+const fs = require("fs");
+const path = require("path");
 const { dialog } = require("electron");
 const { page, setSharedVar } = require("./Utils");
 
@@ -63,7 +65,11 @@ async function handleProtocolLaunch(url) {
 
             log("Download successful -- extracting using 7zip");
             const items = await _7z.list(filepath);
-            if ((!items.find(x => x.name === "meta.json") && !items.find(x => x.name === "_deltamodInfo.json")) || !items.find(x => x.name === "modding.xml")) {
+            var cantFindMeta = false;
+            if (!items.find(x => x.name === "meta.json") && !items.find(x => x.name === "_deltamodInfo.json")) {
+                cantFindMeta = true;
+            }
+            if (cantFindMeta || !items.find(x => x.name === "modding.xml")) {
                 error("Invalid archive -- couldn't find meta.json/deltamodInfo.json or modding.xml");
                 rmSync(filepath);
 
