@@ -560,14 +560,9 @@ function createWindow() {
     win = new BrowserWindow({
         width: w,
         height: h,
-        titleBarStyle: 'hidden',
         resizable: true,
+        frame: false,
         show: false,
-        titleBarOverlay: {
-            color: 'rgba(249,249,249,0)',
-            symbolColor: 'rgb(255, 255, 255)',
-            height: 28
-        },
         webPreferences: {
             nodeIntegration: true,
             partition: partition,

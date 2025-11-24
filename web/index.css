@@ -10,6 +10,31 @@
     padding-right: 10px;
 }
 
+.bar-button > span {
+    margin-top: 4px;
+    font-size: 15px !important;
+}
+
+.bar-button {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.23);
+    font-size: 15px;
+    width: 45px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-right: 3px;
+    margin-left: 3px;
+    height: 30px;
+    transform: translateY(-5px);
+}
+
+.close-button:hover {
+    background-color: rgba(255, 0, 0, 0.87);
+    color: white;
+}
+
 @font-face {
     font-family: 'Orchestra';
     src: url("./commons/orchestra.ttf") format("truetype");

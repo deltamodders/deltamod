@@ -23,8 +23,16 @@
             <pre id="errorPre"><code id="error"></code></pre>
         </div>
     </div>
+    <button id="close" onclick="window.close()">X</button>
 </body>
 <style>
+    #close {
+        position: fixed;
+        top: 0;
+        right: 0;
+        padding: 20px;
+        font-size: 19px;
+    }
     #errorPre {
         text-align: left;
         max-width: 100%;
