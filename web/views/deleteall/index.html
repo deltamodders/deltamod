@@ -1,0 +1,45 @@
+<div>
+    <h1 style="color: red;">Delete all</h1>
+    <p class="calibri">Via this page you will be able to delete all Deltamod data.</p>
+    <div style="font-family: 'Calibri';">
+        <p><b>You will lose:</b></p>
+        <ul>
+            <li>All your mods</li>
+            <li>All your installations</li>
+            <li>All your settings</li>
+        </ul>
+        <p><i>This action is irreversible! Are you sure you want to continue?</i></p>
+    </div>
+    <p>To continue, solve the puzzle below!</p>
+    <div class="puzzle">
+        <marquee behavior="left" direction="left" scrollamount="10" style="margin-top: 20px;">
+            <button class="puzBtn" style="background-color: green;" id="btn0" onclick="window.currentPageStack.unlockBtn(1,this)">Click me first!</button>
+        </marquee>
+        <marquee behavior="right" direction="right" scrollamount="15" style="margin-top: 20px;">
+            <button class="puzBtn" style="background-color: blue;" id="btn1" onclick="window.currentPageStack.unlockBtn(2,this)" disabled>Then, click me!</button>
+        </marquee>
+        <marquee behavior="left" direction="left" scrollamount="19" style="margin-top: 20px;">
+            <button class="puzBtn" style="background-color: gold;" id="btn2" onclick="window.currentPageStack.unlockBtn(3,this)" disabled>After them, me!</button>
+        </marquee>
+        <marquee behavior="right" direction="right" scrollamount="25" style="margin-top: 20px;">
+            <button class="puzBtn" style="background-color: red;" id="btn3" onclick="document.querySelector('.puzzle').style.display='none'; document.querySelector('.puzzleExpired').style.display='block';" disabled>Delete all data</button>
+        </marquee>
+    </div>
+    <div class="puzzleExpired" style="display: none; margin-top: 20px;">
+        <button onclick="window.electronAPI.invoke('initialize',[])">
+            <b>Delete all data</b>
+            <br>
+            <small>This operation is irreversible. Take care.</small>
+        </button>
+    </div>
+</div>
+
+<style>
+    .puzBtn {
+        font-family: 'Calibri'; color: white; padding: 10px 20px; border: none; cursor: pointer;
+    }
+    .puzBtn:disabled {
+        opacity: 0.5; cursor: not-allowed;
+    }
+</style>
+JSL

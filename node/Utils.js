@@ -59,9 +59,9 @@ function getSharedVar(name) {
     return sharedVariables[name];
 }
 
-function properRelaunch() {
+function properRelaunch(otherArgs=[]) {
   const a = process.argv.slice(1);
-  return { args: a.filter(x => !x.toLowerCase().startsWith("deltamod://")) }
+  return { args: [...a.filter(x => !x.toLowerCase().startsWith("deltamod://")), ...otherArgs] }
 }
 
 function logOnAccess(obj, logMsg) {

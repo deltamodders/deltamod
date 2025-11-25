@@ -849,6 +849,11 @@ function createWindow() {
         return destPath;
     });
 
+    ipcMain.handle('initialize', async (event, args) => {
+        app.relaunch(properRelaunch(['---initialize_deltamod']));
+        app.quit();
+    });
+
     ipcMain.handle('executeArgumentCmd', async (event, args) => {
         if (process.argv.includes('---initialize_deltamod')) {
             win.hide();
@@ -1006,7 +1011,13 @@ function createWindow() {
     */
     ipcMain.handle('getTheme', async () => {
         var themeHost = System.getSystemFile('_theme', true);
-        var theme = fs.readFileSync(themeHost, 'utf8');
+        try {
+            var theme = fs.readFileSync(themeHost, 'utf8');
+        }
+        catch(e) {
+            theme = 'base';
+            fs.writeFileSync(themeHost, theme);
+        }
         if (obtainThemes().filter(t => t.id === theme).length === 0) {
             theme = 'base';
             fs.writeFileSync(themeHost, theme);

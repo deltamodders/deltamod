@@ -45,13 +45,16 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
 }
 
 
-async function addButton(name, description, click, buttonText, enabled = true, disabledReason = '') {
+async function addButton(name, description, click, buttonText, enabled = true, disabledReason = '', colour = '') {
     const table = document.querySelector('tbody');
     const tr = document.createElement('tr');
 
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
     span.innerText = name;
+    if (colour != '') {
+        span.style.color = colour;
+    }
     tdLabel.appendChild(span);
 
     tdLabel.appendChild(document.createElement('br'));
@@ -151,6 +154,10 @@ window.currentPageStack.cat = async function(cat) {
             await addButton('Reboot in Developer Mode', 'Reboots in developer mode, a mode which allows you to use the DevTools.', async () => {
                 await window.electronAPI.invoke('rebootDev', []);
             }, 'Open');
+
+            await addButton('Delete all user data', 'Deletes all Deltamod data. Irreeversible!', async () => {
+                page('deleteall');
+            }, 'Delete', true, '', 'red');
             break;
     }
 }
