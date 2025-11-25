@@ -21,10 +21,6 @@
     src: url("./ubuntu.ttf") format("truetype");
 }
 
-input, progress {
-    accent-color: rgb(0, 123, 121) !important;
-}
-
 /* Hide scrollbar for all browsers */
 * {
     scrollbar-width: none;
@@ -131,6 +127,7 @@ table {
 table:hover {
     box-shadow: 0 0 40px rgb(100, 100, 100);
 }
+
 th,
 td {
     border: 1px solid rgb(66, 66, 66);
@@ -151,7 +148,7 @@ td {
     }
 }
 th {
-    color: rgb(200, 200, 200);
+    color: rgba(255, 255, 255, 1);
     border-radius: 4px;
     animation: 0.5s spawn ease-in-out;
 }

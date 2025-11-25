@@ -5,10 +5,23 @@ var pageN = null;
 var addedStyle = null;
 var update = false;
 
+function brightenColor(r,g,b, amount) {
+    r = Math.min(255, r + amount);
+    g = Math.min(255, g + amount);
+    b = Math.min(255, b + amount);
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
 function genbtnstyles() {
     Array.from(document.querySelectorAll('button:not(.sidebar-button)')).forEach(th => {
         th.style.border = '1.3px solid ' + theme.color;
     });
+
+    Array.from(document.querySelectorAll('input, progress')).forEach(th => {
+        th.style.accentColor = theme.color;
+    });
+
+    document.querySelector('.sidebar').style.borderColor = theme.color;
 }
 
 function error() {
