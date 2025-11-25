@@ -111,7 +111,7 @@
 
 .winb {
     z-index: 100000;
-    border: 3px solid rgba(255, 255, 255, 0.582);
+    border: 3px solid var(--theme-color);
     position: fixed;
     top: 0;
     left: 0;
@@ -313,7 +313,7 @@ h1 {
     font-size: 10px;
     background-color: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(3px);
-    border-bottom: 1px solid rgb(255, 255, 255);
+    border-bottom: 2px solid var(--theme-color);
     -webkit-app-region: drag;
     z-index: 1000;
 }
