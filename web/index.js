@@ -13,7 +13,7 @@ function brightenColor(r,g,b, amount) {
 }
 
 function genbtnstyles() {
-    Array.from(document.querySelectorAll('button:not(.sidebar-button)')).forEach(th => {
+    Array.from(document.querySelectorAll('button:not(.sidebar-button), input, select')).forEach(th => {
         th.style.border = '1.3px solid ' + theme.color;
     });
 
