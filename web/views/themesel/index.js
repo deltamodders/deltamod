@@ -70,4 +70,6 @@
         tr.appendChild(td1);
         tr.appendChild(td2);
     }
+
+    genbtnstyles();
 })();

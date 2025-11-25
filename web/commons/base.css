@@ -68,7 +68,6 @@ button, input, select {
     font-size: 16px;
     color: white;
     background-color: rgb(15, 15, 15);
-    border: 1px solid rgb(66, 66, 66);
     border-radius: 7px;
     padding: 5px;
     cursor: pointer;

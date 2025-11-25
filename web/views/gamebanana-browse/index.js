@@ -327,4 +327,6 @@ window.currentPageStack.plusPage = plusPage;
         tr.appendChild(td);
         table.appendChild(tr);
     }
+
+    genbtnstyles();
 })();

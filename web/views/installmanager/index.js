@@ -196,4 +196,7 @@
     
     tbody.appendChild(newRow);
     tbody.appendChild(steamRow);
+
+    genbtnstyles();
+    
 })();

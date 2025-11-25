@@ -1,0 +1,9 @@
+{
+    "name": "Home",
+    "background": "myhouse.jpg",
+    "mainSong": "myhome.mp3",
+    "description": "Your home is like a warm embrace.",
+    "musicTrack": "You can always come home - Toby Fox",
+    "id": "myhouse",
+    "color": "rgba(145, 75, 0, 1)"
+}

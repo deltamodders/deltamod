@@ -355,6 +355,8 @@ function loadInst(index) {
         document.getElementById('importModBtn').style.opacity = 0.3;
     }
     window._pageArguments = null;
+
+    genbtnstyles();
 })();
 
 function patchAndRun() {

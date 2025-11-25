@@ -5,6 +5,12 @@ var pageN = null;
 var addedStyle = null;
 var update = false;
 
+function genbtnstyles() {
+    Array.from(document.querySelectorAll('button:not(.sidebar-button)')).forEach(th => {
+        th.style.border = '1.3px solid ' + theme.color;
+    });
+}
+
 function error() {
     fetch('http://google.com');
 }
@@ -306,6 +312,7 @@ async function page(name) {
     Array.from(document.querySelectorAll('th')).forEach(th => {
         th.style.backgroundColor = theme.color;
     });
+    genbtnstyles();
     if (runScripts)
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
 }

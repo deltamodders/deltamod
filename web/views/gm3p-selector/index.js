@@ -62,4 +62,6 @@
         releaseCard.appendChild(buttonContainer);
         viewport.appendChild(releaseCard);
     }
+
+    genbtnstyles();
 })();

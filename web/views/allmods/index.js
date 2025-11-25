@@ -193,4 +193,6 @@ function createErroringMods(errors) {
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
     }
+
+    genbtnstyles();
 })();

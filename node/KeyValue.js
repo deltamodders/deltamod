@@ -48,18 +48,44 @@ function kvsFlushIndex(obj, index) {
 }
 
 function writeUniqueFlag(name, val) {
-    var pathname = getSystemFile('FLAG-' + name.toUpperCase(), true);
-    if (val) {
-        fs.writeFileSync(pathname, "");
-    } else {
-        if (fs.existsSync(pathname)) {
-            fs.unlinkSync(pathname);
+    try {
+        var database = getSystemFile('flagDB.config', true);
+        if (!fs.existsSync(database)) {
+            fs.writeFileSync(database, defFDBMsg);
         }
+        var databaseContent = fs.readFileSync(database, 'utf8');
+        var lines = databaseContent.split('\n').filter(l => l.trim() != '' && !l.startsWith(name.toUpperCase() + ' = '));
+        lines.push(name.toUpperCase() + ' = ' + (val ? '1' : '0'));
+        fs.writeFileSync(database, lines.join('\n'));
+        return true;
+    }
+    catch (e) {
+        console.log('Error writing unique flag: ' + e);
+        return false;
     }
 }
 
 function readUniqueFlag(name) {
-    return fs.existsSync(getSystemFile('FLAG-' + name.toUpperCase(), true));
+    try {
+        var database = getSystemFile('flagDB.config', true);
+        if (!fs.existsSync(database)) {
+            fs.writeFileSync(database, '');
+        }
+        var databaseContent = fs.readFileSync(database, 'utf8');
+
+        var line = databaseContent.split('\n').find(l => l.startsWith(name.toUpperCase() + ' = '));
+        if (line) {
+            var value = line.split(' = ')[1].trim();
+            return value.toLowerCase() == '1';
+        }
+        databaseContent += "\n" + name.toUpperCase() + " = 0";
+        fs.writeFileSync(database, databaseContent);
+        return false;
+    }
+    catch (e) {
+        console.log('Error reading unique flag: ' + e);
+        return false;
+    }
 }
 
 function kvsWipe() {

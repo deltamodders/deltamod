@@ -74,15 +74,6 @@ function validateDeltarune(deltapath) {
     }
 }
 
-let itch;
-let canLoadItch = false;
-try {
-    itch = require('./ItchKeys.js');
-    canLoadItch = true;
-}
-catch (e) {
-    console.error('Itch.io CSRF keys not found, downloading Deltarune demo will not work.');
-}
 
 let win; // Main window
 let ignoreUpdate = false;
@@ -1102,120 +1093,6 @@ function createWindow() {
      */
     ipcMain.handle('openModFolder', async (event, args) => {
         shell.openPath(path.join(getPacketDatabase(), args[0]));
-    });
-
-    /*
-     * downloadDelta
-     * Downloads the latest version of the Deltarune demo.
-     * The host is itch.io, and Deltamod uses its API to download the game.
-     */
-    ipcMain.handle('downloadDelta', async (event, args) => {
-        if (!canLoadItch) {
-            dialog.showErrorBox('itch.io download not available', 'Deltamod cannot download the Deltarune demo because the needed authentication file is not available.');
-            return;
-        }
-
-        var modal = new BrowserWindow({
-            width: 600,
-            height: 200,
-            resizable: false,
-            maximizable: false,
-            minimizable: false,
-            closable: false,
-            fullscreenable: false,
-            modal: true,
-            parent: win,
-            webPreferences: {
-                devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
-                nodeIntegration: true,
-                partition: partition,
-                preload: Paths.file('web', 'download_deltarune/preload.js'),
-            }
-        });
-        modal.loadURL('deltapack://web/download_deltarune/index.html');
-        modal.setMenuBarVisibility(false);
-
-        var token = await itch.csrf();
-        console.log('Got token from itch: ' + token);
-        var api = await axios.post('https://tobyfox.itch.io/deltarune/file/12206581?source=view_game&as_props=1&after_download_lightbox=true', "csrf_token=" + token);
-
-        var deltaruneUrl = api.data.url;
-
-        var zipPath = path.join(app.getPath('downloads'), 'deltarune_demo.zip');
-
-        if (fs.existsSync(zipPath)) {
-            fs.unlinkSync(zipPath);
-        }
-
-        const downloader = new Downloader({
-            url: deltaruneUrl,
-            fileName: "deltarune_demo.zip",
-            directory: app.getPath('downloads'),
-            onProgress: function (percentage, chunk, remainingSize) {
-                modal.webContents.send('progress', {
-                    percentage: percentage
-                });
-            },
-        });
-
-        try {
-            await downloader.download();
-            console.log('Download completed successfully');
-
-            var extractPath = getSystemFolder('deltaruneInstall', false);
-
-            if (!fs.existsSync(extractPath)) {
-                fs.mkdirSync(extractPath, { recursive: true });
-            }
-
-            await _7z.unpack(zipPath, extractPath);
-
-            // normalize: move contents from the true mod root to `dest` if wrapped
-            const realRoot = GamePatching.findModRoot(extractPath);
-            if (realRoot && realRoot !== extractPath && realRoot.startsWith(extractPath)) {
-                const items = fs.readdirSync(realRoot);
-                for (const name of items) {
-                    const from = path.join(realRoot, name);
-                    const to   = path.join(extractPath, name);
-                    try { fs.renameSync(from, to); }
-                    catch {
-                        // cross-device or conflicts → fallback to copy
-                        if (fs.statSync(from).isDirectory()) {
-                            copyRecursiveSync(from, to);
-                            fs.rmSync(from, { recursive: true, force: true });
-                        } else {
-                            fs.mkdirSync(path.dirname(to), { recursive: true });
-                            fs.copyFileSync(from, to);
-                            fs.rmSync(from, { force: true });
-                        }
-                    }
-                }
-                // try to remove the now-empty wrapper
-                try { fs.rmSync(realRoot, { recursive: true, force: true }); } catch {}
-            }
-
-            fs.unlinkSync(zipPath);
-
-            dialog.showMessageBox(win, {
-                type: 'info',
-                title: 'Import Successful',
-                message: 'Deltarune install downloaded and imported successfully.',
-                buttons: ['OK']
-            }).then(() => {
-                KeyValue.setKVS('loadedDeltarune', true);
-                KeyValue.setKVS('deltarunePath', extractPath);
-                KeyValue.setKVS('deltaruneEdition', "demo");
-                KeyValue.kvsFlush();
-                app.relaunch(properRelaunch());
-                app.exit();
-            });
-        }
-        catch (error) {
-            console.error('Download failed:', error);
-            dialog.showErrorBox('Download Failed', 'An error occurred while downloading the Deltarune demo. Please try again later.');
-            modal.close();
-            errorWin('Download failed: ' + error.toString());
-        }
     });
 
     /*
