@@ -194,11 +194,16 @@ window.currentPageStack.plusPage = plusPage;
                 otherInfoSpan.style.width = '100%';
                 otherInfoSpan.style.alignItems = 'center';
 
+                var nameauthor = mod._aSubmitter._sName;
+                // easter egg for the tenna lover
+                if (mod._aSubmitter._idRow == 1712567) {
+                    nameauthor += ' (Tenna lover)';
+                }
                 var authorSpan = document.createElement('span');
                 authorSpan.className = 'modAuthorSpan';
                 authorSpan.style.display = 'block';
                 authorSpan.style.marginRight = '12px';
-                authorSpan.innerHTML = `<img src="${mod._aSubmitter._sAvatarUrl}" alt="${mod._aSubmitter._sName}" class="modAuthorAvatar"> ${mod._aSubmitter._sName}`;
+                authorSpan.innerHTML = `<img src="${mod._aSubmitter._sAvatarUrl}" alt="${mod._aSubmitter._sName}" class="modAuthorAvatar"> ${nameauthor}`;
                 authorSpan.onclick = () => {
                     window.open(mod._aSubmitter._sProfileUrl, '_blank');
                 };
