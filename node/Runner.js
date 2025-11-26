@@ -790,10 +790,11 @@ function createWindow() {
         var url = args[0];
 
         var modal = new BrowserWindow({
-            width: 300,
-            height: 130,
+            width: 350,
+            height: 170,
             resizable: false,
             maximizable: false,
+            frame: false,
             minimizable: false,
             closable: false,
             fullscreenable: false,

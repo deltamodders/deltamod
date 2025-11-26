@@ -113,8 +113,8 @@ h1 {
 
 table {
     width: 100%;
-    border-radius: 15px;
-    border: 1px solid rgb(66, 66, 66);
+    border: 1px solid var(--theme-color);
+    border-radius: 10px;
     padding: 7px;
     background-color: rgba(40, 40, 40, 0.5);
     backdrop-filter: blur(5px);
@@ -131,7 +131,7 @@ table:hover {
 th,
 td {
     border: 1px solid rgb(66, 66, 66);
-    border-radius: 4px;
+    border-radius: 7px;
     padding: 8px 12px;
     text-align: left;
     animation: 0.2s spawn ease-in-out;
@@ -149,6 +149,6 @@ td {
 }
 th {
     color: rgba(255, 255, 255, 1);
-    border-radius: 4px;
+    border-radius: 7px;
     animation: 0.5s spawn ease-in-out;
 }

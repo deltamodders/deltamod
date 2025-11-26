@@ -5,14 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Downloading...</title>
 </head>
-<body style="text-align: center;">
-    <p style="text-align: center;">Downloading the patcher...</p>
-    <progress id="prog" max="100"></progress>
+<body>
+    <div class="progbar">
+
+    </div>
+    <span>Downloading...</span>
 </body>
 <script>
     function updateProgress(percent) {
-        const progressBar = document.getElementById('prog');
-        progressBar.value = percent;
+        const progressBar = document.querySelector('.progbar');
+        progressBar.style.width = 100-percent + '%';
     }
 </script>
+<style>
+    body {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        background-color: green;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+    }
+    .progbar {
+        height: 100%;
+        position: fixed;
+        z-index: 2;
+        top: 0;
+        right: 0;
+        background-color: transparent;
+        backdrop-filter: grayscale(100%);
+    }
+</style>
 </html>
