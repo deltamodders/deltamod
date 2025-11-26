@@ -21,17 +21,7 @@ function toggleMinimize() {
 }
 
 function genbtnstyles() {
-    /*
-    Array.from(document.querySelectorAll('button:not(.sidebar-button), input, select')).forEach(th => {
-        th.style.border = '1.3px solid ' + theme.color;
-    });
-
-    Array.from(document.querySelectorAll('input, progress')).forEach(th => {
-        th.style.accentColor = theme.color;
-    });
-
-    document.querySelector('.sidebar').style.borderColor = theme.color;
-    */
+    // deprecated
 }
 
 function error() {
@@ -482,3 +472,17 @@ Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => 
         }
     }
 })();
+
+document.querySelector('.sidebar').addEventListener('mouseenter', () => {
+    var a = new Audio();
+    a.src = './hoverSBAR.mp3';
+    a.volume = 0.6;
+    a.play();
+});
+
+document.querySelector('.sidebar').addEventListener('mouseleave', () => {
+    var a = new Audio();
+    a.src = './dehoverSBAR.mp3';
+    a.volume = 0.6;
+    a.play();
+});

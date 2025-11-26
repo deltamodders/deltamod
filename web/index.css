@@ -161,10 +161,11 @@ body {
 .sidebar {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) rotateX(20deg);
     left: 15px;
+    transform-style: preserve-3d;
     border-radius: 50px;
-    opacity: 1;
+    opacity: 0.6;
     width: calc(var(--sidebar-size) * 1 + 10px);
     border: 2px solid gray;
     height: fit-content;
@@ -193,13 +194,14 @@ body {
     z-index: 99;
 }
 
+
 .sidebar-backdrop {
     transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
     pointer-events: none;
 }
 
 .sidebar:hover {
-    transform: translateY(-50%) translateX(15px);
+    transform: translateY(-50%) translateX(15px) rotateX(0deg);
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.527);
     border: 2px solid white;
     background-color: rgba(0, 0, 0, 0.5);
