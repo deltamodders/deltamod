@@ -141,6 +141,17 @@ async function getInstallations(suppressWarnings = false) {
     return installations;
 }
 
+function validateMyInstall(deltapath) {
+    const keyItems = ['data.win', 'DELTARUNE.exe'];
+    let isValid = true;
+    keyItems.forEach((item) => {
+        if (!fs.existsSync(`${deltapath}/${item}`)) {
+            isValid = false;
+        }
+    });
+    return isValid;
+}
+
 /**
  * Show the dogcheck error screen
  * @param {Error} err The error to show
@@ -410,6 +421,7 @@ function createWindow() {
     }
     else {
         console.log('No system index override found, using default index.');
+        setSystemIndex('0');
     }
 
     const partition = 'persist:deltamod'; 
@@ -1491,30 +1503,7 @@ function createWindow() {
     ipcMain.handle('loadedDeltarune', async (event, name) => {
         try {
             var pathname = KeyValue.readKVS('deltarunePath');
-            if (!KeyValue.readKVS('loadedDeltarune')) {
-                KeyValue.setKVS('deltarunePath', null);
-                return {
-                    loaded: false
-                };
-            }
-
-            if (!pathname) {
-                return {
-                    loaded: false
-                };
-            }
-
-            if (!fs.existsSync(pathname)) {
-                KeyValue.setKVS('loadedDeltarune', false);
-                KeyValue.setKVS('deltarunePath', null);
-                return {
-                    loaded: false
-                };
-            }
-
-            return {
-                loaded: pathname
-            }
+            return {loaded: validateMyInstall(pathname) ? pathname : false};
         }
         catch (err) {
             errorWin(err.toString());
