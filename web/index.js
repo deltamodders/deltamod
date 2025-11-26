@@ -12,6 +12,14 @@ function brightenColor(r,g,b, amount) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
+function toggleFullscreen() {
+    window.electronAPI.invoke('toggleFullscreen', []);
+}
+
+function toggleMinimize() {
+    window.electronAPI.invoke('minimizeMe', []);
+}
+
 function genbtnstyles() {
     /*
     Array.from(document.querySelectorAll('button:not(.sidebar-button), input, select')).forEach(th => {

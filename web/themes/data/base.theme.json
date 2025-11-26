@@ -5,13 +5,5 @@
     "id": "base",
     "musicTrack": "My Castle Town - Toby Fox",
     "description": "The default theme for the program.",
-    "color": "rgba(0, 34, 83, 1)",
-    "dynamic": [
-        {
-            "type": "RANDOM_OCCURENCE",
-            "override": {
-                "background": "picazzo.png"
-            }
-        }
-    ]
+    "color": "rgba(0, 34, 83, 1)"
 }

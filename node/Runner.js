@@ -638,9 +638,20 @@ function createWindow() {
         }
     });
     
-    ipcMain.handle('fullscreenMe', (event, args) => {
+    ipcMain.handle('minimizeMe', (event, args) => {
         const senderWin = BrowserWindow.fromWebContents(event.sender);
-        senderWin.setFullScreen(true);
+        
+        if (senderWin) {
+            senderWin.minimize();
+        }
+    });
+
+    ipcMain.handle('toggleFullscreen', (event, args) => {
+        const senderWin = BrowserWindow.fromWebContents(event.sender);
+        
+        if (senderWin) {
+            senderWin.setFullScreen(!senderWin.isFullScreen());
+        }
     });
 
     ipcMain.handle('deltamoddersDiscord', async (event, args) => {
