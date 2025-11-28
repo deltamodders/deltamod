@@ -60,4 +60,10 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
     if (gitCommit) {
         document.querySelector('#version').innerHTML += `${gitCommit}`;
     }
+
+    if (!navigator.onLine) {
+        document.querySelector('#discordBtn').disabled = true;
+        document.querySelector('#discordBtn').style.opacity = 0.5;
+        document.querySelector('#discordBtn').innerHTML += ' (Offline)';
+    }
 })();

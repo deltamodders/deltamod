@@ -11,7 +11,7 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
 
     const small = document.createElement('small');
     small.className = 'calibri';
-    small.innerText = description;
+    small.innerHTML = description;
     tdLabel.appendChild(small);
 
     if (requiresRestart) {
@@ -102,7 +102,7 @@ window.currentPageStack.cat = async function(cat) {
     switch (cat) {
         case 'gen':
             await addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. Will not work on Steam based installs.', 'outputDelta');
-            await addCheckboxOption('Enable Mod Shop', 'Enables the Mod Shop. This service uses GameBanana to run.', 'SHOP', true);
+            await addCheckboxOption('Enable Mod Shop', 'Enables the Mod Shop. This service uses GameBanana to run. ' + (navigator.onLine ? '' : '<br><br><i style="color: gold;">This option is currently disregarded because there is no Internet.</i>'), 'SHOP', true);
             await addButton('Open mod folder', 'Open the folder where mods are stored. You can drag mod folders in Deltamod format there.', async () => {
                 await window.electronAPI.invoke('openSysFolder', ['mods']);
             }, 'Open');
