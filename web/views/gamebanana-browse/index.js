@@ -1,5 +1,8 @@
 function getThumbURL(mod) {
     try {
+        if (mod._sImageUrl && mod._sImageUrl.length > 0) {
+            return mod._sImageUrl;
+        }
         return mod._aPreviewMedia._aImages[0]?._sBaseUrl + "/" + mod._aPreviewMedia._aImages[0]._sFile530;
     }
     catch {
@@ -45,6 +48,19 @@ async function search() {
     page('gamebanana-browse');
 }
 
+async function featured() {
+    // Why doesn't GB have a standard endpoint format for subs SMH
+    window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Game/6755/TopSubs';
+    window._pageArguments.gbAPIFilter = async function(data) {
+        return {_aRecords: data.map(x => {
+            x.featuredDataset = true;
+            return x;
+        })};
+    } 
+    page('gamebanana-browse');
+}
+
+window.currentPageStack.featured = featured;
 window.currentPageStack.qms = {}; //queryme stack
 
 function dlmod(dlurl, buttonElem=null) {
@@ -158,7 +174,7 @@ window.currentPageStack.plusPage = plusPage;
                 
                 var img = document.createElement('img');
                 img.className = 'modThumbImg';
-                img.src = getThumbURL(mod);
+                img.src = (getThumbURL(mod));
                 img.style.width = '120px';
                 img.style.aspectRatio = '16 / 9';
                 img.style.borderRadius = '4px';
@@ -184,15 +200,10 @@ window.currentPageStack.plusPage = plusPage;
 
                 var otherInfoSpan = document.createElement('div');
                 otherInfoSpan.className = 'modOtherInfoSpan';
-                otherInfoSpan.style.display = 'grid';
-                otherInfoSpan.style.gridTemplateColumns = 'repeat(3, 1fr)'; // 3 columns
-                otherInfoSpan.style.gridAutoRows = 'auto'; // allow multiple rows (up to 3 rows if needed)
-                otherInfoSpan.style.gap = '6px';
                 otherInfoSpan.style.fontSize = '0.8em';
                 otherInfoSpan.style.color = '#888888';
                 otherInfoSpan.style.marginTop = '8px';
                 otherInfoSpan.style.width = '100%';
-                otherInfoSpan.style.alignItems = 'center';
 
                 var nameauthor = mod._aSubmitter._sName;
                 // easter egg for the tenna lover
@@ -203,7 +214,7 @@ window.currentPageStack.plusPage = plusPage;
                 authorSpan.className = 'modAuthorSpan';
                 authorSpan.style.display = 'block';
                 authorSpan.style.marginRight = '12px';
-                authorSpan.innerHTML = `<img src="${mod._aSubmitter._sAvatarUrl}" alt="${mod._aSubmitter._sName}" class="modAuthorAvatar"> ${nameauthor}`;
+                authorSpan.innerHTML = `${icon('attribution','0.9em')} ${nameauthor}`;
                 authorSpan.onclick = () => {
                     window.open(mod._aSubmitter._sProfileUrl, '_blank');
                 };
@@ -215,15 +226,17 @@ window.currentPageStack.plusPage = plusPage;
                 categorySpan.style.marginRight = '12px';
                 categorySpan.innerHTML = `${icon('folder','0.9em')} ${mod._aRootCategory._sName}`;
 
-                var dateSpan = document.createElement('span');
-                dateSpan.className = 'modDateSpan';
-                dateSpan.style.display = 'block';
-                dateSpan.innerHTML = `${icon('calendar_clock','0.9em')} ${new Date(mod._tsDateAdded*1000).toLocaleDateString()}`;
+                if (!mod.featuredDataset) {
+                    var dateSpan = document.createElement('span');
+                    dateSpan.className = 'modDateSpan';
+                    dateSpan.style.display = 'block';
+                    dateSpan.innerHTML = `${icon('calendar_clock','0.9em')} ${new Date(mod._tsDateAdded*1000).toLocaleDateString()}`;
 
-                var viewsSpan = document.createElement('span');
-                viewsSpan.className = 'modViewsSpan';
-                viewsSpan.style.display = 'block';
-                viewsSpan.innerHTML = `${icon('visibility','0.9em')} ${roundViews(mod._nViewCount)}`;
+                    var viewsSpan = document.createElement('span');
+                    viewsSpan.className = 'modViewsSpan';
+                    viewsSpan.style.display = 'block';
+                    viewsSpan.innerHTML = `${icon('visibility','0.9em')} ${roundViews(mod._nViewCount)}`;
+                }
 
                 var e = null;
                 if (featuredIDs.find(x => x.id === mod._idRow)) {
@@ -254,8 +267,11 @@ window.currentPageStack.plusPage = plusPage;
 
                 otherInfoSpan.appendChild(authorSpan);
                 otherInfoSpan.appendChild(categorySpan);
-                otherInfoSpan.appendChild(dateSpan);
-                otherInfoSpan.appendChild(viewsSpan);
+                try {
+                    otherInfoSpan.appendChild(dateSpan);
+                    otherInfoSpan.appendChild(viewsSpan);
+                }
+                catch {}
                 if (e) otherInfoSpan.appendChild(e);
                 div1.appendChild(otherInfoSpan);
             }
@@ -330,6 +346,12 @@ window.currentPageStack.plusPage = plusPage;
         td.style.textAlign = 'center';
         td.innerText = 'An error occurred while loading mods.';
         tr.appendChild(td);
+        var small = document.createElement('small');
+        small.innerText = e.message;
+        small.classList.add('calibri');
+        small.style.color = '#888888';
+        td.appendChild(document.createElement('br'));
+        td.appendChild(small);
         table.appendChild(tr);
     }
 

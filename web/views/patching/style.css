@@ -55,7 +55,7 @@
 
 /* Messages / Logs */
 .success {
-    color: #14ab09;
+    color: var(--theme-color);
 }
 
 .logs {
@@ -110,7 +110,7 @@ small {
 .patchingIsland {
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
-    border: 1px solid rgb(101, 101, 101);
+    border: 1px solid var(--theme-color);
     padding: 10px;
     border-radius: 10px;
     overflow: hidden;
