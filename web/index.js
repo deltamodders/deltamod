@@ -473,16 +473,34 @@ Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => 
     }
 })();
 
+var elaps = 0;
+var start = 0;
+var end = 0;
+var lastClose = 0;
 document.querySelector('.sidebar').addEventListener('mouseenter', () => {
-    var a = new Audio();
-    a.src = './hoverSBAR.mp3';
-    a.volume = 0.6;
-    a.play();
+    start = Date.now();
+
+    elaps = start - lastClose;
+
+    if (elaps > 200 || end == 0) {
+        var a = new Audio();
+        a.src = './hoverSBAR.mp3';
+        a.volume = 0.6;
+        a.play();
+    }
 });
 
 document.querySelector('.sidebar').addEventListener('mouseleave', () => {
-    var a = new Audio();
-    a.src = './dehoverSBAR.mp3';
-    a.volume = 0.6;
-    a.play();
+    end = Date.now();
+
+    elaps = end - start;
+
+    if (elaps > 200) {
+        var a = new Audio();
+        a.src = './dehoverSBAR.mp3';
+        a.volume = 0.6;
+        a.play();
+    }
+
+    lastClose = Date.now();
 });
