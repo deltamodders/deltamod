@@ -15,6 +15,17 @@
     font-size: 15px !important;
 }
 
+@keyframes stuffFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0px);
+    }
+}
+
 .bar-button {
     background-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.23);
@@ -92,7 +103,7 @@
     }
     to {
         opacity: 0;
-        height: 5px;
+        height: 0px;
     }
 }
 

@@ -55,14 +55,17 @@ async function htmlAlertRaw(title, message, buttons) {
 
         var titleElement = document.createElement('h1');
         titleElement.innerText = title;
+        titleElement.style.opacity = '0';
         var messageElement = document.createElement('p');
         messageElement.innerText = message;
+        messageElement.style.opacity = '0';
         alertMsg.appendChild(titleElement);
         alertMsg.appendChild(messageElement);
 
         var buttonsHTML = document.createElement('div');
         buttonsHTML.style.textAlign = 'right';
         buttonsHTML.classList.add('alertButtons');
+        buttonsHTML.style.opacity = '0';
         buttons.forEach((button, index) => {
             var btn = document.createElement('button');
             btn.textContent = button.text;
@@ -93,7 +96,7 @@ async function htmlAlertRaw(title, message, buttons) {
                     setTimeout(() => {
                         var nextAlert = alertCache.shift();
                         htmlAlertRaw(nextAlert.title, nextAlert.message, nextAlert.buttons).then(nextAlert.resolve).catch(nextAlert.reject);
-                    }, 100);
+                    }, 600);
                 }
                 return;
             }
@@ -102,6 +105,16 @@ async function htmlAlertRaw(title, message, buttons) {
 
         alertMain.style.display = 'flex';
         alertMsg.appendChild(buttonsHTML);
+
+        setTimeout(() => {
+            titleElement.style.animation = '0.3s stuffFadeIn cubic-bezier(0.25, 1, 0.5, 1) forwards';
+        }, 100);
+        setTimeout(() => {
+            messageElement.style.animation = '0.3s stuffFadeIn cubic-bezier(0.25, 1, 0.5, 1) forwards';
+        }, 200);
+        setTimeout(() => {
+            buttonsHTML.style.animation = '0.3s stuffFadeIn cubic-bezier(0.25, 1, 0.5, 1) forwards';
+        }, 300);
 
         var a = new Audio();
         a.src = './ooow.mp3';
