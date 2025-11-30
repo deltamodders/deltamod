@@ -69,6 +69,9 @@ async function htmlAlertRaw(title, message, buttons) {
             btn.onclick = function() {
                 alertMain.style.display = 'none';
                 isAlertShowing = false;
+                var a = new Audio();
+                a.src = './booow.mp3';
+                a.play();
                 if (button.resolveWith) {
                     resolve(button.resolveWith);
                     return;
