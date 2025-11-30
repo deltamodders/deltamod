@@ -1023,12 +1023,20 @@ function createWindow() {
         var themeHost = System.getSystemFile('_theme', true);
         try {
             var theme = fs.readFileSync(themeHost, 'utf8');
+            var themeData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', 'data', theme + '.theme.json'), 'utf8'));
+            
         }
         catch(e) {
             theme = 'base';
             fs.writeFileSync(themeHost, theme);
         }
         if (obtainThemes().filter(t => t.id === theme).length === 0) {
+            theme = 'base';
+            fs.writeFileSync(themeHost, theme);
+        }
+        console.log('Current theme: ' + theme);
+        console.log('Check now: ' + Date.now() + ' vs ' + (themeData.timedExpire || 0)); 
+        if (Date.now() > themeData.timedExpire) {
             theme = 'base';
             fs.writeFileSync(themeHost, theme);
         }

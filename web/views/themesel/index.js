@@ -2,6 +2,8 @@
     var themes = (await window.electronAPI.invoke('getThemes', [])).sort((a, b) => {
         if (a.builtIn && !b.builtIn) return -1;
         if (!a.builtIn && b.builtIn) return 1;
+        if (a.timed && !b.timed) return -1;
+        if (!a.timed && b.timed) return 1;
         return a.name.localeCompare(b.name);
     });
     var currentTheme = await window.electronAPI.invoke('getTheme', []);
@@ -49,6 +51,23 @@
         ogTag.style.fontSize = '0.8em';
         td1.appendChild(ogTag);
 
+        if (theme.timed) {
+            var tdTimed = document.createElement('span');
+            tdTimed.style.display = 'block';
+            tdTimed.style.marginTop = '0.5em';
+            if (Date.now() > theme.timedExpire) {
+                tdTimed.style.color = '#ff4c4cff';
+                tdTimed.innerHTML = icon('event_busy', '0.8em') + ` This theme has expired. It was available until: ${new Date(theme.timedExpire).toLocaleString()}`;
+            }
+            else {
+                tdTimed.style.color = '#cbd94fff';
+                tdTimed.innerHTML = icon('schedule', '0.8em') + ` This theme expires: ${new Date(theme.timedExpire).toLocaleString()}`;
+            }
+            tdTimed.classList.add('calibri');
+            tdTimed.style.fontSize = '0.8em';
+            td1.appendChild(tdTimed);
+        }
+
         var td2 = document.createElement('td');
         td2.classList.add('theme-entry');
 
@@ -58,6 +77,12 @@
             selectbtn.disabled = true;
             selectbtn.style.opacity = 0.5;
             selectbtn.innerText = 'Select';
+            selectbtn.style.cursor = 'not-allowed';
+        }
+        if (theme.timed && Date.now() > theme.timedExpire) {
+            selectbtn.disabled = true;
+            selectbtn.style.opacity = 0.5;
+            selectbtn.innerText = 'Expired';
             selectbtn.style.cursor = 'not-allowed';
         }
         selectbtn.addEventListener('click', async () => {
