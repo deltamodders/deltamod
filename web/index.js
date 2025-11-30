@@ -67,7 +67,13 @@ async function htmlAlertRaw(title, message, buttons) {
             var btn = document.createElement('button');
             btn.textContent = button.text;
             btn.onclick = function() {
-                alertMain.style.display = 'none';
+                alertMsg.style.animation = '0.3s alertFadeOut cubic-bezier(0.25, 1, 0.5, 1)';
+                setTimeout(() => {
+                    alertMain.style.animation = '';
+                    alertMain.style.display = 'none';
+                    alertMsg.style.animation = '0.3s alertFadeIn cubic-bezier(0.25, 1, 0.5, 1)';
+                    alertMsg.innerHTML = '';
+                }, 300);
                 isAlertShowing = false;
                 var a = new Audio();
                 a.src = './booow.mp3';
@@ -312,15 +318,9 @@ async function page(name) {
     Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
         if (button.getAttribute('data-page') === name) {
             button.classList.add('active');
-            if (button.getAttribute('data-page') == 'allmods') {
-                document.getElementById('specialBookEffect').innerHTML = icon('book_5', '24px');
-            }
         }
         else {
             button.classList.remove('active');
-            if (button.getAttribute('data-page') == 'allmods') {
-                document.getElementById('specialBookEffect').innerHTML = icon('book_4', '24px');
-            }
         }
     });
     try {

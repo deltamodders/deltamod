@@ -152,7 +152,13 @@ window.currentPageStack.cat = async function(cat) {
             }, 'Open');
 
             await addButton('Reboot in Developer Mode', 'Reboots in developer mode, a mode which allows you to use the DevTools.', async () => {
-                await window.electronAPI.invoke('rebootDev', []);
+                if (!await window.electronAPI.invoke('rebootDev', [])) {
+                    await htmlAlert(
+                        'Info', 
+                        'The app is already running in developer mode.', 
+                        [{text:'OK',resolveWith:'ok'}]
+                    );
+                }
             }, 'Open');
 
             await addButton('Delete all user data', 'Deletes all Deltamod data. Irreeversible!', async () => {

@@ -176,15 +176,16 @@ function errorWin(err) {
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err);
     if (win) {
-        setSharedVar('error', err.toString() + "\n" + (err.stack || 'No stack trace available'));
-        win.loadURL('deltapack://web/views/errorWrt/index.html');
+        errorWin(err);
+    }
+    else {
+        app.quit();
     }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     if (win) {
-        setSharedVar('error', reason.toString() + "\n" + (reason.stack || 'No stack trace available'));
-        win.loadURL('deltapack://web/views/errorWrt/index.html');
+        errorWin(new Error('Unhandled Rejection at: ' + promise + ' reason: ' + reason));
     }
 });
 
@@ -432,8 +433,7 @@ function createWindow() {
         // security
         var combined = url.hostname+url.pathname;
         if (combined.includes('..')) {
-            setSharedVar('error', 'Unsecure request made to deltapack.');
-            win.loadURL('deltapack://web/views/errorWrt/index.html');
+            errorWin(new Error('Unsecure request made to deltapack.'));
             return new Response("bad");
         }
         const filePath = path.resolve(__dirname, '..', url.hostname + url.pathname);
@@ -515,8 +515,7 @@ function createWindow() {
         // security
         var combined = url.hostname+url.pathname;
         if (combined.includes('..') || combined.includes('.js')) {
-            setSharedVar('error', 'Unsecure request made to packet protocol.');
-            win.loadURL('deltapack://web/views/errorWrt/index.html');
+            errorWin(new Error('Unsecure request made to packet protocol.'));
             return new Response("bad");
         }
         const filePath = path.resolve(System.getPacketDatabase(), url.hostname + url.pathname);
@@ -729,16 +728,12 @@ function createWindow() {
     });
     ipcMain.handle('rebootDev', async () => {
         if (process.argv.includes('--developer')) {
-            dialog.showMessageBoxSync({
-                type: 'info',
-                title: 'Already running in dev mode.',
-                message: 'The app is already running in developer mode.',
-            });
-            return;
+            return false;
         }
         var existingArgs = process.argv.slice(1).filter(a => !a.startsWith('---system_index=') || a === '---initialize_deltamod' || a.startsWith('deltamod:') );
         app.relaunch({ args: [...existingArgs, '--developer'] });
         app.exit(0);
+        return true; // should not reach here
     });
 
     ipcMain.handle('createInstallLink', async (event, args) => {
@@ -1148,8 +1143,7 @@ function createWindow() {
     });
 
     if (threrror !== "") {
-        setSharedVar('error', threrror);
-        win.loadURL('deltapack://web/views/errorWrt/index.html');
+        errorWin(threrror);
         return;
     }
 

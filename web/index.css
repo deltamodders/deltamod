@@ -85,6 +85,18 @@
 }
 
 
+@keyframes alertFadeOut {
+    from {
+        opacity: 1;
+        height: 180px;
+    }
+    to {
+        opacity: 0;
+        height: 5px;
+    }
+}
+
+
 
 .alertMsg {
     min-width: 100%;
