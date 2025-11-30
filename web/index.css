@@ -48,11 +48,15 @@
 }
 
 .alertButtons {
-    display: block;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 10px;
     margin-top: 10px;
 }
 .alertButtons > button {
-    width: 100%;
+    min-width: 50px;
+    padding: 5px 10px;
     margin-bottom: 5px;
 }
 
@@ -72,29 +76,32 @@
 @keyframes alertFadeIn {
     from {
         opacity: 0;
-        scale: 0.2;
+        height: 5px;
     }
     to {
         opacity: 1;
-        scale: 1;
+        height: 180px;
     }
 }
 
 
 
 .alertMsg {
-    min-width: 400px;
+    min-width: 100%;
     max-width: 650px;
     backdrop-filter: blur(7px);
-    min-height: 120px;
-    background-color: rgba(72, 72, 72, 0.2);
-    border: 2px solid rgb(66, 66, 66);
-    border-radius: 10px;
+    background-color: rgba(72, 72, 72, 0.02);
+    border-top: 2px solid var(--theme-color);
+    border-bottom: 2px solid var(--theme-color);
     padding: 20px;
+    padding-left: 50px;
+    padding-right: 50px;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow-y: scroll;
+    overflow-x: hidden;
     font-family: 'Calibri', sans-serif;
     color: white;
+    height: 180px;
     font-size: 16px;
     animation: 0.4s alertFadeIn cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -292,14 +299,14 @@ h1 {
 
 @keyframes fadeIn {
     from {
-        opacity: 0.5;
-        filter: blur(2px);
-        transform: translateX(-10px);
+        opacity: 0;
+        scale: 0.8;
+        transform: translateX(-10px) rotate(1deg);
     }
     to {
         opacity: 1;
-        filter: blur(0px);
-        transform: translateX(0px);
+        scale: 1;
+        transform: translateX(0px) rotate(0deg);
     }
 }
 .viewport > * {

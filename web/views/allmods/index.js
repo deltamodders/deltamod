@@ -188,8 +188,7 @@ function createErroringMods(errors) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 2;
-        td.innerText = 'No mods found.';
-        td.style.textAlign = 'center';
+        td.innerText = 'No mods are installed on this computer.';
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
     }

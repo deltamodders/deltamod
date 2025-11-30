@@ -334,11 +334,12 @@ function loadInst(index) {
         const td = document.createElement('td');
         td.colSpan = 3;
         td.innerHTML = 'No comaptible mods were found.';
-        td.style.textAlign = 'center';
+        td.style.paddingLeft = '10px';
         tr.appendChild(td);
         if ((await window.electronAPI.invoke('howManyMods', [])) == 0) {
             let small = document.createElement('small');
-            small.innerHTML = 'You can download mods on GameBanana with the 1-Click Mod Download or press the ' + icon('add_box', 'small') + ' button below to open a downloaded Deltamod pack.';
+            var hasShop = await window.electronAPI.invoke('getUniqueFlag', ['SHOP']);
+            small.innerHTML = 'Mods can be downloaded from the GameBanana website' + (hasShop ? ', the <a href="javascript:page(\'gamebanana-browse\')">Mod Shop</a>,' : '') + ' or manually via the Import button.';
             small.style.color = '#888';
             td.appendChild(document.createElement('br'));
             td.appendChild(small);

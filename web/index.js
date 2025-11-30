@@ -88,6 +88,10 @@ async function htmlAlertRaw(title, message, buttons) {
 
         alertMain.style.display = 'flex';
         alertMsg.appendChild(buttonsHTML);
+
+        var a = new Audio();
+        a.src = './ooow.mp3';
+        a.play();
     });
 }
 
@@ -349,6 +353,10 @@ async function page(name) {
     styleTag.innerHTML = generatedCSS;
     if (runScripts)
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
+
+    var a = new Audio();
+    a.src = './rew.mp3';
+    a.play();
 }
 
 window.addEventListener('blur', () => {

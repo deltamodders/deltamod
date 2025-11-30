@@ -921,7 +921,7 @@ function createWindow() {
         if (fs.existsSync(gm3ppath) && !fs.existsSync(devicefusionpath)) {
             var attributes = require('./Utils.js').getFileVersion(gm3ppath);
             if (attributes) {
-                toreturn += `<br>GM3P version ${attributes}`;
+                toreturn += `<br>GM3P ${attributes}`;
             }
             else {
                 toreturn += `<br>GM3P, version unknown`;
