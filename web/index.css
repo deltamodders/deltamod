@@ -198,6 +198,7 @@ body {
     height: 100%;
     border-radius: 50px;
     background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
     z-index: 99;
 }
 

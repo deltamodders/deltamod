@@ -5,6 +5,11 @@ var pageN = null;
 var addedStyle = null;
 var update = false;
 
+function rew() {
+    var a = new Audio();
+    a.src = './rew.mp3';
+    a.play();
+}
 function brightenColor(r,g,b, amount) {
     r = Math.min(255, r + amount);
     g = Math.min(255, g + amount);
@@ -191,7 +196,7 @@ async function refreshTheme(refreshAudio = true) {
         audio.pause();
         audio.currentTime = 0;
         audio.loop = true;
-        audio.volume = 0.7;
+        audio.volume = 0.3;
         audio.src = 'themeprot://mus/' + theme.mainSong;
         audio.play();
         page(pageN);
@@ -287,7 +292,7 @@ async function page(name) {
                 audio.src = './' + audioSrc[1];
             }
             audio.loop = true;
-            audio.volume = 0.7;
+            audio.volume = 0.3;
 
             changeAudio = true;
         }
@@ -354,21 +359,19 @@ async function page(name) {
     if (runScripts)
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
 
-    var a = new Audio();
-    a.src = './rew.mp3';
-    a.play();
+    rew();
 }
 
 window.addEventListener('blur', () => {
     if (audio) {
-        audio.volume = 0.2;
+        audio.volume = 0;
     }
 });
 
 window.addEventListener('focus', async () => {
     let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
     if (audio && shouldPlayAudio) {
-        audio.volume = 0.7;
+        audio.volume = 0.3;
     }
 });
 

@@ -163,4 +163,5 @@ window.currentPageStack.cat = async function(cat) {
     // theme adjustments
     // as far as i know this page is the only page that needs ts
     genbtnstyles();
+    rew();
 }
