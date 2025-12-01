@@ -37,7 +37,7 @@ function plusPage(ind) {
 async function search() {
     let query = document.getElementById('searchInput').value;
     if (query.length < 3) {
-        await htmlAlert('Search query too short','Please enter at least 3 characters to search.',[{text:'Ok',resolveWith:'ok'}]);
+        await htmlAlert('Search query too short','Please enter at least 3 characters to search.',[{text:'Ok',resolveWith:'ok'}], 'error');
         return;
     }
     window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Util/Search/Results?_sModelName=Mod&_sOrder=best_match&_sSearchString=' + encodeURIComponent(query) + '&_csvFields=name%2Cdescription%2Carticle%2Cattribs%2Cstudio%2Cowner%2Ccredits&_idGameRow=6755&_nPage=$PAGE';
@@ -109,7 +109,7 @@ window.currentPageStack.plusPage = plusPage;
 
 (async () => {
     if (navigator.onLine === false) {
-        await htmlAlert('Offline','To access the shopping page, you must have an active Internet connection.',[{text:'Ok',resolveWith:'ok'}]);
+        await htmlAlert('You\'re offline','To access the shopping page, you must have an active Internet connection.',[{text:'Ok',resolveWith:'ok'}], 'cloud_alert');
         page('main');
         return;
     }
@@ -305,7 +305,7 @@ window.currentPageStack.plusPage = plusPage;
 
                     if (eligibleDownloads.length === 0) {
                         viewButton.innerHTML = icon('cancel', '0.9em') + ' Cannot download';
-                        var open = await htmlAlert('No compatible files','This mod cannot be downloaded via Deltamod. Ask the owner to make it compatible with Deltamod!',[{text:'Ok',resolveWith:'no',},{text:'Open mod page on GameBanana',resolveWith:'yes'}]);
+                        var open = await htmlAlert('One click not available','This mod cannot be downloaded via Deltamod because the owner did not package it for usage with the tool.',[{text:'Ok',resolveWith:'no',},{text:'Open mod page on GameBanana',resolveWith:'yes'}], 'web_traffic');
                         if (open === 'yes') {
                             window.open(mod._sProfileUrl, '_blank');
                         }
@@ -314,7 +314,7 @@ window.currentPageStack.plusPage = plusPage;
 
                     if (eligibleDownloads.length > 1) {
                         viewButton.innerHTML = icon('cancel', '0.9em') + ' Multiple files found';
-                        var res = await htmlAlert('Multiple compatible files','This mod has multiple files compatible with Deltamod. Please choose the one to download.',eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}));
+                        var res = await htmlAlert('Multiple compatible files','This mod has multiple files compatible with Deltamod. Please choose the one to download.',eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
                         if (!res) {
                             return;
                         }

@@ -1,9 +1,14 @@
 (async() => {
+    if (!navigator.onLine) {
+        await htmlAlert("Offline", "You appear to be offline. Please connect to the internet to view releases.", [{text:'OK',resolveWith:'ok'}],'cloud_alert');
+        page('options');
+        return;
+    }
     var releases = await fetch('https://api.github.com/repos/deltamodders/GM3P/releases');
     var viewport = document.querySelector('.releases');
     var code = releases.status;
     if (code != 200) {
-        await htmlAlert("An error occurred", `An error occurred while fetching releases from GitHub. Your requests may have been blocked by their servers. (Status code: ${code})`, [{text:'OK',resolveWith:'ok'}]);
+        await htmlAlert("An error occurred", `An error occurred while fetching releases from GitHub. Your requests may have been blocked by their servers. (Status code: ${code})`, [{text:'OK',resolveWith:'ok'}],'cloud_alert');
         page('options');
         return;
     }

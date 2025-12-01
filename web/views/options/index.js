@@ -147,7 +147,7 @@ window.currentPageStack.cat = async function(cat) {
                     var asset = releases[0].assets.find(a => a.name.endsWith('.zip'));
                     await window.electronAPI.invoke('downloadGM3P', [asset.browser_download_url]);
                 } catch (e) {
-                    await htmlAlert('Error', 'An error occurred while trying to download DEVICE_FUSION: ' + e.message, [{text:'OK',resolveWith:'ok'}]);
+                    await htmlAlert('Error', 'An error occurred while trying to download DEVICE_FUSION: ' + e.message, [{text:'OK',resolveWith:'ok'}], 'error');
                 }
             }, 'Open');
 

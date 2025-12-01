@@ -128,7 +128,11 @@
         shortcutBtn = adaptForIcons(shortcutBtn);
         shortcutBtn.innerHTML = icon('forward', '18px');
         shortcutBtn.title = 'Create shortcut';
-        shortcutBtn.onclick = () => {
+        shortcutBtn.onclick = async () => {
+            if (!await window.electronAPI.invoke('isPackaged', [])) {
+                await htmlAlert('Error', 'Creating desktop shortcuts is only available in the packaged version of the application.',[{text:'OK',resolveWith:'ok'}]);
+                return;
+            }
             window.electronAPI.invoke('createInstallLink', [install.index.toString(), install.name || `Install #${install.index + 1}`]);
         };
         tippy(shortcutBtn, {

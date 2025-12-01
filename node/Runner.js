@@ -616,6 +616,10 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('isPackaged', () => {
+        return app.isPackaged;
+    });
+
     ipcMain.handle('openElectronTracer', (event, args) => {
         if (elecTracer) {
             return;

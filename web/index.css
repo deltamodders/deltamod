@@ -15,6 +15,18 @@
     font-size: 15px !important;
 }
 
+.watermark {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    filter: grayscale(100%);
+    height: auto;
+    opacity: 0.1;
+    pointer-events: none;
+    user-select: none;
+}
+
 @keyframes stuffFadeIn {
     from {
         opacity: 0;
@@ -198,7 +210,7 @@ body {
     opacity: 0.6;
     width: calc(var(--sidebar-size) * 1 + 10px);
     border: 2px solid gray;
-    height: fit-content;
+    height: 260px;
     padding-top: 15px;
     box-shadow: unset;
     padding-bottom: 15px;
@@ -235,6 +247,7 @@ body {
     transform: translateY(-50%) translateX(15px) rotateX(0deg);
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.527);
     border: 2px solid white;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     opacity: 1;
 }
@@ -324,8 +337,8 @@ h1 {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        scale: 0.8;
-        transform: translateX(-10px) rotate(1deg);
+        scale: 0.6;
+        transform: translateX(-10px) rotate(5deg);
     }
     to {
         opacity: 1;
@@ -334,7 +347,7 @@ h1 {
     }
 }
 .viewport > * {
-    animation: 0.5s fadeIn cubic-bezier(0.25, 1, 0.5, 1);
+    animation: 0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1);
 }
 
 * {

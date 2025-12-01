@@ -4,7 +4,7 @@ var theme = null;
 var pageN = null;
 var addedStyle = null;
 var update = false;
-
+var TARGET_MUSIC_VOLUME = 0.5;
 function rew() {
     var a = new Audio();
     a.src = './rew.mp3';
@@ -35,23 +35,27 @@ function error() {
 
 var alertCache = [];
 var isAlertShowing = false;
-async function htmlAlert(t,m,b) {
+async function htmlAlert(t,m,b,i) {
     if (isAlertShowing) {
         return new Promise((resolve, reject) => {
-            alertCache.push({title: t, message: m, buttons: b, resolve: resolve, reject: reject});
+            alertCache.push({title: t, message: m, buttons: b, resolve: resolve, reject: reject, specialIcon: 'info'});
         });
     }
     else {
-        return htmlAlertRaw(t, m, b);
+        return htmlAlertRaw(t, m, b, i);
     }
 }
-async function htmlAlertRaw(title, message, buttons) {
+async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
     return new Promise((resolve, reject) => {
         isAlertShowing = true;
         var alertMain = document.getElementsByClassName('alertMain')[0];
-        var alertMsg = alertMain.getElementsByClassName('alertMsg')[0];
+        var alertMsgR = alertMain.getElementsByClassName('alertMsg')[0];
 
-        alertMsg.innerHTML = '';
+
+        alertMsgR.innerHTML = '';
+
+        var alertMsg = document.createElement('div');
+        alertMsgR.appendChild(alertMsg);
 
         var titleElement = document.createElement('h1');
         titleElement.innerText = title;
@@ -70,12 +74,12 @@ async function htmlAlertRaw(title, message, buttons) {
             var btn = document.createElement('button');
             btn.textContent = button.text;
             btn.onclick = function() {
-                alertMsg.style.animation = '0.3s alertFadeOut cubic-bezier(0.25, 1, 0.5, 1)';
+                alertMsgR.style.animation = '0.3s alertFadeOut cubic-bezier(0.25, 1, 0.5, 1)';
                 setTimeout(() => {
                     alertMain.style.animation = '';
                     alertMain.style.display = 'none';
-                    alertMsg.style.animation = '0.3s alertFadeIn cubic-bezier(0.25, 1, 0.5, 1)';
-                    alertMsg.innerHTML = '';
+                    alertMsgR.style.animation = '0.3s alertFadeIn cubic-bezier(0.25, 1, 0.5, 1)';
+                    alertMsgR.innerHTML = '';
                 }, 300);
                 isAlertShowing = false;
                 var a = new Audio();
@@ -105,6 +109,18 @@ async function htmlAlertRaw(title, message, buttons) {
 
         alertMain.style.display = 'flex';
         alertMsg.appendChild(buttonsHTML);
+
+        var bigIcon = document.createElement('span');
+        bigIcon.classList.add('material-symbols-outlined', 'alertBigIcon');
+        bigIcon.innerText = specialIcon;
+        bigIcon.style.fontSize = '400px';
+        bigIcon.style.position = 'absolute';
+        bigIcon.style.top = '-100px';
+        bigIcon.style.right = '-50px';
+        bigIcon.style.opacity = '0.1';
+        bigIcon.style.userSelect = 'none';
+        bigIcon.style.pointerEvents = 'none';
+        alertMsgR.appendChild(bigIcon);
 
         setTimeout(() => {
             titleElement.style.animation = '0.3s stuffFadeIn cubic-bezier(0.25, 1, 0.5, 1) forwards';
@@ -218,7 +234,7 @@ async function refreshTheme(refreshAudio = true) {
         audio.pause();
         audio.currentTime = 0;
         audio.loop = true;
-        audio.volume = 0.3;
+        audio.volume = TARGET_MUSIC_VOLUME;
         audio.src = 'themeprot://mus/' + theme.mainSong;
         audio.play();
         page(pageN);
@@ -314,7 +330,7 @@ async function page(name) {
                 audio.src = './' + audioSrc[1];
             }
             audio.loop = true;
-            audio.volume = 0.3;
+            audio.volume = TARGET_MUSIC_VOLUME;
 
             changeAudio = true;
         }
@@ -387,7 +403,7 @@ window.addEventListener('blur', () => {
 window.addEventListener('focus', async () => {
     let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
     if (audio && shouldPlayAudio) {
-        audio.volume = 0.3;
+        audio.volume = TARGET_MUSIC_VOLUME;
     }
 });
 
