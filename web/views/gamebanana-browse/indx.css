@@ -13,9 +13,30 @@
     left: 60px;
     z-index: 99;
     margin-bottom: 20px;
-    border-radius: 50px;
+    border-radius: 20px;
     backdrop-filter: blur(5px);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--theme-color);
+    overflow: hidden;
+}
+
+.tspandiv > button {
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sbag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    opacity: 0.1;
+    scale: 2.7;
+    z-index: -1;
+    pointer-events: none;
+    user-select: none;
 }
 
 .smicon {

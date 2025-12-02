@@ -132,7 +132,7 @@
     padding-left: 50px;
     padding-right: 50px;
     box-sizing: border-box;
-    overflow-y: scroll;
+    overflow-y: hidden;
     overflow-x: hidden;
     font-family: 'Calibri', sans-serif;
     color: white;

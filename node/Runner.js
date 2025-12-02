@@ -620,6 +620,10 @@ function createWindow() {
         return app.isPackaged;
     });
 
+    ipcMain.handle('hasPatchingCore', () => {
+        return fs.existsSync(path.join(__dirname, '..', 'gm3p'));
+    });
+
     ipcMain.handle('openElectronTracer', (event, args) => {
         if (elecTracer) {
             return;
@@ -839,7 +843,13 @@ function createWindow() {
 
         writer.on('finish', async () => {
             console.log('Download completed successfully');
-            fs.rmdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
+            try {
+                fs.rmdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
+            
+            }
+            catch (e) {
+                console.error('Failed to remove old gm3p folder:', e);
+            }
             fs.mkdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true });
             await _7z.unpack(destPath, path.join(__dirname, '..', 'gm3p'));
             dialog.showMessageBoxSync(win, {

@@ -3,7 +3,7 @@ const path = require('path');
 const console = require('./Console.js');
 const fs = require('fs');
 
-const JUNCTION_EXE_PATH = path.join(__dirname, '../', 'junction.exe');
+const JUNCTION_EXE_PATH = path.join(__dirname, '../', 'tools', 'junction.exe');
 
 function betweenDoubleQuotes(str) {
     return `"${str}"`;

@@ -426,6 +426,22 @@ if (!window.electronAPI) {
         return;
     }
 
+    var hasCore = await window.electronAPI.invoke('hasPatchingCore',[]);
+    if (!hasCore) {
+        page('busy');
+        await htmlAlert('Important error', 'There is no patcher installed. Please install a new GM3P version to continue using Deltamod.', [
+            { text: 'OK', resolveWith: 'ok' }
+        ], 'error_med');
+
+        await page('gm3p-selector');
+
+        document.querySelectorAll('.sidebar-button').forEach(button => {
+            button.disabled = true;
+        });
+
+        return;
+    }
+
     if (loaded.loaded) {
         var available = await window.electronAPI.invoke('fireUpdate', []);
         console.log('Update check complete. Update available:', available);

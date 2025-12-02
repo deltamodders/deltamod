@@ -9,16 +9,21 @@
 <body>
     <div class="win">
         <div class="organizer">
-            <img src="dog-maraca.gif" alt="Dog Maraca" width="130" style="margin-bottom: 10px;">
-            <h1>
-                <marquee behavior="scroll" direction="left" scrollamount="10">Deltamod reportedly crashed, according to recent findings made by the error screen.</marquee>
+            <h1 style="margin-top: 10px;">
+                An error occurred!
             </h1>
-            <p>If you want to report it, go to "Documents" > "deltamod" and find the file named <code id="errorfilename">(shit)</code>. You can then send its contents to a Deltamod dev.</p>
+            <img src="dog-maraca.gif" alt="Dog Maraca" width="130" style="margin-bottom: 10px; margin-top: 10px;">
+            
+            <p>Logs are available in the file named <code id="errorfilename">(shit)</code>. There is also a heap screenshot for debugging the backend. <span id="warnMSG"></span></p>
             <div class="button-container">
                 <button id="showerror">Show error file</button>
                 <button id="copyerror">Copy error to clipboard</button>
                 <button id="gitbtn" onclick="openErrorGithub()">Report this issue on GitHub</button>
             </div>
+            <br>
+        </div>
+        <div class="errDet">
+            <span class="lalign">Error details</span>
             <br>
             <pre id="errorPre"><code id="error"></code></pre>
         </div>
@@ -28,9 +33,10 @@
 <style>
     #close {
         position: fixed;
-        top: 0;
-        right: 0;
+        top: 20px;
+        right: 20px;
         padding: 20px;
+        border: none;
         font-size: 19px;
     }
     #errorPre {
@@ -48,18 +54,35 @@
     body {
         width: 100%;
         height: 100vh;
+        margin: 0;
+        overflow: hidden;
+        padding: 0;
+    }
+    :root {
+        /* emulate a dark theme */
+        --theme-color: #000000ff;
     }
     .win {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        height: 100%;
+        width: calc(100% - 40px);
+        height: calc(100% - 40px);
+        margin: 20px;
+        border-radius: 30px;
+        background-color: rgba(36, 36, 36, 0.57);
     }
-    div {
+    .organizer {
         text-align: center;
         width: 90%;
+    }
+    .errDet {
+        width: calc(100% - 100px);
+        margin: 50px;
+        margin-top: 20px;
+        background-color: rgba(36, 36, 36, 0.57);
+        padding: 20px;
     }
     a {
         color: white;
@@ -92,6 +115,10 @@
             opacity: 1;
         }
     }
+    .lalign {
+        text-align: left !important;
+        width: 100%;
+    }
     .organizer {
         animation: 0.4s ease-in-out 0s 1 slidein;
     }
@@ -116,6 +143,11 @@
         document.querySelector('#showerror').addEventListener('click', () => {
             window.electronAPI.invoke('showItem', [filepath]);
         });
+
+        if (await window.electronAPI.invoke('isDevMode', [])) {
+            document.querySelector('#gitbtn').style.display = 'none';
+            document.getElementById('warnMSG').innerText = " (This error cannot be reported.)";
+        }
     })();
 
     (async () => {

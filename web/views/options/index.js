@@ -99,6 +99,11 @@ window.currentPageStack.cat = async function(cat) {
     let tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
 
+    document.getElementById('b_gen').classList.remove('selected');
+    document.getElementById('b_ui').classList.remove('selected');
+    document.getElementById('b_inst').classList.remove('selected');
+    document.getElementById('b_adv').classList.remove('selected');
+    document.getElementById('b_' + cat).classList.add('selected');
     switch (cat) {
         case 'gen':
             await addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. Will not work on Steam based installs.', 'outputDelta');
