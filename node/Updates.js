@@ -30,6 +30,11 @@ async function checkUpdates() {
         return {update: false, newVersionLink: null, version: null};
     }
 
+    if (VERSION.includes("DiscordPreview")) {
+        console.warn("You are using a Discord Preview build. Auto-updates are disabled.");
+        return {update: false, newVersionLink: null, version: null};
+    }
+
     if (ARTIFACT_NEEDED === 'C') {
         console.warn("Auto-updates are not supported on Linux. Please check https://github.com/deltamodders/deltamod for updates.");
         return {update: false, newVersionLink: null, version: null};
