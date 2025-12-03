@@ -144,7 +144,7 @@
             window.electronAPI.invoke('showItem', [filepath]);
         });
 
-        if (await window.electronAPI.invoke('isDevMode', [])) {
+        if (await window.electronAPI.invoke('canReportError', [])) {
             document.querySelector('#gitbtn').style.display = 'none';
             document.getElementById('warnMSG').innerText = " (This error cannot be reported.)";
         }

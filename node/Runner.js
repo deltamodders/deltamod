@@ -21,6 +21,7 @@ const Netlayer = require('./Netlayer.js');
 const path = require('path');
 
 let abortController;
+let updateAvailable = false;
 let callbackNPS;
 let callbackNPSPassWith;
 
@@ -1575,6 +1576,7 @@ function createWindow() {
             console.log('Update check result:', updateInfo.update);
             if (updateInfo.update && !ignoreUpdate) {
                 win.webContents.send('updateAvailable', updateInfo);
+                updateAvailable = true;
                 return true;
             }
             return false;
@@ -1809,6 +1811,10 @@ function createWindow() {
 
     ipcMain.handle('isDevMode', async (event, args) => {
         return (process.argv.includes('--developer'));
+    });
+
+    ipcMain.handle('canReportError', async (event, args) => {
+        return !(process.argv.includes('--developer')) && !(updateAvailable);
     });
 
     ipcMain.handle('isCurrentInstallDemo', async (event, args) => {
