@@ -1,9 +1,9 @@
 {
     "name": "Base Theme",
-    "background": "fountain.gif",
-    "mainSong": "mainTheme1Alt.mp3",
-    "id": "base",
-    "musicTrack": "My Castle Town - Toby Fox",
+    "background": "home.png",
+    "mainSong": "hometown.mp3",
     "description": "The default theme for the program.",
-    "color": "rgba(1, 73, 174, 1)"
+    "musicTrack": "Another day in hometown - Toby Fox",
+    "id": "base",
+    "color": "rgb(197, 72, 40)"
 }

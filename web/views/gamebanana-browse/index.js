@@ -339,19 +339,11 @@ window.currentPageStack.plusPage = plusPage;
     }
     catch (e) {
         console.error(e);
-        var tr = document.createElement('tr');
-        var td = document.createElement('td');
-        td.colSpan = 2;
-        td.innerText = 'An error occurred while loading mods!';
-        tr.appendChild(td);
-        var small = document.createElement('small');
-        small.innerText = e.message;
-        small.classList.add('calibri');
-        small.style.fontSize = '0.8em';
-        small.style.color = '#888888';
-        td.appendChild(document.createElement('br'));
-        td.appendChild(small);
-        table.appendChild(tr);
+        
+        await htmlAlert('Error loading mods','An error occurred while loading mods from GameBanana. Please try again later.',[{text:'Ok',resolveWith:'ok'}], 'error');
+
+        page('main');
+        return;
     }
 
     genbtnstyles();

@@ -1,9 +1,0 @@
-{
-    "name": "Base Theme (Alternate Song)",
-    "background": "fountain.gif",
-    "mainSong": "dmodOST.wav",
-    "id": "baseAlt",
-    "musicTrack": "Uwa!! So Shady - Myggins07",
-    "description": "The default theme for the program. This version includes a new original song, made for Deltamod.",
-    "color": "rgba(1, 73, 174, 1)"
-}

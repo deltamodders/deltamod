@@ -1,0 +1,9 @@
+{
+    "name": "Fountain",
+    "background": "fountain.gif",
+    "mainSong": "mainTheme1Alt.mp3",
+    "id": "fountain",
+    "musicTrack": "My Castle Town - Toby Fox",
+    "description": "A theme based on DELTARUNE's fountain.",
+    "color": "rgba(1, 73, 174, 1)"
+}

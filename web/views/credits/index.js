@@ -20,23 +20,20 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
     var credits = document.querySelector('.gbcredits');
     credits.innerHTML = '';
 
+    var madeUsers = [];
+
     gbpage._aCredits.forEach(group => {
-        var div = document.createElement('div');
-        div.className = 'credits-group';
-
-        var groupname = document.createElement('span');
-        groupname.className = 'credits-header';
-        groupname.innerText = group._sGroupName;
-
-        var authorsDiv = document.createElement('div');
-        authorsDiv.className = 'credits-developers';
-
+        var groupTitle = document.createElement('span');
+        groupTitle.innerText = group._sGroupName;
+        groupTitle.style.fontSize = '1.2em';
+        credits.appendChild(groupTitle);
         group._aAuthors.forEach(credit => {
             var personname = document.createElement('span');
-            console.log(JSON.stringify(credit));
             personname.onclick = () => window.open(credit._sProfileUrl);
             personname.innerHTML = `${navigator.onLine ? `<img src="${credit._sAvatarUrl}" alt="${credit._sName}" class="credits-avatar">` : ''} ${credit._sName}`;
-            personname.className = 'credits-author';
+            personname.className = 'credits-author calibri';
+
+            madeUsers.push(credit._sName);
 
             if (credit._sRole) {
                 tippy(personname, {
@@ -44,12 +41,8 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
                 });
             }
 
-            authorsDiv.appendChild(personname);
+            credits.appendChild(personname);
         });
-
-        div.appendChild(groupname);
-        div.appendChild(authorsDiv);
-        credits.appendChild(div);
     });
 })();
 
