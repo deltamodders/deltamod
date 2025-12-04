@@ -6,6 +6,7 @@ const console = require('./Console');
 const _7z = require('7zip-min');
 const { randomString, page } = require('./Utils');
 const { findModRoot } = require('./GamePatching');
+const crypto = require('crypto');
 const { dialog } = require('electron');
 const { url } = require('inspector');
 
@@ -159,6 +160,30 @@ function modList() {
             };
             var meta = modInfo.metadata || {};
 
+            if (require('./KeyValue').readUniqueFlag('HASHCHECKS')) {
+                modInfo.neededFiles?.forEach(file => {
+                    var fileContents = (path.join(system.getSystemFolder('deltaruneInstall'), file.file));
+                    var fileContentsHashCPATH = (path.join(system.getSystemFolder('deltaruneInstall'), file.file + '.hash'));
+
+                    if (!fs.existsSync(fileContents)) {
+                        meta._incompatibleHASH = true;
+                        return; // skip to next file
+                    }
+
+                    if (!fs.existsSync(fileContentsHashCPATH)) {
+                        var fileContentsHashCalc = crypto.createHash('sha256').update(fs.readFileSync(fileContents)).digest('hex');
+                        fs.writeFileSync(fileContentsHashCPATH, fileContentsHashCalc, 'utf8');
+                    }
+
+                    var fileContentsHash = fs.readFileSync(fileContentsHashCPATH, 'utf8').trim();
+
+                    console.log('CHECK FILES! ' + file.checksum + ' VS ' + fileContentsHash);
+                    if (file.checksum !== fileContentsHash) {
+                        meta._incompatibleHASH = true;
+                    }
+                }); // future use
+            }
+
             const idPath = findFirstByName(modPath, '__deltaID.json') || path.join(modPath, '__deltaID.json');
             failureReason = "Failed to read __deltaID JSON.";
             let deltamodExclusive = safeReadJSON(idPath);
@@ -247,6 +272,7 @@ function modList() {
                 customRGB:   meta.color || null,
                 dependencies: modInfo.dependencies || [],
                 packageID: validatePID(meta.packageID),
+                _incompatibleHASH: meta._incompatibleHASH || false,
                 // NEW: give the renderer stable identifiers
                 new: deltamodExclusive.new || false, // Used in UI
 

@@ -44,6 +44,15 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
     table.appendChild(tr);
 }
 
+window.electronAPI.invoke('isDevMode', []).then((devmode) => {
+    if (devmode) {
+        document.getElementById('b_dev').style.display = 'inline-block';
+    }
+    else {
+        const devBtn = document.getElementById('b_dev');
+        if (devBtn) devBtn.remove();
+    }
+});
 
 async function addButton(name, description, click, buttonText, enabled = true, disabledReason = '', colour = '') {
     const table = document.querySelector('tbody');
@@ -90,10 +99,6 @@ async function addButton(name, description, click, buttonText, enabled = true, d
     table.appendChild(tr);
 }
 
-(async() => {
-    /*
-        */
-})();
 
 window.currentPageStack.cat = async function(cat) {
     let tbody = document.querySelector('tbody');
@@ -103,16 +108,28 @@ window.currentPageStack.cat = async function(cat) {
     document.getElementById('b_ui').classList.remove('selected');
     document.getElementById('b_inst').classList.remove('selected');
     document.getElementById('b_adv').classList.remove('selected');
+    try {
+        document.getElementById('b_dev').classList.remove('selected');
+    }
+    catch (e) {
+        console.log('Dev button not found, skipping.');
+    }
+
     document.getElementById('b_' + cat).classList.add('selected');
     switch (cat) {
         case 'gen':
             await addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. Will not work on Steam based installs.', 'outputDelta');
-            await addCheckboxOption('Enable Mod Shop', 'Enables the Mod Shop. This service uses GameBanana to run. ' + (navigator.onLine ? '' : '<br><br><i style="color: gold;">This option is currently disregarded because there is no Internet.</i>'), 'SHOP', true);
+            
             await addButton('Open mod folder', 'Open the folder where mods are stored. You can drag mod folders in Deltamod format there.', async () => {
                 await window.electronAPI.invoke('openSysFolder', ['mods']);
             }, 'Open');
+            await addButton('Delete all user data', 'Deletes all Deltamod data. Irreeversible!', async () => {
+                page('deleteall');
+            }, 'Delete', true, '', 'red');
+            await addCheckboxOption('Enable advanced mod checks', 'Enables advanced compatibility checks for mods that support it. Currently beta!', 'HASHCHECKS');
             break;
         case 'ui':
+            await addCheckboxOption('Enable Mod Shop', 'Enables the Mod Shop. This service uses GameBanana to run. ' + (navigator.onLine ? '' : '<br><br><i style="color: gold;">This option is currently disregarded because there is no Internet.</i>'), 'SHOP', true);
             await addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background.', 'audio');
 
             await addButton('Select a theme', 'Opens the theme selection menu.', async () => {
@@ -157,6 +174,13 @@ window.currentPageStack.cat = async function(cat) {
             }, 'Open');
 
             await addButton('Reboot in Developer Mode', 'Reboots in developer mode, a mode which allows you to use the DevTools.', async () => {
+                var goOn = await htmlAlert(
+                        'Warning', 
+                        'Are you sure you want to reboot in developer mode? This is only for people who know their shit!', 
+                        [{text:'Yes',resolveWith:'ok'}, {text:'No',rejectWith:'cancel'}]
+                    );
+                await new Promise(r => setTimeout(r, 1000));
+                
                 if (!await window.electronAPI.invoke('rebootDev', [])) {
                     await htmlAlert(
                         'Info', 
@@ -166,9 +190,11 @@ window.currentPageStack.cat = async function(cat) {
                 }
             }, 'Open');
 
-            await addButton('Delete all user data', 'Deletes all Deltamod data. Irreeversible!', async () => {
-                page('deleteall');
-            }, 'Delete', true, '', 'red');
+            break;
+        case "dev":
+            await addButton('Open flag database (DEV-ONLY)', 'Opens the database holding flags.', async () => {
+                await window.electronAPI.invoke('openFlagDatabase', []);
+            }, 'Open');
             break;
     }
     // theme adjustments

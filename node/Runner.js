@@ -617,6 +617,11 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('openFlagDatabase', (event, args) => {
+        const flagDBPath = path.join(app.getPath('userData'), 'deltamod_system-unique', 'flagDB.config');
+        shell.openPath(flagDBPath);
+    });
+
     ipcMain.handle('isPackaged', () => {
         return app.isPackaged;
     });
@@ -1299,28 +1304,10 @@ function createWindow() {
 
         const datalist = modList.filter((mod) => {
             var editionCompatible = (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
+            if (mod._incompatibleHASH) return false; // filter out flagged by modstore incompatible mods right away
             if (!editionCompatible) return false; // return early if the first check fails, no need to check the file hashes at that point
 
-            var hashCompatible = true;
-
-            try {
-                if (mod.neededFiles > 0)
-                    for (const file of mod.neededFiles) {
-                        var specifiedHash = file.checksum.toLowerCase();
-                        var filePath = path.join(KeyValue.readKVS('deltarunePath'), file.file);
-
-                        if (!fs.existsSync(filePath) || hashFile(filePath).toLowerCase() !== specifiedHash) {
-                            hashCompatible = false;
-                            break; // further checking is not needed, as at least one file is invalid anyway
-                        }
-                    };
-            }
-            catch (e) {
-                console.error('Error checking mod hashes compatibility:', e);
-                hashCompatible = false;
-            }
-
-            return hashCompatible && editionCompatible;
+            return editionCompatible;
         });
 
         return { modList: datalist, errors };
