@@ -61,7 +61,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         titleElement.innerText = title;
         titleElement.style.opacity = '0';
         var messageElement = document.createElement('p');
-        messageElement.innerText = message;
+        messageElement.innerHTML = message.replace(/\n/g, '<br>');
         messageElement.style.opacity = '0';
         alertMsg.appendChild(titleElement);
         alertMsg.appendChild(messageElement);

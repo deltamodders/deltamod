@@ -242,6 +242,7 @@ function modList() {
                 folder:      mod,
                 size:        modSize, // New in 1.1.2
                 demo:        !!meta.demoMod,
+                mergeSupport: (meta.mergeSupport == undefined ? true : meta.mergeSupport), // default true
                 url:         meta.url || null,
                 customRGB:   meta.color || null,
                 dependencies: modInfo.dependencies || [],

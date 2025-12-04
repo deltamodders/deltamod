@@ -15,7 +15,7 @@ function purifyDescription(desc) {
     return text;
 }
 
-var baking = false;
+var noMergeMods = [];
 
 function adaptForIconsA(elem) {
     elem.style.display = 'inline-flex';
@@ -168,10 +168,11 @@ async function createMod(mod) {
     flexContnainer.style.alignItems = 'center';
     flexContnainer.style.justifyContent = 'left';
     flexContnainer.style.gap = '6px';
-    flexContnainer.style.marginTop = '4px';
-    flexContnainer.style.backgroundColor = '#1d1d1dff';
+    flexContnainer.style.marginTop = '8px';
+    flexContnainer.style.backgroundColor = '#1d1d1d99';
+    flexContnainer.style.backdropFilter = 'blur(5px)';
     flexContnainer.style.boxShadow = '0 0 5px #ffffff34';
-    flexContnainer.style.borderRadius = '5px';
+    flexContnainer.style.borderRadius = '50px';
     flexContnainer.style.width = 'fit-content';
     flexContnainer.style.padding = '4px';
     flexContnainer.style.paddingLeft = '10px';
@@ -198,6 +199,21 @@ async function createMod(mod) {
     versionSpan.innerHTML = `${icon('change_history', fontSize + 'px')} ${(mod.version ? mod.version : 'Unknown')}`;
     versionSpan.id = `modsize-${mod.uid}`;
     flexContnainer.appendChild(versionSpan);
+
+    if (!mod.mergeSupport) {
+        noMergeMods.push({uid: mod.uid, name: mod.name});  
+
+        let mergeSpan = document.createElement('p');
+        mergeSpan = adaptForIconsA(mergeSpan);
+        mergeSpan.style.margin = '0px';
+        mergeSpan.style.marginTop = '10px';
+        mergeSpan.className = 'calibri';
+        mergeSpan.style.fontSize = fontSize + 'px';
+        mergeSpan.style.color = '#f9ff55ff';
+        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} This mod cannot be merged with others!`;
+        mergeSpan.id = `modmerge-${mod.uid}`;
+        infoContainer.appendChild(mergeSpan);
+    }
 
     bigAhhContainer.appendChild(imageContainer);
     bigAhhContainer.appendChild(infoContainer);
@@ -349,12 +365,6 @@ function loadInst(index) {
         //document.getElementById('par').innerText = 'Run without patches';
     }
 
-    baking = window._pageArguments && window._pageArguments.baker;
-    if (baking) {
-        document.getElementById('ptitle').innerText = 'Select mods to bake';
-        document.getElementById('importModBtn').disabled = true;
-        document.getElementById('importModBtn').style.opacity = 0.3;
-    }
     window._pageArguments = null;
 
     genbtnstyles();
@@ -364,27 +374,23 @@ function patchAndRun() {
     var allChecks = Array.from(document.querySelectorAll('input[type="checkbox"]')).filter(cb => cb.id.startsWith('modcheck-'));
     var selectedMods = allChecks.filter(cb => cb.checked).map(cb => cb.id.replace('modcheck-', ''));
     console.log('Selected mods:', selectedMods);
-    if (baking && selectedMods.length === 0) {
-        htmlAlert('No mods selected', 'You need to select at least one mod to bake into the game.', [{ text: 'Close', resolveWith: 'close' }]);
-        return;
-    }
-    if (baking) {
-        window._pageArguments = { baker: true, customPatchingText: 'Baking installation...', customPatchingDesc: 'Please wait while the installation is baked.' };
-        var msg = [
-            'You are about to bake the selected mods into the game installation.',
-            'This installation will not be able to use any other mods apart from the ones you selected now.',
-            'You can still add a new installation and it will be unaffected by this.',
-            'Are you sure you want to continue?'
-        ]
-        if (!window.confirm(msg.join('\n'))) {
-            return;
+
+    var goOn = true;
+    selectedMods.forEach(modId => {
+        if (!goOn) return;
+        if (noMergeMods.map(x => x.uid).includes(modId) && selectedMods.length > 1) {
+            goOn = false;
+            htmlAlert('Incompatible setting detected', `"<i>${noMergeMods.find(x => x.uid === modId).name}</i>" cannot be merged with other mods.`, [{ text: 'Close', resolveWith: 'close' }], 'join');
+
         }
-    }
+    });
+    if (!goOn) return;
+
     if (selectedMods.length === 0) {
         window.electronAPI.invoke('startGame', []);
     }
     else {
-        window.electronAPI.invoke('patchAndRun', [selectedMods, (baking ? 'baker' : '')]);
+        window.electronAPI.invoke('patchAndRun', [selectedMods]);
         page('patching');
     }
 }
