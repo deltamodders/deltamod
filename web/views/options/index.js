@@ -116,6 +116,14 @@ window.currentPageStack.cat = async function(cat) {
     }
 
     document.getElementById('b_' + cat).classList.add('selected');
+    document.querySelectorAll('[id^="b_"]').forEach(btn => {
+        if (btn.id != 'b_' + cat) {
+            btn.classList.add('blur');
+        }
+        else {
+            btn.classList.remove('blur');
+        }
+    });
     switch (cat) {
         case 'gen':
             await addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. Will not work on Steam based installs.', 'outputDelta');
