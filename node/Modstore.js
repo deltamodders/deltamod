@@ -36,7 +36,7 @@ async function importMod(filePath, nextPage = "main") {
         }
         const realRoot = findModRoot(modPath);
         if (realRoot && path.resolve(realRoot) !== path.resolve(modPath)) {
-            flattenInto(modPath, realRoot);
+            throw new Error('Please repackage the mod so that its contents are at the root level.');
         }
 
         // Check manifest anywhere in the tree (now usually at root after flatten)
@@ -238,9 +238,18 @@ function modList() {
             if (fs.readdirSync(modPath).filter(x => x.endsWith('.js')).length !== 0
             || fs.readdirSync(modPath).filter(x => x.endsWith('.ts')).length !== 0
             || fs.readdirSync(modPath).filter(x => x.endsWith('.exe')).length !== 0) {
-                failureReason = "Mod contains executable files which are not allowed.";
-                throw new Error(`Mod contains executable files which are not allowed: ${mod}`);
+                failureReason = "This mod is malicious and will not work with Deltamod. (EXE_DETECT)";
+                throw new Error(`This mod is malicious and will not work with Deltamod. (EXE_DETECT)`);
             }
+
+            [meta.name, meta.description, meta.author].forEach(field => {
+                if (
+                    (typeof field === 'string' && /<\/?[^>]+>/.test(field))
+                ) {
+                    failureReason = "This mod is malicious and will not work with Deltamod. (HTML_DETECT)";
+                    throw new Error('This mod is malicious and will not work with Deltamod. (HTML_DETECT)');
+                }
+            });
 
             var modSize = 0;
             function calculateFolderSize(folderPath) {

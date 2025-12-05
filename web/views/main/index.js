@@ -209,8 +209,8 @@ async function createMod(mod) {
         mergeSpan.style.marginTop = '10px';
         mergeSpan.className = 'calibri';
         mergeSpan.style.fontSize = fontSize + 'px';
-        mergeSpan.style.color = '#f9ff55ff';
-        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} This mod cannot be merged with others!`;
+        mergeSpan.style.color = '#888';
+        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} It is recommended to not use mod merging with this mod. Merging may not work with this mod.`;
         mergeSpan.id = `modmerge-${mod.uid}`;
         infoContainer.appendChild(mergeSpan);
     }
@@ -370,20 +370,30 @@ function loadInst(index) {
     genbtnstyles();
 })();
 
-function patchAndRun() {
+async function patchAndRun() {
     var allChecks = Array.from(document.querySelectorAll('input[type="checkbox"]')).filter(cb => cb.id.startsWith('modcheck-'));
     var selectedMods = allChecks.filter(cb => cb.checked).map(cb => cb.id.replace('modcheck-', ''));
     console.log('Selected mods:', selectedMods);
 
     var goOn = true;
-    selectedMods.forEach(modId => {
-        if (!goOn) return;
+    for (let i = 0; i < selectedMods.length; i++) {
+        const modId = selectedMods[i];
+        if (!goOn) break;
         if (noMergeMods.map(x => x.uid).includes(modId) && selectedMods.length > 1) {
+            try {
+                var resp = await htmlAlert(
+                    'Incompatible setting detected',
+                    `The author of "<i>${noMergeMods.find(x => x.uid === modId).name}</i>" has recommended not to merge this mod with others. Continue anyway?`,
+                    [{ text: 'No', rejectWith: 'no' }, { text: 'Yes', resolveWith: 'yes' }],
+                    'join'
+                );
+            } catch (e) {
+                // treat rejection like a "No"
+                resp = 'no';
+            }
             goOn = false;
-            htmlAlert('Incompatible setting detected', `"<i>${noMergeMods.find(x => x.uid === modId).name}</i>" cannot be merged with other mods.`, [{ text: 'Close', resolveWith: 'close' }], 'join');
-
         }
-    });
+    }
     if (!goOn) return;
 
     if (selectedMods.length === 0) {
