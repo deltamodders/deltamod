@@ -87,11 +87,21 @@ th {
 
 .modlist-error {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   background-color: #ff1111bb;
   border: 1px solid #ff0000cc;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  margin-bottom: 16px;
   cursor: pointer;
+  transition: 0.3s all;
+  animation: 0.7s ease forwards openError;
+}
+
+.modlist-error:hover {
+  background-color: #ff1111ee;
+  border: 1px solid #ff0000ee;
+  scale: 1.02;
+  
 }
 
 .modlist-error > h2 {
@@ -116,7 +126,7 @@ th {
   color: white;
   border: 2px solid var(--theme-color);
   backdrop-filter: blur(8px);
-  background-color: rgba(0, 0, 0, 0.51);
+  background-color: rgba(0, 0, 0, 0.9);
   padding: 20px;
   border-radius: 10px;
   animation: openError 0.3s ease forwards;
@@ -143,9 +153,9 @@ th {
 
 .error-buttons {
   margin-top: 12px;
-  display: flex;
   width: 100%;
-  justify-content: center;
+  display: flex;
+  justify-content: left;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }

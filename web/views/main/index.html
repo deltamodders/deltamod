@@ -49,13 +49,13 @@
 
         <dialog class="error-list-dialog" id="error-list-dialog">
             <h2>Some mods failed to load</h2>
-            <span class="calibri">Below is a list of mods that have failed to load along with the reason.</span>
+            <span class="calibri">Some mods didn't load correctly. Here are the details:</span>
             <div class="error-list-div" id="error-list-div">
 
             </div>
             <div class="error-buttons">
                 <!-- forgive me for this MASSIVE onclick thing, but keeping this and allmods unified is a pain in the ass -->
-                <button onclick="document.getElementById('error-list-dialog').style.animation = '0.3s closeError ease forwards'; setTimeout(() => { document.getElementById('error-list-dialog').close(); document.getElementById('error-list-dialog').style.animation = '0.3s openError ease forwards'; }, 300);" style="width: 100%; padding: 10px;">OK</button>
+                <button onclick="rew(); document.getElementById('error-list-dialog').style.animation = '0.3s closeError ease forwards'; setTimeout(() => { document.getElementById('error-list-dialog').close(); document.getElementById('error-list-dialog').style.animation = '0.3s openError ease forwards'; }, 300);" style="width: 100%; padding: 10px;">OK</button>
             </div>
         </dialog>
 </div>

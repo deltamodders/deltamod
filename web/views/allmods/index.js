@@ -140,22 +140,35 @@ function createErroringMods(errors) {
 
         const modId = document.createElement("span");
         modId.innerHTML = `Mod ID '${err.mod}'`;
+        modId.style.fontSize = '20px';
+        modId.style.color = '#888';
 
         const reasoning = document.createElement("span");
         reasoning.className = 'calibri';
-        reasoning.innerHTML = `<b style='font-weight: bold !important;'>Reason:</b> ${err.reason}`;
+        reasoning.innerHTML = `${icon('warning', '20px')} ${err.reason}`;
+        reasoning.style.display = 'flex';
+        reasoning.style.alignItems = 'center';
+        reasoning.style.gap = '8px';
+        reasoning.style.justifyContent = 'left';
+
+        var selectSpan = document.createElement('span');
+        selectSpan.className = 'calibri';
+        selectSpan.style.marginTop = '18px';
+        selectSpan.style.display = 'block';
+        selectSpan.innerText = 'How would you like to proceed?';
+        
 
         const actionRow = document.createElement("div");
         actionRow.className = "error-buttons";
         {
             // Action Row
             const exploreBtn = document.createElement("button");
-            exploreBtn.innerText = "Open Folder";
+            exploreBtn.innerText = "Open the mod's folder";
             exploreBtn.onclick = () => window.electronAPI.invoke("openModFolder", [err.mod]);
             actionRow.appendChild(exploreBtn);
 
             const deleteBtn = document.createElement("button");
-            deleteBtn.innerText = "Delete Permanently";
+            deleteBtn.innerText = "Delete the mod";
             deleteBtn.onclick = () => window.electronAPI.invoke("removeMod", [err.mod]);
             actionRow.appendChild(deleteBtn);
         }
@@ -163,6 +176,7 @@ function createErroringMods(errors) {
         element.appendChild(modId);
         element.appendChild(document.createElement("br"));
         element.appendChild(reasoning);
+        element.appendChild(selectSpan);
         element.appendChild(actionRow);
         errorList.appendChild(element);
     }
@@ -179,7 +193,10 @@ function createErroringMods(errors) {
     modList.forEach(x => createMod(x, fmodList.map(f => f.uid).includes(x.uid)));
 
     if (errors.length > 0) {
-        errorBanner.onclick = () => createErroringMods(errors);
+        errorBanner.onclick = () => {
+            rew();
+            createErroringMods(errors);
+        };
         errorBanner.children[0].innerText = `${errors.length} mod${errors.length === 1 ? "" : "s"} failed to load`;
         errorBanner.style.display = "inherit";
     } else errorBanner.style.display = "none";

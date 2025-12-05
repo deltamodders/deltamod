@@ -14,7 +14,7 @@ const computerName = os.hostname();
 
 async function importMod(filePath, nextPage = "main") {
     // create unique mod folder
-    const modPath = path.join(system.getPacketDatabase(), randomString(32));
+    const modPath = path.join(system.getPacketDatabase(), "Mod_" + randomString(32));
     fs.mkdirSync(modPath, { recursive: true });
 
     try {
@@ -45,6 +45,19 @@ async function importMod(filePath, nextPage = "main") {
             fs.rmdirSync(modPath, { recursive: true, force: true });
             throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
         }
+
+        var modInfo = safeReadJSON(manifestPath);
+        if (!modInfo || !modInfo.metadata) {
+            fs.rmdirSync(modPath, { recursive: true, force: true });
+            throw new Error('Invalid mod manifest. Please ensure meta.json is correctly formatted.');
+        }
+
+        modInfo.metadata.packageID = validatePID(modInfo.metadata.packageID);
+
+        if (modInfo.metadata.packageID != "und.und.und") {
+            fs.renameSync(modPath, path.join(system.getPacketDatabase(), modInfo.metadata.packageID));
+        }
+
 
         /*await dialog.showMessageBox(win, {
             type: 'info',
@@ -136,7 +149,7 @@ function modList() {
     for (var mod of mods) {
         try {
             failureReason = "Unknown. Contact a developer!";
-            var modPath = path.join(system.getPacketDatabase(), mod)
+            var modPath = path.join(system.getPacketDatabase(), mod);
             
             if (fs.existsSync(path.join(modPath, '_deltamodInfo.json'))) {
                 fs.copyFileSync(path.join(modPath, '_deltamodInfo.json'), path.join(modPath, 'meta.json'));
@@ -159,6 +172,16 @@ function modList() {
                 dependencies: []
             };
             var meta = modInfo.metadata || {};
+
+            meta.packageID = validatePID(meta.packageID);
+            const pid = meta.packageID;
+
+            if (modPath.endsWith(pid) === false && pid !== "und.und.und") {
+                console.log(`Renaming mod folder ${modPath} to use packageID ${pid} according to new standard.`);
+                const newModPath = path.join(system.getPacketDatabase(), pid);
+                fs.renameSync(modPath, newModPath);
+                modPath = newModPath;
+            }
 
             if (require('./KeyValue').readUniqueFlag('HASHCHECKS')) {
                 modInfo.neededFiles?.forEach(file => {
@@ -238,16 +261,16 @@ function modList() {
             if (fs.readdirSync(modPath).filter(x => x.endsWith('.js')).length !== 0
             || fs.readdirSync(modPath).filter(x => x.endsWith('.ts')).length !== 0
             || fs.readdirSync(modPath).filter(x => x.endsWith('.exe')).length !== 0) {
-                failureReason = "This mod is malicious and will not work with Deltamod. (EXE_DETECT)";
-                throw new Error(`This mod is malicious and will not work with Deltamod. (EXE_DETECT)`);
+                failureReason = "This mod contains potentially malicious content. (EXE_DETECT)";
+                throw new Error(`This mod contains potentially malicious content. (EXE_DETECT)`);
             }
 
             [meta.name, meta.description, meta.author].forEach(field => {
                 if (
                     (typeof field === 'string' && /<\/?[^>]+>/.test(field))
                 ) {
-                    failureReason = "This mod is malicious and will not work with Deltamod. (HTML_DETECT)";
-                    throw new Error('This mod is malicious and will not work with Deltamod. (HTML_DETECT)');
+                    failureReason = "This mod contains potentially malicious content. (HTML_DETECT)";
+                    throw new Error('This mod contains potentially malicious content. (HTML_DETECT)');
                 }
             });
 
@@ -280,7 +303,7 @@ function modList() {
                 url:         meta.url || null,
                 customRGB:   meta.color || null,
                 dependencies: modInfo.dependencies || [],
-                packageID: validatePID(meta.packageID),
+                packageID: pid,
                 _incompatibleHASH: meta._incompatibleHASH || false,
                 // NEW: give the renderer stable identifiers
                 new: deltamodExclusive.new || false, // Used in UI
