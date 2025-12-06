@@ -22,7 +22,7 @@
         const title = document.createElement('span');
         title.className = 'str';
         title.style.fontSize = '30px';
-        title.innerHTML = release.name + (release.prerelease ? ' <span style="color:orange;">(Beta)</span>' : ' <span style="color:green;">(Stable)</span>');
+        title.innerHTML = icon('deployed_code','25px') + ' ' + release.name + (release.prerelease ? ' <span style="color:orange;">(Beta)</span>' : ' <span style="color:green;">(Stable)</span>');
 
         const description = document.createElement('p');
         description.className = 'desc calibri';
