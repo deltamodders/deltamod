@@ -259,8 +259,10 @@ async function page(name) {
         name = 'bakedhome';
     }
     document.querySelector('.viewport').style.animation = '0.3s fadeOut cubic-bezier(0, 0.55, 0.45, 1)';
+    document.querySelector('.viewport').style.pointerEvents = 'none';
     await new Promise(resolve => setTimeout(resolve, 300));
     document.querySelector('.viewport').style.animation = '0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1)';
+    document.querySelector('.viewport').style.pointerEvents = 'auto';
     window.electronAPI.invoke('showWindow', []);
     theme = await fetch('themeprot://data/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
