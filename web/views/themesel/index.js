@@ -4,6 +4,10 @@
         if (!a.builtIn && b.builtIn) return 1;
         if (a.timed && !b.timed) return -1;
         if (!a.timed && b.timed) return 1;
+        const aExpired = a.timed && Date.now() > a.timedExpire;
+        const bExpired = b.timed && Date.now() > b.timedExpire;
+        if (!aExpired && bExpired) return -1;
+        if (aExpired && !bExpired) return 1;
         return a.name.localeCompare(b.name);
     });
     var currentTheme = await window.electronAPI.invoke('getTheme', []);

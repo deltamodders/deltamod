@@ -4,8 +4,6 @@
     "mainSong": "jolly.mp3",
     "id": "jolly",
     "musicTrack": "Gingerbread House - Toby Fox",
-    "description": "A timed Christmas theme for Deltamod.",
-    "color": "rgba(112, 187, 111, 1)",
-    "timed": true,
-    "timedExpire": 1768062600000
+    "description": "A Christmas theme for Deltamod.",
+    "color": "rgba(112, 187, 111, 1)"
 }
