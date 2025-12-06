@@ -315,6 +315,7 @@ h1 {
     overflow-y: scroll;
     padding: 20px;
     box-sizing: border-box;
+    animation: 0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1);
 }
 
 .bg {
@@ -335,18 +336,28 @@ h1 {
 
 @keyframes fadeIn {
     from {
-        opacity: 0;
-        scale: 0.6;
-        transform: translateX(-10px) rotate(5deg);
+        opacity: 0.4;
+        scale: 1;
+        transform: translateX(-30px);
     }
     to {
         opacity: 1;
         scale: 1;
-        transform: translateX(0px) rotate(0deg);
+        transform: translateX(0px);
     }
 }
-.viewport > * {
-    animation: 0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1);
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        scale: 1;
+        transform: translateX(0px);
+    }
+    to {
+        opacity: 0;
+        scale: 1;
+        transform: translateX(30px);
+    }
 }
 
 * {

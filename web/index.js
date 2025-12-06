@@ -249,6 +249,8 @@ window.preloadAPI.onThemeChange(refreshTheme);
 let lockRandoms = false;
 
 async function page(name) {
+    rew();
+    
     if (name == "") {
         name = pageN;
     }
@@ -256,6 +258,9 @@ async function page(name) {
     if (await window.electronAPI.invoke('isBaked', []) && name == 'main') {
         name = 'bakedhome';
     }
+    document.querySelector('.viewport').style.animation = '0.3s fadeOut cubic-bezier(0, 0.55, 0.45, 1)';
+    await new Promise(resolve => setTimeout(resolve, 300));
+    document.querySelector('.viewport').style.animation = '0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1)';
     window.electronAPI.invoke('showWindow', []);
     theme = await fetch('themeprot://data/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
@@ -394,8 +399,6 @@ async function page(name) {
     styleTag.innerHTML = generatedCSS;
     if (runScripts)
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
-
-    rew();
 }
 
 window.addEventListener('blur', () => {

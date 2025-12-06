@@ -78,6 +78,15 @@ button:hover {
     color: rgb(15,15,15);
 }
 
+button:hover:not(.noScaleBTN) {
+    scale: 1.2;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.38);
+}
+
+button:active:not(.noScaleBTN) {
+    scale: 1.3;
+}
+
 input {
     cursor: text;
 }
