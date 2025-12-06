@@ -179,6 +179,7 @@ function modList() {
             if (modPath.endsWith(pid) === false && pid !== "und.und.und") {
                 console.log(`Renaming mod folder ${modPath} to use packageID ${pid} according to new standard.`);
                 const newModPath = path.join(system.getPacketDatabase(), pid);
+                mod = pid;
                 fs.renameSync(modPath, newModPath);
                 modPath = newModPath;
             }

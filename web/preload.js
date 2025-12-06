@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('preloadAPI', {
   onRefresh: (callback) => ipcRenderer.on('refresh', () => callback()),
   onFinishedPatch: (callback) => ipcRenderer.on('finishedPatch', () => callback()),
   onDLMODProgress: (callback) => ipcRenderer.on('dlmodURL-progress', (_, info) => callback(info)),
+  onWRA: (callback) => ipcRenderer.on('winResAlert', (_, info) => callback(info)),
 });
 
 ipcRenderer.on('warn', (_, message) => {

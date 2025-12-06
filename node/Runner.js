@@ -588,6 +588,16 @@ function createWindow() {
         callback({ cancel: false });
     });
 
+    win.on('resized', () => {
+        var [width, height] = win.getSize();
+
+        if (width < 800) width = 800;
+        if (height < 600) height = 600;
+        win.setSize(width, height);
+
+        win.webContents.send('winResAlert', []);
+    });
+
     win.loadURL('deltapack://web/index.html');
 
     devToolsEnabled = (process.argv.includes('--developer') || process.env.DELTAMOD_ENV === 'dev' ? true : false);

@@ -29,6 +29,10 @@ function genbtnstyles() {
     // deprecated
 }
 
+window.preloadAPI.onWRA(() => {
+    rew();
+});
+
 function error() {
     fetch('http://google.com');
 }
@@ -151,7 +155,7 @@ window.preloadAPI.onUpdateAvailable((info) => {
     htmlAlert('Update available', `A new version of Deltamod (${info.version}) is available for download. Do you wish to update?`, [
         { text: 'Yes', resolveWith: "a" },
         { text: 'No', rejectWith: "a" }
-    ]).then(async (result) => {
+    ], 'update').then(async (result) => {
         await window.electronAPI.invoke('start-update', [window.ustack.updateInfo]);
     }).catch(async (result) => {
         await window.electronAPI.invoke('ignore-update', []);
