@@ -456,7 +456,11 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                             fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
                             fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'modNumbersCache.txt'), modNumber.toString());
                             if (modNumber != 1) {
-                                await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportModifiedOnly.csx'));
+                                if (!fs.existsSync(path.join(UTMT_FOLD, 'Scripts', 'ExportModifiedOnly.csx'))) {
+                                    await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportModifiedOnly.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAssetOrder.csx'));
+                                } else {
+                                    await run(DOTNET_UNIX + ' ' + UTMT_EXE + ' load ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --verbose --output ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'data.win') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAllTexturesGrouped.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAllCode.csx') + ' --scripts ' + path.join(UTMT_FOLD, 'Scripts', 'ExportAssetOrder.csx'));
+                                }
                             }
                         }
                     }
@@ -488,7 +492,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
             }            
             // Copy each produced chapter back
             for (let i = 0; i < chapterTargets.length; i++) {
-                if (modAmount > 1) {
+                if (modAmount > 1 || Patcher !== 'GM3P') {
                     produced = path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '1', 'data.win');
                 } else {
                     produced = path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '2', 'data.win');
