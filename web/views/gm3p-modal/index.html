@@ -9,12 +9,12 @@
     <div class="progbar">
 
     </div>
-    <span>Downloading...</span>
+    <img src="./logo.png" alt="" width="70" class="deltamodLogo">
 </body>
 <script>
     function updateProgress(percent) {
         const progressBar = document.querySelector('.progbar');
-        progressBar.style.width = 100-percent + '%';
+        progressBar.style.width = percent + '%';
     }
 </script>
 <style>
@@ -28,7 +28,7 @@
         height: 100%;
         width: 100%;
         overflow: hidden;
-        background-color: green;
+        background: url(./anotherhim.webp);
         color: white;
         display: flex;
         justify-content: center;
@@ -36,13 +36,14 @@
         font-family: Arial, sans-serif;
     }
     .progbar {
-        height: 100%;
+        height: 9px;
         position: fixed;
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
         z-index: 2;
-        top: 0;
-        right: 0;
-        background-color: transparent;
-        backdrop-filter: grayscale(100%);
+        bottom: 0;
+        left: 0;
+        background-color: rgba(255, 255, 255, 0.741);
     }
 </style>
 </html>

@@ -183,16 +183,8 @@ window.currentPageStack.cat = async function(cat) {
                         'Are you sure you want to reboot in developer mode? This is only for people who know their shit!', 
                         [{text:'Yes',resolveWith:'ok'}, {text:'No',rejectWith:'cancel'}]
                     );
-                await new Promise(r => setTimeout(r, 1000));
-                
-                if (!await window.electronAPI.invoke('rebootDev', [])) {
-                    await htmlAlert(
-                        'Info', 
-                        'The app is already running in developer mode.', 
-                        [{text:'OK',resolveWith:'ok'}]
-                    );
-                }
-            }, 'Open');
+                await window.electronAPI.invoke('rebootDev', [])
+            }, 'Open', !await window.electronAPI.invoke('isDevMode', []), 'You are already in dev mode.');
 
             break;
         case "dev":
