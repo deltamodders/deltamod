@@ -29,7 +29,7 @@
         editablespan.style.cursor = 'text';
         editablespan.onblur = () => {
             if (editablespan.value.trim() === "") {
-                window.alert("Installation name cannot be empty.");
+                htmlAlert('Invalid Name', 'Installation name cannot be empty. Reverting to default name.', [{text: 'OK', resolveWith: 'ok'}]);
                 editablespan.value = `Install #${install.index + 1}`;
             }
             install.name = editablespan.value.trim();
@@ -95,8 +95,13 @@
         deleteBtn.style.textAlign = 'center';
         deleteBtn = adaptForIcons(deleteBtn);
         deleteBtn.innerHTML = icon('delete', '18px');
-        deleteBtn.onclick = () => {
-            if (window.confirm("Are you sure you want to delete this installation? This action cannot be undone." + (install.steam ? "\nThe game will also be deleted from Steam and will need to be redownloaded to be played." : ""))) {
+        deleteBtn.onclick = async () => {
+            var resp = await htmlAlert('Confirmation', `Are you sure you want to delete the installation "${install.name || `Install #${install.index + 1}`}"? This action cannot be undone.`, [
+                {text: 'Yes', resolveWith: 'Y'},
+                {text: 'No', resolveWith: 'N'}
+            ]);
+
+            if (resp === 'Y') {
                 window.electronAPI.invoke('deleteSystemIndex', [install.index.toString()]);
             }
         };

@@ -1563,6 +1563,89 @@ function createWindow() {
         }
     });
 
+    ipcMain.handle('downloadDelta', async (event) => {
+        return new Promise (async (resolve, reject) => {
+            let cheerio = require('cheerio');
+            var itchIOPage = await axios.get('https://tobyfox.itch.io/deltarune').then(r => r.data);
+            
+            const $ = cheerio.load(itchIOPage);
+            const csrfToken = $('meta[name="csrf_token"]').attr('value');
+            console.log('Got token: ', csrfToken);
+
+            var api = await axios.post('https://tobyfox.itch.io/deltarune/file/12206581?source=view_game&as_props=1&after_download_lightbox=true', "csrf_token=" + csrfToken);
+
+            var deltaruneUrl = api.data.url;
+
+            var modal = new BrowserWindow({
+                width: 350,
+                height: 170,
+                resizable: false,
+                maximizable: false,
+                frame: false,
+                minimizable: false,
+                fullscreenable: false,
+                modal: true,
+                parent: win,
+                webPreferences: {
+                    devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
+                    nodeIntegration: true,
+                    preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
+                    partition: partition
+                }
+            });
+
+            modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
+            modal.setMenuBarVisibility(false);
+
+            const fileName = "deltaruneGAME.zip";
+            const destPath = path.join(System.getTemporary(), fileName);
+
+            const writer = fs.createWriteStream(destPath);
+
+            const response = await axios({
+                method: 'get',
+                url: deltaruneUrl,
+                responseType: 'stream'
+            });
+
+            const totalLength = response.headers['content-length'] ? parseInt(response.headers['content-length'], 10) : null;
+            let downloaded = 0;
+
+            response.data.on('data', (chunk) => {
+                downloaded += chunk.length;
+                if (totalLength) {
+                    const percent = ((downloaded / totalLength) * 100).toFixed(2);
+                    console.log(`Downloaded ${percent}%`);
+                    modal.webContents.executeJavaScript(`updateProgress(${percent});`); // i hate this workaround
+                } else {
+                    console.log(`Downloaded ${downloaded} bytes`);
+                }
+            });
+
+            response.data.pipe(writer);
+
+            writer.on('finish', async () => {
+                console.log('Download completed successfully');
+                
+                var extractPath = path.join(System.getTemporary(), 'deltarune_extracted_' + Date.now());
+                fs.mkdirSync(extractPath, { recursive: true });
+                await _7z.unpack(destPath, extractPath);
+                console.log('Extraction completed successfully');
+                modal.close();
+                resolve(extractPath);
+
+                
+            });
+
+            writer.on('error', (err) => {
+                console.error('Error downloading file:', err);
+                modal.close();
+                reject(err);
+            });
+        });
+
+    });
+
     /*
      * fireUpdate
      * Called by window when ready to get update info.
