@@ -321,7 +321,7 @@ function loadInst(index) {
 (async () => {
     const errorBanner = document.getElementById("error-banner");
 
-    var { modList, errors } = await window.electronAPI.invoke('getModList', []);
+    var { modList, errors } = (await window.electronAPI.invoke('getModList', []));
     if (window._pageArguments && window._pageArguments.sortfunc && window._pageArguments.sortid) {
         modList = modList.sort(window._pageArguments.sortfunc);
         document.getElementById('sortWay').value = window._pageArguments.sortid;
@@ -330,7 +330,7 @@ function loadInst(index) {
         // sort by name ascending by default
         modList = modList.sort((a, b) => a.name.localeCompare(b.name));
     }
-    modList.forEach(x => createMod(x));
+    modList.filter(x => !x.isIncompatible).forEach(x => createMod(x));
 
     document.getElementById('sortWay').onchange = (e) => {
         switch (e.target.value) {
@@ -362,11 +362,11 @@ function loadInst(index) {
         errorBanner.style.display = "inherit";
     } else errorBanner.style.display = "none";
 
-    if (modList.length === 0) {
+    if (modList.filter(x => !x.isIncompatible).length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 3;
-        td.innerHTML = 'No comaptible mods were found.';
+        td.innerHTML = 'No compatible mods were found.<br><small class="calibri" style="color: #888;">' + modList.filter(x => x.isIncompatible).length + ' mods were detected but are incompatible.</small>';
         td.style.paddingLeft = '10px';
         tr.appendChild(td);
         if ((await window.electronAPI.invoke('howManyMods', [])) == 0) {

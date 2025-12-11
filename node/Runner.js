@@ -1312,13 +1312,14 @@ function createWindow() {
         var { modList, errors } = Modstore.modList();
         var edition = KeyValue.readKVS('deltaruneEdition');
 
-        const datalist = modList.filter((mod) => {
+        let datalist = modList;
+        for (let i = datalist.length - 1; i >= 0; i--) {
+            datalist[i].isIncompatible = false;
+            let mod = datalist[i];
             var editionCompatible = (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
-            if (mod._incompatibleHASH) return false; // filter out flagged by modstore incompatible mods right away
-            if (!editionCompatible) return false; // return early if the first check fails, no need to check the file hashes at that point
-
-            return editionCompatible;
-        });
+            if (mod._incompatibleHASH) datalist[i].isIncompatible = true;
+            if (!editionCompatible) datalist[i].isIncompatible = true;
+        }
 
         return { modList: datalist, errors };
     });
@@ -1326,7 +1327,7 @@ function createWindow() {
     /*
      * getModListFull
      * Returns the list of mods from the KVS.
-     * Includes incompatible mods as well.
+     * Includes incompatible mods as well, marked.
     */
     ipcMain.handle('getModListFull', async (event, args) => {
         return Modstore.modList();

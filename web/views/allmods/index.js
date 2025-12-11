@@ -187,10 +187,9 @@ function createErroringMods(errors) {
 (async () => {
     const errorBanner = document.getElementById("error-banner");
 
-    var { modList, errors } = await window.electronAPI.invoke('getModListFull', []);
-    var fmodList = await window.electronAPI.invoke('getModList', []);
-    fmodList = fmodList.modList;
-    modList.forEach(x => createMod(x, fmodList.map(f => f.uid).includes(x.uid)));
+    var { modList, errors } = await window.electronAPI.invoke('getModList', []);
+
+    modList.forEach(x => createMod(x, x.isCompatible));
 
     if (errors.length > 0) {
         errorBanner.onclick = () => {
