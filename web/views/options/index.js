@@ -158,23 +158,8 @@ window.currentPageStack.cat = async function(cat) {
 
             break;
         case 'adv':
-            await addButton('Change GM3P version', 'Allows you to change your GM3P version. Only for advanced users!', async () => {
+            await addButton('Change patcher', 'Allows you to change your patching system. Only for advanced users!', async () => {
                 page('gm3p-selector');
-            }, 'Open');
-
-            await addButton('Install DEVICE_FUSION', '(BETA) Allows you to use DEVICE_FUSION instead of GM3P for patching.', async () => {
-                try {
-                    var releasesRaw = await fetch('https://api.github.com/repos/Egochka11/DEVICE-FUSION/releases');
-                    var releases = await releasesRaw.json();
-                    var code = releasesRaw.status;
-                    if (code != 200) {
-                        throw new Error(`GitHub is rejecting your requests. HTML code: ${code}`);
-                    }
-                    var asset = releases[0].assets.find(a => a.name.endsWith('.zip'));
-                    await window.electronAPI.invoke('downloadGM3P', [asset.browser_download_url]);
-                } catch (e) {
-                    await htmlAlert('Error', 'An error occurred while trying to download DEVICE_FUSION: ' + e.message, [{text:'OK',resolveWith:'ok'}], 'error');
-                }
             }, 'Open');
 
             await addButton('Reboot in Developer Mode', 'Reboots in developer mode, a mode which allows you to use the DevTools.', async () => {

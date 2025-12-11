@@ -1,10 +1,14 @@
 (async() => {
+    var curpatch = 'deltamodders/GM3P';
+    if (window._pageArguments && window._pageArguments.curpatch) {
+        curpatch = window._pageArguments.curpatch;
+    }
     if (!navigator.onLine) {
         await htmlAlert("Offline", "You appear to be offline. Please connect to the internet to view releases.", [{text:'OK',resolveWith:'ok'}],'cloud_alert');
         page('options');
         return;
     }
-    var releases = await fetch('https://api.github.com/repos/deltamodders/GM3P/releases');
+    var releases = await fetch(`https://api.github.com/repos/${curpatch}/releases`);
     var viewport = document.querySelector('.releases');
     var code = releases.status;
     if (code != 200) {
@@ -70,3 +74,8 @@
 
     genbtnstyles();
 })();
+
+document.getElementById('viewPatcher').oninput = () => {
+    window.currentPageStack.curpatch = document.getElementById('viewPatcher').value;
+    page();
+}
