@@ -366,7 +366,7 @@ function loadInst(index) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 3;
-        td.innerHTML = 'No compatible mods were found.<br><small class="calibri" style="color: #888;">' + modList.filter(x => x.isIncompatible).length + ' mods were detected but are incompatible.</small>';
+        td.innerHTML = 'No compatible mods were found.' + (modList.filter(x => x.isIncompatible).length != 0 ? '<br><small class="calibri" style="color: #888;">' + modList.filter(x => x.isIncompatible).length + ' mods were detected but are incompatible.</small>' : '');
         td.style.paddingLeft = '10px';
         tr.appendChild(td);
         if ((await window.electronAPI.invoke('howManyMods', [])) == 0) {
