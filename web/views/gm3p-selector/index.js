@@ -3,6 +3,7 @@
     if (window._pageArguments && window._pageArguments.curpatch) {
         curpatch = window._pageArguments.curpatch;
     }
+    document.getElementById('viewPatcher').value = curpatch;
     if (!navigator.onLine) {
         await htmlAlert("Offline", "You appear to be offline. Please connect to the internet to view releases.", [{text:'OK',resolveWith:'ok'}],'cloud_alert');
         page('options');
@@ -76,6 +77,7 @@
 })();
 
 document.getElementById('viewPatcher').oninput = () => {
-    window.currentPageStack.curpatch = document.getElementById('viewPatcher').value;
-    page();
-}
+    window._pageArguments = {};
+    window._pageArguments.curpatch = document.getElementById('viewPatcher').value;
+    page("gm3p-selector");
+};

@@ -36,6 +36,12 @@ const { error } = require('console');
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
 function obtainThemes() {
+    if (!fs.existsSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes'))) {
+        fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes'));
+        fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data'));
+        fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'img'));
+        fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'mus'));
+    }
     var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes', 'data')).filter(f => f.endsWith('.theme.json'));
         var available2 = fs.readdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data')).filter(f => f.endsWith('.theme.json'));
         return [...available.map(f => {
@@ -572,7 +578,7 @@ function createWindow() {
             preload: Paths.file('web', 'preload.js'),
         }
     });
-
+    
     win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
         // check if it https
         if (details.url.startsWith('https://')) {
@@ -849,6 +855,7 @@ function createWindow() {
             if (totalLength) {
                 const percent = ((downloaded / totalLength) * 100).toFixed(2);
                 console.log(`Downloaded ${percent}%`);
+                win.setProgressBar(Math.round(percent)/100);
                 modal.webContents.executeJavaScript(`updateProgress(${percent});`); // i hate this workaround
             } else {
                 console.log(`Downloaded ${downloaded} bytes`);
@@ -858,6 +865,7 @@ function createWindow() {
         response.data.pipe(writer);
 
         writer.on('finish', async () => {
+            win.setProgressBar(0);
             console.log('Download completed successfully');
             try {
                 fs.rmdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
@@ -1617,6 +1625,7 @@ function createWindow() {
                 if (totalLength) {
                     const percent = ((downloaded / totalLength) * 100).toFixed(2);
                     console.log(`Downloaded ${percent}%`);
+                    win.setProgressBar(Math.round(percent)/100);
                     modal.webContents.executeJavaScript(`updateProgress(${percent});`); // i hate this workaround
                 } else {
                     console.log(`Downloaded ${downloaded} bytes`);
@@ -1627,6 +1636,8 @@ function createWindow() {
 
             writer.on('finish', async () => {
                 console.log('Download completed successfully');
+
+                win.setProgressBar(0);
                 
                 var extractPath = path.join(System.getTemporary(), 'deltarune_extracted_' + Date.now());
                 fs.mkdirSync(extractPath, { recursive: true });
