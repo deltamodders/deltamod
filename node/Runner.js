@@ -165,6 +165,9 @@ function validateMyInstall(deltapath) {
  */
 function errorWin(err) {
     var filename = 'error_' + Date.now() + '.log';
+    if (!fs.existsSync(path.join(app.getPath('documents'), 'deltamodErrors'))) {
+        fs.mkdirSync(path.join(app.getPath('documents'), 'deltamodErrors'), { recursive: true });
+    }
     var whereWrite = path.join(app.getPath('documents'), 'deltamodErrors', filename);
     var heapScreenshot = require('v8').getHeapSnapshot();
     var heapFile = fs.createWriteStream(whereWrite.replace('.log', '.heapsnapshot'));
