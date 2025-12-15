@@ -1725,18 +1725,13 @@ function createWindow() {
             path1 = result.filePaths[0];
         }
         else if (steam && !isFromLocate) {
-            dialog.showMessageBoxSync({
-                type: 'info',
-                title: 'Steam information',
-                message: 'This will modify your Steam folder to point to a Deltamod-managed install of Deltarune. This feature is in beta and if the install is later removed from Deltamod, you will need to re-download it from Steam.\n\n(This won\'t affect other games installed on Steam.)',
-            });
             var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
             var EDITIONS = require('../steamdata.json').editions;
 
             var userChoice = dialog.showMessageBoxSync({
                 type: 'info',
-                title: 'Steam edition selection',
-                message: 'Please select the edition of Deltarune you\'d like to import from Steam.',
+                title: 'Select an edition',
+                message: 'Please choose the preferred Deltarune edition to import:',
                 buttons: [...EDITIONS.map(m => m.name), 'Cancel'],
             });
 

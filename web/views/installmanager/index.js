@@ -193,7 +193,7 @@
     steamButton.style.paddingTop = '10px';
     steamButton.style.paddingBottom = '10px';
     steamButton.style.justifyContent = 'center';
-    steamButton.innerHTML = '<brand-icon>S</brand-icon> Import Steam installation (BETA)';
+    steamButton.innerHTML = '<brand-icon>S</brand-icon> New installation from Steam';
     steamButton.style.textAlign = 'center';
     steamButton.onclick = () => {
         console.log('Steam button clicked');
