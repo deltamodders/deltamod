@@ -21,6 +21,15 @@
     src: url("./ubuntu.ttf") format("truetype");
 }
 
+@font-face {
+    font-family: "Brands";
+    src: url("./brands.ttf");
+}
+
+brand-icon {
+    font-family: 'Brands';
+}
+
 /* Hide scrollbar for all browsers */
 * {
     scrollbar-width: none;

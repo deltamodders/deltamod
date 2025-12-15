@@ -55,7 +55,9 @@ async function importMod(filePath, nextPage = "main") {
         modInfo.metadata.packageID = validatePID(modInfo.metadata.packageID);
 
         if (modInfo.metadata.packageID != "und.und.und") {
-            fs.renameSync(modPath, path.join(system.getPacketDatabase(), modInfo.metadata.packageID));
+            var pp = path.join(system.getPacketDatabase(), modInfo.metadata.packageID);
+            console.log('work into ' + pp + ' ; id ' + modInfo.metadata.packageID);
+            fs.renameSync(modPath, pp);
         }
 
 
@@ -122,6 +124,10 @@ function safeReadJSON(p) {
 
 function validatePID(pid) {
     console.log("Validating packageID:", pid);
+
+    if (pid.includes('..') || pid.includes('/') || pid.includes('\\')) {
+        return "und.und.und"; // prevent directory traversal
+    }
 
     if (!pid) return "und.und.und"; // default if not specified
 

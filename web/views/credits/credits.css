@@ -24,3 +24,10 @@
 .credits-author:hover {
     color: yellow;
 }
+
+#discordBtn {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 15px;
+}
