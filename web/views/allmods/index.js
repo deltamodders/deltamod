@@ -85,20 +85,9 @@ async function createMod(mod, compatible) {
     idSpan.className = 'calibri';
     idSpan.style.fontSize = 'smaller';
     idSpan.style.color = '#888';
-    idSpan.innerHTML = `${icon('sell', 'small')} ${mod.packageID}`;
+    idSpan.innerHTML = `${icon('sell', 'small')} ${mod.packageID == 'und.und.und' ? '<i>No ID was specified.</i>' : mod.packageID}`;
     idSpan.id = `modid-${mod.uid}`;
     modNameContainer.appendChild(idSpan);
-
-    let compatibilitySpan = document.createElement('p');
-    compatibilitySpan = adaptForIcons(compatibilitySpan);
-    compatibilitySpan.style.margin = '0px';
-    compatibilitySpan.style.marginTop = '4px';
-    compatibilitySpan.className = 'calibri';
-    compatibilitySpan.style.fontSize = 'smaller';
-    compatibilitySpan.style.color = (compatible ? '#97cb85ff' : '#be8383ff');
-    compatibilitySpan.innerHTML = `${icon((compatible ? 'task_alt' : 'warning'), 'small')} ${compatible ? 'Compatible' : 'Incompatible'}`;
-    compatibilitySpan.id = `modcompat-${mod.uid}`;
-    modNameContainer.appendChild(compatibilitySpan);
 
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
