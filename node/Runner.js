@@ -31,7 +31,6 @@ const console = require('./Console.js');
 const { handleProtocolLaunch } = require('./Protocol.js');
 const { isFeatureEnabled } = require('./FeatureFlags.js');
 const { valid } = require('node-html-parser');
-const { error } = require('console');
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
