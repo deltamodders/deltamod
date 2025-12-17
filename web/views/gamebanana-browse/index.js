@@ -67,25 +67,37 @@ function dlmod(dlurl, buttonElem=null) {
     lockUs = true;
     Array.from(document.querySelectorAll('.sidebar-button')).forEach(e => e.disabled = true);
     let queryme = Math.random().toString(36).substring(2, 15);
-    buttonElem.innerHTML = "";
-    var prog = document.createElement('progress');
-    prog.value = 0;
-    prog.max = 100;
-    prog.style.width = '100px';
-    buttonElem.appendChild(prog);
+
+    buttonElem.innerHTML = icon('clock_loader_10', '0.9em');
 
     window.currentPageStack.qms[queryme] = function(info) {
         if (info.error) {
             lockUs = false;
             Array.from(document.querySelectorAll('.sidebar-button')).forEach(e => e.disabled = false);
-            buttonElem.innerHTML = icon('cancel', '0.9em') + ' Error: ' + info.message;;
+            buttonElem.innerHTML = icon('cancel', '0.9em')
             return;
         }
-        prog.value = info.percent;
+        var ranges = [
+            [0,20,'20'],
+            [20,40,'40'],
+            [40,60,'60'],
+            [60,80,'80'],
+            [80,100,'90']
+        ];
+        let roundedPercent = '';
+
+        for (let r of ranges) {
+            if (info.percent >= r[0] && info.percent < r[1]) {
+                roundedPercent = r[2];
+                break;
+            }
+        }
+        
+        buttonElem.innerHTML = icon('clock_loader_' + roundedPercent, '0.9em');
         if (info.percent >= 100) {
             lockUs = false;
             Array.from(document.querySelectorAll('.sidebar-button')).forEach(e => e.disabled = false);
-            buttonElem.innerHTML = icon('check', '0.9em') + ' Download complete!';
+            buttonElem.innerHTML = icon('check', '0.9em');
         }
     };
 
@@ -278,12 +290,12 @@ window.currentPageStack.plusPage = plusPage;
             var td1 = document.createElement('td');
             // Rendering of td1
             {
-                var viewButton = document.createElement('button');
-                viewButton.innerHTML = icon('download', '0.9em') + ' Download this mod';
-                viewButton.onclick = async () => {
-                    viewButton.disabled = true;
-                    viewButton.innerHTML = icon('downloading', '0.9em') + ' Loading...';
-                    viewButton.style.opacity = '0.6';
+                var dlBtn = document.createElement('button');
+                dlBtn.innerHTML = icon('download', '0.9em') + '';
+                dlBtn.onclick = async () => {
+                    dlBtn.disabled = true;
+                    dlBtn.innerHTML = icon('downloading', '0.9em');
+                    dlBtn.style.opacity = '0.6';
 
                     var dlpage = await fetch(`https://gamebanana.com/apiv11/Mod/${mod._idRow}/ProfilePage`);
                     dlpage = await dlpage.json();
@@ -303,7 +315,7 @@ window.currentPageStack.plusPage = plusPage;
                     });
 
                     if (eligibleDownloads.length === 0) {
-                        viewButton.innerHTML = icon('cancel', '0.9em') + ' Cannot download';
+                        dlBtn.innerHTML = icon('cancel', '0.9em') + ' Cannot download';
                         var open = await htmlAlert('One click not available','This mod cannot be downloaded via Deltamod because the owner did not package it for usage with the tool.',[{text:'Ok',resolveWith:'no',},{text:'Open mod page on GameBanana',resolveWith:'yes'}], 'web_traffic');
                         if (open === 'yes') {
                             window.open(mod._sProfileUrl, '_blank');
@@ -312,20 +324,28 @@ window.currentPageStack.plusPage = plusPage;
                     }
 
                     if (eligibleDownloads.length > 1) {
-                        viewButton.innerHTML = icon('cancel', '0.9em') + ' Multiple files found';
+                        dlBtn.innerHTML = icon('indeterminate_question_box', '0.9em');
                         var res = await htmlAlert('Multiple compatible files','This mod has multiple files compatible with Deltamod. Please choose the one to download.',eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
                         if (!res) {
                             return;
                         }
                         else {
-                            dlmod(res, viewButton);
+                            dlmod(res, dlBtn);
                         }
                         return;
                     }
 
-                    dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), viewButton);
+                    dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn);
                 };
-                td1.appendChild(viewButton);
+
+                var vwBtn = document.createElement('button');
+                vwBtn.innerHTML = icon('open_in_new', '0.9em') + '';
+                vwBtn.style.marginRight = '8px';
+                vwBtn.onclick = () => {
+                    window.open(mod._sProfileUrl, '_blank');
+                }
+                td1.appendChild(vwBtn);
+                td1.appendChild(dlBtn);
             }
 
 
