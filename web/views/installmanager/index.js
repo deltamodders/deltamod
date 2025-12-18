@@ -2,7 +2,8 @@
     var installs = await window.electronAPI.invoke('getInstallations', []);
     var index = await window.electronAPI.invoke('getSystemIndex', []);
     const tbody = document.querySelector('#installations-list');
-    installs.forEach(install => {
+    for (i in installs) {
+        var install = installs[i];
         const row = document.createElement('tr');
         const nameCell = document.createElement('td');
         const goCell = document.createElement('td');
@@ -18,13 +19,17 @@
         console.log(JSON.stringify(install));
 
         const nameContainer = document.createElement('div');
+        nameContainer.style.display = 'flex';
+        nameContainer.style.justifyContent = 'left';
+        nameContainer.style.alignItems = 'center';
+        nameContainer.style.gap = '8px';
 
         let editablespan = document.createElement('input');
         editablespan.type = 'text';
         editablespan.style.display = 'block';
         editablespan.style.margin = '0';
         editablespan.style.height = '22px';
-        editablespan.style.fontSize = '13px';
+        editablespan.style.fontSize = '16px';
         editablespan.value = sanitizeHTML(install.name || `Install #${install.index + 1}`);
         editablespan.style.cursor = 'text';
         editablespan.onblur = () => {
@@ -36,35 +41,20 @@
             window.electronAPI.invoke('setInstallationCName', [install.index.toString(), install.name]);
         };
 
-        let boldName = document.createElement('small');
-        boldName.style.display = 'inline-flex';
-        boldName.style.alignItems = 'center';
-        boldName.style.gap = '5px';
-        boldName.style.fontSize = '13px';
-        boldName.style.marginBottom = '6px';
-        boldName.style.justifyContent = 'left';
-        boldName.style.fontWeight = 'normal';
-        boldName.innerHTML = icon((install.bakedInstallation ? 'skillet' : 'snippet_folder'));
-        boldName.appendChild(editablespan);
+        let boldName = document.createElement('img');
+        boldName.style.width = '43px';
+        boldName.src = './gamesIco/' + install.pid + '.png';
 
         nameContainer.appendChild(boldName);
+        nameContainer.appendChild(editablespan);
 
         const details = document.createElement('small');
         {
-            const gameType = document.createTextNode(` Game type: ${uppercaseFirst(install.type)}`);
-            const lineBreak = document.createElement('br');
-            const gameSource = document.createTextNode(`Game source: ${(install.steam ? 'Steam' : 'Manual')}`);
-            if (install.bakedInstallation) {
-                const bakedInfo = document.createElement('i');
-                bakedInfo.textContent = 'Baked installation';
-                details.appendChild(bakedInfo);
-                details.appendChild(lineBreak.cloneNode());
-            }
-            details.appendChild(gameType);
-            details.appendChild(lineBreak);
-            details.appendChild(gameSource);
+            var gname = await (window.electronAPI.invoke('getGameInfo', [install.pid])).then(g => g.name);
+            details.innerHTML = `${icon('stadia_controller', '14px')} ${gname} <br> ${icon('gite', '14px')} ${(install.steam ? 'Steam' : 'Manual')}`;
         }
         details.classList.add('calibri');
+        details.style.color = '#888';
         details.style.display = 'block';
         nameContainer.appendChild(details);
 
@@ -155,7 +145,7 @@
         row.appendChild(nameCell);
         row.appendChild(goCell);
         tbody.appendChild(row);
-    });
+    }
 
     const newRow = document.createElement('tr');
     const newCell = document.createElement('td');

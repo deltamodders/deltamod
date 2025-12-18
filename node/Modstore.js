@@ -52,6 +52,16 @@ async function importMod(filePath, nextPage = "main") {
             throw new Error('Invalid mod manifest. Please ensure meta.json is correctly formatted.');
         }
 
+        if (modInfo.metadata.demoMod !== undefined) {
+            modInfo.metadata.game = (modInfo.metadata.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
+            delete modInfo.metadata.demoMod;
+            fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+        }
+        else if (modInfo.metadata.demoMod === undefined && modInfo.metadata.game === undefined) {
+            fs.rmdirSync(modPath, { recursive: true, force: true });
+            throw new Error('Mod manifest is missing required field `game`.');
+        }
+
         modInfo.metadata.packageID = validatePID(modInfo.metadata.packageID);
 
         if (modInfo.metadata.packageID != "und.und.und") {
@@ -174,10 +184,17 @@ function modList() {
             // Zork's Patch: Read defensively; synthesize defaults if missing
             failureReason = "Failed to read meta.json.";
             var modInfo = safeReadJSON(manifestPath) || {
-                metadata: { name: mod, version: '1.0.0', demoMod: false, packageID: 'und.und.und' },
+                metadata: { name: mod, version: '1.0.0', game: 'toby.deltarune', packageID: 'und.und.und' },
                 dependencies: []
             };
             var meta = modInfo.metadata || {};
+
+            if (meta.demoMod !== undefined) {
+                console.log("Upgrading demoMod field to game field for mod:", mod);
+                meta.game = (meta.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
+                delete meta.demoMod;
+                fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+            }
 
             meta.packageID = validatePID(meta.packageID);
             const pid = meta.packageID;
@@ -259,9 +276,9 @@ function modList() {
                 !meta ||
                 typeof meta.name !== 'string' ||
                 typeof meta.description !== 'string' ||
-                typeof meta.demoMod === 'undefined'
+                typeof meta.game === 'undefined'
             ) {
-                failureReason = "meta.json is missing required fields `name`, `description` or `demoMod`.";
+                failureReason = "meta.json is missing required fields `name`, `description` or `game`.";
                 throw new Error(`Missing required fields in meta.json for mod: ${mod}`);
             }
 
@@ -305,10 +322,10 @@ function modList() {
                 description: meta.description || '',
                 folder:      mod,
                 size:        modSize, // New in 1.1.2
-                demo:        !!meta.demoMod,
                 mergeSupport: (meta.mergeSupport == undefined ? true : meta.mergeSupport), // default true
                 url:         meta.url || null,
                 customRGB:   meta.color || null,
+                game:        meta.game || "toby.deltarune",
                 dependencies: modInfo.dependencies || [],
                 packageID: pid,
                 _incompatibleHASH: meta._incompatibleHASH || false,

@@ -19,12 +19,6 @@ function retrieve() {
         fs.writeFileSync(pathname, '{}');
     }
     var raw = fs.readFileSync(pathname, 'utf8');
-    if (hash(raw.split('##')[0]) != raw.split('##')[1]) {
-        console.log('Store hash mismatch, wiping store');
-        fs.writeFileSync(pathname, '{}##' + hash('{}'));
-        retrieve();
-        return true;
-    }
     kvs = JSON.parse(raw.split('##')[0]);
     console.log('Store loaded')
     return true;
@@ -35,14 +29,14 @@ function kvsFlush() {
     var exportedKVS = kvs;
     
     exportedKVS.version = 'DELTAMOD_DATA_'+require('../package.json').version;
-    fs.writeFileSync(pathname, JSON.stringify(exportedKVS, null, 2) + '##' + hash(JSON.stringify(exportedKVS, null, 2)));
+    fs.writeFileSync(pathname, JSON.stringify(exportedKVS, null, 2));
     console.log('Store flushed.');
     return true;
 }
 
 function kvsFlushIndex(obj, index) {
     var pathname = getSystemFileOfIndex('store.json', index);
-    fs.writeFileSync(pathname, JSON.stringify(obj, null, 2) + '##' + hash(JSON.stringify(obj, null, 2)));
+    fs.writeFileSync(pathname, JSON.stringify(obj, null, 2));
     console.log('Store flushed for index ' + index);
     return true;
 }
@@ -101,6 +95,34 @@ function setKVS(name, value) {
     kvsFlush();
 }
 
+function upgradeStores() {
+    try {
+        var oldStorePath = app.getPath('userData');
+
+        console.log('Checking for old stores to upgrade in ' + oldStorePath);
+
+        fs.readdirSync(oldStorePath).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
+            if (file.endsWith('unique')) return;
+            var indx = file.split('-')[1];
+            console.log('Checking install index ' + indx);
+            if (readKVSOfIndex('deltaruneEdition', indx, "FF") != "rem") {
+                console.log('Upgrading index ' + indx);
+                var pid = "toby.deltarune.demo";
+                if (readKVSOfIndex('deltaruneEdition', indx, "n") == "full") {
+                    pid = "toby.deltarune";
+                }
+                setKVSOfIndex('gamePid', pid, indx);
+                setKVSOfIndex('deltaruneEdition', "rem", indx);
+                console.log('Upgraded index ' + indx);
+                return;
+            }
+        });
+    }
+    catch (e) {
+        console.log('No old stores found to upgrade: ' + e);
+    }
+}
+
 function setKVSOfIndex(name, value, index) {
     try {
         var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
@@ -129,6 +151,7 @@ module.exports = {
     readUniqueFlag,
     kvsWipe,
     setKVS,
+    upgradeStores,
     setKVSOfIndex,
     readKVSOfIndex,
     readKVS

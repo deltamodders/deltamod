@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell, screen, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification } = require('electron');
 const Paths = require('./Paths.js');
 const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
@@ -6,11 +6,10 @@ const { execSync } = require('child_process');
 const mime = require('mime-types');
 const createDesktopShortcut = require('create-desktop-shortcuts');
 const _7z = require("7zip-min");
-const {Downloader} = require("nodejs-file-downloader");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
 const crypto = require('crypto');
-const { hashFile, setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require('./Utils.js');
-const { exec, execFileSync } = require('child_process');
+const { setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require('./Utils.js');
+const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
 const GamePatching = require('./GamePatching.js');
@@ -19,18 +18,19 @@ const { default: axios } = require('axios');
 const System = require('./System.js');
 const Netlayer = require('./Netlayer.js');
 const path = require('path');
-
-let abortController;
-let updateAvailable = false;
-let callbackNPS;
-let callbackNPSPassWith;
-
 const { getConfig, config } = require('7zip-min');
 const { path7za } = require('7zip-bin');
 const console = require('./Console.js');
 const { handleProtocolLaunch } = require('./Protocol.js');
 const { isFeatureEnabled } = require('./FeatureFlags.js');
 const { valid } = require('node-html-parser');
+
+let abortController;
+let updateAvailable = false;
+let callbackNPS;
+let callbackNPSPassWith;
+
+
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
@@ -138,7 +138,7 @@ async function getInstallations(suppressWarnings = false) {
             index: parseInt(file.split('-')[1]),
             name: commonName,
             steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
-            type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1])),
+            pid: KeyValue.readKVSOfIndex('gamePid', parseInt(file.split('-')[1])),
             appid: KeyValue.readKVSOfIndex('steamAppId', parseInt(file.split('-')[1])),
             bakedInstallation: KeyValue.readKVSOfIndex('baked', parseInt(file.split('-')[1])) === true,
         });
@@ -340,6 +340,7 @@ function showError(errorCode) {
 }
 
 function createWindow() {
+    KeyValue.upgradeStores();
     if (!KeyValue.readUniqueFlag('setup')) {
         KeyValue.writeUniqueFlag('setup', 'true');
         KeyValue.writeUniqueFlag('audio', 'true');
@@ -418,14 +419,6 @@ function createWindow() {
         if (parseInt(overrideData) < 0) {
             console.error('The specified installation of Deltarune is invalid.');
             threrror = 'The specified installation of Deltarune is invalid.';
-        }
-        if (!fs.existsSync(app.getPath('userData') + '/deltamod_system-' + overrideData + '/deltaruneInstall') && overrideData !== '0') {
-            overrideData = '0'; // Only 0 can be valid without a deltaruneInstallù
-            dialog.showMessageBoxSync({
-                type: 'warning',
-                title: 'Invalid Installation Selected',
-                message: 'The specified installation of Deltarune is invalid. Reverting to the default installation.'
-            });
         }
         setSystemIndex(overrideData);
     }
@@ -1306,7 +1299,7 @@ function createWindow() {
     */
     ipcMain.handle('getEditionByIndex', async (event, args) => {
         var index = args[0];
-        var edition = KeyValue.readKVSOfIndex('deltaruneEdition', index);
+        var edition = KeyValue.readKVSOfIndex('gamePid', index);
         if (edition) {
             return edition;
         }
@@ -1320,13 +1313,15 @@ function createWindow() {
     */
     ipcMain.handle('getModList', async (event, args) => {
         var { modList, errors } = Modstore.modList();
-        var edition = KeyValue.readKVS('deltaruneEdition');
+        var edition = KeyValue.readKVS('gamePid');
+        
 
         let datalist = modList;
         for (let i = datalist.length - 1; i >= 0; i--) {
             datalist[i].isIncompatible = false;
             let mod = datalist[i];
-            var editionCompatible = (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
+            var editionCompatible = (mod.game == edition);
+            console.log(`Mod ${mod.name} (${mod.uniqueId}) compatibility check: mod game=${mod.game} vs edition=${edition} => ${editionCompatible ? 'compatible' : 'incompatible'}`);
             if (mod._incompatibleHASH) datalist[i].isIncompatible = true;
             if (!editionCompatible) datalist[i].isIncompatible = true;
         }
@@ -1694,6 +1689,7 @@ function createWindow() {
         var steam = (args[0] == 'steam');
         var isFromLocate = (args[1] == 'locate');
         var specifiedLocatePath = (isFromLocate && args[2] ? args[2] : null);
+        var game = args[3] || "def";
 
         // get max index
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -1776,9 +1772,14 @@ function createWindow() {
             return false;
         }
 
-        var gameEdition = 'demo';
-        if (fs.existsSync(`${path1}/chapter4_windows/data.win`)) {
-            gameEdition = 'full';
+        if (game == "def" || steam) {
+            var gameEdition = 'toby.deltarune.demo';
+            if (fs.existsSync(`${path1}/chapter4_windows/data.win`)) {
+                gameEdition = 'toby.deltarune';
+            }
+        }
+        else {
+            var gameEdition = game;
         }
 
         if (!fs.existsSync(path2)) {
@@ -1791,7 +1792,7 @@ function createWindow() {
 
             KeyValue.setKVSOfIndex('loadedDeltarune', true, i);
             KeyValue.setKVSOfIndex('deltarunePath', path2, i);
-            KeyValue.setKVSOfIndex('deltaruneEdition', gameEdition, i);
+            KeyValue.setKVSOfIndex('gamePid', gameEdition, i);
             KeyValue.setKVSOfIndex('enabledMods', [], i);
             KeyValue.setKVSOfIndex('isSteam', steam, i);
             KeyValue.setKVSOfIndex('originalSteamPath', (steam ? path1 : ""), i);
@@ -1902,15 +1903,17 @@ function createWindow() {
         return (process.argv.includes('--developer'));
     });
 
+    ipcMain.handle('getGameInfo', async (event, args) => {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', args[0] + '.json'), 'utf8'));
+    });
+
+    ipcMain.handle('getAvailableGames', async (event, args) => {
+        return fs.readdirSync(path.join(__dirname, '../', 'games')).filter(f => f.endsWith('.json')).map(f => JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', f), 'utf8')));
+    });
+
     ipcMain.handle('canReportError', async (event, args) => {
         return !(process.argv.includes('--developer')) && !(updateAvailable);
     });
-
-    ipcMain.handle('isCurrentInstallDemo', async (event, args) => {
-        var currentIndex = require('./System.js').getCurrentSystemIndex();
-        return (KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(currentIndex)) === 'demo');
-    });
-
 
     setWindow(win);
 }

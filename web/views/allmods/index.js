@@ -89,6 +89,17 @@ async function createMod(mod, compatible) {
     idSpan.id = `modid-${mod.uid}`;
     modNameContainer.appendChild(idSpan);
 
+    let gameSpan = document.createElement('p');
+    gameSpan = adaptForIcons(gameSpan);
+    gameSpan.style.margin = '0px';
+    gameSpan.style.marginTop = '4px';
+    gameSpan.className = 'calibri';
+    gameSpan.style.fontSize = 'smaller';
+    gameSpan.style.color = '#888';
+    gameSpan.innerHTML = `${icon('stadia_controller', 'small')} ${await window.electronAPI.invoke('getGameInfo', [mod.game]).then(g => g.name)}`;
+    gameSpan.id = `modgame-${mod.uid}`;
+    modNameContainer.appendChild(gameSpan);
+
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
     actionContainer.style.textAlign = 'center';
@@ -176,9 +187,44 @@ function createErroringMods(errors) {
 (async () => {
     const errorBanner = document.getElementById("error-banner");
 
+    let filterFunc = (x) => true;
+    try {
+        if (window._pageArguments.specID != undefined && window._pageArguments.specID !== 'all') {
+            filterFunc = (mod) => mod.game === window._pageArguments.specID;
+        }
+    }
+    catch (e) {
+        console.error("Failed to apply filter function:", e);
+    }
+
+    var enumerateGames = await window.electronAPI.invoke('getAvailableGames', []);
+    const gamesShowSelect = document.getElementById('gamesShow');
+    for (const game of enumerateGames) {
+        const option = document.createElement('option');
+        option.value = game.id;
+        option.innerText = game.name;
+        gamesShowSelect.appendChild(option);
+    }
+
+    gamesShowSelect.onchange = () => {
+        const selectedGame = gamesShowSelect.value;
+        window._pageArguments = { specID: selectedGame };
+        page('allmods');
+    };
+    
+    try {
+        if (window._pageArguments.specID != undefined && window._pageArguments.specID !== 'all') {
+            gamesShowSelect.value = window._pageArguments.specID;
+        }
+    } catch (e) {
+        console.error("Failed to set game select value:", e);
+    }
+    
+
     var { modList, errors } = await window.electronAPI.invoke('getModList', []);
 
-    modList.forEach(x => createMod(x, x.isCompatible));
+    modList.filter(filterFunc).forEach(x => createMod(x, x.isCompatible));
+    window._pageArguments = {}; // Clear it so it doesn't affect other mods
 
     if (errors.length > 0) {
         errorBanner.onclick = () => {
