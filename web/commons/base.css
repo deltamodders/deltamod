@@ -76,10 +76,10 @@ button, input, select {
     font-size: 16px;
     color: white;
     background-color: rgb(15,15,15);
-    border-radius: 7px;
-    padding: 5px;
+    border-radius: 12px;
+    padding: 9px;
     cursor: pointer;
-    transition: 0.2s all;
+    transition: 0.3s all;
 }
 
 button:hover {
@@ -88,12 +88,12 @@ button:hover {
 }
 
 button:hover:not(.noScaleBTN) {
-    scale: 1.2;
+    scale: 1.1;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.38);
 }
 
 button:active:not(.noScaleBTN) {
-    scale: 1.3;
+    scale: 1.2;
 }
 
 input {
@@ -137,8 +137,8 @@ table {
     border: 1px solid var(--theme-color);
     border-radius: 10px;
     padding: 5px;
-    background-color: rgba(40, 40, 40, 0.5);
-    backdrop-filter: blur(5px);
+    background-color: rgba(40, 40, 40, 0.127);
+    backdrop-filter: blur(10px);
     color: white;
     font-family: "Pixel", sans-serif;
     font-size: 16px;
@@ -152,8 +152,8 @@ table:hover {
 th,
 td {
     border: 1px solid rgb(66, 66, 66);
-    border-radius: 3px;
-    padding: 8px 12px;
+    border-radius: 12px;
+    padding: 10px 18px;
     text-align: left;
     animation: 0.2s spawn ease-in-out;
     transition: 0.3s all;
@@ -171,5 +171,6 @@ td {
 th {
     color: rgba(255, 255, 255, 1);
     border-radius: 7px;
+    background-color: var(--theme-color);
     animation: 0.5s spawn ease-in-out;
 }

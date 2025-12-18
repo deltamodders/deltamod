@@ -387,9 +387,6 @@ async function page(name) {
     button:not(.sidebar-button), input, select {
         border: 1.3px solid ${theme.color};
     }
-    th {
-        background-color: ${theme.color};
-    }
     input, progress {
         accent-color: ${theme.color};
     }
