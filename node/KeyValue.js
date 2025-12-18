@@ -105,7 +105,9 @@ function upgradeStores() {
             if (file.endsWith('unique')) return;
             var indx = file.split('-')[1];
             console.log('Checking install index ' + indx);
-            if (readKVSOfIndex('deltaruneEdition', indx, "FF") != "rem") {
+            var fff = readKVSOfIndex('deltaruneEdition', indx, "none");
+            console.log('Found edition ' + fff + ' in index ' + indx);
+            if (fff != "rem") {
                 console.log('Upgrading index ' + indx);
                 var pid = "toby.deltarune.demo";
                 if (readKVSOfIndex('deltaruneEdition', indx, "n") == "full") {
