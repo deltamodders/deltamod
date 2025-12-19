@@ -183,6 +183,8 @@ function errorWin(err) {
     fs.writeFileSync(whereWrite, error, 'utf8');
     heapScreenshot.pipe(heapFile);
 
+    win.show();
+
     win.loadURL('deltapack://web/views/errorWrt/index.html');
 }
 
@@ -1373,10 +1375,12 @@ function createWindow() {
 
         let gameConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', KeyValue.readKVS('gamePid') + '.json'), 'utf8'));
 
-        const exeCandidate = path.join(pathname, gameConfig.exeName + '.exe');
+        const exe = path.join(pathname, gameConfig.exeName);
+
+        console.log('running off ' + exe);
 
         if (!exe) {
-            errorWin('Could not find a Deltarune executable to run.');
+            errorWin('Could not find executable to run.');
             win.show();
             win.webContents.send('audio', true);
             win.webContents.send('page', 'main');
@@ -1400,7 +1404,7 @@ function createWindow() {
             dialog.showMessageBoxSync({
                 type: 'info',
                 title: 'Launching via Steam',
-                message: 'Deltarune will now be launched via Steam. Deltamod will close.',
+                message: 'The game will now be launched via Steam. Deltamod will close.',
             });
             shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
             app.quit();
@@ -1538,8 +1542,7 @@ function createWindow() {
             return { loaded: fs.existsSync(path.join(kvs, 'data.win')), path: kvs };
         }
         catch (err) {
-            errorWin(err.toString());
-            return null;
+            return { loaded: false, path: "" };
         }
     });
 
@@ -1701,6 +1704,7 @@ function createWindow() {
         var isFromLocate = (args[1] == 'locate');
         var specifiedLocatePath = (isFromLocate && args[2] ? args[2] : null);
         var fromIM = (args[3]);
+        var selectedGame = args[4];
         
         console.log('Creating new installation, steam=' + steam + ', isFromLocate=' + isFromLocate + ', specifiedLocatePath=' + specifiedLocatePath + ', fromIM=' + fromIM);
 
@@ -1751,6 +1755,8 @@ function createWindow() {
 
             var chosenEdition = EDITIONS[userChoice];
 
+            selectedGame = chosenEdition.pid;
+
             if ((await getInstallations(true)).map(x => x.appid).includes(chosenEdition.appid)) {
                 dialog.showErrorBox('Edition already imported', 'The selected edition has already been imported. Please select another edition or remove the existing one from the Install Manager.');
                 return false;
@@ -1791,15 +1797,19 @@ function createWindow() {
             return false;
         }
 
-        var gameEdition = "";
-        var response = dialog.showMessageBoxSync({
-            type: 'question',
-            title: 'Choose the game',
-            message: 'Please choose the game you are importing:',
-            buttons: ['DELTARUNE', 'DELTARUNE (demo)', 'UNDERTALE']
-        }); // to fix dialog focus issues on some platforms
+        var gameEdition = selectedGame;
+        if (gameEdition == null || gameEdition == undefined || gameEdition.trim() == "") {
+            var games = fs.readdirSync(path.join(__dirname, '../', 'games')).map(x => JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', x))));
+       
+            var response = dialog.showMessageBoxSync({
+                type: 'question',
+                title: 'Choose the game',
+                message: 'Please choose the game you are importing:',
+                buttons: games.map(x => x.name)
+            }); // to fix dialog focus issues on some platforms
 
-        gameEdition = ['toby.deltarune', 'toby.deltarune.demo', 'toby.undertale'][response];
+            gameEdition = games.map(x => x.id)[response];
+        }
 
         if (!fs.existsSync(path2)) {
             fs.mkdirSync(path2, { recursive: true });
