@@ -1795,6 +1795,7 @@ function createWindow() {
             KeyValue.setKVSOfIndex('loadedDeltarune', true, i);
             KeyValue.setKVSOfIndex('deltarunePath', path2, i);
             KeyValue.setKVSOfIndex('gamePid', gameEdition, i);
+            KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i);
             KeyValue.setKVSOfIndex('enabledMods', [], i);
             KeyValue.setKVSOfIndex('isSteam', steam, i);
             KeyValue.setKVSOfIndex('originalSteamPath', (steam ? path1 : ""), i);
