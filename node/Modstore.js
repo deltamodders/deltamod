@@ -62,14 +62,6 @@ async function importMod(filePath, nextPage = "main") {
             throw new Error('Mod manifest is missing required field `game`.');
         }
 
-        modInfo.metadata.packageID = validatePID(modInfo.metadata.packageID);
-
-        if (modInfo.metadata.packageID != "und.und.und") {
-            var pp = path.join(system.getPacketDatabase(), modInfo.metadata.packageID);
-            console.log('work into ' + pp + ' ; id ' + modInfo.metadata.packageID);
-            fs.renameSync(modPath, pp);
-        }
-
 
         /*await dialog.showMessageBox(win, {
             type: 'info',
@@ -199,14 +191,6 @@ function modList() {
             meta.packageID = validatePID(meta.packageID);
             const pid = meta.packageID;
 
-            if (modPath.endsWith(pid) === false && pid !== "und.und.und") {
-                console.log(`Renaming mod folder ${modPath} to use packageID ${pid} according to new standard.`);
-                const newModPath = path.join(system.getPacketDatabase(), pid);
-                mod = pid;
-                fs.renameSync(modPath, newModPath);
-                modPath = newModPath;
-            }
-
             if (require('./KeyValue').readUniqueFlag('HASHCHECKS')) {
                 modInfo.neededFiles?.forEach(file => {
                     var fileContents = (path.join(system.getSystemFolder('deltaruneInstall'), file.file));
@@ -235,7 +219,7 @@ function modList() {
             failureReason = "Failed to read __deltaID JSON.";
             let deltamodExclusive = safeReadJSON(idPath);
 
-            failureReason = "Failed to generate unique __deltaID for mod.";
+            failureReason = "Failed to generate an UINTID for the mod.";
 
             try {
                 if (deltamodExclusive.new == null) {

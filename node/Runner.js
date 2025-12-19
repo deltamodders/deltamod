@@ -1538,8 +1538,9 @@ function createWindow() {
     */
     ipcMain.handle('loadedDeltarune', async (event, name) => {
         try {
-            var kvs = KeyValue.readKVS('deltarunePath');
-            return { loaded: fs.existsSync(path.join(kvs, 'data.win')), path: kvs };
+            var kvs = KeyValue.readKVS('gamePid');
+            var gameInfo = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', kvs + '.json'), 'utf8'));
+            return { loaded: fs.existsSync(path.join(System.getSystemFolder('deltaruneInstall'), gameInfo.exeName)), path: kvs };
         }
         catch (err) {
             return { loaded: false, path: "" };
@@ -1791,7 +1792,7 @@ function createWindow() {
         }
 
         // Check if the path is valid
-        console.log(`Importing Deltarune install from ${path1} to ${path2}`);
+        console.log(`Importing game install from ${path1} to ${path2}`);
         if (!fs.existsSync(path1)) {
             dialog.showErrorBox('Invalid folder', 'The provided folder path is invalid.');
             return false;
@@ -1809,6 +1810,14 @@ function createWindow() {
             }); // to fix dialog focus issues on some platforms
 
             gameEdition = games.map(x => x.id)[response];
+        }
+
+        var gameInfo = fs.readFileSync(path.join(__dirname, '../', 'games', gameEdition + '.json'), 'utf8');
+        gameInfo = JSON.parse(gameInfo);
+
+        if (!fs.existsSync(path.join(path1, gameInfo.exeName))) {
+            dialog.showErrorBox('Invalid install', 'The selected folder does not contain the required game files (' + gameInfo.exeName + ' not found).');
+            return false;
         }
 
         if (!fs.existsSync(path2)) {
@@ -1838,8 +1847,8 @@ function createWindow() {
             return true;
         } catch (err) {
             var stack = err.stack ? '\n\n' + err.stack : '';
-            dialog.showErrorBox('Import failed', `Failed to import Deltarune install: ${err.message} ${stack}`);
-            errorWin('Failed to import Deltarune install: ' + err.toString());
+            dialog.showErrorBox('Import failed', `Failed to import game install: ${err.message} ${stack}`);
+            errorWin('Failed to import game install: ' + err.toString());
             return false;
         }
     });
@@ -1879,19 +1888,18 @@ function createWindow() {
 
         // Now reorder the remaining sysindex
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
-        systemFiles.forEach((file) => {
-            var currentIndex = file.split('-')[1];
-            if (currentIndex === 'unique') return;
 
-            var newIndex = parseInt(currentIndex);
-            if (newIndex > index) {
-                newIndex--;
-            }
+        var cNum = -1;
+        systemFiles.forEach((file) => {
+            var idx = file.split('-')[1];
+            if (idx === 'unique') return;
+            cNum++;
 
             var oldPath = path.join(app.getPath('userData'), file);
-            var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + newIndex);
+            var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + cNum);
 
             fs.renameSync(oldPath, newPath);
+            console.log(`Shifted index: ${file.split('-')[1]} -> ${cNum}`);
         });
 
         fs.writeFileSync(getSystemFile('_sysindex',true), (0).toString());

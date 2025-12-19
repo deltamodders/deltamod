@@ -173,7 +173,8 @@ window.currentPageStack.plusPage = plusPage;
             return;
         }
         data._aRecords.forEach(mod => {
-            if (mod._sModelName !== 'Mod') return;
+            if (mod._sModelName == 'Wip' && !mod._bHasFiles) return;
+            if (mod._sModelName != 'Wip' && mod._sModelName != 'Mod') return;
 
             var td0 = document.createElement('td');
             td0.style.display = 'flex';
@@ -300,7 +301,7 @@ window.currentPageStack.plusPage = plusPage;
                     dlBtn.innerHTML = icon('downloading', '0.9em');
                     dlBtn.style.opacity = '0.6';
 
-                    var dlpage = await fetch(`https://gamebanana.com/apiv11/Mod/${mod._idRow}/ProfilePage`);
+                    var dlpage = await fetch(`https://gamebanana.com/apiv11/${mod._sModelName}/${mod._idRow}/ProfilePage`);
                     dlpage = await dlpage.json();
 
                     var eligibleDownloads = [];
