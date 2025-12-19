@@ -147,6 +147,10 @@ async function getInstallations(suppressWarnings = false) {
     return installations;
 }
 
+function intoIM() {
+    return { args: [...process.argv.slice(1).filter(x => !x.toLowerCase().startsWith("deltamod://")), '---im'] };
+}
+
 function validateMyInstall(deltapath) {
     const keyItems = ['data.win'];
     let isValid = true;
@@ -626,6 +630,10 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('shouldGoIM', () => {
+        return process.argv.includes('---im');
     });
 
     ipcMain.handle('getCurrentGameInfo', (event, args) => {
@@ -1293,7 +1301,7 @@ function createWindow() {
 
     ipcMain.handle('changeSystemIndex', async (event, args) => {
         fs.writeFileSync(getSystemFile('_sysindex',true), args[0]);
-        app.relaunch(properRelaunch());
+        app.relaunch(intoIM());
         app.exit();
     });
 
@@ -1526,8 +1534,8 @@ function createWindow() {
     */
     ipcMain.handle('loadedDeltarune', async (event, name) => {
         try {
-            var pathname = KeyValue.readKVS('deltarunePath');
-            return {loaded: validateMyInstall(pathname) ? pathname : false};
+            var kvs = KeyValue.readKVS('deltarunePath');
+            return { loaded: fs.existsSync(path.join(kvs, 'data.win')), path: kvs };
         }
         catch (err) {
             errorWin(err.toString());
@@ -1692,6 +1700,9 @@ function createWindow() {
         var steam = (args[0] == 'steam');
         var isFromLocate = (args[1] == 'locate');
         var specifiedLocatePath = (isFromLocate && args[2] ? args[2] : null);
+        var fromIM = (args[3]);
+        
+        console.log('Creating new installation, steam=' + steam + ', isFromLocate=' + isFromLocate + ', specifiedLocatePath=' + specifiedLocatePath + ', fromIM=' + fromIM);
 
         // get max index
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -1703,7 +1714,7 @@ function createWindow() {
             }
         });
 
-        if (isFromLocate) {
+        if (isFromLocate && !fromIM) {
             i = parseInt(require('./System.js').getCurrentSystemIndex());
         }
         else {
@@ -1813,7 +1824,7 @@ function createWindow() {
                 console.log(`Created junction from ${path1} to ${path2}`);
             }
             
-            page((isFromLocate ? "main" : "installmanager"));
+            page((fromIM ? "installmanager" : "main"));
             return true;
         } catch (err) {
             var stack = err.stack ? '\n\n' + err.stack : '';
@@ -1875,7 +1886,7 @@ function createWindow() {
 
         fs.writeFileSync(getSystemFile('_sysindex',true), (0).toString());
 
-        app.relaunch(properRelaunch());
+        app.relaunch(intoIM());
         app.exit();
 
         return true;

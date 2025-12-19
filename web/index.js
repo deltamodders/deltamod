@@ -452,7 +452,13 @@ if (!window.electronAPI) {
         var available = await window.electronAPI.invoke('fireUpdate', []);
         console.log('Update check complete. Update available:', available);
 
-        await page('main');
+        var im = await window.electronAPI.invoke('shouldGoIM', []);
+        if (im) {
+            await page('installmanager');
+        }
+        else {
+            await page('main');
+        }
 
         window.electronAPI.invoke('executeArgumentCmd',[]);
         

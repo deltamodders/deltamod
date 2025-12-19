@@ -7,7 +7,7 @@ async function locateDelta() {
 
 function id() {
     console.log(document.getElementById('dpath').value.replaceAll('\\', '/'));
-    window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/')]);
+    window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/'), (window.fromIM == undefined ? false : window.fromIM)]);
 }
 
 function steam() {
