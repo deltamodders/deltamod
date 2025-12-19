@@ -1770,7 +1770,7 @@ function createWindow() {
         }
 
         if (validateDeltarune(path1) === null) {
-            dialog.showErrorBox('Invalid folder', (steam ? 'The edition you prompted does not exist on your computer\'s hard drive or is corrupted. Download the game from Steam.' : 'The provided folder does not appear to be a valid Deltarune install.'));
+            dialog.showErrorBox('Invalid folder', (steam ? 'The edition you prompted does not exist on your computer\'s hard drive or is corrupted. Download the game from Steam.' : 'The provided folder does not appear to be a valid game installation.'));
             if (chosenEdition.downloadable && process.platform === 'win32') {
                 if (dialog.showMessageBoxSync({
                     type: 'question',
@@ -1831,7 +1831,7 @@ function createWindow() {
             KeyValue.setKVSOfIndex('loadedDeltarune', true, i);
             KeyValue.setKVSOfIndex('deltarunePath', path2, i);
             KeyValue.setKVSOfIndex('gamePid', gameEdition, i);
-            KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i);
+            KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i); // signal so that gamestore isnt upgraded and reset
             KeyValue.setKVSOfIndex('enabledMods', [], i);
             KeyValue.setKVSOfIndex('isSteam', steam, i);
             KeyValue.setKVSOfIndex('originalSteamPath', (steam ? path1 : ""), i);

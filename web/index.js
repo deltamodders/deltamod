@@ -393,6 +393,8 @@ async function page(name) {
     .sidebar {
         border-color: ${theme.color};
     }
+
+    ${theme.specialCSS || ''}
     `;
     var styleTag = document.getElementById('dynamic-theme-styles');
     styleTag.innerHTML = generatedCSS;
