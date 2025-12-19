@@ -1900,6 +1900,15 @@ function createWindow() {
 
             fs.renameSync(oldPath, newPath);
             console.log(`Shifted index: ${file.split('-')[1]} -> ${cNum}`);
+
+            var cnamePath = path.join(newPath, '_cname');
+            if (fs.existsSync(cnamePath)) {
+                var cname = fs.readFileSync(cnamePath, 'utf8');
+                if (cname.startsWith('Install #')) {
+                    console.log('Shifting CName for index', cNum);
+                    fs.writeFileSync(cnamePath, 'Install #' + (cNum+1));
+                }
+            }
         });
 
         fs.writeFileSync(getSystemFile('_sysindex',true), (0).toString());
