@@ -35,12 +35,13 @@ function plusPage(ind) {
 }
 
 async function search() {
+    let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
     let query = document.getElementById('searchInput').value;
     if (query.length < 3) {
         await htmlAlert('Search query too short','Please enter at least 3 characters to search.',[{text:'Ok',resolveWith:'ok'}], 'error');
         return;
     }
-    window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Util/Search/Results?_sModelName=Mod&_sOrder=best_match&_sSearchString=' + encodeURIComponent(query) + '&_csvFields=name%2Cdescription%2Carticle%2Cattribs%2Cstudio%2Cowner%2Ccredits&_idGameRow=6755&_nPage=$PAGE';
+    window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Util/Search/Results?_sModelName=Mod&_sOrder=best_match&_sSearchString=' + encodeURIComponent(query) + '&_csvFields=name%2Cdescription%2Carticle%2Cattribs%2Cstudio%2Cowner%2Ccredits&_idGameRow=' + gameID + '&_nPage=$PAGE';
     window._pageArguments.gbAPIFilter = async function(data) {
         return data;
     };
@@ -49,8 +50,9 @@ async function search() {
 }
 
 async function featured() {
+    let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
     // Why doesn't GB have a standard endpoint format for subs SMH
-    window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Game/6755/TopSubs';
+    window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Game/' + gameID + '/TopSubs';
     window._pageArguments.gbAPIFilter = async function(data) {
         return {_aRecords: data.map(x => {
             x.featuredDataset = true;
@@ -125,7 +127,8 @@ window.currentPageStack.plusPage = plusPage;
         page('main');
         return;
     }
-    let GB_API = 'https://gamebanana.com/apiv11/Game/6755/Subfeed?_sSort=default&_nPage=$PAGE';
+    let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
+    let GB_API = 'https://gamebanana.com/apiv11/Game/' + gameID + '/Subfeed?_sSort=default&_nPage=$PAGE';
     let table = document.getElementById('modsBody');
     let filter = async function(a) {
         return a;
@@ -153,7 +156,7 @@ window.currentPageStack.plusPage = plusPage;
     var response = await fetch(furl);
     var data = await filter(await response.json());
 
-    var featured = await fetch("https://gamebanana.com/apiv11/Game/6755/TopSubs");
+    var featured = await fetch("https://gamebanana.com/apiv11/Game/" + gameID + "/TopSubs");
     var featuredData = await featured.json();
     var featuredIDs = featuredData.map(x => {return {id: x._idRow, period: x._sPeriod};});
 
@@ -315,7 +318,7 @@ window.currentPageStack.plusPage = plusPage;
                     });
 
                     if (eligibleDownloads.length === 0) {
-                        dlBtn.innerHTML = icon('cancel', '0.9em') + ' Cannot download';
+                        dlBtn.innerHTML = icon('cancel', '0.9em');
                         var open = await htmlAlert('One click not available','This mod cannot be downloaded via Deltamod because the owner did not package it for usage with the tool.',[{text:'Ok',resolveWith:'no',},{text:'Open mod page on GameBanana',resolveWith:'yes'}], 'web_traffic');
                         if (open === 'yes') {
                             window.open(mod._sProfileUrl, '_blank');

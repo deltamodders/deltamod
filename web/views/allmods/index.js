@@ -244,5 +244,14 @@ function createErroringMods(errors) {
         document.getElementById('modlist').appendChild(tr);
     }
 
+    if (modList.filter(filterFunc).length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 2;
+        td.innerText = 'No mods matching your query were found.';
+        tr.appendChild(td);
+        document.getElementById('modlist').appendChild(tr);
+    }
+
     genbtnstyles();
 })();

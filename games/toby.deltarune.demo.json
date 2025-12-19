@@ -1,5 +1,8 @@
 {
     "name": "DELTARUNE Demo",
     "author": "Toby Fox",
-    "id": "toby.deltarune.demo"
+    "id": "toby.deltarune.demo",
+    "gamebanana": {
+        "id": 6755
+    }
 }

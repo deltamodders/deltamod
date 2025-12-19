@@ -43,18 +43,19 @@
     border: 1px solid rgba(255, 255, 255, 0.23);
     font-size: 15px;
     width: 45px;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     margin-right: 3px;
     margin-left: 3px;
     height: 30px;
+    padding: 5px;
     transform: translateY(-5px);
 }
 
 .bar-button:hover {
-    transform: translateY(-1px);
+    transform: translateY(-3px);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     cursor: pointer;
 }

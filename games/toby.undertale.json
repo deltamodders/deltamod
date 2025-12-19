@@ -1,5 +1,8 @@
 {
     "name": "UNDERTALE",
     "author": "Toby Fox",
-    "id": "toby.undertale"
+    "id": "toby.undertale",
+    "gamebanana": {
+        "id": 5506
+    }
 }

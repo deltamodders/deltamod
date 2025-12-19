@@ -628,6 +628,10 @@ function createWindow() {
         return { action: 'allow' };
     });
 
+    ipcMain.handle('getCurrentGameInfo', (event, args) => {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', KeyValue.readKVS('gamePid') + '.json')), 'utf8');
+    });
+
     ipcMain.handle('openFlagDatabase', (event, args) => {
         const flagDBPath = path.join(app.getPath('userData'), 'deltamod_system-unique', 'flagDB.config');
         shell.openPath(flagDBPath);
