@@ -1725,6 +1725,12 @@ function createWindow() {
             var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
             var EDITIONS = require('../steamdata.json').editions;
 
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Note',
+                message: 'Please note that Deltamod can only import DELTARUNE from Steam.',
+            });
+
             var userChoice = dialog.showMessageBoxSync({
                 type: 'info',
                 title: 'Select an edition',

@@ -13,26 +13,6 @@ function id() {
 function steam() {
     window.electronAPI.invoke("createNewInstallation", ["steam", "", ""]);
 }
-async function downloadDelta() {
-    var resp = await htmlAlert('Info', 'Please note that downloading the game directly means you implicitly agree to the terms and conditions of itch.io.', [
-        { text: 'Yes', resolveWith: 'yes' },
-        { text: 'No', resolveWith: 'no' }
-    ]);
-    if (resp !== 'yes') {
-        return;
-    }
-    try {
-        var p = await window.electronAPI.invoke("downloadDelta", []);
-        if (p) {
-            document.querySelector('input[type="text"]').value = p;
-        }
-    } catch (e) {
-        console.error("Error downloading Deltarune:", e);
-        htmlAlert('Error', 'An error occurred while downloading Deltarune. Please try again later.', [
-            { text: 'OK', resolveWith: 'close' }
-        ], 'error');
-    }
-}
 
 window.currentPageStack.id = id;
 
