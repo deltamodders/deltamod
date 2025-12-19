@@ -62,7 +62,7 @@ function obtainThemes() {
         })];
 }
 function validateDeltarune(deltapath) {
-    const keyItems = ['data.win', 'DELTARUNE.exe'];
+    const keyItems = ['data.win'];
     const missingItems = [];
     let isValid = true;
 
@@ -148,7 +148,7 @@ async function getInstallations(suppressWarnings = false) {
 }
 
 function validateMyInstall(deltapath) {
-    const keyItems = ['data.win', 'DELTARUNE.exe'];
+    const keyItems = ['data.win'];
     let isValid = true;
     keyItems.forEach((item) => {
         if (!fs.existsSync(`${deltapath}/${item}`)) {
@@ -1363,10 +1363,9 @@ function createWindow() {
         win.hide();
         win.webContents.send('audio', false);
 
-        const exeCandidate = KeyValue.readKVS('deltaruneExecutable');
-        const exe = (exeCandidate && fs.existsSync(exeCandidate))
-            ? exeCandidate
-            : (fs.existsSync(path.join(pathname, 'DELTARUNE.exe')) ? path.join(pathname, 'DELTARUNE.exe') : null);
+        let gameConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', KeyValue.readKVS('gamePid') + '.json'), 'utf8'));
+
+        const exeCandidate = path.join(pathname, gameConfig.exeName + '.exe');
 
         if (!exe) {
             errorWin('Could not find a Deltarune executable to run.');
@@ -1693,7 +1692,6 @@ function createWindow() {
         var steam = (args[0] == 'steam');
         var isFromLocate = (args[1] == 'locate');
         var specifiedLocatePath = (isFromLocate && args[2] ? args[2] : null);
-        var game = args[3] || "def";
 
         // get max index
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -1776,15 +1774,15 @@ function createWindow() {
             return false;
         }
 
-        if (game == "def" || steam) {
-            var gameEdition = 'toby.deltarune.demo';
-            if (fs.existsSync(`${path1}/chapter4_windows/data.win`)) {
-                gameEdition = 'toby.deltarune';
-            }
-        }
-        else {
-            var gameEdition = game;
-        }
+        var gameEdition = "";
+        var response = dialog.showMessageBoxSync({
+            type: 'question',
+            title: 'Choose the game',
+            message: 'Please choose the game you are importing:',
+            buttons: ['DELTARUNE', 'DELTARUNE (demo)', 'UNDERTALE']
+        }); // to fix dialog focus issues on some platforms
+
+        gameEdition = ['toby.deltarune', 'toby.deltarune.demo', 'toby.undertale'][response];
 
         if (!fs.existsSync(path2)) {
             fs.mkdirSync(path2, { recursive: true });
@@ -1868,33 +1866,10 @@ function createWindow() {
             fs.renameSync(oldPath, newPath);
         });
 
-        if (currentIndex == index)  {
-            dialog.showMessageBoxSync({
-                type: 'info',
-                title: 'Current installation deleted',
-                message: 'The installation you were using has been deleted. The app will now reboot.'
-            });
-            var stop = false;
-            var launchHere = 0;
-            systemFiles.forEach((file) => {
-                var idx = file.split('-')[1];
-                if (idx !== 'unique') return;
-                if (stop) return;
+        fs.writeFileSync(getSystemFile('_sysindex',true), (0).toString());
 
-                if (fs.existsSync(path.join(app.getPath('userData'), file, 'deltaruneInstall', 'DELTARUNE.exe'))) {
-                    launchHere = parseInt(idx);
-                    stop = true;
-                }
-            });
-
-            fs.writeFileSync(getSystemFile('_sysindex',true), ""+launchHere);
-
-            app.relaunch(properRelaunch());
-            app.exit();
-            return true;
-        }
-
-        page("installmanager");
+        app.relaunch(properRelaunch());
+        app.exit();
 
         return true;
     });

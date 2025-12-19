@@ -223,7 +223,8 @@ function createErroringMods(errors) {
 
     var { modList, errors } = await window.electronAPI.invoke('getModList', []);
 
-    modList.filter(filterFunc).forEach(x => createMod(x, x.isCompatible));
+    var list = modList.filter(filterFunc);
+    list.forEach(x => createMod(x, x.isCompatible));
     window._pageArguments = {}; // Clear it so it doesn't affect other mods
 
     if (errors.length > 0) {
@@ -235,20 +236,11 @@ function createErroringMods(errors) {
         errorBanner.style.display = "inherit";
     } else errorBanner.style.display = "none";
 
-    if (modList.length === 0) {
+    if (list.length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 2;
-        td.innerText = 'No mods are installed on this computer.';
-        tr.appendChild(td);
-        document.getElementById('modlist').appendChild(tr);
-    }
-
-    if (modList.filter(filterFunc).length === 0) {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 2;
-        td.innerText = 'No mods matching your query were found.';
+        td.innerText = (modList.length === 0) ? 'No mods are installed.' : 'No mods match the selected filter.';
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
     }
