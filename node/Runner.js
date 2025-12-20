@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, session, net, shell, screen, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification } = require('electron');
 const Paths = require('./Paths.js');
 const KeyValue = require('./KeyValue.js');
 const fs = require('fs');
@@ -6,31 +6,32 @@ const { execSync } = require('child_process');
 const mime = require('mime-types');
 const createDesktopShortcut = require('create-desktop-shortcuts');
 const _7z = require("7zip-min");
-const {Downloader} = require("nodejs-file-downloader");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
 const crypto = require('crypto');
-const { hashFile, setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require('./Utils.js');
-const { exec, execFileSync } = require('child_process');
+const { setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require('./Utils.js');
+const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
+const GameDB = require('./GameDB.js');
 const GamePatching = require('./GamePatching.js');
 const Junction = require('./Junction.js');
 const { default: axios } = require('axios');
 const System = require('./System.js');
 const Netlayer = require('./Netlayer.js');
 const path = require('path');
-
-let abortController;
-let updateAvailable = false;
-let callbackNPS;
-let callbackNPSPassWith;
-
 const { getConfig, config } = require('7zip-min');
 const { path7za } = require('7zip-bin');
 const console = require('./Console.js');
 const { handleProtocolLaunch } = require('./Protocol.js');
 const { isFeatureEnabled } = require('./FeatureFlags.js');
 const { valid } = require('node-html-parser');
+
+let abortController;
+let updateAvailable = false;
+let callbackNPS;
+let callbackNPSPassWith;
+
+
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
@@ -62,7 +63,7 @@ function obtainThemes() {
         })];
 }
 function validateDeltarune(deltapath) {
-    const keyItems = ['data.win', 'DELTARUNE.exe'];
+    const keyItems = ['data.win'];
     const missingItems = [];
     let isValid = true;
 
@@ -138,7 +139,7 @@ async function getInstallations(suppressWarnings = false) {
             index: parseInt(file.split('-')[1]),
             name: commonName,
             steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
-            type: KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(file.split('-')[1])),
+            pid: KeyValue.readKVSOfIndex('gamePid', parseInt(file.split('-')[1])),
             appid: KeyValue.readKVSOfIndex('steamAppId', parseInt(file.split('-')[1])),
             bakedInstallation: KeyValue.readKVSOfIndex('baked', parseInt(file.split('-')[1])) === true,
         });
@@ -147,8 +148,12 @@ async function getInstallations(suppressWarnings = false) {
     return installations;
 }
 
+function intoIM() {
+    return { args: [...process.argv.slice(1).filter(x => !x.toLowerCase().startsWith("deltamod://")), '---im'] };
+}
+
 function validateMyInstall(deltapath) {
-    const keyItems = ['data.win', 'DELTARUNE.exe'];
+    const keyItems = ['data.win'];
     let isValid = true;
     keyItems.forEach((item) => {
         if (!fs.existsSync(`${deltapath}/${item}`)) {
@@ -178,6 +183,8 @@ function errorWin(err) {
 
     fs.writeFileSync(whereWrite, error, 'utf8');
     heapScreenshot.pipe(heapFile);
+
+    win.show();
 
     win.loadURL('deltapack://web/views/errorWrt/index.html');
 }
@@ -340,6 +347,7 @@ function showError(errorCode) {
 }
 
 function createWindow() {
+    KeyValue.upgradeStores();
     if (!KeyValue.readUniqueFlag('setup')) {
         KeyValue.writeUniqueFlag('setup', 'true');
         KeyValue.writeUniqueFlag('audio', 'true');
@@ -418,14 +426,6 @@ function createWindow() {
         if (parseInt(overrideData) < 0) {
             console.error('The specified installation of Deltarune is invalid.');
             threrror = 'The specified installation of Deltarune is invalid.';
-        }
-        if (!fs.existsSync(app.getPath('userData') + '/deltamod_system-' + overrideData + '/deltaruneInstall') && overrideData !== '0') {
-            overrideData = '0'; // Only 0 can be valid without a deltaruneInstallù
-            dialog.showMessageBoxSync({
-                type: 'warning',
-                title: 'Invalid Installation Selected',
-                message: 'The specified installation of Deltarune is invalid. Reverting to the default installation.'
-            });
         }
         setSystemIndex(overrideData);
     }
@@ -633,6 +633,14 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('shouldGoIM', () => {
+        return process.argv.includes('---im');
+    });
+
+    ipcMain.handle('getCurrentGameInfo', (event, args) => {
+        return GameDB.getGameById(KeyValue.readKVS('gamePid'));
     });
 
     ipcMain.handle('openFlagDatabase', (event, args) => {
@@ -1296,7 +1304,7 @@ function createWindow() {
 
     ipcMain.handle('changeSystemIndex', async (event, args) => {
         fs.writeFileSync(getSystemFile('_sysindex',true), args[0]);
-        app.relaunch(properRelaunch());
+        app.relaunch(intoIM());
         app.exit();
     });
 
@@ -1306,7 +1314,7 @@ function createWindow() {
     */
     ipcMain.handle('getEditionByIndex', async (event, args) => {
         var index = args[0];
-        var edition = KeyValue.readKVSOfIndex('deltaruneEdition', index);
+        var edition = KeyValue.readKVSOfIndex('gamePid', index);
         if (edition) {
             return edition;
         }
@@ -1320,13 +1328,15 @@ function createWindow() {
     */
     ipcMain.handle('getModList', async (event, args) => {
         var { modList, errors } = Modstore.modList();
-        var edition = KeyValue.readKVS('deltaruneEdition');
+        var edition = KeyValue.readKVS('gamePid');
+        
 
         let datalist = modList;
         for (let i = datalist.length - 1; i >= 0; i--) {
             datalist[i].isIncompatible = false;
             let mod = datalist[i];
-            var editionCompatible = (mod.demo && edition === 'demo') || (!mod.demo && edition === 'full');
+            var editionCompatible = (mod.game == edition);
+            console.log(`Mod ${mod.name} (${mod.uniqueId}) compatibility check: mod game=${mod.game} vs edition=${edition} => ${editionCompatible ? 'compatible' : 'incompatible'}`);
             if (mod._incompatibleHASH) datalist[i].isIncompatible = true;
             if (!editionCompatible) datalist[i].isIncompatible = true;
         }
@@ -1364,13 +1374,14 @@ function createWindow() {
         win.hide();
         win.webContents.send('audio', false);
 
-        const exeCandidate = KeyValue.readKVS('deltaruneExecutable');
-        const exe = (exeCandidate && fs.existsSync(exeCandidate))
-            ? exeCandidate
-            : (fs.existsSync(path.join(pathname, 'DELTARUNE.exe')) ? path.join(pathname, 'DELTARUNE.exe') : null);
+        let gameConfig = GameDB.getGameById(KeyValue.readKVS('gamePid'));
+
+        const exe = path.join(pathname, gameConfig.exeName);
+
+        console.log('running off ' + exe);
 
         if (!exe) {
-            errorWin('Could not find a Deltarune executable to run.');
+            errorWin('Could not find executable to run.');
             win.show();
             win.webContents.send('audio', true);
             win.webContents.send('page', 'main');
@@ -1394,7 +1405,7 @@ function createWindow() {
             dialog.showMessageBoxSync({
                 type: 'info',
                 title: 'Launching via Steam',
-                message: 'Deltarune will now be launched via Steam. Deltamod will close.',
+                message: 'The game will now be launched via Steam. Deltamod will close.',
             });
             shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
             app.quit();
@@ -1528,12 +1539,12 @@ function createWindow() {
     */
     ipcMain.handle('loadedDeltarune', async (event, name) => {
         try {
-            var pathname = KeyValue.readKVS('deltarunePath');
-            return {loaded: validateMyInstall(pathname) ? pathname : false};
+            var kvs = KeyValue.readKVS('gamePid');
+            var gameInfo = GameDB.getGameById(kvs);
+            return { loaded: fs.existsSync(path.join(System.getSystemFolder('deltaruneInstall'), gameInfo.exeName)), path: kvs };
         }
         catch (err) {
-            errorWin(err.toString());
-            return null;
+            return { loaded: false, path: "" };
         }
     });
 
@@ -1694,6 +1705,10 @@ function createWindow() {
         var steam = (args[0] == 'steam');
         var isFromLocate = (args[1] == 'locate');
         var specifiedLocatePath = (isFromLocate && args[2] ? args[2] : null);
+        var fromIM = (args[3]);
+        var selectedGame = args[4];
+        
+        console.log('Creating new installation, steam=' + steam + ', isFromLocate=' + isFromLocate + ', specifiedLocatePath=' + specifiedLocatePath + ', fromIM=' + fromIM);
 
         // get max index
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
@@ -1705,7 +1720,7 @@ function createWindow() {
             }
         });
 
-        if (isFromLocate) {
+        if (isFromLocate && !fromIM) {
             i = parseInt(require('./System.js').getCurrentSystemIndex());
         }
         else {
@@ -1727,6 +1742,12 @@ function createWindow() {
             var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
             var EDITIONS = require('../steamdata.json').editions;
 
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Note',
+                message: 'Please note that Deltamod can only import DELTARUNE from Steam.',
+            });
+
             var userChoice = dialog.showMessageBoxSync({
                 type: 'info',
                 title: 'Select an edition',
@@ -1735,6 +1756,8 @@ function createWindow() {
             });
 
             var chosenEdition = EDITIONS[userChoice];
+
+            selectedGame = chosenEdition.pid;
 
             if ((await getInstallations(true)).map(x => x.appid).includes(chosenEdition.appid)) {
                 dialog.showErrorBox('Edition already imported', 'The selected edition has already been imported. Please select another edition or remove the existing one from the Install Manager.');
@@ -1748,7 +1771,7 @@ function createWindow() {
         }
 
         if (validateDeltarune(path1) === null) {
-            dialog.showErrorBox('Invalid folder', (steam ? 'The edition you prompted does not exist on your computer\'s hard drive or is corrupted. Download the game from Steam.' : 'The provided folder does not appear to be a valid Deltarune install.'));
+            dialog.showErrorBox('Invalid folder', (steam ? 'The edition you prompted does not exist on your computer\'s hard drive or is corrupted. Download the game from Steam.' : 'The provided folder does not appear to be a valid game installation.'));
             if (chosenEdition.downloadable && process.platform === 'win32') {
                 if (dialog.showMessageBoxSync({
                     type: 'question',
@@ -1770,15 +1793,31 @@ function createWindow() {
         }
 
         // Check if the path is valid
-        console.log(`Importing Deltarune install from ${path1} to ${path2}`);
+        console.log(`Importing game install from ${path1} to ${path2}`);
         if (!fs.existsSync(path1)) {
             dialog.showErrorBox('Invalid folder', 'The provided folder path is invalid.');
             return false;
         }
 
-        var gameEdition = 'demo';
-        if (fs.existsSync(`${path1}/chapter4_windows/data.win`)) {
-            gameEdition = 'full';
+        var gameEdition = selectedGame;
+        if (gameEdition == null || gameEdition == undefined || gameEdition.trim() == "") {
+            var games = GameDB.getGames();
+       
+            var response = dialog.showMessageBoxSync({
+                type: 'question',
+                title: 'Choose the game',
+                message: 'Please choose the game you are importing:',
+                buttons: games.map(x => x.name)
+            }); // to fix dialog focus issues on some platforms
+
+            gameEdition = games.map(x => x.id)[response];
+        }
+
+        var gameInfo = GameDB.getGameById(gameEdition);
+
+        if (!fs.existsSync(path.join(path1, gameInfo.exeName))) {
+            dialog.showErrorBox('Invalid install', 'The selected folder does not contain the required game files (' + gameInfo.exeName + ' not found).');
+            return false;
         }
 
         if (!fs.existsSync(path2)) {
@@ -1791,7 +1830,8 @@ function createWindow() {
 
             KeyValue.setKVSOfIndex('loadedDeltarune', true, i);
             KeyValue.setKVSOfIndex('deltarunePath', path2, i);
-            KeyValue.setKVSOfIndex('deltaruneEdition', gameEdition, i);
+            KeyValue.setKVSOfIndex('gamePid', gameEdition, i);
+            KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i); // signal so that gamestore isnt upgraded and reset
             KeyValue.setKVSOfIndex('enabledMods', [], i);
             KeyValue.setKVSOfIndex('isSteam', steam, i);
             KeyValue.setKVSOfIndex('originalSteamPath', (steam ? path1 : ""), i);
@@ -1803,12 +1843,12 @@ function createWindow() {
                 console.log(`Created junction from ${path1} to ${path2}`);
             }
             
-            page((isFromLocate ? "main" : "installmanager"));
+            page((fromIM ? "installmanager" : "main"));
             return true;
         } catch (err) {
             var stack = err.stack ? '\n\n' + err.stack : '';
-            dialog.showErrorBox('Import failed', `Failed to import Deltarune install: ${err.message} ${stack}`);
-            errorWin('Failed to import Deltarune install: ' + err.toString());
+            dialog.showErrorBox('Import failed', `Failed to import game install: ${err.message} ${stack}`);
+            errorWin('Failed to import game install: ' + err.toString());
             return false;
         }
     });
@@ -1848,48 +1888,33 @@ function createWindow() {
 
         // Now reorder the remaining sysindex
         var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
-        systemFiles.forEach((file) => {
-            var currentIndex = file.split('-')[1];
-            if (currentIndex === 'unique') return;
 
-            var newIndex = parseInt(currentIndex);
-            if (newIndex > index) {
-                newIndex--;
-            }
+        var cNum = -1;
+        systemFiles.forEach((file) => {
+            var idx = file.split('-')[1];
+            if (idx === 'unique') return;
+            cNum++;
 
             var oldPath = path.join(app.getPath('userData'), file);
-            var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + newIndex);
+            var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + cNum);
 
             fs.renameSync(oldPath, newPath);
+            console.log(`Shifted index: ${file.split('-')[1]} -> ${cNum}`);
+
+            var cnamePath = path.join(newPath, '_cname');
+            if (fs.existsSync(cnamePath)) {
+                var cname = fs.readFileSync(cnamePath, 'utf8');
+                if (cname.startsWith('Install #')) {
+                    console.log('Shifting CName for index', cNum);
+                    fs.writeFileSync(cnamePath, 'Install #' + (cNum+1));
+                }
+            }
         });
 
-        if (currentIndex == index)  {
-            dialog.showMessageBoxSync({
-                type: 'info',
-                title: 'Current installation deleted',
-                message: 'The installation you were using has been deleted. The app will now reboot.'
-            });
-            var stop = false;
-            var launchHere = 0;
-            systemFiles.forEach((file) => {
-                var idx = file.split('-')[1];
-                if (idx !== 'unique') return;
-                if (stop) return;
+        fs.writeFileSync(getSystemFile('_sysindex',true), (0).toString());
 
-                if (fs.existsSync(path.join(app.getPath('userData'), file, 'deltaruneInstall', 'DELTARUNE.exe'))) {
-                    launchHere = parseInt(idx);
-                    stop = true;
-                }
-            });
-
-            fs.writeFileSync(getSystemFile('_sysindex',true), ""+launchHere);
-
-            app.relaunch(properRelaunch());
-            app.exit();
-            return true;
-        }
-
-        page("installmanager");
+        app.relaunch(intoIM());
+        app.exit();
 
         return true;
     });
@@ -1902,15 +1927,17 @@ function createWindow() {
         return (process.argv.includes('--developer'));
     });
 
+    ipcMain.handle('getGameInfo', async (event, args) => {
+        return GameDB.getGameById(args[0]);
+    });
+
+    ipcMain.handle('getAvailableGames', async (event, args) => {
+        return GameDB.getGames();
+    });
+
     ipcMain.handle('canReportError', async (event, args) => {
         return !(process.argv.includes('--developer')) && !(updateAvailable);
     });
-
-    ipcMain.handle('isCurrentInstallDemo', async (event, args) => {
-        var currentIndex = require('./System.js').getCurrentSystemIndex();
-        return (KeyValue.readKVSOfIndex('deltaruneEdition', parseInt(currentIndex)) === 'demo');
-    });
-
 
     setWindow(win);
 }

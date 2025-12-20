@@ -7,31 +7,15 @@ async function locateDelta() {
 
 function id() {
     console.log(document.getElementById('dpath').value.replaceAll('\\', '/'));
-    window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/')]);
+    if (window.gid == 'noid') {
+        htmlAlert('Warning','Please select a game.',[{text:'OK',resolveWith:'ok'}]);
+        return;
+    }
+    window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/'), (window.fromIM == undefined ? false : window.fromIM), window.gid]);
 }
 
 function steam() {
-    window.electronAPI.invoke("createNewInstallation", ["steam", "", ""]);
-}
-async function downloadDelta() {
-    var resp = await htmlAlert('Info', 'Please note that downloading the game directly means you implicitly agree to the terms and conditions of itch.io.', [
-        { text: 'Yes', resolveWith: 'yes' },
-        { text: 'No', resolveWith: 'no' }
-    ]);
-    if (resp !== 'yes') {
-        return;
-    }
-    try {
-        var p = await window.electronAPI.invoke("downloadDelta", []);
-        if (p) {
-            document.querySelector('input[type="text"]').value = p;
-        }
-    } catch (e) {
-        console.error("Error downloading Deltarune:", e);
-        htmlAlert('Error', 'An error occurred while downloading Deltarune. Please try again later.', [
-            { text: 'OK', resolveWith: 'close' }
-        ], 'error');
-    }
+    window.electronAPI.invoke("createNewInstallation", ["steam", "", "", window.fromIM, ""]);
 }
 
 window.currentPageStack.id = id;
@@ -44,8 +28,6 @@ window.currentPageStack.locateDelta = locateDelta;
 
 window.currentPageStack.steam = steam;
 
-window.currentPageStack.downloadDelta = downloadDelta;
-
 document.getElementById('audioCHECK').addEventListener('change', (event) => {
     window.electronAPI.invoke('setUniqueFlag', ['AUDIO', event.target.checked]);
 });
@@ -53,3 +35,40 @@ document.getElementById('audioCHECK').addEventListener('change', (event) => {
 window.electronAPI.invoke('getUniqueFlag', ['AUDIO']).then((result) => {
     document.getElementById('audioCHECK').checked = result;
 });
+
+(async() => {
+    window.gid = "noid";
+
+    var games = await window.electronAPI.invoke('getAvailableGames',[]);
+    var gOptions = document.querySelector('.gOptions');
+
+    var ems = [];
+
+    for (l in games) {
+        await (async() => {
+            var game = games[l];
+
+            var img = document.createElement('img');
+            img.style.width = '40px';
+            img.style.opacity = '0.4';
+            img.style.cursor = 'pointer';
+            img.id = game.id;
+            img.classList.add('gameico');
+            img.addEventListener('click', function() {
+                window.gid = game.id;
+                document.querySelectorAll('.gameico:not(#' + game.id + ')').forEach(x =>{
+                    x.style.opacity = 0.4;
+                    img.style.opacity = 1;
+                });
+            })
+            img.src = './gamesIco/' + game.id+'.png';
+            gOptions.appendChild(img);
+
+            ems.push({id:game.id,em:img});
+
+            tippy(img, {
+                content: game.name
+            });
+        })();
+    }
+})();

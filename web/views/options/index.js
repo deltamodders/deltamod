@@ -126,7 +126,7 @@ window.currentPageStack.cat = async function(cat) {
     });
     switch (cat) {
         case 'gen':
-            await addCheckboxOption('Show user Deltarune logs after close', 'Enables logging of Deltarune messages and errors to Deltamod. Will not work on Steam based installs.', 'outputDelta');
+            await addCheckboxOption('Enable console logging', 'Enables logging of game messages and errors to Deltamod. Will not work on DELTARUNE Steam based installs.', 'outputDelta');
             
             await addButton('Open mod folder', 'Open the folder where mods are stored. You can drag mod folders in Deltamod format there.', async () => {
                 await window.electronAPI.invoke('openSysFolder', ['mods']);
