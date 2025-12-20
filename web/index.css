@@ -1,5 +1,5 @@
 :root {
-    --topbar-height: 35px;
+    --topbar-height: 40px;
     --sidebar-size: 50px;
 }
 
@@ -51,7 +51,7 @@
     margin-left: 3px;
     height: 30px;
     padding: 5px;
-    transform: translateY(-5px);
+    transform: translateY(-7px);
 }
 
 .bar-button:hover {
@@ -375,13 +375,12 @@ h1 {
     padding-left: 20px;
     height: calc(var(--topbar-height) * 1);
     font-size: 10px;
-    background-color: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(15px);
+    background-color: rgba(40, 40, 40, 0.286);
     border-bottom: 2px solid var(--theme-color);
     -webkit-app-region: drag;
     z-index: 1000;
 }
-
 
 .bottombar {
     position: fixed;
