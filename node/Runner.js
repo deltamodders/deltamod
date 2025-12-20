@@ -12,6 +12,7 @@ const { setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require(
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
+const GameDB = require('./GameDB.js');
 const GamePatching = require('./GamePatching.js');
 const Junction = require('./Junction.js');
 const { default: axios } = require('axios');
@@ -639,7 +640,7 @@ function createWindow() {
     });
 
     ipcMain.handle('getCurrentGameInfo', (event, args) => {
-        return JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', KeyValue.readKVS('gamePid') + '.json')), 'utf8');
+        return GameDB.getGameById(KeyValue.readKVS('gamePid'));
     });
 
     ipcMain.handle('openFlagDatabase', (event, args) => {
@@ -1373,7 +1374,7 @@ function createWindow() {
         win.hide();
         win.webContents.send('audio', false);
 
-        let gameConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', KeyValue.readKVS('gamePid') + '.json'), 'utf8'));
+        let gameConfig = GameDB.getGameById(KeyValue.readKVS('gamePid'));
 
         const exe = path.join(pathname, gameConfig.exeName);
 
@@ -1539,7 +1540,7 @@ function createWindow() {
     ipcMain.handle('loadedDeltarune', async (event, name) => {
         try {
             var kvs = KeyValue.readKVS('gamePid');
-            var gameInfo = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', kvs + '.json'), 'utf8'));
+            var gameInfo = GameDB.getGameById(kvs);
             return { loaded: fs.existsSync(path.join(System.getSystemFolder('deltaruneInstall'), gameInfo.exeName)), path: kvs };
         }
         catch (err) {
@@ -1800,7 +1801,7 @@ function createWindow() {
 
         var gameEdition = selectedGame;
         if (gameEdition == null || gameEdition == undefined || gameEdition.trim() == "") {
-            var games = fs.readdirSync(path.join(__dirname, '../', 'games')).map(x => JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', x))));
+            var games = GameDB.getGames();
        
             var response = dialog.showMessageBoxSync({
                 type: 'question',
@@ -1812,8 +1813,7 @@ function createWindow() {
             gameEdition = games.map(x => x.id)[response];
         }
 
-        var gameInfo = fs.readFileSync(path.join(__dirname, '../', 'games', gameEdition + '.json'), 'utf8');
-        gameInfo = JSON.parse(gameInfo);
+        var gameInfo = GameDB.getGameById(gameEdition);
 
         if (!fs.existsSync(path.join(path1, gameInfo.exeName))) {
             dialog.showErrorBox('Invalid install', 'The selected folder does not contain the required game files (' + gameInfo.exeName + ' not found).');
@@ -1928,11 +1928,11 @@ function createWindow() {
     });
 
     ipcMain.handle('getGameInfo', async (event, args) => {
-        return JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', args[0] + '.json'), 'utf8'));
+        return GameDB.getGameById(args[0]);
     });
 
     ipcMain.handle('getAvailableGames', async (event, args) => {
-        return fs.readdirSync(path.join(__dirname, '../', 'games')).filter(f => f.endsWith('.json')).map(f => JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'games', f), 'utf8')));
+        return GameDB.getGames();
     });
 
     ipcMain.handle('canReportError', async (event, args) => {
