@@ -1390,15 +1390,6 @@ function createWindow() {
 
         // Build args
         let argsStr = '';
-        if (KeyValue.readUniqueFlag('outputDelta')) {
-            const consoleFile = path.join(path.dirname(exe), '_console.txt');
-            try {
-                if (fs.existsSync(consoleFile)) fs.unlinkSync(consoleFile);
-            } catch (e) {
-                console.warn('Could not remove previous console file:', e);
-            }
-            argsStr = '-output _console.txt';
-        }
 
         // If this install is steam-managed, launch via steam protocol and quit
         if (KeyValue.readKVS('isSteam')) {
@@ -1423,20 +1414,8 @@ function createWindow() {
             }
 
             win.show();
-
-            if (KeyValue.readUniqueFlag('outputDelta')) {
-                try {
-                    const consoleFile = path.join(path.dirname(exe), '_console.txt');
-                    const consoleContent = fs.readFileSync(consoleFile, 'utf8');
-                    fs.unlinkSync(consoleFile);
-                    setSharedVar('deltaruneLogs', consoleContent);
-                } catch (e) {
-                    console.error('Failed to read or remove console file:', e);
-                }
-            }
-
             win.webContents.send('audio', true);
-            win.webContents.send('page', KeyValue.readUniqueFlag('outputDelta') ? 'deltalogs' : 'main');
+            win.webContents.send('page', 'main');
         });
 
         return true;
