@@ -1,8 +1,11 @@
-Fixed various bugs, Bugfix
-Added the Mod Shop, Addition
-Added new themes, Addition
-Various UI overhauls, Overhaul
-Removed baking due to a bug, Removal
-Changed the Deltamod standard, Amendment
-Various optimizations, Optimization
-Fixed a bug where in the absence of Internet the icons wouldn't show, Bugfix
+Now supports other games, Addition
+New themes, Addition
+A refactored UI, Overhaul
+New original icons and new original music, Overhaul
+GM3P issues were fixed, Bugfix
+Fixed numerous minor UI bugs, Bugfix
+You can now toggle on hashing checks, Addition
+Select games can be downloaded directly via Deltamod, Addition
+Better error descriptions, Overhaul
+Mod Shop can be toggled off, Addition
+Partial custom themes support, Addition
