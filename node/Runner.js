@@ -1612,18 +1612,11 @@ function createWindow() {
         }
     });
 
-    ipcMain.handle('downloadDelta', async (event) => {
+    ipcMain.handle('downloadGame', async (event, args) => {
         return new Promise (async (resolve, reject) => {
-            let cheerio = require('cheerio');
-            var itchIOPage = await axios.get('https://tobyfox.itch.io/deltarune').then(r => r.data);
-            
-            const $ = cheerio.load(itchIOPage);
-            const csrfToken = $('meta[name="csrf_token"]').attr('value');
-            console.log('Got token: ', csrfToken);
+            var dataFeat = GameDB.getFeatInfo(args[0], 'autodownload').data;
 
-            var api = await axios.post('https://tobyfox.itch.io/deltarune/file/12206581?source=view_game&as_props=1&after_download_lightbox=true', "csrf_token=" + csrfToken);
-
-            var deltaruneUrl = api.data.url;
+            var deltaruneUrl = await (require('./DownloadUtilities/' + dataFeat.pluginName).run(args[0], dataFeat));
 
             var modal = new BrowserWindow({
                 width: 350,
@@ -1679,9 +1672,15 @@ function createWindow() {
 
                 win.setProgressBar(0);
                 
-                var extractPath = path.join(System.getTemporary(), 'deltarune_extracted_' + Date.now());
+                var extractPath = path.join(System.getTemporary(), 'game_ext_' + Date.now());
                 fs.mkdirSync(extractPath, { recursive: true });
                 await _7z.unpack(destPath, extractPath);
+
+                if (fs.readdirSync(extractPath).length == 1) {
+                    const singleFolder = fs.readdirSync(extractPath)[0];
+                    const singleFolderPath = path.join(extractPath, singleFolder);
+                    extractPath = singleFolderPath;
+                }
                 console.log('Extraction completed successfully');
                 modal.close();
                 resolve(extractPath);

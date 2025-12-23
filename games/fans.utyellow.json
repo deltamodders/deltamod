@@ -6,5 +6,12 @@
         "id": 19606
     },
     "exeName": "Undertale Yellow.exe",
-    "availableFeatures": []
+    "availableFeatures": [{
+        "feat": "autodownload",
+        "data": {
+            "pluginName": "GameJolt",
+            "buildId": "1857285",
+            "gameId": "136925" 
+        }
+    }]
 }

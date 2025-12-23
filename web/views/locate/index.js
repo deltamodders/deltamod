@@ -33,7 +33,11 @@ window.currentPageStack.locateDelta = locateDelta;
 window.currentPageStack.steam = steam;
 
 window.currentPageStack.downloadDelta = async function() {
-    var path = await window.electronAPI.invoke("downloadDelta", []);
+    if (window.gid == 'noid') {
+        htmlAlert('Warning','Please select a game.',[{text:'OK',resolveWith:'ok'}]);
+        return;
+    }
+    var path = await window.electronAPI.invoke("downloadGame", [window.gid]);
     if (path) {
         document.querySelector('input[type="text"]').value = path;
     }

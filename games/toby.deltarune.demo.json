@@ -7,7 +7,12 @@
     },
     "exeName": "DELTARUNE.exe",
     "availableFeatures": [{
-        "feat": "autodownload"
+        "feat": "autodownload",
+        "data": {
+            "pluginName": "Itch",
+            "homepage": "https://tobyfox.itch.io/deltarune",
+            "fileID": "12206581" 
+        }
     }, {
         "feat": "steam",
         "data": {
