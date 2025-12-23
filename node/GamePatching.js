@@ -444,14 +444,14 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                 await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + 'massPatch ' + gamePath + ' GM ' + String(modAmount) + ' ' + filepathArg);
                 if (modAmount > 1) {
                     //Attempt to speed things up and to lower chances of a timeout by having UTMTCLI being a child instead of a grandchild process.
-                    for (var i = 0; i < 5; i++) {
+                    for (var i = 0; i < chapterTargets.length; i++) {
                         for (var modNumber = 0; modNumber < modAmount + 2; modNumber++) {
                             if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'))) {
                                 await fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), modNumber.toString(), 'Objects', 'CodeEntries'), { recursive: true });
                             }
                         }
                     }
-                    for (var i = 0; i < 5; i++) {
+                    for (var i = 0; i < chapterTargets.length; i++) {
                         for (var modNumber = 1; modNumber < modAmount + 2; modNumber++) {
                             fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'chapterNumber.txt'), i.toString());
                             fs.writeFileSync(path.join(GM3P_OUTPUT, 'Cache', 'running', 'modNumbersCache.txt'), modNumber.toString());
@@ -476,7 +476,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                     oneMod = ' true';
                 } else { oneMod = ' false'; }
             } else {
-                for (var i = 0; i < 5; i++) {
+                for (var i = 0; i < chapterTargets.length; i++) {
                     if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1'))) {
                         fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '1'), {recursive: true});
                     }
