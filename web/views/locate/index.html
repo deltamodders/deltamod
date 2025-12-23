@@ -3,25 +3,32 @@
     <p class="calibri">Welcome, and thanks for downloading Deltamod! <br><br>Please use the picker below to choose your game installation.</p>
     <hr>
     <div>
-        <p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
-        <span class="material-symbols-outlined">folder</span>
-        Select your game installation folder.
-        </p>
-        <div class="fileInput" style="display: flex; justify-content: left; align-items: center; gap: 5px;">
-            <input type="text" name="" id="dpath" placeholder="Path to your game install" style="width: 100%;">
-            <button onclick="window.currentPageStack.locateDelta()">
-                <span class="material-symbols-outlined" style="font-size: 17px;">folder_open</span>
-            </button>
-            <button onclick="window.currentPageStack.steam()">
-                <brand-icon>S</brand-icon>
-            </button>
-        </div>
+        
         <p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
         <span class="material-symbols-outlined">gamepad_up</span>
         Select the game you are trying to add.
         </p>
         <div class="gOptions">
 
+        </div>
+        <p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
+        <span class="material-symbols-outlined">folder</span>
+        Select your game installation folder.
+        </p>
+        <div class="fileInput" style="display: flex; justify-content: left; align-items: center; gap: 5px;">
+            <input type="text" name="" id="dpath" placeholder="Path to your existing game installation" style="width: 100%;">
+            <button onclick="window.currentPageStack.locateDelta()">
+                <span class="material-symbols-outlined" style="font-size: 17px;">folder_open</span>
+            </button>
+        </div>
+        <p class="smaller">These other methods are also available for importing the game:</p>
+        <div class="otherImports">
+            <button onclick="window.currentPageStack.steam()" id="feat_steam">
+                <brand-icon style="font-size: 14px;">S</brand-icon> Import from Steam
+            </button>
+            <button onclick="window.currentPageStack.downloadDelta()" id="feat_autodownload">
+                <span class="material-symbols-outlined" style="font-size: 14px;">cloud_download</span> Automatic download
+            </button>
         </div>
     </div>
     <br>
@@ -37,6 +44,23 @@
     </small>
 </div>
 <style>
+    .otherImports {
+        display: flex;
+        justify-content: left;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .otherImports > button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+    }
+    .smaller {
+        font-size: 14px;
+        color: #888;
+    }
     .gOptions {
         width: 100%;
         height: 50px;
@@ -44,11 +68,10 @@
         border-radius: 10px;
         background-color: rgb(0,0,0,0.5);
         backdrop-filter: blur(5px);
-        padding: 5px;
         display: flex;
         justify-content: left;
         align-items: center;
-        gap: 10px;
+        gap: 20px;
         border: 1px solid var(--theme-color);
     }
 </style>

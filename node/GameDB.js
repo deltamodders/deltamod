@@ -14,7 +14,14 @@ function getGameById(id) {
     return games.find(g => g.id == id);
 }
 
+function getFeatInfo(id, feat) {
+    const game = getGameById(id);
+    if (!game || !game.availableFeatures) return false;
+    return game.availableFeatures.filter(f => f.feat == feat)[0];
+}
+
 module.exports = {
     getGames,
-    getGameById
+    getGameById, 
+    getFeatInfo
 };

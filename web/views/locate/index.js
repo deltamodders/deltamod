@@ -15,7 +15,11 @@ function id() {
 }
 
 function steam() {
-    window.electronAPI.invoke("createNewInstallation", ["steam", "", "", window.fromIM, ""]);
+    if (window.gid == 'noid') {
+        htmlAlert('Warning','Please select a game.',[{text:'OK',resolveWith:'ok'}]);
+        return;
+    }
+    window.electronAPI.invoke("createNewInstallation", ["steam", "", "", window.fromIM, window.gid]);
 }
 
 window.currentPageStack.id = id;
@@ -28,6 +32,13 @@ window.currentPageStack.locateDelta = locateDelta;
 
 window.currentPageStack.steam = steam;
 
+window.currentPageStack.downloadDelta = async function() {
+    var path = await window.electronAPI.invoke("downloadDelta", []);
+    if (path) {
+        document.querySelector('input[type="text"]').value = path;
+    }
+}
+
 document.getElementById('audioCHECK').addEventListener('change', (event) => {
     window.electronAPI.invoke('setUniqueFlag', ['AUDIO', event.target.checked]);
 });
@@ -37,6 +48,11 @@ window.electronAPI.invoke('getUniqueFlag', ['AUDIO']).then((result) => {
 });
 
 (async() => {
+    var allFeat = ['steam','autodownload'];
+    allFeat.forEach(f => {
+        document.getElementById('feat_' + f).disabled = true;
+        document.getElementById('feat_' + f).style.opacity = 0.4;
+    });
     window.gid = "noid";
 
     var games = await window.electronAPI.invoke('getAvailableGames',[]);
@@ -49,7 +65,7 @@ window.electronAPI.invoke('getUniqueFlag', ['AUDIO']).then((result) => {
             var game = games[l];
 
             var img = document.createElement('img');
-            img.style.width = '40px';
+            img.style.width = '30px';
             img.style.opacity = '0.4';
             img.style.cursor = 'pointer';
             img.id = game.id;
@@ -59,6 +75,18 @@ window.electronAPI.invoke('getUniqueFlag', ['AUDIO']).then((result) => {
                 document.querySelectorAll('.gameico:not(#' + game.id + ')').forEach(x =>{
                     x.style.opacity = 0.4;
                     img.style.opacity = 1;
+                });
+
+                var allFeat = ['steam','autodownload'];
+                allFeat.forEach(f => {
+                    if (game.availableFeatures.map(x => x.feat).includes(f)) {
+                        document.getElementById('feat_' + f).disabled = false;
+                        document.getElementById('feat_' + f).style.opacity = 1;
+                    }
+                    else {
+                        document.getElementById('feat_' + f).disabled = true;
+                        document.getElementById('feat_' + f).style.opacity = 0.4;
+                    }
                 });
             })
             img.src = './gamesIco/' + game.id+'.png';

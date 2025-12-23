@@ -298,6 +298,12 @@ function modList() {
             calculateFolderSize(modPath);
             // convert bytes to megabytes, round to 2 decimals; non-zero values are at least 0.01 MB
             modSize = modSize === 0 ? 0 : Math.max(0.01, Math.round((modSize / (1024 * 1024)) * 100) / 100);
+
+            var games = require('./GameDB').getGames();
+            if (!games.some(g => g.id === meta.game)) {
+                failureReason = `Mod targets unknown game: ${meta.game}`;
+                throw new Error(`Mod targets unknown game: ${meta.game}`);
+            }
             // keep your return shape; just add ids (non-breaking)
             modList.push({
                 name:        meta.name || mod,

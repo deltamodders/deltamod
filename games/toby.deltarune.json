@@ -5,5 +5,13 @@
     "gamebanana": {
         "id": 6755
     },
-    "exeName": "DELTARUNE.exe"
+    "exeName": "DELTARUNE.exe",
+    "availableFeatures": [{
+        "feat": "steam",
+        "data": {
+            "folder": "DELTARUNE",
+            "appid": "1671210",
+            "downloadable": false
+        }
+    }]
 }
