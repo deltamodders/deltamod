@@ -273,6 +273,43 @@ function findFirstByName(root, name) {
     return null;
 }
 
+async function precalculateHashes(root) {
+    if (!fs.existsSync(root)) return;
+    if (fs.lstatSync(root).isFile()) return;
+
+    var allFiles = [];
+
+    function walkDir(dir) {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+            const fullPath = path.join(dir, file);
+            const stat = fs.lstatSync(fullPath);
+            if (stat.isDirectory()) {
+                walkDir(fullPath);
+            } else if (stat.isFile()) {
+                allFiles.push(fullPath);
+            }
+        }
+    }
+
+    walkDir(root);
+
+    console.log(`Precalculating hashes for ${allFiles.length} files...`);
+    for (let i = 0; i < allFiles.length; i++) {
+        const filePath = allFiles[i];
+
+        if (filePath.endsWith('.hash')) continue; // skip existing hashes
+
+        var fileBuffer = fs.readFileSync(filePath);
+
+        var hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+        fs.writeFileSync(filePath + '.hash', hash, 'utf8');
+
+        console.log(`Hashed file ${i + 1} / ${allFiles.length}`);
+    }
+}
+
 function isSubpath(parent, child) {
     const P = p => path.resolve(p).toLowerCase();
     const a = P(parent), b = P(child);
@@ -637,6 +674,10 @@ function createWindow() {
 
     ipcMain.handle('shouldGoIM', () => {
         return process.argv.includes('---im');
+    });
+
+    ipcMain.handle('precalcGameHashes', () => {
+        return precalculateHashes(getSystemFolder('deltaruneInstall'));
     });
 
     ipcMain.handle('getCurrentGameInfo', (event, args) => {
@@ -1337,8 +1378,15 @@ function createWindow() {
             let mod = datalist[i];
             var editionCompatible = (mod.game == edition);
             console.log(`Mod ${mod.name} (${mod.uniqueId}) compatibility check: mod game=${mod.game} vs edition=${edition} => ${editionCompatible ? 'compatible' : 'incompatible'}`);
-            if (mod._incompatibleHASH) datalist[i].isIncompatible = true;
-            if (!editionCompatible) datalist[i].isIncompatible = true;
+            if (mod._incompatibleHASH) {
+                datalist[i].isIncompatible = true;
+                datalist[i].incompatibilityReason = 'Mismatching hashes (disable advanced mod compatibility checks to ignore)';
+                delete datalist[i]._incompatibleHASH;
+            }
+            if (!editionCompatible) {
+                datalist[i].isIncompatible = true;
+                datalist[i].incompatibilityReason = 'Mod not made for this game';
+            }
         }
 
         return { modList: datalist, errors };

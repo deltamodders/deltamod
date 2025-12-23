@@ -350,6 +350,7 @@ function loadInst(index) {
                 window._pageArguments = { sortfunc: (a, b) => (b.size || 0) - (a.size || 0), sortid: 'size-desc' };
                 page('');
                 break;
+
         }
     };
 

@@ -99,6 +99,18 @@ async function createMod(mod, compatible) {
     gameSpan.innerHTML = `${icon('stadia_controller', 'small')} ${await window.electronAPI.invoke('getGameInfo', [mod.game]).then(g => g.name)}`;
     gameSpan.id = `modgame-${mod.uid}`;
     modNameContainer.appendChild(gameSpan);
+    
+    var comp = !mod.isIncompatible;
+    let compatSpan = document.createElement('p');
+    compatSpan = adaptForIcons(compatSpan);
+    compatSpan.style.margin = '0px';
+    compatSpan.style.marginTop = '4px';
+    compatSpan.className = 'calibri';
+    compatSpan.style.fontSize = 'smaller';
+    compatSpan.style.color = comp ? '#4caf50' : '#f44336';
+    compatSpan.innerHTML = comp ? `${icon('check', 'small')} Compatible with current version` : `${icon('error', 'small')} Incompatible: ${mod.incompatibilityReason}`;
+    compatSpan.id = `modcompat-${mod.uid}`;
+    modNameContainer.appendChild(compatSpan);
 
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');

@@ -169,6 +169,11 @@ window.currentPageStack.cat = async function(cat) {
                 await window.electronAPI.invoke('rebootDev', [])
             }, 'Open', !await window.electronAPI.invoke('isDevMode', []), 'You are already in dev mode.');
 
+            await addButton('Precalculate game hashes', 'If you are using advanced mod checks, doing this operation may save you time when opening Deltamod, but it can be pretty lengthy.', async () => {
+                await window.electronAPI.invoke('precalcGameHashes', []);
+                await htmlAlert('Done','The operation was successful.',[{text: 'OK', resolveWith:''}]);
+            }, 'Open');
+
             break;
         case "dev":
             await addButton('Open flag database (DEV-ONLY)', 'Opens the database holding flags.', async () => {
