@@ -390,6 +390,10 @@ function createWindow() {
         KeyValue.writeUniqueFlag('audio', 'true');
     }
 
+    if (!KeyValue.readUniqueFlag('sfx')) {
+        KeyValue.writeUniqueFlag('sfx', 'true');
+    }
+
     try {
         if (process.platform === 'win32') {
             try {

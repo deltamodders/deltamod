@@ -34,6 +34,13 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
     input.id = 'FLAG-' + flagid.toUpperCase();
     input.checked = await window.electronAPI.invoke('getUniqueFlag', [flagid]);
     input.addEventListener('change', async (e) => {
+        if (flagid == 'sfx' && e.target.checked) {
+            var a = new Audio();
+            a.src = './orch2.mp3';
+            a.playbackRate = 1.1;
+            a.currentTime = 0.6;
+            a.play();
+        }
         await window.electronAPI.invoke('setUniqueFlag', [flagid, e.target.checked]);
     });
     tdInput.appendChild(input);
@@ -137,6 +144,7 @@ window.currentPageStack.cat = async function(cat) {
         case 'ui':
             await addCheckboxOption('Enable Mod Shop', 'Enables the Mod Shop. This service uses GameBanana to run. ' + (navigator.onLine ? '' : '<br><br><i style="color: gold;">This option is currently disregarded because there is no Internet.</i>'), 'SHOP', true);
             await addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background.', 'audio');
+            await addCheckboxOption('Enable SFX in menus', 'Choose if you want SFX to play when you do some things. Some actions might still trigger SFX even with this off.', 'sfx');
 
             await addButton('Select a theme', 'Opens the theme selection menu.', async () => {
                 page('themesel');

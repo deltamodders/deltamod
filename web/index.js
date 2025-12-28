@@ -5,7 +5,10 @@ var pageN = null;
 var addedStyle = null;
 var update = false;
 var TARGET_MUSIC_VOLUME = 0.5;
-function rew() {
+async function rew() {
+    if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === false) {
+        return;
+    }
     var a = new Audio();
     a.src = './rew.mp3';
     a.play();
@@ -50,7 +53,7 @@ async function htmlAlert(t,m,b,i) {
     }
 }
 async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         isAlertShowing = true;
         var alertMain = document.getElementsByClassName('alertMain')[0];
         var alertMsgR = alertMain.getElementsByClassName('alertMsg')[0];
@@ -88,7 +91,9 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
                 isAlertShowing = false;
                 var a = new Audio();
                 a.src = './booow.mp3';
-                a.play();
+                if (window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === true) {
+                    a.play();
+                }
                 if (button.resolveWith) {
                     resolve(button.resolveWith);
                     return;
@@ -138,7 +143,9 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
 
         var a = new Audio();
         a.src = './ooow.mp3';
-        a.play();
+        if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === true) {
+            a.play();
+        }
     });
 }
 
@@ -550,12 +557,15 @@ var elaps = 0;
 var start = 0;
 var end = 0;
 var lastClose = 0;
-document.querySelector('.sidebar').addEventListener('mouseenter', () => {
+document.querySelector('.sidebar').addEventListener('mouseenter', async () => {
     start = Date.now();
 
     elaps = start - lastClose;
 
     if (elaps > 200 || end == 0) {
+        if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === false) {
+            return;
+        }
         var a = new Audio();
         a.src = './hoverSBAR.mp3';
         a.volume = 0.6;
@@ -563,12 +573,15 @@ document.querySelector('.sidebar').addEventListener('mouseenter', () => {
     }
 });
 
-document.querySelector('.sidebar').addEventListener('mouseleave', () => {
+document.querySelector('.sidebar').addEventListener('mouseleave', async () => {
     end = Date.now();
 
     elaps = end - start;
 
     if (elaps > 200) {
+        if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === false) {
+            return;
+        }
         var a = new Audio();
         a.src = './dehoverSBAR.mp3';
         a.volume = 0.6;

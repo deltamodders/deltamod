@@ -181,35 +181,45 @@ function modList() {
             };
             var meta = modInfo.metadata || {};
 
-            if (meta.demoMod !== undefined) {
-                console.log("Upgrading demoMod field to game field for mod:", mod);
-                meta.game = (meta.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
-                delete meta.demoMod;
-                fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+            try {
+                if (meta.demoMod !== undefined) {
+                    console.log("Upgrading demoMod field to game field for mod:", mod);
+                    meta.game = (meta.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
+                    delete meta.demoMod;
+                    fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+                }
+            }
+            catch {
+                console.log("Failed to upgrade demoMod field for mod:", mod);
             }
 
-            meta.packageID = validatePID(meta.packageID);
+            meta.packageID = validatePID(meta.packageID) || "und.und.und";
             const pid = meta.packageID;
 
             if (require('./KeyValue').readUniqueFlag('HASHCHECKS')) {
                 modInfo.neededFiles?.forEach(file => {
-                    var fileContents = (path.join(system.getSystemFolder('deltaruneInstall'), file.file));
-                    var fileContentsHashCPATH = (path.join(system.getSystemFolder('deltaruneInstall'), file.file + '.hash'));
+                    try {
+                        var fileContents = (path.join(system.getSystemFolder('deltaruneInstall'), file.file));
+                        var fileContentsHashCPATH = (path.join(system.getSystemFolder('deltaruneInstall'), file.file + '.hash'));
 
-                    if (!fs.existsSync(fileContents)) {
-                        meta._incompatibleHASH = true;
-                        return; // skip to next file
+                        if (!fs.existsSync(fileContents)) {
+                            meta._incompatibleHASH = true;
+                            return; // skip to next file
+                        }
+
+                        if (!fs.existsSync(fileContentsHashCPATH)) {
+                            var fileContentsHashCalc = crypto.createHash('sha256').update(fs.readFileSync(fileContents)).digest('hex');
+                            fs.writeFileSync(fileContentsHashCPATH, fileContentsHashCalc, 'utf8');
+                        }
+
+                        var fileContentsHash = fs.readFileSync(fileContentsHashCPATH, 'utf8').trim();
+
+                        console.log('CHECK FILES! ' + file.checksum + ' VS ' + fileContentsHash);
+                        if (file.checksum !== fileContentsHash) {
+                            meta._incompatibleHASH = true;
+                        }
                     }
-
-                    if (!fs.existsSync(fileContentsHashCPATH)) {
-                        var fileContentsHashCalc = crypto.createHash('sha256').update(fs.readFileSync(fileContents)).digest('hex');
-                        fs.writeFileSync(fileContentsHashCPATH, fileContentsHashCalc, 'utf8');
-                    }
-
-                    var fileContentsHash = fs.readFileSync(fileContentsHashCPATH, 'utf8').trim();
-
-                    console.log('CHECK FILES! ' + file.checksum + ' VS ' + fileContentsHash);
-                    if (file.checksum !== fileContentsHash) {
+                    catch {
                         meta._incompatibleHASH = true;
                     }
                 }); // future use
