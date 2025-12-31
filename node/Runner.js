@@ -866,6 +866,19 @@ function createWindow() {
         callbackNPS = null;
     });
 
+    ipcMain.handle('deltahubMessageGet', async (event, args) => {
+        var url = 'https://us-central1-dh-data-5a818.cloudfunctions.net/deltamodGetChatMessages?channel=' + args[0];
+
+        var get = await axios.get(url);
+
+        return get.data;
+    });
+
+    ipcMain.handle('deltahubMessagePost', async (event, args) => {
+        // TODO : implement
+        return;
+    });
+
     ipcMain.handle('downloadGM3P', async (event, args) => {
         var url = args[0];
 
