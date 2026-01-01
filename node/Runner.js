@@ -875,7 +875,46 @@ function createWindow() {
     });
 
     ipcMain.handle('deltahubMessagePost', async (event, args) => {
-        // TODO : implement
+        console.log('Requesting signature for Deltahub message...');
+        var url = 'https://us-central1-dh-data-5a818.cloudfunctions.net/deltamodSendChatMessage';
+        var hash = "";
+
+        var tool = path.join(__dirname, '..', 'tools', 'dhubsign.exe'); // this exe is not distributed on github
+
+        if (fs.existsSync(tool)) {
+            try {
+                hash = (await new Promise((resolve, reject) => {
+                    exec(`"${tool}" "${btoa(args[1])}"`, (error, stdout, stderr) => {
+                        if (error) {
+                            console.error('Error signing message for Deltahub:', error);
+                            resolve("");
+                            return;
+                        }
+                        resolve(stdout);
+                    });
+                })).replaceAll('\r','').replaceAll('\n','').replaceAll('[start]','').replaceAll('[end]','').trim(); // long;
+            } catch (e) {
+                console.error('Failed to sign message for Deltahub:', e);
+            }
+        }
+
+        hash = hash.trim();
+
+        var post = await axios.post(url, {
+            channel: args[0],
+            message: args[1],
+        }, {
+            headers: {
+                'X-Signature': hash
+            }
+        }).catch((error) => {
+            throw error.data.message;
+        });
+
+        if (post.data.ok !== true) {
+            throw post.data.message;
+        }
+
         return;
     });
 

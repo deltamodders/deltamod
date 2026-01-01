@@ -4,11 +4,18 @@
 
     </div>
     <br>
-    <input type="text" name="messageInput" id="messageInput" placeholder="(This input will unlock in 5 seconds)" disabled>
+    <div class="sendInput">
+        <input type="text" name="messageInput" id="messageInput" placeholder="Type your message here... ">
+        <button id="sendBtn">Send</button>
+    </div>
 </div>
 <style>
     #messageInput {
         width: calc(100% - 20px);
+    }
+    .sendInput {
+        display: flex;
+        gap: 10px;
     }
     .messages {
         height: 300px;

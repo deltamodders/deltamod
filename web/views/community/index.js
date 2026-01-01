@@ -36,52 +36,28 @@
     // scroll to bottom of messages
     msgDiv.scrollTop = msgDiv.scrollHeight;
 
-    setTimeout(() => {
-        document.querySelector('#messageInput').disabled = false;
-        document.querySelector('#messageInput').placeholder = 'Type your message here and press Enter to send...';
-    }, 5000);
-
-    document.querySelector('#messageInput').addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
+    document.querySelector('#sendBtn').addEventListener('click', async () => {
+        try {
             var inputElem = document.querySelector('#messageInput');
             var message = inputElem.value.trim();
-            if (message.length === 0) {
-                return;
-            }
-            if (message.length > 100) {
-                await htmlAlert(
-                    'Error',
-                    'Message is too long. Please limit to 100 characters.',
-                    [{ text: 'OK', resolveWith: 'ok' }],
-                    'error'
-                );
-                return;
-            }
-            if (message.includes('https://') || message.includes('http://') || message.includes('www.')) {
-                await htmlAlert(
-                    'Error',
-                    'Message cannot contain URLs.',
-                    [{ text: 'OK', resolveWith: 'ok' }],
-                    'error'
-                );
-                return;
-            }
-            inputElem.value = 'Sending...';
-            inputElem.disabled = true;
-            inputElem.style.color = 'gray';
-            var resp = await window.electronAPI.invoke('deltahubMessagePost', ['en', message]).catch(async (err) => {
-                console.error('Error sending message: ', err)
-                await htmlAlert(
-                    'Error',
-                    'Could not send message. Please try again later.',
-                    [{ text: 'OK', resolveWith: 'ok' }],
-                    'error'
-                );
-                inputElem.value = '';
-            });
+            if (message.length === 0) return;
+
+            var sendResult = await window.electronAPI.invoke('deltahubMessagePost', ['en', message]);
             
+            inputElem.value = '';
+
             page('community');
+        }
+        catch (e) {
+            console.error('Error sending message: ', e);
+            await htmlAlert(
+                'Error',
+                'Could not send message. Please check if it contains URLs and try again.',
+                [{ text: 'OK', resolveWith: 'ok' }],
+                'error'
+            );
+            inputElem.value = "";
+            return;
         }
     });
 })();
