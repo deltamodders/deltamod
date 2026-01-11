@@ -6,5 +6,5 @@
     "musicTrack": "Gingerbread House - Toby Fox",
     "description": "A Christmas theme for Deltamod.",
     "color": "rgba(187, 111, 111, 1)",
-    "specialCSS": "th { background: url('./christmasTH.png'); }"
+    "specialCSS": "th { background: url('img/christmasTH.png'); }"
 }

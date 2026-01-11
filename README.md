@@ -1,4 +1,4 @@
-<p align="center"><img width="200" alt="Deltamod" src="./web/gblogo-outline.png" /></p><p align="center"><b>A Deltarune mod manager, written in Node.js and Electron.</b> </p>
+<p align="center"><img width="200" alt="Deltamod" src="./web/img/gblogo-outline.png" /></p><p align="center"><b>A Deltarune mod manager, written in Node.js and Electron.</b> </p>
 
 # Running Deltamod from source
 ## Script

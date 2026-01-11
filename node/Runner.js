@@ -975,7 +975,7 @@ function createWindow() {
             win.setProgressBar(0);
             console.log('Download completed successfully');
             try {
-                fs.rmdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
+                fs.rmSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
             
             }
             catch (e) {

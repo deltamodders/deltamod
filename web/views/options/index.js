@@ -36,7 +36,7 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
     input.addEventListener('change', async (e) => {
         if (flagid == 'sfx' && e.target.checked) {
             var a = new Audio();
-            a.src = './orch2.mp3';
+            a.src = 'audio/orch2.mp3';
             a.playbackRate = 1.1;
             a.currentTime = 0.6;
             a.play();

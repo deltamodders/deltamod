@@ -10,7 +10,7 @@ async function rew() {
         return;
     }
     var a = new Audio();
-    a.src = './rew.mp3';
+    a.src = 'audio/rew.mp3';
     a.play();
 }
 function brightenColor(r,g,b, amount) {
@@ -90,7 +90,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
                 }, 300);
                 isAlertShowing = false;
                 var a = new Audio();
-                a.src = './booow.mp3';
+                a.src = 'audio/booow.mp3';
                 if (window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === true) {
                     a.play();
                 }
@@ -142,7 +142,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         }, 300);
 
         var a = new Audio();
-        a.src = './ooow.mp3';
+        a.src = 'audio/ooow.mp3';
         if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === true) {
             a.play();
         }
@@ -203,20 +203,20 @@ function sanitizeHTML(str) {
     return temp.innerHTML;
 }
 
-console.log = function(...arguments) {
-    window.electronAPI.invoke('log', [arguments.join(' '), 'LOG', pageN]);
+console.log = function(...args) {
+    window.electronAPI.invoke('log', [args.join(' '), 'LOG', pageN]);
 }
 
-console.warn = function(...arguments) {
-    window.electronAPI.invoke('log', [arguments.join(' '), 'WARN', pageN]);
+console.warn = function(...args) {
+    window.electronAPI.invoke('log', [args.join(' '), 'WARN', pageN]);
 }
 
-console.error = function(...arguments) {
-    window.electronAPI.invoke('log', [arguments.join(' '), 'ERROR', pageN]);
+console.error = function(...args) {
+    window.electronAPI.invoke('log', [args.join(' '), 'ERROR', pageN]);
 }
 
-console.info = function(...arguments) {
-    window.electronAPI.invoke('log', [arguments.join(' '), 'INFO', pageN]);
+console.info = function(...args) {
+    window.electronAPI.invoke('log', [args.join(' '), 'INFO', pageN]);
 }
 
 function uppercaseFirst(string) {
@@ -567,7 +567,7 @@ document.querySelector('.sidebar').addEventListener('mouseenter', async () => {
             return;
         }
         var a = new Audio();
-        a.src = './hoverSBAR.mp3';
+        a.src = 'audio/hoverSBAR.mp3';
         a.volume = 0.6;
         a.play();
     }
@@ -583,7 +583,7 @@ document.querySelector('.sidebar').addEventListener('mouseleave', async () => {
             return;
         }
         var a = new Audio();
-        a.src = './dehoverSBAR.mp3';
+        a.src = 'audio/dehoverSBAR.mp3';
         a.volume = 0.6;
         a.play();
     }

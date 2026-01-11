@@ -124,7 +124,7 @@ async function createMod(mod) {
 
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
     if (!imeta.path) {
-        imeta.path = 'deltapack://web/mod-placeholder.png';
+        imeta.path = 'deltapack://web/img/mod-placeholder.png';
     }
 
     let img = document.createElement('img');
