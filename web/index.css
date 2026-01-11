@@ -224,6 +224,7 @@ body {
     transition: 0.9s all cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 100;
     animation: 0.5s sidebarFadeIn cubic-bezier(0.25, 1, 0.5, 1);
+    user-select: none;
 }
 
 .sidebar-backdrop {
@@ -380,6 +381,7 @@ h1 {
     border-bottom: 2px solid var(--theme-color);
     -webkit-app-region: drag;
     z-index: 1000;
+    user-select: none;
 }
 
 .bottombar {
