@@ -2057,7 +2057,11 @@ app.on('window-all-closed', () => {
     } catch (e) {
         console.warn('Failed to terminate GM3P processes:', e && e.message ? e.message : e);
     }
-    if (process.platform !== 'darwin') app.quit();
+    // This originally didn't quit the app was not on macOS
+    // However, the app shows an error and instantly crashes on macOS when trying to click
+    // the app icon to open a new window.
+    // I think making the app close when all windows are closed on macOS is okay for now.
+    app.quit();
 });
 
 app.on('activate', () => {
