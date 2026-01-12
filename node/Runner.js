@@ -81,7 +81,7 @@ function validateDeltarune(deltapath) {
     }
 }
 
-
+/** @type {BrowserWindow} */
 let win; // Main window
 let ignoreUpdate = false;
 
@@ -168,6 +168,16 @@ function validateMyInstall(deltapath) {
  * @param {Error} err The error to show
  */
 function errorWin(err) {
+    // TODO this is a rudimentary way of getting all child windows and closing them.
+    // This is used to close all progress windows during an error.
+    // Perhaps there is a better way to figure out if a window is a progress window?
+    console.log('=====================================')
+    console.log(win.getChildWindows().length);
+    console.log('=====================================')
+    for (const childWin of win.getChildWindows()) {
+        childWin.close();
+    }
+
     var filename = 'error_' + Date.now() + '.log';
     if (!fs.existsSync(path.join(app.getPath('documents'), 'deltamodErrors'))) {
         fs.mkdirSync(path.join(app.getPath('documents'), 'deltamodErrors'), { recursive: true });
@@ -918,17 +928,52 @@ function createWindow() {
         return;
     });
 
-    ipcMain.handle('downloadGM3P', async (event, args) => {
-        var url = args[0];
+    ipcMain.handle('modalTest', async (event, args) => {
+        console.log('MODALTEST HANDLED')
 
         var modal = new BrowserWindow({
-            width: 350,
-            height: 170,
+            // width: 350,
+            // height: 170,
+            width: 200,
+            height: 200,
             resizable: false,
             maximizable: false,
             frame: false,
             minimizable: false,
-            closable: false,
+            closable: true,
+            fullscreenable: false,
+            modal: true,
+            parent: win,
+            webPreferences: {
+                devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
+                nodeIntegration: true,
+                preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
+                partition: partition
+            }
+        }); 
+
+        modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
+        modal.setMenuBarVisibility(false);
+
+        setTimeout(() => {
+            console.log('IM GONNA DO AN ERROR!!!');
+            throw new Error('oh no what an errro!!!');
+        }, 1000);
+    })
+
+    ipcMain.handle('downloadGM3P', async (event, args) => {
+        var url = args[0];
+
+        var modal = new BrowserWindow({
+            // width: 350,
+            // height: 170,
+            width: 200,
+            height: 200,
+            resizable: false,
+            maximizable: false,
+            frame: true,
+            minimizable: false,
+            closable: true,
             fullscreenable: false,
             modal: true,
             parent: win,
@@ -941,7 +986,7 @@ function createWindow() {
         });
 
         modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
-        modal.setMenuBarVisibility(false);
+        modal.setMenuBarVisibility(true);
 
         const fileName = "gm3p_pkg.zip";
         const destPath = path.join(app.getPath('downloads'), fileName);
@@ -973,27 +1018,33 @@ function createWindow() {
 
         writer.on('finish', async () => {
             win.setProgressBar(0);
-            console.log('Download completed successfully');
+            console.log("download completed successfully");
+            console.log("removing old gm3p folder...");
             try {
                 fs.rmSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
-            
             }
             catch (e) {
                 console.error('Failed to remove old gm3p folder:', e);
             }
+            console.log('creating new gm3p folder...');
             fs.mkdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true });
+            console.log(`unpacking ${fileName}...`);
             await _7z.unpack(destPath, path.join(__dirname, '..', 'gm3p'));
+            console.log("showing success box...");
+            modal.close();
             dialog.showMessageBoxSync(win, {
                 type: 'info',
                 title: 'Download Complete',
                 message: 'Patcher package downloaded and extracted successfully.',
             });
+            console.log("relaunching...");
             app.relaunch(properRelaunch());
             app.quit();
             process.exit(0);
         });
 
         writer.on('error', (err) => {
+            modal.close();
             console.error('Error downloading file:', err);
             dialog.showErrorBoxSync('Download Error', 'An error occurred while downloading the Patcher package. The app will now reboot.');
             app.relaunch(properRelaunch());
@@ -1677,6 +1728,7 @@ function createWindow() {
             var modal = new BrowserWindow({
                 width: 350,
                 height: 170,
+                closable: true,
                 resizable: false,
                 maximizable: false,
                 frame: false,
@@ -1691,7 +1743,6 @@ function createWindow() {
                     partition: partition
                 }
             });
-
             modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
             modal.setMenuBarVisibility(false);
 
@@ -1740,8 +1791,6 @@ function createWindow() {
                 console.log('Extraction completed successfully');
                 modal.close();
                 resolve(extractPath);
-
-                
             });
 
             writer.on('error', (err) => {

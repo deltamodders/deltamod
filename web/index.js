@@ -441,6 +441,10 @@ if (!window.electronAPI) {
         return;
     }
 
+    page('busy');
+    await htmlAlert('IMPORTANT DELTARUNE', 'chapter 5.', [{text: 'OK', resolveWith: 'ok'}], 'idkwhatthisdoes');
+    await window.electronAPI.invoke('modalTest', []);
+
     var hasCore = await window.electronAPI.invoke('hasPatchingCore',[]);
     if (!hasCore) {
         page('busy');
