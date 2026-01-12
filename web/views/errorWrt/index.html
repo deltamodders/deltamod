@@ -14,7 +14,7 @@
             </h1>
             <img src="dog-maraca.gif" alt="Dog Maraca" width="130" style="margin-bottom: 10px; margin-top: 10px;">
             
-            <p>Logs are available in the file named <code id="errorfilename">(shit)</code>. There is also a heap screenshot for debugging the backend. <span id="warnMSG"></span></p>
+            <p>Logs are available in the file named SHIT <code id="errorfilename">(shit)</code>. There is also a heap screenshot for debugging the backend. <span id="warnMSG"></span></p>
             <div class="button-container">
                 <button id="showerror">Show error file</button>
                 <button id="copyerror">Copy error to clipboard</button>
@@ -144,7 +144,7 @@
             window.electronAPI.invoke('showItem', [filepath]);
         });
 
-        if (await window.electronAPI.invoke('canReportError', [])) {
+        if (!(await window.electronAPI.invoke('canReportError', []))) {
             document.querySelector('#gitbtn').style.display = 'none';
             document.getElementById('warnMSG').innerText = " (This error cannot be reported.)";
         }
