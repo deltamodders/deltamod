@@ -25,6 +25,7 @@ const console = require('./Console.js');
 const { handleProtocolLaunch } = require('./Protocol.js');
 const { isFeatureEnabled } = require('./FeatureFlags.js');
 const { valid } = require('node-html-parser');
+const os = require('os');
 
 let abortController;
 let updateAvailable = false;
@@ -69,6 +70,7 @@ function validateDeltarune(deltapath) {
 
     keyItems.forEach((item) => {
         if (!fs.existsSync(`${deltapath}/${item}`)) {
+            console.log(`Missing key item: ${deltapath}/${item}`);
             isValid = false;
             missingItems.push(item);
         }
@@ -1870,7 +1872,17 @@ function createWindow() {
             path1 = result.filePaths[0];
         }
         else if (steam && !isFromLocate) {
-            var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
+            switch (process.platform) {
+                case "win32":
+                    var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
+                    break;
+                case "linux":
+                    var STEAM_BASE = path.join(os.homedir(), "/.local/share/Steam/steamapps/common/");
+                    break;
+                case "darwin":
+                    var STEAM_BASE = path.join(os.homedir(), "/Library/Application Support/Steam/steamapps/common/");
+                    break;
+            }
 
             var chosenEdition = GameDB.getFeatInfo(selectedGame, "steam").data;
 
@@ -1882,6 +1894,7 @@ function createWindow() {
             }
 
             path1 = path.join(STEAM_BASE, chosenEdition.folder);
+            console.log('Assumed steam path: ' + path1);
         }
         else {
             path1 = specifiedLocatePath;
