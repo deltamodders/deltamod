@@ -121,4 +121,20 @@ function getSteamDirectory(dialog) {
     return steamdir;
 }
 
-module.exports = { timeoutPromise, between, logOnAccess, getFileVersion, randomString, hashFile, lastOfArray, getWindow, setWindow, page, validateVersioning, setSharedVar, getSharedVar, properRelaunch, getSteamDirectory };
+module.exports = { 
+    timeoutPromise,
+    between, 
+    logOnAccess, 
+    getFileVersion, 
+    randomString, 
+    hashFile, 
+    lastOfArray, 
+    getWindow, 
+    setWindow, 
+    page, 
+    validateVersioning, 
+    setSharedVar, 
+    getSharedVar, 
+    properRelaunch, 
+    getSteamDirectory
+};

@@ -1671,7 +1671,7 @@ function createWindow() {
             path1 = result.filePaths[0];
         }
         else if (steam && !isFromLocate) {
-            STEAM_BASE = getSteamDirectory();
+            STEAM_BASE = getSteamDirectory(dialog);
 
             var chosenEdition = GameDB.getFeatInfo(selectedGame, "steam").data;
 
