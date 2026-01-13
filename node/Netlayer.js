@@ -10,4 +10,6 @@ function approve(domain) {
     return true;
 }
 
-module.exports = { approve };
+module.exports = {
+    approve
+};

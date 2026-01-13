@@ -1919,4 +1919,6 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
-module.exports = {loadUrl};
+module.exports = {
+    loadUrl
+};

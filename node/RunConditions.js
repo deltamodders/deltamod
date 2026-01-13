@@ -61,4 +61,6 @@ function checkConditions() {
     return checkers;
 }
 
-module.exports = {checkConditions};
+module.exports = {
+    checkConditions
+};

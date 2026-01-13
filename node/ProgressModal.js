@@ -56,4 +56,7 @@ function updateProgressModal(modal, mainWindow, frac, logPrefix) {
     // The workaround above is TERRIBLE.
 }
 
-module.exports = {createProgressModal, updateProgressModal}
+module.exports = {
+    createProgressModal,
+    updateProgressModal
+};

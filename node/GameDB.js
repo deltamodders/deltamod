@@ -22,6 +22,6 @@ function getFeatInfo(id, feat) {
 
 module.exports = {
     getGames,
-    getGameById, 
+    getGameById,
     getFeatInfo
 };

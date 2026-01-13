@@ -620,4 +620,9 @@ function deleteOriginals(gamePath) {
     return restored;
 }
 
-module.exports = { startGamePatch, restoreOriginalsIfAny, findModRoot, deleteOriginals };
+module.exports = {
+    startGamePatch,
+    restoreOriginalsIfAny,
+    findModRoot,
+    deleteOriginals
+};
