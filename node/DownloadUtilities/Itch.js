@@ -14,4 +14,6 @@ async function run(id, data) {
     return api.data.url;
 }
 
-module.exports = { run };
+module.exports = {
+    run
+};

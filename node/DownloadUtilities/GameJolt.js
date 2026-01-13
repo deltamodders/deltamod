@@ -37,4 +37,6 @@ async function run(id, data) {
     });
 }
 
-module.exports = { run };
+module.exports = {
+    run 
+};
