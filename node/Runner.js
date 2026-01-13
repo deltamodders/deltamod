@@ -1874,7 +1874,23 @@ function createWindow() {
         else if (steam && !isFromLocate) {
             switch (process.platform) {
                 case "win32":
-                    var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
+                    if(fs.existsSync("C:/Program Files (x86)/Steam/steamapps/common/")) {
+                        var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
+                    }else if(fs.existsSync("D:/Program Files (x86)/Steam/steamapps/common/")) {
+                        var STEAM_BASE = "D:/Program Files (x86)/Steam/steamapps/common/";
+                    }else {
+                        if (dialog.showMessageBoxSync({
+                            type: 'question',
+                            title: 'Provide Steam path',
+                            message: 'Could not find Steam installation automatically. Would you like to provide the Steam installation path manually?',
+                            buttons: ['Yes', 'No'],
+                        }) === 0) {
+                            var STEAM_BASE = await dialog.showOpenDialogSync(win, {
+                                properties: ['openDirectory'],
+                                message: 'Select the Steam "common" folder (e.g., C:/Program Files (x86)/Steam/steamapps/common/)',
+                            });
+                        }
+                    }
                     break;
                 case "linux":
                     var STEAM_BASE = path.join(os.homedir(), "/.local/share/Steam/steamapps/common/");
