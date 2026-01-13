@@ -13,6 +13,7 @@ const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
 const GameDB = require('./GameDB.js');
+const { createProgressModal, updateProgressModal } = require('./ProgressModal.js');
 const GamePatching = require('./GamePatching.js');
 const Junction = require('./Junction.js');
 const { default: axios } = require('axios');
@@ -22,7 +23,7 @@ const path = require('path');
 const { getConfig, config } = require('7zip-min');
 const { path7za } = require('7zip-bin');
 const console = require('./Console.js');
-const { handleProtocolLaunch } = require('./Protocol.js');
+const { handleProtocolLaunch, registerProtocolSchemesAsPrivileged, registerProtocolHandlers } = require('./Protocol.js');
 const { isFeatureEnabled } = require('./FeatureFlags.js');
 const { valid } = require('node-html-parser');
 const os = require('os');
@@ -31,7 +32,6 @@ let abortController;
 let updateAvailable = false;
 let callbackNPS;
 let callbackNPSPassWith;
-
 
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
@@ -233,40 +233,7 @@ function asyncTimeout(amount) {
 
 let elecTracer;
 
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'deltapack',
-    privileges: {
-      standard: true,
-      secure: true,
-      supportFetchAPI: true
-    }
-  },
-  {
-    scheme: 'packet',
-    privileges: {
-        standard: true,
-        secure: true,
-        supportFetchAPI: true
-    }
-  },
-  {
-    scheme: 'themeprot',
-    privileges: {
-        standard: true,
-        secure: true,
-        supportFetchAPI: true
-    }
-  },
-  {
-    scheme: "deltamod",
-    privileges: {
-        standard: false,
-        secure: true,
-        supportFetchAPI: true
-    }
-  }
-])
+registerProtocolSchemesAsPrivileged(protocol);
 
 // find the first file named `name` anywhere under `root`
 function findFirstByName(root, name) {
@@ -490,107 +457,7 @@ function createWindow() {
     const partition = 'persist:deltamod'; 
     const ses = session.fromPartition(partition);
 
-    ses.protocol.handle('deltapack', async (request) => {
-        const url = new URL(request.url);
-        // security
-        var combined = url.hostname+url.pathname;
-        if (combined.includes('..')) {
-            errorWin(new Error('Unsecure request made to deltapack.'));
-            return new Response("bad");
-        }
-        const filePath = path.resolve(__dirname, '..', url.hostname + url.pathname);
-
-        const data = await fs.promises.readFile(filePath);
-        return new Response(data, {
-            headers: {
-                'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
-                'Content-Length': data.length,
-                'Cache-Control': 'no-cache'
-            }
-        });
-    });
-
-    ses.protocol.handle('themeprot', async (request) => {
-        const url = new URL(request.url);
-        // security
-        var combined = url.hostname+url.pathname;
-        if (combined.includes('..')) {
-            errorWin(new Error('Unsecure request made to themes protocol.'));
-            return new Response("bad");
-        }
-        if (!fs.existsSync(path.join(app.getPath('userData'), 'customThemes'))) {
-            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes'), { recursive: true });
-            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'data'), { recursive: true });
-            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'img'), { recursive: true });
-            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'mus'), { recursive: true });
-        }
-        let pospath1 = path.join(__dirname, '..', 'web/themes', url.hostname + url.pathname);
-        let pospath2 = path.join(app.getPath('userData'), 'customThemes', url.hostname + url.pathname);
-        let finalPath = null;
-        if (fs.existsSync(pospath2)) {
-            finalPath = pospath2;
-        }
-        else {
-            finalPath = pospath1;
-        }
-
-        if (fs.existsSync(pospath1) && fs.existsSync(pospath2)) {
-            finalPath = pospath1; // prefer built-in theme files
-        }
-
-        const data = await fs.promises.readFile(finalPath);
-        return new Response(data, {
-            headers: {
-                'Content-Type': mime.lookup(finalPath.split('.')[finalPath.split('.').length - 1]) || 'application/octet-stream',
-                'Content-Length': data.length,
-                'Cache-Control': 'no-cache'
-            }
-        });
-    });
-
-    /*
-    ses.protocol.handle('https', async (request) => {
-        const url = new URL(request.url);
-
-        if (!Netlayer.approve(request.url)) {
-            setSharedVar('error', 'Unsecure request made to https protocol.');
-            win.loadURL('deltapack://web/views/errorWrt/index.html');
-        }
-        
-        const data = await (await fetch(request.url)).arrayBuffer();
-
-        return new Response(data, {
-            headers: {
-                'Content-Length': data.length,
-                'Cache-Control': 'no-cache'
-            }
-        });
-    });
-    */
-
-    ses.protocol.handle('http', async (request) => {
-        errorWin(new Error('HTTP protocol is not supported. Please use HTTPS for secure connections.'));
-    });
-
-    ses.protocol.handle('packet', async (request) => {
-        const url = new URL(request.url);
-        // security
-        var combined = url.hostname+url.pathname;
-        if (combined.includes('..') || combined.includes('.js')) {
-            errorWin(new Error('Unsecure request made to packet protocol.'));
-            return new Response("bad");
-        }
-        const filePath = path.resolve(System.getPacketDatabase(), url.hostname + url.pathname);
-
-        const data = await fs.promises.readFile(filePath);
-        return new Response(data, {
-            headers: {
-                'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
-                'Content-Length': data.length,
-                'Cache-Control': 'no-cache'
-            }
-        });
-    });
+    registerProtocolHandlers(ses.protocol);
 
     let unmetConditions = require('./RunConditions.js').checkConditions();
 
@@ -931,28 +798,7 @@ function createWindow() {
     });
 
     ipcMain.handle('modalTest', async (event, args) => {
-        console.log('MODALTEST HANDLED')
-
-        var modal = new BrowserWindow({
-            // width: 350,
-            // height: 170,
-            width: 200,
-            height: 200,
-            resizable: false,
-            maximizable: false,
-            frame: false,
-            minimizable: false,
-            closable: true,
-            fullscreenable: false,
-            modal: true,
-            parent: win,
-            webPreferences: {
-                devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
-                nodeIntegration: true,
-                preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
-                partition: partition
-            }
-        }); 
+        var modal = createProgressModal();
 
         modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
         modal.setMenuBarVisibility(false);
@@ -966,29 +812,7 @@ function createWindow() {
     ipcMain.handle('downloadGM3P', async (event, args) => {
         var url = args[0];
 
-        var modal = new BrowserWindow({
-            // width: 350,
-            // height: 170,
-            width: 200,
-            height: 200,
-            resizable: false,
-            maximizable: false,
-            frame: true,
-            minimizable: false,
-            closable: true,
-            fullscreenable: false,
-            modal: true,
-            parent: win,
-            webPreferences: {
-                devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
-                nodeIntegration: true,
-                preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
-                partition: partition
-            }
-        });
-
-        modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
-        modal.setMenuBarVisibility(true);
+        var modal = createProgressModal();
 
         const fileName = "gm3p_pkg.zip";
         const destPath = path.join(app.getPath('downloads'), fileName);
@@ -1007,10 +831,7 @@ function createWindow() {
         response.data.on('data', (chunk) => {
             downloaded += chunk.length;
             if (totalLength) {
-                const percent = ((downloaded / totalLength) * 100).toFixed(2);
-                console.log(`Downloaded ${percent}%`);
-                win.setProgressBar(Math.round(percent)/100);
-                modal.webContents.executeJavaScript(`updateProgress(${percent});`); // i hate this workaround
+                updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded');
             } else {
                 console.log(`Downloaded ${downloaded} bytes`);
             }
@@ -1727,26 +1548,7 @@ function createWindow() {
 
             var deltaruneUrl = await (require('./DownloadUtilities/' + dataFeat.pluginName).run(args[0], dataFeat));
 
-            var modal = new BrowserWindow({
-                width: 350,
-                height: 170,
-                closable: true,
-                resizable: false,
-                maximizable: false,
-                frame: false,
-                minimizable: false,
-                fullscreenable: false,
-                modal: true,
-                parent: win,
-                webPreferences: {
-                    devTools: (process.env.DELTAMOD_ENV === 'dev' ? true : false),
-                    nodeIntegration: true,
-                    preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
-                    partition: partition
-                }
-            });
-            modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
-            modal.setMenuBarVisibility(false);
+            var modal = createProgressModal();
 
             const fileName = "deltaruneGAME.zip";
             const destPath = path.join(System.getTemporary(), fileName);
@@ -1765,10 +1567,7 @@ function createWindow() {
             response.data.on('data', (chunk) => {
                 downloaded += chunk.length;
                 if (totalLength) {
-                    const percent = ((downloaded / totalLength) * 100).toFixed(2);
-                    console.log(`Downloaded ${percent}%`);
-                    win.setProgressBar(Math.round(percent)/100);
-                    modal.webContents.executeJavaScript(`updateProgress(${percent});`); // i hate this workaround
+                    updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded')
                 } else {
                     console.log(`Downloaded ${downloaded} bytes`);
                 }

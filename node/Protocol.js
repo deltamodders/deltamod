@@ -25,6 +25,144 @@ function trim(str, ch) {
     return (start > 0 || end < str.length) ? str.substring(start, end) : str;
 }
 
+/**
+ * 
+ * @param {Electron.Protocol} protocol 
+ */
+function registerProtocolSchemesAsPrivileged(protocol) {
+    const privileges = {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true
+    }
+    protocol.registerSchemesAsPrivileged([
+        {
+            scheme: 'deltapack',
+            privileges
+        },
+        {
+            scheme: 'packet',
+            privileges
+        },
+        {
+            scheme: 'themeprot',
+            privileges
+        },
+        {
+            scheme: "deltamod",
+            privileges
+        }
+    ])
+}
+
+/**
+ * 
+ * @param {Electron.Session} ses 
+ */
+function registerProtocolHandlers(ses) {
+    ses.protocol.handle('deltapack', async (request) => {
+        const url = new URL(request.url);
+        // security
+        var combined = url.hostname+url.pathname;
+        if (combined.includes('..')) {
+            errorWin(new Error('Unsecure request made to deltapack.'));
+            return new Response("bad");
+        }
+        const filePath = path.resolve(__dirname, '..', url.hostname + url.pathname);
+
+        const data = await fs.promises.readFile(filePath);
+        return new Response(data, {
+            headers: {
+                'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
+                'Content-Length': data.length,
+                'Cache-Control': 'no-cache'
+            }
+        });
+    });
+
+    ses.protocol.handle('themeprot', async (request) => {
+        const url = new URL(request.url);
+        // security
+        var combined = url.hostname+url.pathname;
+        if (combined.includes('..')) {
+            errorWin(new Error('Unsecure request made to themes protocol.'));
+            return new Response("bad");
+        }
+        if (!fs.existsSync(path.join(app.getPath('userData'), 'customThemes'))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes'), { recursive: true });
+            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'data'), { recursive: true });
+            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'img'), { recursive: true });
+            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'mus'), { recursive: true });
+        }
+        let pospath1 = path.join(__dirname, '..', 'web/themes', url.hostname + url.pathname);
+        let pospath2 = path.join(app.getPath('userData'), 'customThemes', url.hostname + url.pathname);
+        let finalPath = null;
+        if (fs.existsSync(pospath2)) {
+            finalPath = pospath2;
+        }
+        else {
+            finalPath = pospath1;
+        }
+
+        if (fs.existsSync(pospath1) && fs.existsSync(pospath2)) {
+            finalPath = pospath1; // prefer built-in theme files
+        }
+
+        const data = await fs.promises.readFile(finalPath);
+        return new Response(data, {
+            headers: {
+                'Content-Type': mime.lookup(finalPath.split('.')[finalPath.split('.').length - 1]) || 'application/octet-stream',
+                'Content-Length': data.length,
+                'Cache-Control': 'no-cache'
+            }
+        });
+    });
+
+    /*
+    ses.protocol.handle('https', async (request) => {
+        const url = new URL(request.url);
+
+        if (!Netlayer.approve(request.url)) {
+            setSharedVar('error', 'Unsecure request made to https protocol.');
+            win.loadURL('deltapack://web/views/errorWrt/index.html');
+        }
+        
+        const data = await (await fetch(request.url)).arrayBuffer();
+
+        return new Response(data, {
+            headers: {
+                'Content-Length': data.length,
+                'Cache-Control': 'no-cache'
+            }
+        });
+    });
+    */
+
+    ses.protocol.handle('http', async (request) => {
+        errorWin(new Error('HTTP protocol is not supported. Please use HTTPS for secure connections.'));
+    });
+
+    ses.protocol.handle('packet', async (request) => {
+        const url = new URL(request.url);
+        // security
+        var combined = url.hostname+url.pathname;
+        if (combined.includes('..') || combined.includes('.js')) {
+            errorWin(new Error('Unsecure request made to packet protocol.'));
+            return new Response("bad");
+        }
+        const filePath = path.resolve(System.getPacketDatabase(), url.hostname + url.pathname);
+
+        const data = await fs.promises.readFile(filePath);
+        return new Response(data, {
+            headers: {
+                'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
+                'Content-Length': data.length,
+                'Cache-Control': 'no-cache'
+            }
+        });
+    });
+}
+
 async function handleProtocolLaunch(url) {
     if (!url || !url.startsWith("deltamod://")) return;
     
@@ -101,4 +239,8 @@ async function handleProtocolLaunch(url) {
     }
 }
 
-module.exports = {handleProtocolLaunch};
+module.exports = {
+    handleProtocolLaunch,
+    registerProtocolHandlers,
+    registerProtocolSchemesAsPrivileged
+};
