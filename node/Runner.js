@@ -8,7 +8,7 @@ const createDesktopShortcut = require('create-desktop-shortcuts');
 const _7z = require("7zip-min");
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
 const crypto = require('crypto');
-const { setWindow, page, getSharedVar, setSharedVar, properRelaunch } = require('./Utils.js');
+const { setWindow, page, getSharedVar, setSharedVar, properRelaunch, getSteamDirectory } = require('./Utils.js');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
@@ -1671,33 +1671,7 @@ function createWindow() {
             path1 = result.filePaths[0];
         }
         else if (steam && !isFromLocate) {
-            switch (process.platform) {
-                case "win32":
-                    if(fs.existsSync("C:/Program Files (x86)/Steam/steamapps/common/")) {
-                        var STEAM_BASE = "C:/Program Files (x86)/Steam/steamapps/common/";
-                    }else if(fs.existsSync("D:/Program Files (x86)/Steam/steamapps/common/")) {
-                        var STEAM_BASE = "D:/Program Files (x86)/Steam/steamapps/common/";
-                    }else {
-                        if (dialog.showMessageBoxSync({
-                            type: 'question',
-                            title: 'Provide Steam path',
-                            message: 'Could not find Steam installation automatically. Would you like to provide the Steam installation path manually?',
-                            buttons: ['Yes', 'No'],
-                        }) === 0) {
-                            var STEAM_BASE = await dialog.showOpenDialogSync(win, {
-                                properties: ['openDirectory'],
-                                message: 'Select the Steam "common" folder (e.g., C:/Program Files (x86)/Steam/steamapps/common/)',
-                            });
-                        }
-                    }
-                    break;
-                case "linux":
-                    var STEAM_BASE = path.join(os.homedir(), "/.local/share/Steam/steamapps/common/");
-                    break;
-                case "darwin":
-                    var STEAM_BASE = path.join(os.homedir(), "/Library/Application Support/Steam/steamapps/common/");
-                    break;
-            }
+            STEAM_BASE = getSteamDirectory();
 
             var chosenEdition = GameDB.getFeatInfo(selectedGame, "steam").data;
 
