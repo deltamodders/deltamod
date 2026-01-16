@@ -231,9 +231,13 @@ async function handleProtocolLaunch(url) {
             if (args.length < 1) break;
 
             var installationIdx = args.shift();
-            // TODO: Launch an installation using it's index
+            const { getSystemFile } = require('./System');
+            const { app } = require('electron');
 
+            fs.writeFileSync(getSystemFile('_sysindex', true), installationIdx.toString());
             log("Launching installation", installationIdx);
+            app.relaunch();
+            app.exit();
             break;
         }
     }

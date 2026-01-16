@@ -1,5 +1,7 @@
 const { BrowserWindow } = require("electron");
 
+const progressModals = new Set();
+
 /**
  * @returns {BrowserWindow}
  */
@@ -20,8 +22,11 @@ function createProgressModal() {
             nodeIntegration: true,
             preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
             partition: partition
-        } 
+        }
     });
+
+    progressModals.add(modal);
+    modal.on('closed', () => progressModals.delete(modal));
 
     modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
     modal.setMenuBarVisibility(false);
@@ -56,7 +61,15 @@ function updateProgressModal(modal, mainWindow, frac, logPrefix) {
     // The workaround above is TERRIBLE.
 }
 
+function closeAllProgressModals() {
+    for (const modal of progressModals) {
+        try { modal.close(); } catch {}
+    }
+    progressModals.clear();
+}
+
 module.exports = {
     createProgressModal,
-    updateProgressModal
+    updateProgressModal,
+    closeAllProgressModals
 };

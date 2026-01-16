@@ -13,7 +13,7 @@ const { exec } = require('child_process');
 const Modstore = require('./Modstore.js');
 const Updates = require('./Updates.js');
 const GameDB = require('./GameDB.js');
-const { createProgressModal, updateProgressModal } = require('./ProgressModal.js');
+const { createProgressModal, updateProgressModal, closeAllProgressModals } = require('./ProgressModal.js');
 const GamePatching = require('./GamePatching.js');
 const Junction = require('./Junction.js');
 const { default: axios } = require('axios');
@@ -170,15 +170,7 @@ function validateMyInstall(deltapath) {
  * @param {Error} err The error to show
  */
 function errorWin(err) {
-    // TODO this is a rudimentary way of getting all child windows and closing them.
-    // This is used to close all progress windows during an error.
-    // Perhaps there is a better way to figure out if a window is a progress window?
-    console.log('=====================================')
-    console.log(win.getChildWindows().length);
-    console.log('=====================================')
-    for (const childWin of win.getChildWindows()) {
-        childWin.close();
-    }
+    closeAllProgressModals();
 
     var filename = 'error_' + Date.now() + '.log';
     if (!fs.existsSync(path.join(app.getPath('documents'), 'deltamodErrors'))) {
@@ -1125,8 +1117,7 @@ function createWindow() {
 
     /*
      * getModImage
-     * Returns the URL of a mod, using the file protocol.
-     * TODO: code a custom protocol for this.
+     * Returns the URL of a mod image using the packet:// protocol.
     */
     ipcMain.handle('getModImage', async (event, args) => {
         return Modstore.getModImage(args[0]);
