@@ -365,19 +365,18 @@ function getModImage(moduid) {
         var deltaID = safeReadJSON(path.join(system.getPacketDatabase(), mod, '__deltaID.json'));
         if (deltaID && deltaID.uniqueId === moduid) {
             try {
-                const imgPath = ((mod + '/icon.png'));
+                const imgPath = mod + '/icon.png';
                 if (fs.existsSync(path.join(system.getPacketDatabase(), imgPath))) {
-                    return { exists: true, path: imgPath };
+                    return { exists: true, path: 'packet://' + imgPath };
                 }
-                else {
-                    return { exists: false, path: null };
-                }
+                return { exists: false, path: null };
             }
             catch {
                 return { exists: false, path: null };
             }
         }
     }
+    return { exists: false, path: null };
 }
 if (!fs.existsSync(system.getPacketDatabase())) {
     fs.mkdirSync(system.getPacketDatabase(), { recursive: true });

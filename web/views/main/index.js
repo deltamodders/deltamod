@@ -128,7 +128,7 @@ async function createMod(mod) {
     }
 
     let img = document.createElement('img');
-    img.src = (imeta.path.includes('deltapack') ? '' : "packet://") + imeta.path;
+    img.src = imeta.path;
     img.style.width = IMAGE_DIMENSION + 'px';
     img.style.height = IMAGE_DIMENSION + 'px';
     img.classList.add('mod-image');
