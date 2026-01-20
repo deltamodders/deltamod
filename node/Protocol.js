@@ -2,14 +2,15 @@ const { writeFileSync, mkdirSync, rmSync } = require("original-fs");
 const { log } = require("./Console");
 const { isFeatureEnabled } = require("./FeatureFlags");
 const { join, dirname } = require("path");
-const system = require("./System");
+const System = require("./System");
 const _7z = require("7zip-min");
 const { error } = require("console");
 const { importMod } = require("./Modstore");
 const fs = require("fs");
 const path = require("path");
-const { dialog } = require("electron");
-const { page, setSharedVar } = require("./Utils");
+const { dialog, app } = require("electron");
+const { page, setSharedVar, errorWin } = require("./Utils");
+const mime = require("mime-types");
 
 // https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
 function trim(str, ch) {
@@ -74,7 +75,7 @@ function registerProtocolHandlers(ses) {
         return new Response(data, {
             headers: {
                 'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
-                'Content-Length': data.length,
+                'Content-Length': String(data.length),
                 'Cache-Control': 'no-cache'
             }
         });
@@ -112,7 +113,7 @@ function registerProtocolHandlers(ses) {
         return new Response(data, {
             headers: {
                 'Content-Type': mime.lookup(finalPath.split('.')[finalPath.split('.').length - 1]) || 'application/octet-stream',
-                'Content-Length': data.length,
+                'Content-Length': String(data.length),
                 'Cache-Control': 'no-cache'
             }
         });
@@ -138,8 +139,9 @@ function registerProtocolHandlers(ses) {
     });
     */
 
-    ses.protocol.handle('http', async (request) => {
-        errorWin(new Error('HTTP protocol is not supported. Please use HTTPS for secure connections.'));
+    ses.protocol.handle("http", async (request) => {
+        errorWin(new Error("HTTP protocol is not supported. Please use HTTPS for secure connections."));
+        return new Response("bad");
     });
 
     ses.protocol.handle('packet', async (request) => {
@@ -156,7 +158,7 @@ function registerProtocolHandlers(ses) {
         return new Response(data, {
             headers: {
                 'Content-Type': mime.lookup(filePath.split('.')[filePath.split('.').length - 1]) || 'application/octet-stream',
-                'Content-Length': data.length,
+                'Content-Length': String(data.length),
                 'Cache-Control': 'no-cache'
             }
         });
@@ -185,8 +187,8 @@ async function handleProtocolLaunch(url) {
             var modArchive = args.join("/");
 
             log("Installing mod via GameBanana:", modType, modId, modArchive);
-            var itemid = system.generateUniqueId();
-            var filepath = join(system.getTemporary(), `${itemid}.modarchive`);
+            var itemid = System.generateUniqueId();
+            var filepath = join(System.getTemporary(), `${itemid}.modarchive`);
             log("Downloading to", filepath);
 
             mkdirSync(dirname(filepath), { recursive: true });

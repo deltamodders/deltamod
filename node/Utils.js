@@ -1,7 +1,10 @@
 // collecton of utility functions
 
-const crypto = require('crypto');
-const fs = require('fs');
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+const { BrowserWindow, app } = require("electron");
 
 var win = null;
 
@@ -33,16 +36,24 @@ function hashFile(filePath) {
         .digest('hex');
 }
 
-function getWindow() {
-    return win;
-}
-
 function validateVersioning(version) {
     return version;
 }
 
+/**
+ * sets the current window to newwin.
+ * @param {BrowserWindow} newwin 
+ */
 function setWindow(newwin) {
     win = newwin;
+}
+
+/**
+ * returns the current window.
+ * @returns {BrowserWindow}
+ */
+function getWindow() {
+    return win;
 }
 
 function page(newPage) {
@@ -114,7 +125,7 @@ function getSteamDirectory(dialog) {
             steamdir = dialog.showOpenDialogSync(win, {
                 properties: ['openDirectory'],
                 message: 'Select the Steam "common" folder (e.g., C:/Program Files (x86)/Steam/steamapps/common/)',
-            });
+            })[0];
         }
     }
 
@@ -129,12 +140,14 @@ module.exports = {
     randomString,
     hashFile,
     lastOfArray,
-    getWindow,
-    setWindow,
     page,
     validateVersioning,
     setSharedVar,
     getSharedVar,
     properRelaunch,
-    getSteamDirectory
+    getSteamDirectory,
+
+    getWindow,
+    setWindow,
+    // errorWin,
 };

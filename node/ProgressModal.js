@@ -1,4 +1,7 @@
 const { BrowserWindow } = require("electron");
+const { getWindow } = require("./Utils");
+const Paths = require("./Paths");
+const { PARTITION } = require("./Config");
 
 const progressModals = new Set();
 
@@ -16,12 +19,12 @@ function createProgressModal() {
         closable: true,
         fullscreenable: false,
         modal: true,
-        parent: win,
+        parent: getWindow(),
         webPreferences: {
             devTools: process.env.DELTAMOD_ENV === 'dev',
             nodeIntegration: true,
             preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
-            partition: partition
+            partition: PARTITION
         }
     });
 
@@ -42,7 +45,7 @@ function createProgressModal() {
  * @param {string?} logPrefix
  */
 function updateProgressModal(modal, mainWindow, frac, logPrefix) {
-    const percent = (frac * 100).toFixed(2);
+    const percent = Math.round(frac * 100 * 100) / 100;
 
     if (logPrefix == null) {
         console.log(`Progress: ${percent}%`);
@@ -51,7 +54,7 @@ function updateProgressModal(modal, mainWindow, frac, logPrefix) {
     }
 
     if (mainWindow != null) {
-        win.setProgressBar(Math.round(percent)/100);
+        getWindow().setProgressBar(Math.round(percent)/100);
     }
 
     // Disclaimer: In a few lines, you will see a TERRIBLE workaround. I *hate* this workaround.

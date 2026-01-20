@@ -1,7 +1,12 @@
 const path = require('path');
 
-function file(lib,name) {
-    return path.join(__dirname, "../", lib, name);
+/**
+ * Paths.file("foo", "bar", "baz") == "node/../foo/bar/baz".
+ * @param  {...string} args the directories/filename to add
+ * @returns {string}
+ */
+function file(...args) {
+    return path.join(__dirname, "../", ...args);
 }
 
 module.exports = {

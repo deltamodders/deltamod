@@ -1,38 +1,42 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification } = require('electron');
-const Paths = require('./Paths.js');
-const KeyValue = require('./KeyValue.js');
+const Paths = require('./Paths');
+const KeyValue = require('./KeyValue');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const mime = require('mime-types');
 const createDesktopShortcut = require('create-desktop-shortcuts');
 const _7z = require("7zip-min");
-const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System.js');
+const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System');
 const crypto = require('crypto');
-const { setWindow, page, getSharedVar, setSharedVar, properRelaunch, getSteamDirectory } = require('./Utils.js');
+const { setWindow, page, getSharedVar, setSharedVar, properRelaunch, getSteamDirectory } = require('./Utils');
 const { exec } = require('child_process');
-const Modstore = require('./Modstore.js');
-const Updates = require('./Updates.js');
-const GameDB = require('./GameDB.js');
-const { createProgressModal, updateProgressModal, closeAllProgressModals } = require('./ProgressModal.js');
-const GamePatching = require('./GamePatching.js');
-const Junction = require('./Junction.js');
+const Modstore = require('./Modstore');
+const Updates = require('./Updates');
+const GameDB = require('./GameDB');
+const { createProgressModal, updateProgressModal, closeAllProgressModals } = require('./ProgressModal');
+const GamePatching = require('./GamePatching');
+const Junction = require('./Junction');
 const { default: axios } = require('axios');
-const System = require('./System.js');
-const Netlayer = require('./Netlayer.js');
+const System = require('./System');
+const Netlayer = require('./Netlayer');
 const path = require('path');
 const { getConfig, config } = require('7zip-min');
 const { path7za } = require('7zip-bin');
-const console = require('./Console.js');
-const { handleProtocolLaunch, registerProtocolSchemesAsPrivileged, registerProtocolHandlers } = require('./Protocol.js');
-const { isFeatureEnabled } = require('./FeatureFlags.js');
+const console = require('./Console');
+const { handleProtocolLaunch, registerProtocolSchemesAsPrivileged, registerProtocolHandlers } = require('./Protocol');
+const { isFeatureEnabled } = require('./FeatureFlags');
 const { valid } = require('node-html-parser');
 const os = require('os');
+const { PARTITION } = require('./Config');
+const { errorWin } = require("./ErrorWin");
 
 let abortController;
 let updateAvailable = false;
 let callbackNPS;
 let callbackNPSPassWith;
-
+let devToolsEnabled;
+// TODO should this have CONST_CASE or not?
+let STEAM_BASE;
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
@@ -163,34 +167,6 @@ function validateMyInstall(deltapath) {
         }
     });
     return isValid;
-}
-
-/**
- * Show the dogcheck error screen
- * @param {Error} err The error to show
- */
-function errorWin(err) {
-    closeAllProgressModals();
-
-    var filename = 'error_' + Date.now() + '.log';
-    if (!fs.existsSync(path.join(app.getPath('documents'), 'deltamodErrors'))) {
-        fs.mkdirSync(path.join(app.getPath('documents'), 'deltamodErrors'), { recursive: true });
-    }
-    var whereWrite = path.join(app.getPath('documents'), 'deltamodErrors', filename);
-    var heapScreenshot = require('v8').getHeapSnapshot();
-    var heapFile = fs.createWriteStream(whereWrite.replace('.log', '.heapsnapshot'));
-    var error = (err.stack || err.toString());
-
-    setSharedVar('error', error);
-    setSharedVar('filename', filename);
-    setSharedVar('filepath', whereWrite);
-
-    fs.writeFileSync(whereWrite, error, 'utf8');
-    heapScreenshot.pipe(heapFile);
-
-    win.show();
-
-    win.loadURL('deltapack://web/views/errorWrt/index.html');
 }
 
 process.on('uncaughtException', (err) => {
@@ -446,10 +422,10 @@ function createWindow() {
         setSystemIndex('0');
     }
 
-    const partition = 'persist:deltamod'; 
+    const partition = PARTITION; 
     const ses = session.fromPartition(partition);
 
-    registerProtocolHandlers(ses.protocol);
+    registerProtocolHandlers(ses);
 
     let unmetConditions = require('./RunConditions.js').checkConditions();
 
@@ -492,6 +468,10 @@ function createWindow() {
             preload: Paths.file('web', 'preload.js'),
         }
     });
+
+    // I put this at the start so that we could use getWindow() in window setup functions
+    // Because I want createWindow() to not be a giant function
+    setWindow(win);
     
     win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
         // check if it https
@@ -661,7 +641,7 @@ function createWindow() {
             response.data.pipe(writer);
 
             await new Promise((resolve, reject) => {
-                writer.on('finish', resolve);
+                writer.on('finish', () => resolve);
                 writer.on('error', reject);
             });
 
@@ -861,7 +841,7 @@ function createWindow() {
         writer.on('error', (err) => {
             modal.close();
             console.error('Error downloading file:', err);
-            dialog.showErrorBoxSync('Download Error', 'An error occurred while downloading the Patcher package. The app will now reboot.');
+            dialog.showErrorBox('Download Error', 'An error occurred while downloading the Patcher package. The app will now reboot.');
             app.relaunch(properRelaunch());
             app.quit();
             process.exit(1);
@@ -911,7 +891,7 @@ function createWindow() {
                 }
             });
 
-            fs.rmdirSync(path.join(app.getPath('appData'), 'deltamod', 'pkg.db'), { recursive: true, force: true });
+            fs.rmSync(path.join(app.getPath('appData'), 'deltamod', 'pkg.db'), { recursive: true, force: true });
 
             await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -1748,7 +1728,7 @@ function createWindow() {
             KeyValue.setKVSOfIndex('steamAppId', (steam ? chosenEdition.appid : ""), i);
 
             if (steam) {
-                fs.rmdirSync(path1, { force: true, recursive: true });
+                fs.rmSync(path1, { force: true, recursive: true });
                 Junction.createJunction(path2, path1);
                 console.log(`Created junction from ${path1} to ${path2}`);
             }
@@ -1848,8 +1828,6 @@ function createWindow() {
     ipcMain.handle('canReportError', async (event, args) => {
         return !(process.argv.includes('--developer')) && !(updateAvailable);
     });
-
-    setWindow(win);
 }
 
 if (!app.requestSingleInstanceLock()) app.quit();

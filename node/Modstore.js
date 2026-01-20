@@ -42,13 +42,13 @@ async function importMod(filePath, nextPage = "main") {
         // Check manifest anywhere in the tree (now usually at root after flatten)
         const manifestPath = findFirstByName(modPath, 'meta.json') || path.join(modPath, 'meta.json');
         if (!fs.existsSync(manifestPath)) {
-            fs.rmdirSync(modPath, { recursive: true, force: true });
+            fs.rmSync(modPath, { recursive: true, force: true });
             throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
         }
 
         var modInfo = safeReadJSON(manifestPath);
         if (!modInfo || !modInfo.metadata) {
-            fs.rmdirSync(modPath, { recursive: true, force: true });
+            fs.rmSync(modPath, { recursive: true, force: true });
             throw new Error('Invalid mod manifest. Please ensure meta.json is correctly formatted.');
         }
 
@@ -58,7 +58,7 @@ async function importMod(filePath, nextPage = "main") {
             fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
         }
         else if (modInfo.metadata.demoMod === undefined && modInfo.metadata.game === undefined) {
-            fs.rmdirSync(modPath, { recursive: true, force: true });
+            fs.rmSync(modPath, { recursive: true, force: true });
             throw new Error('Mod manifest is missing required field `game`.');
         }
 
@@ -82,7 +82,7 @@ async function importMod(filePath, nextPage = "main") {
         dialog.showErrorBox('Import failed', String(err) + "\nThe mod was not imported.");
         // clean up
         try {
-            fs.rmdirSync(modPath, { recursive: true, force: true });
+            fs.rmSync(modPath, { recursive: true, force: true });
         }
         catch (_) {
             console.warn('Failed to clean up mod folder after failed import:', modPath);
@@ -180,6 +180,7 @@ function modList() {
                 dependencies: []
             };
             var meta = modInfo.metadata || {};
+            meta.isIncompatible = false;
 
             try {
                 if (meta.demoMod !== undefined) {
@@ -334,7 +335,12 @@ function modList() {
 
                 uniqueId: uid,
                 uid:      uid,   // <- many UIs look for this name
-                id:       uid
+                id:       uid,
+
+                // TODO I don't know what the default values for these fields should be.
+                // I'm just adding them to satisfy the typechecker.
+                isIncompatible: false,
+                incompatibilityReason: "",
             });
         }
         catch (e) {

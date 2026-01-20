@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "noImplicitAny": false,
+        "target": "es2015",
+        "moduleResolution": "nodenext",
+        "module": "nodenext",
+        "lib": ["es2021"]
+    }
+}
