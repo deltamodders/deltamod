@@ -20,10 +20,16 @@ const { dialog } = require('electron');
 const { exec } = require('child_process');
 const { timeoutPromise } = require('./Utils.js');
 const { emitKeypress } = require('emit-keypress');
+const { log } = require('./Console.js');
 const convert = require('xml-js');
 const process = require('process');
 const console = require('./Console.js');
 
+let GM3P_EXE;
+let Patcher;
+let GM3P_DLL;
+let UTMT_EXE;
+let DOTNET_UNIX;
 
 
 const GM3P_OUTPUT = path.join(__dirname, '../gm3p/output')
@@ -267,7 +273,7 @@ const onKeyPress = (input, key, close) => {
 
     // Close the stream if the user presses `Ctrl+C`
     if (input === '\x03') {
-        dialog.showErrorBox('Patching was cancelled');
+        dialog.showErrorBox('Patching was cancelled', 'Patching was cancelled.');
         for (const t of chapterTargets) restoreIfBackup(t);
         ret.log = log.concat('Patching was cancelled').join('\n');
         return ret;

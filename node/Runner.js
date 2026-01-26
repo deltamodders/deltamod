@@ -772,13 +772,23 @@ function createWindow() {
     ipcMain.handle('modalTest', async (event, args) => {
         var modal = createProgressModal();
 
-        modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
-        modal.setMenuBarVisibility(false);
+        let x = 0.0;
+        function doit() {
+            x += 0.1;
+            updateProgressModal(modal, win, x, null);
+        }
 
-        setTimeout(() => {
-            console.log('IM GONNA DO AN ERROR!!!');
-            throw new Error('oh no what an errro!!!');
-        }, 1000);
+        setTimeout(function doit1234() {
+            doit();
+            if (x < 1.0)
+                setTimeout(doit1234, 250);
+            else
+                setTimeout(() => {
+                    console.log('IM GONNA ATTEMPT TO CLOSE THE WINDOW!!!');
+                    modal.close();
+                    // modal.destroy();
+                }, 250);
+        }, 250)
     })
 
     ipcMain.handle('downloadGM3P', async (event, args) => {
@@ -826,7 +836,13 @@ function createWindow() {
             console.log(`unpacking ${fileName}...`);
             await _7z.unpack(destPath, path.join(__dirname, '..', 'gm3p'));
             console.log("showing success box...");
-            modal.close();
+
+            // TODO I REALLY want to figure out how electron works
+            // and why it modal.close() does ABSOLUTELY NOTHING here
+            // modal.close() does NOT close the window and it does NOT
+            // call the 'close' event handler either!!!
+            modal.destroy();
+
             dialog.showMessageBoxSync(win, {
                 type: 'info',
                 title: 'Download Complete',

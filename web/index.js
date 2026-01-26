@@ -429,6 +429,12 @@ if (!window.electronAPI) {
 }
 
 (async function() {
+    // {
+    //     page('busy');
+    //     await htmlAlert('TEST', 'SUPERTEST', [{text: 'kay', resolveWith: 'kay'}]);
+    //     await window.electronAPI.invoke('modalTest', []);
+    // }
+
     var os = await window.electronAPI.invoke('getOS',[]);
     if (os.platform == 'win32' && os.version.startsWith('Windows 11')) {
         document.getElementsByClassName('winb')[0].style.borderRadius = "8px";

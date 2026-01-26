@@ -1,3 +1,37 @@
+/**
+ * Filters assets to find the specific GM3P download we need
+ * This is to keep users from downloading the nupkg or "From Toolmakers" versions of GM3P
+ * If there are any changes in how GM3P versions are released, feel free to modify this function!
+ * (Although GM3P is kind of dead by now, so we are trying to switch away from it...)
+ * @param {any[]} assets 
+ * @returns {any[]}
+ */
+function filterAssets(assets) {
+    if (assets.length == 1) {
+        return assets;
+    }
+
+    const filteredAssets = assets.filter((asset) => {
+        /** @type {string} */
+        const name = asset.name;
+
+        const filenameComps = name.split('.');
+        const fileExtension = filenameComps[filenameComps.length - 1];
+        // filter out nupkgs
+        if (fileExtension == 'nupkg') {
+            return false;
+        }
+        // filter out GM3P for Toolmakers
+        if (filenameComps.includes('Toolmakers')) {
+            return false;
+        }
+
+        return true;
+    });
+
+    return filteredAssets;
+}
+
 (async() => {
     var curpatch = 'deltamodders/GM3P';
     if (window._pageArguments && window._pageArguments.curpatch) {
@@ -50,7 +84,7 @@
         buttonContainer.className = 'asset-buttons';
 
         if (Array.isArray(json.assets) && json.assets.length) {
-            for (const asset of json.assets) {
+            for (const asset of filterAssets(json.assets)) {
                 const btn = document.createElement('button');
                 btn.style.display = 'block';
                 btn.style.marginBottom = '8px';

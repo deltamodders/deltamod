@@ -29,7 +29,13 @@ function createProgressModal() {
     });
 
     progressModals.add(modal);
-    modal.on('closed', () => progressModals.delete(modal));
+    modal.on('closed', () => {
+        progressModals.delete(modal)
+        console.log("THE WINDOW SHALL ACTUALLY CLOSE NOW.");
+        // hopefully this actually destroys the modal
+        modal.destroy();
+        console.log("IT SHOULD BE CLOSED BY NOW.");
+    });
 
     modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
     modal.setMenuBarVisibility(false);

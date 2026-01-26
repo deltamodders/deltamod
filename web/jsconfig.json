@@ -1,0 +1,6 @@
+{
+    "extends": "../jsconfig.json",
+    "compilerOptions": {
+        "lib": ["es2021", "dom"]
+    }
+}
