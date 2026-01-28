@@ -9,7 +9,7 @@
     "availableFeatures": [{
         "feat": "steam",
         "data": {
-            "folder": "PizzaTower",
+            "folder": "Pizza Tower",
             "appid": "2231450",
             "downloadable": false
         }
