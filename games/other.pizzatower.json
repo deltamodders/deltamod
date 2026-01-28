@@ -1,0 +1,17 @@
+{
+    "name": "Pizza Tower",
+    "author": "Tour de Pizza",
+    "id": "other.pizzatower",
+    "gamebanana": {
+        "id": 7692
+    },
+    "exeName": "PizzaTower.exe",
+    "availableFeatures": [{
+        "feat": "steam",
+        "data": {
+            "folder": "Pizza Tower",
+            "appid": "2231450",
+            "downloadable": false
+        }
+    }]
+}

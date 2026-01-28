@@ -24,8 +24,11 @@ async function run(id, data) {
                 contextIsolation: true
             }
         });
+
         await testerWindow.loadURL(`https://gamejolt.com/get/build?game=${data.gameId}&build=${data.buildId}`);
 
+        testerWindow.webContents.setAudioMuted(true);
+        
         testerWindow.webContents.on('will-navigate', (event, url) => {
             console.log('Found GJ redir: ', url);
             waitingModal.close();
