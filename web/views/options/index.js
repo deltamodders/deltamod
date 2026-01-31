@@ -115,6 +115,7 @@ window.currentPageStack.cat = async function(cat) {
     document.getElementById('b_ui').classList.remove('selected');
     document.getElementById('b_inst').classList.remove('selected');
     document.getElementById('b_adv').classList.remove('selected');
+    document.getElementById('b_gb').classList.remove('selected');
     try {
         document.getElementById('b_dev').classList.remove('selected');
     }
@@ -188,9 +189,62 @@ window.currentPageStack.cat = async function(cat) {
                 await window.electronAPI.invoke('openFlagDatabase', []);
             }, 'Open');
             break;
+        case 'gb':
+            var tr = document.createElement('tr');
+            tbody.appendChild(tr);
+
+            var td = document.createElement('td');
+            td.colSpan = 2;
+            td.innerHTML = 'Please wait...';
+
+            var gamebananaUserinfo = await window.electronAPI.invoke('getGamebananaUserinfo', []);
+            td.innerHTML = '';
+
+            var flexdiv = document.createElement('div');
+            flexdiv.style.display = 'flex';
+            flexdiv.style.alignItems = 'center';
+            flexdiv.style.gap = '10px';
+            td.appendChild(flexdiv);
+
+            var img = document.createElement('img');
+            img.src = gamebananaUserinfo._sAvatarUrl || './img/mod-placeholder.png';
+            img.style.width = '32px';
+            img.style.height = '32px';
+            flexdiv.appendChild(img);
+
+            img.style.borderRadius = '8px';
+            var span = document.createElement('span');
+            flexdiv.appendChild(span);
+            span.innerText = 'Currently logged in as ' + gamebananaUserinfo._sName;
+
+            if (gamebananaUserinfo._sName == undefined) {
+                span.innerText = 'You aren\'t logged in to GameBanana.';
+                gamebananaUserinfo = { loggedIn: false };
+            }
+            else {
+                gamebananaUserinfo.loggedIn = true;
+            }
+
+            tr.appendChild(td);
+
+            await addButton('Logout from GameBanana', 'Logs you out from GameBanana in Deltamod.', async () => {
+                await window.electronAPI.invoke('logoutGamebanana', []);
+                window._pageArguments = {cat: 'gb'};
+                page('options');
+            }, 'Logout', gamebananaUserinfo.loggedIn, 'You are not logged in.', '');
+
+            await addButton('Login to GameBanana', 'Logs you in to GameBanana in Deltamod.', async () => {
+                await window.electronAPI.invoke('loginGamebanana', []);
+                window._pageArguments = {cat: 'gb'};
+                page('options');
+            }, 'Login', !gamebananaUserinfo.loggedIn, 'You are already logged in.', '');
     }
     // theme adjustments
     // as far as i know this page is the only page that needs ts
     genbtnstyles();
     rew();
+}
+
+if (window._pageArguments.cat != undefined) {
+    window.currentPageStack.cat(window._pageArguments.cat);
 }

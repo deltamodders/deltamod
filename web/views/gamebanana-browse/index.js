@@ -20,33 +20,17 @@ async function gameBananaLogin() {
     if (loggedin) {
         var pic = await window.electronAPI.invoke('getGamebananaPic',[]);
         document.getElementById('gbPic').src = pic;
-
-        document.getElementById('gbPic').onclick = async () => {
-            var choice = await htmlAlert('GameBanana account','You are currently logged in to GameBanana. What would you like to do?',[
-                {text:'Log out',resolveWith:'logout'},
-                {text:'Cancel',resolveWith:'cancel'}
-            ], 'account_circle');
-            if (choice === 'logout') {
-                await window.electronAPI.invoke('logoutGamebanana',[]);
-                await htmlAlert('Logged out','You have been logged out of your GameBanana account.',[{text:'Ok',resolveWith:'ok'}], 'info');
-                page("");
-            }
-        };
     }
     else {
         document.getElementById('gbPic').src = './img/mod-placeholder.png';
-        document.getElementById('gbPic').onclick = async () => {
-            var choice = await htmlAlert('GameBanana account','You are not logged in to GameBanana. Would you like to log in now?',[
-                {text:'Log in',resolveWith:'login'},
-                {text:'Cancel',resolveWith:'cancel'}
-            ], 'account_circle');
-            if (choice === 'login') {
-                await window.electronAPI.invoke('loginGamebanana',[]);
-                await htmlAlert('Logged in','You have been logged in to your GameBanana account.',[{text:'Ok',resolveWith:'ok'}], 'info');
-                page("");
-            }
-        };
     }
+
+    document.getElementById('gbPic').onclick = async () => {
+        window._pageArguments = {
+            cat: 'gb'
+        };
+        page('options');
+    };
 };
 
 function roundViews(views) {

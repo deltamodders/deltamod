@@ -28,6 +28,7 @@ function obtainLogin() {
         loginWindow.loadURL('https://gamebanana.com/members/account/login');
 
         loginWindow.webContents.on('did-navigate', async (event, url) => {
+            loginWindow.webContents.executeJavaScript('document.title = "Login to GameBanana to continue in Deltamod."; document.querySelectorAll(\'.Description\')[0].innerHTML = "To continue in Deltamod, login here. Please create an account in your browser if you do not have one. Only login with GameBanana on apps you trust. <b>This page is not endorsed by GameBanana.</b><br><br><b>This action will grant full account control to Deltamod.</b>"');
             if (!url.includes('gamebanana.com/members/account')) {
                 const allCookies = (await loginWindow.webContents.session.cookies.get({})).filter(c => {
                     return ['sess', 'rmc', 'muid'].includes(c.name.toLowerCase());

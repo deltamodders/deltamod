@@ -581,6 +581,23 @@ function createWindow() {
         return uiconf._idMemberRow;
     });
 
+    ipcMain.handle('getGamebananaUserinfo', async () => {
+        var uiconf = await getGBUIConf();
+        var id = uiconf._idMemberRow;
+
+        var cond = id > 0;
+        if (!cond) {
+            return {loggedIn: false};
+        }
+
+        var profilepage = await axios.get('https://gamebanana.com/apiv11/Member/' + id + '/ProfilePage');
+
+        return {
+            ...profilepage.data,
+            loggedIn: true
+        };
+    });
+
     ipcMain.handle('shouldGoIM', () => {
         return process.argv.includes('---im');
     });
