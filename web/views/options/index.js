@@ -227,13 +227,13 @@ window.currentPageStack.cat = async function(cat) {
 
             tr.appendChild(td);
 
-            await addButton('Logout from GameBanana', 'Logs you out from GameBanana in Deltamod.', async () => {
+            await addButton('Logout', 'Removes your GameBanana account from Deltamod.', async () => {
                 await window.electronAPI.invoke('logoutGamebanana', []);
                 window._pageArguments = {cat: 'gb'};
                 page('options');
             }, 'Logout', gamebananaUserinfo.loggedIn, 'You are not logged in.', '');
 
-            await addButton('Login to GameBanana', 'Logs you in to GameBanana in Deltamod.', async () => {
+            await addButton('Login', 'Adds a GameBanana account to Deltamod.\n\nThis action will save your session ID (not username and password) on your computer in plaintext.\n\nPLEASE ENABLE 2FA BEFORE USING THIS FEATURE!!', async () => {
                 await window.electronAPI.invoke('loginGamebanana', []);
                 window._pageArguments = {cat: 'gb'};
                 page('options');
