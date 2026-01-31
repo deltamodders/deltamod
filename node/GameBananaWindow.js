@@ -1,4 +1,4 @@
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
@@ -43,8 +43,8 @@ function obtainLogin() {
 
 async function getGBUIConf() {
     try {
-        var file = getSystemFile('gamebanana_sesscookie', true);
-        var token = (fs.readFileSync(file, 'utf8'));
+        var file = getSystemFile('bananapwd', true);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
     }
     catch {
         var file = "";
@@ -65,8 +65,8 @@ async function getGBUIConf() {
 
 async function leaveComment(id, comment, model) {
     try {
-        var file = getSystemFile('gamebanana_sesscookie', true);
-        var token = (fs.readFileSync(file, 'utf8'));
+        var file = getSystemFile('bananapwd', true);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
     }
     catch {
         return false;

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification, safeStorage } = require('electron');
 const Paths = require('./Paths');
 const KeyValue = require('./KeyValue');
 const fs = require('fs');
@@ -531,16 +531,23 @@ function createWindow() {
     });
 
     ipcMain.handle('loginGamebanana', async () => {
+        if (!safeStorage.isEncryptionAvailable()) {
+            dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Reduced security',
+                message: 'Your system does not support secure storage. GameBanana login information will be stored without encryption, which may pose a security risk. It is recommended to use Deltamod on a system that supports secure storage for enhanced security.',
+            });
+        }
         var token = await require('./GameBananaWindow.js').obtainLogin();
 
-        var file = getSystemFile('gamebanana_sesscookie', true);
-        fs.writeFileSync(file, (token), 'utf8');
+        var file = getSystemFile('bananapwd', true);
+        fs.writeFileSync(file, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(token) : token, 'utf8');
 
         return true;
     });
 
     ipcMain.handle('logoutGamebanana', async () => {
-        var file = getSystemFile('gamebanana_sesscookie', true);
+        var file = getSystemFile('bananapwd', true);
         fs.unlinkSync(file);
         cachedUIConf = null;
         return true;
