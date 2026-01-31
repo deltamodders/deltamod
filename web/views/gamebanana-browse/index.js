@@ -10,6 +10,45 @@ function getThumbURL(mod) {
     }
 }
 
+var isGBLoggedIn = false;
+
+async function gameBananaLogin() {
+    var loggedin = await window.electronAPI.invoke('validateGamebananaToken',[]);
+
+    isGBLoggedIn = loggedin;
+
+    if (loggedin) {
+        var pic = await window.electronAPI.invoke('getGamebananaPic',[]);
+        document.getElementById('gbPic').src = pic;
+
+        document.getElementById('gbPic').onclick = async () => {
+            var choice = await htmlAlert('GameBanana account','You are currently logged in to GameBanana. What would you like to do?',[
+                {text:'Log out',resolveWith:'logout'},
+                {text:'Cancel',resolveWith:'cancel'}
+            ], 'account_circle');
+            if (choice === 'logout') {
+                await window.electronAPI.invoke('logoutGamebanana',[]);
+                await htmlAlert('Logged out','You have been logged out of your GameBanana account.',[{text:'Ok',resolveWith:'ok'}], 'info');
+                page("");
+            }
+        };
+    }
+    else {
+        document.getElementById('gbPic').src = './img/mod-placeholder.png';
+        document.getElementById('gbPic').onclick = async () => {
+            var choice = await htmlAlert('GameBanana account','You are not logged in to GameBanana. Would you like to log in now?',[
+                {text:'Log in',resolveWith:'login'},
+                {text:'Cancel',resolveWith:'cancel'}
+            ], 'account_circle');
+            if (choice === 'login') {
+                await window.electronAPI.invoke('loginGamebanana',[]);
+                await htmlAlert('Logged in','You have been logged in to your GameBanana account.',[{text:'Ok',resolveWith:'ok'}], 'info');
+                page("");
+            }
+        };
+    }
+};
+
 function roundViews(views) {
     const n = Number(views) || 0;
     if (n >= 1000) return Math.round(n / 1000) + 'k';
@@ -150,6 +189,8 @@ window.currentPageStack.plusPage = plusPage;
 
     capi = GB_API;
     window._pageArguments = {}; // reset page arguments
+
+    await gameBananaLogin();
 
     var furl = GB_API.replace('$PAGE', PAGE);
     console.log('Fetching from URL: ' + furl);
@@ -350,6 +391,20 @@ window.currentPageStack.plusPage = plusPage;
                 }
                 td1.appendChild(vwBtn);
                 td1.appendChild(dlBtn);
+
+                if (isGBLoggedIn) {
+                    var commentBtn = document.createElement('button');
+                    commentBtn.innerHTML = icon('comment', '0.9em') + '';
+                    commentBtn.style.marginLeft = '8px';
+                    commentBtn.onclick = async () => {
+                        window._pageArguments = {
+                            id: mod._idRow,
+                            model: mod._sModelName
+                        };
+                        page('gamebanana-leave-comment');
+                    };
+                    td1.appendChild(commentBtn);
+                }
             }
 
 

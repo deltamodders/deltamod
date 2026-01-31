@@ -40,6 +40,9 @@ let STEAM_BASE;
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
+let cachedUIConf = null;
+
+const { getGBUIConf } = require('./GameBananaWindow');
 function obtainThemes() {
     if (!fs.existsSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes'))) {
         fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes'));
@@ -525,6 +528,57 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+
+    ipcMain.handle('loginGamebanana', async () => {
+        var token = await require('./GameBananaWindow.js').obtainLogin();
+
+        var file = getSystemFile('gamebanana_sesscookie', true);
+        fs.writeFileSync(file, (token), 'utf8');
+
+        return true;
+    });
+
+    ipcMain.handle('logoutGamebanana', async () => {
+        var file = getSystemFile('gamebanana_sesscookie', true);
+        fs.unlinkSync(file);
+        cachedUIConf = null;
+        return true;
+    });
+
+    ipcMain.handle('leaveCommentGamebanana', async (event, args) => {
+        var uiconf = await getGBUIConf();
+
+        var cond = uiconf._idMemberRow > 0;
+
+        if (cond) {
+            return (await require('./GameBananaWindow.js').leaveComment(args[0], args[1], args[2]));
+        }
+    });
+
+    ipcMain.handle('validateGamebananaToken', async () => {
+        var uiconf = await getGBUIConf();
+
+        var cond = uiconf._idMemberRow > 0;
+        console.log('GameBanana logged in status: ' + cond);
+
+        return cond;
+    });
+
+    ipcMain.handle('getGamebananaPic', async () => {
+        var uiconf = await getGBUIConf();
+
+        console.log('GameBanana avatar URL: ' + uiconf._sAvatarUrl);
+
+        return uiconf._sAvatarUrl;
+    });
+
+    ipcMain.handle('getGamebananaID', async () => {
+        var uiconf = await getGBUIConf();
+
+        console.log('GameBanana user ID: ' + uiconf._idMemberRow);
+
+        return uiconf._idMemberRow;
     });
 
     ipcMain.handle('shouldGoIM', () => {

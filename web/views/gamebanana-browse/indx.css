@@ -20,6 +20,11 @@
     overflow: hidden;
 }
 
+#gbPic {
+    cursor: pointer;
+    border-radius: 50%;
+}
+
 .tspandiv > button {
     border-radius: 50%;
     width: 35px;
