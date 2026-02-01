@@ -1,5 +1,30 @@
-<h1>Leave a comment</h1>
-<textarea name="comment" id="comment" style="width: 100%; height: 150px; background-color: rgba(0,0,0,0.5); color: white;" placeholder="Type your comment here..."></textarea>
-<br><br>
-<button onclick="window.currentPageStack.send()">Send</button>
+<button onclick="page('gamebanana-browse')">Back</button>
+<br>
+<h1>Comments</h1>
+<div class="comments">
+    <div class="commentBox">
+        <img src="" alt="" width="50" height="50" id="gbPic">
+        <div class="commentArea">
+            <textarea name="comment" id="comment" style="width: calc(100% - 10px); height: 150px; background-color: rgba(0,0,0,0.5); color: white;" placeholder="Type your comment here..."></textarea>
+            <br><br>
+            <button onclick="window.currentPageStack.send()" id="sendBtn">Send</button>
+        </div>
+    </div>
+</div>
+<style>
+.commentBox {
+    background-color: rgba(0,0,0,0.1);
+    border: 1px solid var(--theme-color);
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+.commentArea {
+    width: calc(100% - 55px);
+}
+</style>
 JSL
