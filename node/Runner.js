@@ -529,7 +529,6 @@ function createWindow() {
         }
         return { action: 'allow' };
     });
-
     ipcMain.handle('loginGamebanana', async () => {
         if (!safeStorage.isEncryptionAvailable()) {
             dialog.showMessageBoxSync({
@@ -570,6 +569,31 @@ function createWindow() {
         console.log('GameBanana logged in status: ' + cond);
 
         return cond;
+    });
+
+    ipcMain.handle('dev_getGBToken', async () => {
+        var file = getSystemFile('bananapwd', true);
+        if (!fs.existsSync(file)) {
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'No GameBanana Token',
+                message: 'No GameBanana token found.',
+            });
+            return null;
+        }
+
+        var contents = fs.readFileSync(file);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(contents) : contents.toString('utf8');
+
+        dialog.showSaveDialog(win, {
+            title: 'Save GameBanana Token',
+            defaultPath: path.join(os.homedir(), 'gamebanana_token.txt'),
+            buttonLabel: 'Save Token',
+        }).then(result => {
+            if (!result.canceled && result.filePath) {
+                fs.writeFileSync(result.filePath, token, 'utf8');
+            }
+        });
     });
 
     ipcMain.handle('getGamebananaPic', async () => {

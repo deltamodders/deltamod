@@ -188,6 +188,10 @@ window.currentPageStack.cat = async function(cat) {
             await addButton('Open flag database (DEV-ONLY)', 'Opens the database holding flags.', async () => {
                 await window.electronAPI.invoke('openFlagDatabase', []);
             }, 'Open');
+            await addButton('Decrypt GameBanana account token (DEV-ONLY)', 'Decrypts your GameBanana account token from the default encryption and saves it to your desktop.', async () => {
+                await window.electronAPI.invoke('dev_getGBToken', []);
+                await htmlAlert('Done','The operation was successful.',[{text: 'OK', resolveWith:''}]);
+            }, 'Open');
             break;
         case 'gb':
             var tr = document.createElement('tr');
@@ -227,17 +231,21 @@ window.currentPageStack.cat = async function(cat) {
 
             tr.appendChild(td);
 
-            await addButton('Logout', 'Removes your GameBanana account from Deltamod.', async () => {
-                await window.electronAPI.invoke('logoutGamebanana', []);
-                window._pageArguments = {cat: 'gb'};
-                page('options');
-            }, 'Logout', gamebananaUserinfo.loggedIn, 'You are not logged in.', '');
-
-            await addButton('Login', 'Adds a GameBanana account to Deltamod.\n\nThis action will save your session ID (not username and password) on your computer in plaintext.\n\nPLEASE ENABLE 2FA BEFORE USING THIS FEATURE!!', async () => {
-                await window.electronAPI.invoke('loginGamebanana', []);
-                window._pageArguments = {cat: 'gb'};
-                page('options');
-            }, 'Login', !gamebananaUserinfo.loggedIn, 'You are already logged in.', '');
+            if (gamebananaUserinfo.loggedIn && gamebananaUserinfo._sName != undefined) {
+                await addButton('Logout', 'Removes your GameBanana account from Deltamod.', async () => {
+                    await window.electronAPI.invoke('logoutGamebanana', []);
+                    window._pageArguments = {cat: 'gb'};
+                    page('options');
+                }, 'Logout', gamebananaUserinfo.loggedIn, 'You are not logged in.', '');
+            }
+            else {
+                await addButton('Login', 'Adds a GameBanana account to Deltamod.', async () => {
+                    await window.electronAPI.invoke('loginGamebanana', []);
+                    window._pageArguments = {cat: 'gb'};
+                    page('options');
+                }, 'Login', !gamebananaUserinfo.loggedIn, 'You are already logged in.', '');
+            }
+            break;
     }
     // theme adjustments
     // as far as i know this page is the only page that needs ts
@@ -247,4 +255,5 @@ window.currentPageStack.cat = async function(cat) {
 
 if (window._pageArguments.cat != undefined) {
     window.currentPageStack.cat(window._pageArguments.cat);
+    window._pageArguments = {};
 }
