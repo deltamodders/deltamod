@@ -562,6 +562,16 @@ function createWindow() {
         }
     });
 
+    ipcMain.handle('gbLikeMod', async (event, args) => {
+        var uiconf = await getGBUIConf();
+
+        var cond = uiconf._idMemberRow > 0;
+
+        if (cond) {
+            return (await require('./GameBananaWindow.js').likeMod(args[0], args[1]));
+        }
+    });
+
     ipcMain.handle('validateGamebananaToken', async () => {
         var uiconf = await getGBUIConf();
 
@@ -716,46 +726,10 @@ function createWindow() {
     });
 
     ipcMain.handle('dlmodURL', async (event, args) => {
-        const url = args[0];
-        try {
-            const response = await axios({ method: 'get', url, responseType: 'stream' });
-            const savepath = path.join(System.getTemporary(), 'modarchive_' + Date.now() + '.zip');
-            const writer = fs.createWriteStream(savepath);
-
-            const totalLength = response.headers['content-length'] ? parseInt(response.headers['content-length'], 10) : null;
-            let downloaded = 0;
-
-            response.data.on('data', (chunk) => {
-                downloaded += chunk.length;
-                if (totalLength) {
-                    const percent = Math.round((downloaded / totalLength) * 100);
-                    event.sender.send('dlmodURL-progress', { percent, downloaded, queryme: args[1], error: false });
-                } else {
-                    event.sender.send('dlmodURL-progress', { queryme: args[1], error: false });
-                }
-            });
-
-            response.data.on('error', (err) => {
-                writer.close();
-                event.sender.send('dlmodURL-progress', { message: err.message || String(err), queryme: args[1], error: true });
-            });
-
-            response.data.pipe(writer);
-
-            await new Promise((resolve, reject) => {
-                writer.on('finish', () => resolve);
-                writer.on('error', reject);
-            });
-
-            // final progress update
-            event.sender.send('dlmodURL-progress', { percent: 100, queryme: args[1], error: false });
-
-            Modstore.importMod(savepath, "donothing");
-            return savepath;
-        } catch (err) {
-            event.sender.send('dlmodURL-progress', { message: err.message || String(err), queryme: args[1], error: true, percent: 0 });
-            throw err;
-        }
+        // TODO: There seems to be a new bug in new axios versions where
+        // this request never completes, and thus the old code doesn't work.
+        // Plus axios isn't really made for big downloads like this, so
+        // we need to use https module directly.
     });
     ipcMain.handle('getOS', () => {
         return {
@@ -1867,6 +1841,7 @@ function createWindow() {
 
     ipcMain.handle('removeSteamIntegration', async (event, args) => {
         var currentIndex = require('./System.js').getCurrentSystemIndex();
+const https = require('https');
         Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(currentIndex)));
         KeyValue.setKVSOfIndex('isSteam', false, parseInt(currentIndex));
         KeyValue.setKVSOfIndex('originalSteamPath', "", parseInt(currentIndex));

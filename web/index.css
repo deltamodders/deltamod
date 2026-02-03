@@ -15,6 +15,11 @@
     font-size: 15px !important;
 }
 
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .watermark {
     position: fixed;
     bottom: 10px;

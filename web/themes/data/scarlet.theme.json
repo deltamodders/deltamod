@@ -1,0 +1,9 @@
+{
+    "name": "Scarlet Forest Theme",
+    "background": "scarlet.png",
+    "mainSong": "scarlet.mp3",
+    "description": "A theme inspired by the Scarlet Forest area from Deltarune.",
+    "musicTrack": "Scarlet Forest - Toby Fox",
+    "id": "scarlet",
+    "color": "rgb(156, 7, 32)"
+}

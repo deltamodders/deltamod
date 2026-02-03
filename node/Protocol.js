@@ -9,7 +9,8 @@ const { importMod } = require("./Modstore");
 const fs = require("fs");
 const path = require("path");
 const { dialog, app } = require("electron");
-const { page, setSharedVar, errorWin } = require("./Utils");
+const { page, setSharedVar } = require("./Utils");
+const { errorWin } = require("./ErrorWin");
 const mime = require("mime-types");
 
 // https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string

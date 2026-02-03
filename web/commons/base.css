@@ -18,7 +18,7 @@
 /* I did everything to use Calibri but I realized I actually want a font from my library.... */
 @font-face {
     font-family: "Calibri";
-    src: url("./ubuntu.ttf") format("truetype");
+    src: url("./Lato.ttf") format("truetype");
 }
 
 @font-face {

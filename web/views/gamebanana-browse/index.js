@@ -233,15 +233,14 @@ window.currentPageStack.plusPage = plusPage;
 
                 var biggerSpan = document.createElement('span');
                 biggerSpan.className = 'modTitleSpan';
-                biggerSpan.style.fontFamily = 'Calibri, sans-serif';
-                biggerSpan.style.fontSize = '1.0em';
+                biggerSpan.style.fontSize = '1.4em';
                 biggerSpan.innerText = mod._sName;
                 div1.appendChild(biggerSpan);
 
                 var otherInfoSpan = document.createElement('div');
                 otherInfoSpan.className = 'modOtherInfoSpan';
                 otherInfoSpan.style.fontSize = '0.8em';
-                otherInfoSpan.style.color = '#888888';
+                otherInfoSpan.style.color = '#616161';
                 otherInfoSpan.style.marginTop = '8px';
                 otherInfoSpan.style.width = '100%';
 
@@ -251,7 +250,7 @@ window.currentPageStack.plusPage = plusPage;
                     nameauthor += ' (Tenna lover)';
                 }
                 var authorSpan = document.createElement('span');
-                authorSpan.className = 'modAuthorSpan';
+                authorSpan.className = 'modAuthorSpan iptspan';
                 authorSpan.style.display = 'block';
                 authorSpan.style.marginRight = '12px';
                 authorSpan.innerHTML = `${icon('attribution','0.9em')} ${nameauthor}`;
@@ -261,19 +260,19 @@ window.currentPageStack.plusPage = plusPage;
                 authorSpan.style.cursor = 'pointer';
 
                 var categorySpan = document.createElement('span');
-                categorySpan.className = 'modCategorySpan';
+                categorySpan.className = 'modCategorySpan iptspan';
                 categorySpan.style.display = 'block';
                 categorySpan.style.marginRight = '12px';
                 categorySpan.innerHTML = `${icon('folder','0.9em')} ${mod._aRootCategory._sName}`;
 
                 if (!mod.featuredDataset) {
                     var dateSpan = document.createElement('span');
-                    dateSpan.className = 'modDateSpan';
+                    dateSpan.className = 'modDateSpan iptspan';
                     dateSpan.style.display = 'block';
                     dateSpan.innerHTML = `${icon('calendar_clock','0.9em')} ${new Date(mod._tsDateAdded*1000).toLocaleDateString()}`;
 
                     var viewsSpan = document.createElement('span');
-                    viewsSpan.className = 'modViewsSpan';
+                    viewsSpan.className = 'modViewsSpan iptspan';
                     viewsSpan.style.display = 'block';
                     viewsSpan.innerHTML = `${icon('visibility','0.9em')} ${roundViews(mod._nViewCount)}`;
                 }
@@ -292,7 +291,7 @@ window.currentPageStack.plusPage = plusPage;
                         ["alltime","All-Time Best"]
                     ]
                     var featSpan = document.createElement('span');
-                    featSpan.className = 'modFeaturedSpan';
+                    featSpan.className = 'modFeaturedSpan iptspan';
                     featSpan.style.display = 'inline-block';
                     for (let pd of periodsDesc) {
                         if (featuredIDs.find(x => x.id === mod._idRow && x.period === pd[0])) {
@@ -317,6 +316,7 @@ window.currentPageStack.plusPage = plusPage;
             }
 
             var td1 = document.createElement('td');
+            td1.style.textAlign = 'center';
             // Rendering of td1
             {
                 var dlBtn = document.createElement('button');
@@ -376,19 +376,38 @@ window.currentPageStack.plusPage = plusPage;
                 td1.appendChild(vwBtn);
                 td1.appendChild(dlBtn);
 
-                if (isGBLoggedIn) {
-                    var commentBtn = document.createElement('button');
-                    commentBtn.innerHTML = icon('comment', '0.9em') + '';
-                    commentBtn.style.marginLeft = '8px';
-                    commentBtn.onclick = async () => {
-                        window._pageArguments = {
-                            id: mod._idRow,
-                            model: mod._sModelName
-                        };
-                        page('gamebanana-leave-comment');
+                var commentBtn = document.createElement('button');
+                commentBtn.innerHTML = icon('comment', '0.9em') + '';
+                commentBtn.style.marginLeft = '8px';
+                commentBtn.onclick = async () => {
+                    window._pageArguments = {
+                        id: mod._idRow,
+                        model: mod._sModelName
                     };
-                    td1.appendChild(commentBtn);
-                }
+                    page('gamebanana-leave-comment');
+                };
+                commentBtn.disabled = !isGBLoggedIn;
+                td1.appendChild(commentBtn);
+
+                var likeBtn = document.createElement('button');
+                likeBtn.innerHTML = icon('mood_heart', '0.9em') + '';
+                likeBtn.style.marginLeft = '8px';
+                likeBtn.disabled = !isGBLoggedIn;
+                likeBtn.onclick = async () => {
+                    let res = await window.electronAPI.invoke('gbLikeMod',[mod._sModelName, mod._idRow]);
+                    if (res.status == 200) {
+                        likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + '';
+                        likeBtn.disabled = true;
+                    }
+                    else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
+                        await htmlAlert('Couldn\'t like the mod','You\'ve already liked this mod. Can\'t get any more likes than that!',[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
+                        likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + '';
+                        likeBtn.disabled = true;
+                    } else {
+                        await htmlAlert('Couldn\'t like the mod',res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
+                    }
+                };
+                td1.appendChild(likeBtn);
             }
 
 

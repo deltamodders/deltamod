@@ -20,16 +20,9 @@ function errorWin(err) {
         fs.mkdirSync(path.join(app.getPath('documents'), 'deltamodErrors'), { recursive: true });
     }
     var whereWrite = path.join(app.getPath('documents'), 'deltamodErrors', filename);
-    var heapScreenshot = require('v8').getHeapSnapshot();
-    var heapFile = fs.createWriteStream(whereWrite.replace('.log', '.heapsnapshot'));
     var error = (err.stack || err.toString());
 
-    setSharedVar('error', error);
-    setSharedVar('filename', filename);
-    setSharedVar('filepath', whereWrite);
-
     fs.writeFileSync(whereWrite, error, 'utf8');
-    heapScreenshot.pipe(heapFile);
 
     const win = getWindow();
     win.show();

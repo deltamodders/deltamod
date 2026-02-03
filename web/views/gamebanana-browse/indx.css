@@ -20,6 +20,12 @@
     overflow: hidden;
 }
 
+.iptspan {
+	display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 #gbPic {
     cursor: pointer;
     border-radius: 50%;

@@ -90,8 +90,32 @@ async function leaveComment(id, comment, model) {
     return response.status === 200;
 }
 
+async function likeMod(model, id) {
+    try {
+        var file = getSystemFile('bananapwd', true);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
+    }
+    catch {
+        return false;
+    }
+
+    var response = await axios.post(`https://gamebanana.com/apiv11/${model}/${id}/Like`, {}, {
+        headers: {
+            'Cookie': token,
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0',
+            'TE': 'Trailers',
+            'Content-Type': 'application/json'
+        },
+    }).catch((error) => {
+        return error.response;
+    });
+
+    return { status: response.status, data: response.data };
+}
+
 module.exports = {
     obtainLogin,
     getGBUIConf,
-    leaveComment
+    leaveComment,
+    likeMod
 };
