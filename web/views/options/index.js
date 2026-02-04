@@ -106,8 +106,11 @@ async function addButton(name, description, click, buttonText, enabled = true, d
     table.appendChild(tr);
 }
 
+var tempLock = false;
 
 window.currentPageStack.cat = async function(cat) {
+    if (tempLock) return;
+    tempLock = true;
     let tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
 
@@ -251,6 +254,8 @@ window.currentPageStack.cat = async function(cat) {
     // as far as i know this page is the only page that needs ts
     genbtnstyles();
     rew();
+
+    tempLock = false;
 }
 
 if (window._pageArguments.cat != undefined) {
