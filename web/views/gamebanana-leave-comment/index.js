@@ -7,8 +7,8 @@ async function send() {
     var comment = document.getElementById('comment').value;
     await window.electronAPI.invoke('leaveCommentGamebanana',[gbModID, comment, gbModel]);
     window._pageArguments = {
-        'gbModID': gbModID,
-        'gbModel': gbModel,
+        'id': gbModID,
+        'model': gbModel,
         'commentPage': commentPage
     };
     page('gamebanana-leave-comment');

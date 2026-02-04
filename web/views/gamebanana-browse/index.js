@@ -88,12 +88,12 @@ async function featured() {
 window.currentPageStack.featured = featured;
 window.currentPageStack.qms = {}; //queryme stack
 
-function dlmod(dlurl, buttonElem=null) {
+async function dlmod(dlurl, buttonElem=null, modid, modmodel) {
     lockUs = true;
     Array.from(document.querySelectorAll('.sidebar-button')).forEach(e => e.disabled = true);
     let queryme = Math.random().toString(36).substring(2, 15);
 
-    buttonElem.innerHTML = icon('clock_loader_10', '0.9em');
+    buttonElem.innerHTML = icon('search_activity', '0.9em');
 
     window.currentPageStack.qms[queryme] = function(info) {
         if (info.error) {
@@ -102,31 +102,13 @@ function dlmod(dlurl, buttonElem=null) {
             buttonElem.innerHTML = icon('cancel', '0.9em')
             return;
         }
-        var ranges = [
-            [0,20,'20'],
-            [20,40,'40'],
-            [40,60,'60'],
-            [60,80,'80'],
-            [80,100,'90']
-        ];
-        let roundedPercent = '';
-
-        for (let r of ranges) {
-            if (info.percent >= r[0] && info.percent < r[1]) {
-                roundedPercent = r[2];
-                break;
-            }
-        }
-        
-        buttonElem.innerHTML = icon('clock_loader_' + roundedPercent, '0.9em');
-        if (info.percent >= 100) {
-            lockUs = false;
-            Array.from(document.querySelectorAll('.sidebar-button')).forEach(e => e.disabled = false);
-            buttonElem.innerHTML = icon('check', '0.9em');
-        }
     };
 
-    window.electronAPI.invoke('dlmodURL',[dlurl, queryme]);
+    var res = await window.electronAPI.invoke('dlmodURL',[dlurl, queryme, modid, modmodel]);
+
+    lockUs = false;
+    Array.from(document.querySelectorAll('.sidebar-button')).forEach(e => e.disabled = false);
+    buttonElem.innerHTML = icon('done_outline', '0.9em');
 }
 
 window.currentPageStack.dlmod = async function(info) {
@@ -364,7 +346,7 @@ window.currentPageStack.plusPage = plusPage;
                         return;
                     }
 
-                    dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn);
+                    dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName);
                 };
 
                 var vwBtn = document.createElement('button');

@@ -130,6 +130,44 @@ async function createMod(mod, compatible) {
         deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
         deleteModButton.innerHTML = icon('delete_forever', '20px');
         bdiv.appendChild(deleteModButton);
+
+        if (mod.gamebanana.supports) {
+            const gbModButton = document.createElement('button');
+            gbModButton.onclick = () => {
+                window._pageArguments = {
+                    id: mod.gamebanana.id,
+                    model: mod.gamebanana.model
+                };
+                page(`gamebanana-leave-comment`);
+            };
+            gbModButton.innerHTML = icon('comment', '20px');
+            bdiv.appendChild(gbModButton);
+
+            const likeBtn = document.createElement('button');
+            likeBtn.onclick = async () => {
+                let res = await window.electronAPI.invoke('gbLikeMod',[mod.gamebanana.model, mod.gamebanana.id]);
+                    if (res.status == 200) {
+                        likeBtn.innerHTML = icon('sentiment_very_satisfied', '20px') + '';
+                        likeBtn.disabled = true;
+                    }
+                    else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
+                        await htmlAlert('Couldn\'t like the mod','You\'ve already liked this mod. Can\'t get any more likes than that!',[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
+                        likeBtn.innerHTML = icon('sentiment_very_satisfied', '20px') + '';
+                        likeBtn.disabled = true;
+                    } else {
+                        await htmlAlert('Couldn\'t like the mod',res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
+                    }
+            };
+            likeBtn.innerHTML = icon('mood_heart', '20px');
+            bdiv.appendChild(likeBtn);
+
+            tippy(likeBtn, {
+                content: 'Like this mod on GameBanana',
+            });
+            tippy(gbModButton, {
+                content: 'Leave a comment on GameBanana',
+            });
+        }
     }
 
     modRow.appendChild(modNameContainer);

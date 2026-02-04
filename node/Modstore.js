@@ -8,11 +8,32 @@ const { randomString, page } = require('./Utils');
 const { findModRoot } = require('./GamePatching');
 const crypto = require('crypto');
 const { dialog } = require('electron');
+const {Downloader} = require("nodejs-file-downloader");
 const { url } = require('inspector');
 
 const computerName = os.hostname();
 
-async function importMod(filePath, nextPage = "main") {
+function downloadModFromURL(url, onProgress, mID, mModel) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const downloader = new Downloader({
+                url: url,
+                directory: require('os').tmpdir(),
+                onProgress: (percentage) => {
+                    console.log(`Download progress: ${percentage}%`);
+                    if (onProgress) onProgress(percentage, 200);
+                }
+            });
+            const { filePath } = await downloader.download();
+            await importMod(filePath, "donothing", mID, mModel);
+            resolve(true);
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+async function importMod(filePath, nextPage = "main", mID = null, mModel = null) {
     // create unique mod folder
     const modPath = path.join(system.getPacketDatabase(), "Mod_" + randomString(32));
     fs.mkdirSync(modPath, { recursive: true });
@@ -52,6 +73,12 @@ async function importMod(filePath, nextPage = "main") {
             throw new Error('Invalid mod manifest. Please ensure meta.json is correctly formatted.');
         }
 
+        if (mID && mModel) {
+            modInfo.metadata.gamebanana_id = mID;
+            modInfo.metadata.gamebanana_model = mModel;
+            fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+        }
+
         if (modInfo.metadata.demoMod !== undefined) {
             modInfo.metadata.game = (modInfo.metadata.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
             delete modInfo.metadata.demoMod;
@@ -61,6 +88,8 @@ async function importMod(filePath, nextPage = "main") {
             fs.rmSync(modPath, { recursive: true, force: true });
             throw new Error('Mod manifest is missing required field `game`.');
         }
+
+
 
 
         /*await dialog.showMessageBox(win, {
@@ -194,7 +223,12 @@ function modList() {
                 console.log("Failed to upgrade demoMod field for mod:", mod);
             }
 
-            meta.packageID = validatePID(meta.packageID) || "und.und.und";
+            try {
+                meta.packageID = validatePID(meta.packageID) || "und.und.und";
+            }
+            catch {
+                meta.packageID = "und.und.und";
+            }
             const pid = meta.packageID;
 
             if (require('./KeyValue').readUniqueFlag('HASHCHECKS')) {
@@ -311,6 +345,7 @@ function modList() {
             modSize = modSize === 0 ? 0 : Math.max(0.01, Math.round((modSize / (1024 * 1024)) * 100) / 100);
 
             var games = require('./GameDB').getGames();
+const Downloader = require('nodejs-file-downloader');
             if (!games.some(g => g.id === meta.game)) {
                 failureReason = `Mod targets unknown game: ${meta.game}`;
                 throw new Error(`Mod targets unknown game: ${meta.game}`);
@@ -329,6 +364,11 @@ function modList() {
                 game:        meta.game || "toby.deltarune",
                 dependencies: modInfo.dependencies || [],
                 packageID: pid,
+                gamebanana: {
+                    supports: meta.gamebanana_id != null && meta.gamebanana_model != null,
+                    id:       meta.gamebanana_id || null,
+                    model:    meta.gamebanana_model || null,
+                },
                 _incompatibleHASH: meta._incompatibleHASH || false,
                 // NEW: give the renderer stable identifiers
                 new: deltamodExclusive.new || false, // Used in UI
@@ -344,7 +384,7 @@ function modList() {
             });
         }
         catch (e) {
-            console.error(`Error reading mod info for ${mod}:`, e);
+            console.error(`Error reading mod info for ${mod}:`, e, ' ' + e.stack);
             errors.push({ mod, reason: failureReason });
         }
     };
@@ -392,6 +432,7 @@ module.exports = {
     modList,
     importMod,
     howmany,
+    downloadModFromURL,
     removeModSafe,
     getModImage
 };

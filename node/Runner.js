@@ -726,10 +726,14 @@ function createWindow() {
     });
 
     ipcMain.handle('dlmodURL', async (event, args) => {
-        // TODO: There seems to be a new bug in new axios versions where
-        // this request never completes, and thus the old code doesn't work.
-        // Plus axios isn't really made for big downloads like this, so
-        // we need to use https module directly.
+        var url = args[0];
+        var queryme = args[1];
+        var modid = args[2];
+        var modmodel = args[3];
+        console.log('Downloading mod from URL: ' + url + ' (modid: ' + modid + ', model: ' + modmodel + ', queryme: ' + queryme + ')');
+        return await Modstore.downloadModFromURL(url, function(progress, downloaded) {
+            event.sender.send('dlmodURL-progress', { progress, downloaded, queryme: args[1], error: false });
+        }, modid, modmodel);
     });
     ipcMain.handle('getOS', () => {
         return {
