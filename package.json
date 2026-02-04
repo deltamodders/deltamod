@@ -49,8 +49,8 @@
   "author": "Deltamodders",
   "license": "EUPL-1.2",
   "devDependencies": {
-    "electron": "^37.3.1",
-    "electron-builder": "^26.0.12"
+    "electron": "^40.1.0",
+    "electron-builder": "^26.7.0"
   },
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",
