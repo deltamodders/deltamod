@@ -39,9 +39,12 @@ if (process.platform === 'win32') {
     if (fs.existsSync(path.join(__dirname, '../gm3p/GM3P.exe'))) {
         GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/GM3P.exe')) + '\"';
         Patcher = 'GM3P';
-    } else {
+    } else if ((path.join(__dirname, '../gm3p/GamemakerModMerger.exe'))){
         GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/GamemakerModMerger.exe')) + '\"';
         Patcher = 'DEVICE_FUSION';
+    } else {
+        GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/G3MTool.exe')) + '\"';
+        Patcher = 'G3M';
     }
     GM3P_DLL = '';
     UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.exe');
@@ -481,7 +484,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                     }
                     oneMod = ' true';
                 } else { oneMod = ' false'; }
-            } else {
+            } else if (Patcher === 'DEVICE_FUSION'){
                 for (var i = 0; i < chapterTargets.length; i++) {
                     if (!fs.existsSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', i.toString(), '1'))) {
                         fs.mkdirSync(path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '1'), {recursive: true});
@@ -489,6 +492,8 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
                     clog('Patching chapter', i, 'with', (perChapterPatches.map(list => list.length ? (list.join('::')) : ''))[i]);
                     await run(GM3P_EXE + ' ' + GM3P_DLL + ' ' + path.join(gamePath, 'chapter' + String(i) + '_windows', 'data.win') + ' ' + (perChapterPatches.map(list => list.length ? (list.join('::')) : ''))[i] + ' ' + path.join(GM3P_OUTPUT, 'xDeltaCombiner', String(i), '1', 'data.win'));
                 }
+            } else {
+                await run(GM3P_EXE = ' ' + GM3P_DLL + ' --help'); 
             }
             // Produce: one subfolder per chapter index
             pack   = 'DeltamodPack_Multi';
