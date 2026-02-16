@@ -42,14 +42,14 @@ function error() {
 
 var alertCache = [];
 var isAlertShowing = false;
-async function htmlAlert(t,m,b,i) {
+async function htmlAlert(title, message, buttons, specialIcon) {
     if (isAlertShowing) {
         return new Promise((resolve, reject) => {
-            alertCache.push({title: t, message: m, buttons: b, resolve: resolve, reject: reject, specialIcon: 'info'});
+            alertCache.push({title: title, message: message, buttons: buttons, resolve: resolve, reject: reject, specialIcon: 'info'});
         });
     }
     else {
-        return htmlAlertRaw(t, m, b, i);
+        return htmlAlertRaw(title, message, buttons, specialIcon);
     }
 }
 async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {

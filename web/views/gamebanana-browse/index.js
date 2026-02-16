@@ -48,7 +48,7 @@ function plusPage(ind) {
     PAGE += ind;
     if (PAGE < 1) PAGE = 1;
     window._pageArguments = window._pageArguments || {};
-    window._pageArguments.lp = PAGE;
+    window._pageArguments.lp = PAGE.toString();
     window._pageArguments.gbAPI = capi;
     window._pageArguments.gbAPIFilter = async function(data) {
         return data;
@@ -158,7 +158,7 @@ window.currentPageStack.plusPage = plusPage;
 
     await gameBananaLogin();
 
-    var furl = GB_API.replace('$PAGE', PAGE);
+    var furl = GB_API.replace('$PAGE', PAGE.toString());
     console.log('Fetching from URL: ' + furl);
     var response = await fetch(furl);
     var data = await filter(await response.json());
