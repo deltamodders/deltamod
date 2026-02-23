@@ -255,6 +255,19 @@ window.preloadAPI.onThemeChange(refreshTheme);
 
 let lockRandoms = false;
 
+(async () => {
+    if (await window.electronAPI.invoke('getUniqueFlag', ["PARALLAX"]) == true) {
+        document.addEventListener('mousemove', (e) => {
+            const bg = document.querySelector('.bg');
+            if (bg) {
+                const x = (e.clientX / window.innerWidth) * 20 - 10;
+                const y = (e.clientY / window.innerHeight) * 20 - 10;
+                bg.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
+                document.querySelector('.viewport').style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+            }
+        });
+    }
+})();
 async function page(name) {
     rew();
     
@@ -265,9 +278,9 @@ async function page(name) {
     if (await window.electronAPI.invoke('isBaked', []) && name == 'main') {
         name = 'bakedhome';
     }
-    document.querySelector('.viewport').style.animation = '0.3s fadeOut cubic-bezier(0, 0.55, 0.45, 1)';
+    document.querySelector('.viewport').style.animation = 'none';
     document.querySelector('.viewport').style.pointerEvents = 'none';
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 50));
     document.querySelector('.viewport').style.animation = '0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1)';
     document.querySelector('.viewport').style.pointerEvents = 'auto';
     window.electronAPI.invoke('showWindow', []);
@@ -522,16 +535,6 @@ window.preloadAPI.onAudio((stat) => {
     else closeAudio();
 });
 
-document.getElementsByClassName('sidebar')[0].addEventListener('mouseenter', () => {
-    document.getElementsByClassName('sidebar-backdrop')[0].style.opacity = 1;
-});
-
-document.getElementsByClassName('sidebar')[0].addEventListener('mouseleave', () => {
-    document.getElementsByClassName('sidebar-backdrop')[0].style.opacity = 0;
-});
-
-document.getElementsByClassName('sidebar-backdrop')[0].style.opacity = 0;
-
 Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
     tippy(button, {
         content: button.getAttribute('data-label') || uppercaseFirst(button.getAttribute('data-page')),
@@ -558,41 +561,3 @@ Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => 
         }
     }
 })();
-
-var elaps = 0;
-var start = 0;
-var end = 0;
-var lastClose = 0;
-document.querySelector('.sidebar').addEventListener('mouseenter', async () => {
-    start = Date.now();
-
-    elaps = start - lastClose;
-
-    if (elaps > 200 || end == 0) {
-        if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === false) {
-            return;
-        }
-        var a = new Audio();
-        a.src = 'audio/hoverSBAR.mp3';
-        a.volume = 0.6;
-        a.play();
-    }
-});
-
-document.querySelector('.sidebar').addEventListener('mouseleave', async () => {
-    end = Date.now();
-
-    elaps = end - start;
-
-    if (elaps > 200) {
-        if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === false) {
-            return;
-        }
-        var a = new Audio();
-        a.src = 'audio/dehoverSBAR.mp3';
-        a.volume = 0.6;
-        a.play();
-    }
-
-    lastClose = Date.now();
-});

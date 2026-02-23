@@ -194,7 +194,7 @@ body {
         padding-bottom: 50px;
         opacity: 0.4;
         filter: blur(10px);
-        transform: translateX(-40px) translateY(-50%);
+        transform: translateX(-40px);
     }
     to {
         padding-top: 15px;
@@ -202,60 +202,28 @@ body {
         width: calc(var(--sidebar-size) * 1 + 10px);
         opacity: 1;
         filter: blur(0px);
-        transform: translateX(0px) translateY(-50%);
+        transform: translateX(0px);
     }
 }
 
 .sidebar {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%) rotateX(20deg);
-    left: 15px;
-    transform-style: preserve-3d;
-    border-radius: 50px;
-    opacity: 0.6;
-    width: calc(var(--sidebar-size) * 1 + 10px);
-    border: 2px solid gray;
-    height: fit-content;
+    top: 0;
+    left: 0;
+    width: calc(var(--sidebar-size) * 1 + 20px);
+    height: 100%;
     padding-top: 15px;
     box-shadow: unset;
     padding-bottom: 15px;
-    backdrop-filter: blur(7px);
-    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px);
+    background-color: rgba(40, 40, 40, 0.286);
     overflow-x: hidden;
     display: flex;
-    justify-content: left;
+    justify-content: center;
     align-items: center;
     transition: 0.9s all cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 100;
-    animation: 0.5s sidebarFadeIn cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 999;
     user-select: none;
-}
-
-.sidebar-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50px;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
-    z-index: 99;
-}
-
-
-.sidebar-backdrop {
-    transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-    pointer-events: none;
-}
-
-.sidebar:hover {
-    transform: translateY(-50%) translateX(15px) rotateX(0deg);
-    box-shadow: 0 0 15px var(--theme-color);
-    border: 2px solid var(--theme-color);
-    background-color: rgba(0, 0, 0, 0.5);
-    opacity: 1;
 }
 .sidebar > div {
     margin-left: 5px;
@@ -316,11 +284,15 @@ h1 {
 .viewport {
     position: absolute;
     top: calc(var(--topbar-height) * 1);
-    left: calc(var(--sidebar-size) + 30px);
-    width: calc(100% - 65px - (var(--sidebar-size) * 1));
-    height: calc(100% - calc(var(--topbar-height) * 1) - 35px);
+    left: calc(var(--sidebar-size) * 1 + 20px);
+    width: calc(100% - (var(--sidebar-size) * 1));
+    border: 2.5px solid var(--theme-color);
+    border-top-left-radius: 10px;
+    height: calc(100% - calc(var(--topbar-height) * 1) - 20px);
     overflow-y: scroll;
     padding: 20px;
+    padding-left: 40px;
+    padding-right: 80px;
     box-sizing: border-box;
     animation: 0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1);
 }
@@ -343,28 +315,20 @@ h1 {
 
 @keyframes fadeIn {
     from {
-        opacity: 0.4;
-        scale: 1;
-        transform: translateX(-30px);
+        scale: 1.1;
     }
     to {
-        opacity: 1;
         scale: 1;
-        transform: translateX(0px);
     }
 }
 
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-        scale: 1;
-        transform: translateX(0px);
-    }
-    to {
-        opacity: 0;
-        scale: 1;
-        transform: translateX(30px);
-    }
+.dmodicon {
+    position: fixed;
+    top: calc(var(--topbar-height) - 25px);
+    left: 15px;
+    width: 50px;
+    height: auto;
+    z-index: 1001;
 }
 
 * {
@@ -383,7 +347,6 @@ h1 {
     font-size: 10px;
     backdrop-filter: blur(15px);
     background-color: rgba(40, 40, 40, 0.286);
-    border-bottom: 2px solid var(--theme-color);
     -webkit-app-region: drag;
     z-index: 1000;
     user-select: none;

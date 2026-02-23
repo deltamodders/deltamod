@@ -1,7 +1,5 @@
 {
     "features": [
-        "GB-OneClick",
-        "Shop",
-        "DeltahubChat"
+        "GB-OneClick"
     ]
 }

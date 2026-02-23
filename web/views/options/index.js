@@ -149,6 +149,7 @@ window.currentPageStack.cat = async function(cat) {
             await addCheckboxOption('Enable Mod Shop', 'Enables the Mod Shop. This service uses GameBanana to run. ' + (navigator.onLine ? '' : '<br><br><i style="color: gold;">This option is currently disregarded because there is no Internet.</i>'), 'SHOP', true);
             await addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background.', 'audio');
             await addCheckboxOption('Enable SFX in menus', 'Choose if you want SFX to play when you do some things. Some actions might still trigger SFX even with this off.', 'sfx');
+            await addCheckboxOption('Enable enhanced UI effects', 'Enables enhanced UI effects. May take a toll on performance.', 'PARALLAX', true);
 
             await addButton('Select a theme', 'Opens the theme selection menu.', async () => {
                 page('themesel');
