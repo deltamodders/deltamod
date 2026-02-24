@@ -149,8 +149,7 @@ async function getInstallations(suppressWarnings = false) {
             name: commonName,
             steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
             pid: KeyValue.readKVSOfIndex('gamePid', parseInt(file.split('-')[1])),
-            appid: KeyValue.readKVSOfIndex('steamAppId', parseInt(file.split('-')[1])),
-            bakedInstallation: KeyValue.readKVSOfIndex('baked', parseInt(file.split('-')[1])) === true,
+            appid: KeyValue.readKVSOfIndex('steamAppId', parseInt(file.split('-')[1]))
         });
     });
 
@@ -784,10 +783,6 @@ function createWindow() {
 
     ipcMain.handle('isBaked', async (event, args) => {
         return KeyValue.readKVS('baked');
-    });
-
-    ipcMain.handle('getBakedMods', async (event, args) => {
-        return {modList: KeyValue.readKVS("bakeList"), errors: [] };
     });
 
     // NPS callbacks can be used for everything, so feel free.
@@ -1532,7 +1527,6 @@ function createWindow() {
                 win.webContents.send('finishedPatch',mods);
             }
             else {
-                KeyValue.setKVS('baked', true);
                 var allMods = Modstore.modList().modList.filter(m => (args[0].includes(m.uniqueId))).map(m => ({
                     name: m.name,
                     description: m.description,
