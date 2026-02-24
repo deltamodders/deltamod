@@ -35,7 +35,7 @@ button:disabled {
 @keyframes stuffFadeIn {
     from {
         opacity: 0;
-        transform: translateX(-10px);
+        transform: translateX(-20px);
     }
     to {
         opacity: 1;
@@ -109,7 +109,7 @@ button:disabled {
     }
     to {
         opacity: 1;
-        height: 180px;
+        height: 190px;
     }
 }
 
@@ -117,7 +117,7 @@ button:disabled {
 @keyframes alertFadeOut {
     from {
         opacity: 1;
-        height: 180px;
+        height: 190px;
     }
     to {
         opacity: 0;
@@ -142,9 +142,9 @@ button:disabled {
     overflow-x: hidden;
     font-family: 'Calibri', sans-serif;
     color: white;
-    height: 180px;
+    height: 190px;
     font-size: 16px;
-    animation: 0.4s alertFadeIn cubic-bezier(0.25, 1, 0.5, 1);
+    animation: 0.6s alertFadeIn cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .sidebar-ribbon {

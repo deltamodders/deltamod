@@ -47,7 +47,8 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
 })();
 
 (async() => {
-    var version = await window.electronAPI.invoke('version',[]);
+    var version = (await window.electronAPI.invoke('version',[])).split('.').filter(i => (i != 0)).join('.');
+
     var gitCommit = await window.electronAPI.invoke('myCommitInfo',[]);
     document.querySelector('#version').innerText = `Deltamod ${version}`;
     if (gitCommit) {

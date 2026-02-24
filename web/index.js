@@ -58,6 +58,8 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         var alertMain = document.getElementsByClassName('alertMain')[0];
         var alertMsgR = alertMain.getElementsByClassName('alertMsg')[0];
 
+        var animOptions = 'cubic-bezier(0.22, 1, 0.36, 1) forwards';
+        var animLength = 0.5;
 
         alertMsgR.innerHTML = '';
 
@@ -81,11 +83,11 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
             var btn = document.createElement('button');
             btn.textContent = button.text;
             btn.onclick = function() {
-                alertMsgR.style.animation = '0.3s alertFadeOut cubic-bezier(0.25, 1, 0.5, 1)';
+                alertMsgR.style.animation = `${animLength}s alertFadeOut ${animOptions}`;
                 setTimeout(() => {
                     alertMain.style.animation = '';
                     alertMain.style.display = 'none';
-                    alertMsgR.style.animation = '0.3s alertFadeIn cubic-bezier(0.25, 1, 0.5, 1)';
+                    alertMsgR.style.animation = `${animLength}s alertFadeIn ${animOptions}`;
                     alertMsgR.innerHTML = '';
                 }, 300);
                 isAlertShowing = false;
@@ -132,13 +134,13 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         alertMsgR.appendChild(bigIcon);
 
         setTimeout(() => {
-            titleElement.style.animation = '0.3s stuffFadeIn cubic-bezier(0.25, 1, 0.5, 1) forwards';
+            titleElement.style.animation = `${animLength}s stuffFadeIn ${animOptions}`;
         }, 100);
         setTimeout(() => {
-            messageElement.style.animation = '0.3s stuffFadeIn cubic-bezier(0.25, 1, 0.5, 1) forwards';
+            messageElement.style.animation = `${animLength}s stuffFadeIn ${animOptions}`;
         }, 200);
         setTimeout(() => {
-            buttonsHTML.style.animation = '0.3s stuffFadeIn cubic-bezier(0.25, 1, 0.5, 1) forwards';
+            buttonsHTML.style.animation = `${animLength}s stuffFadeIn ${animOptions}`;
         }, 300);
 
         var a = new Audio();
