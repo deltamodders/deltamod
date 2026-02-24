@@ -563,3 +563,19 @@ Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => 
         }
     }
 })();
+
+// snowgrave 1225
+let keystrokeBuffer = '';
+
+document.addEventListener('keydown', (e) => {
+    keystrokeBuffer += e.key.toLowerCase();
+    
+    if (keystrokeBuffer.includes('snowgrave')) {
+        window.electronAPI.invoke('setUniqueFlag', ['WEIRD', true]);
+        keystrokeBuffer = '';
+    }
+    
+    if (keystrokeBuffer.length > 9) {
+        keystrokeBuffer = keystrokeBuffer.slice(-9);
+    }
+});
