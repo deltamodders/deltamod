@@ -198,6 +198,10 @@ window.currentPageStack.cat = async function(cat) {
             }, 'Open');
             break;
         case 'gb':
+            var loadtr = document.createElement('tr');
+            loadtr.innerHTML = '<td colspan="2" style="text-align:center;">Loading GameBanana user info...</td>';
+            tbody.appendChild(loadtr);
+
             var tr = document.createElement('tr');
             tbody.appendChild(tr);
 
@@ -206,6 +210,7 @@ window.currentPageStack.cat = async function(cat) {
             td.innerHTML = 'Please wait...';
 
             var gamebananaUserinfo = await window.electronAPI.invoke('getGamebananaUserinfo', []);
+            tbody.removeChild(loadtr);
             td.innerHTML = '';
 
             var flexdiv = document.createElement('div');

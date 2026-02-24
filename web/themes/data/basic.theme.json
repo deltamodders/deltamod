@@ -1,0 +1,9 @@
+{
+    "name": "Basic Theme",
+    "background": "basic.png",
+    "mainSong": "basic.mp3",
+    "id": "basic",
+    "musicTrack": "Ferris Wheel - Toby Fox",
+    "description": "A basic theme.",
+    "color": "rgba(100, 100, 100, 1)"
+}
