@@ -1121,12 +1121,6 @@ function createWindow() {
             theme = 'base';
             fs.writeFileSync(themeHost, theme);
         }
-        console.log('Current theme: ' + theme);
-        console.log('Check now: ' + Date.now() + ' vs ' + (themeData.timedExpire || 0)); 
-        if (Date.now() > themeData.timedExpire) {
-            theme = 'base';
-            fs.writeFileSync(themeHost, theme);
-        }
         return theme;
     });
 

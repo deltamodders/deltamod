@@ -9,6 +9,9 @@ function obtainLogin() {
         let loginWindow = new BrowserWindow({
             width: 800,
             height: 600,
+            resizable: false,
+            fullscreenable: false,
+            minimizable: false,
             webPreferences: {
                 nodeIntegration: false,
                 partition: 'persist:gamebananaLogin',
@@ -28,6 +31,10 @@ function obtainLogin() {
         loginWindow.loadURL('https://gamebanana.com/members/account/login');
 
         loginWindow.webContents.on('did-navigate', async (event, url) => {
+            var allowedURLS = [
+                "https://gamebanana.com/members/account/login",
+                "https://gamebanana.com/"
+            ];
             loginWindow.webContents.executeJavaScript('document.title = "Login to GameBanana to continue in Deltamod."; document.querySelectorAll(\'.Description\')[0].innerHTML = "To continue in Deltamod, login here. Please create an account in your browser if you do not have one. Only login with GameBanana on apps you trust. <b>This page is not endorsed by GameBanana.</b><br><br><b>This action will grant full account control to Deltamod.</b>"');
             if (!url.includes('gamebanana.com/members/account')) {
                 const allCookies = (await loginWindow.webContents.session.cookies.get({})).filter(c => {
