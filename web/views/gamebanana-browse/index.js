@@ -222,7 +222,7 @@ window.currentPageStack.plusPage = plusPage;
                 var otherInfoSpan = document.createElement('div');
                 otherInfoSpan.className = 'modOtherInfoSpan';
                 otherInfoSpan.style.fontSize = '0.8em';
-                otherInfoSpan.style.color = '#616161';
+                otherInfoSpan.style.color = '#7c7c7c';
                 otherInfoSpan.style.marginTop = '8px';
                 otherInfoSpan.style.width = '100%';
 
@@ -412,3 +412,9 @@ window.currentPageStack.plusPage = plusPage;
 
     genbtnstyles();
 })();
+
+document.getElementById('searchInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        search();
+    }
+});

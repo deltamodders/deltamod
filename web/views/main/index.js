@@ -143,9 +143,12 @@ async function createMod(mod) {
         }).catch(() => {});
     };
 
+    var prevalColor = mod.customRGB || getPredominantColor(img);
+
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
+    titleSpan.style.fontSize = '23px';
     if (mod.new) {
         titleSpan = adaptForIconsA(titleSpan);
         titleSpan.style.marginBottom = '0px';
@@ -158,7 +161,7 @@ async function createMod(mod) {
 
     let descSpan = document.createElement('span');
     descSpan.className = 'calibri';
-    descSpan.style = 'font-size: 10px; color: #ffffffdd;';
+    descSpan.style = 'font-size: 12px; color: #ffffff;';
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
@@ -239,19 +242,12 @@ async function createMod(mod) {
         enabledContainer.appendChild(enabled);
     }
 
-    if (!mod.customRGB)
-    {
-        var prevalColor = getPredominantColor(img);
-        var cssStyle = `linear-gradient(90deg,rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5) 0%, rgba(40, 40, 40, 0) 100px)`;
-        modNameContainer.style.background = `${cssStyle}`;
-        modRow.appendChild(modNameContainer);
-        modRow.appendChild(enabledContainer);
-    }
-    else {
-        modNameContainer.style.background = `linear-gradient(90deg, rgba(${mod.customRGB.r}, ${mod.customRGB.g}, ${mod.customRGB.b}, 0.5) 0%, rgba(40, 40, 40, 0) 100px)`;
-        modRow.appendChild(modNameContainer);
-        modRow.appendChild(enabledContainer);
-    }
+    var cssStyle1 = `rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.2)`;
+    var cssStyle2 = `rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.1)`;
+    modNameContainer.style.background = `${cssStyle1}`;
+    enabledContainer.style.background = `${cssStyle2}`;
+    modRow.appendChild(modNameContainer);
+    modRow.appendChild(enabledContainer);
 
     document.getElementById('modlist').appendChild(modRow);
     return modRow;

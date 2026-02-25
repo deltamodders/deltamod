@@ -463,7 +463,6 @@ function createWindow() {
         height: h,
         resizable: true,
         frame: false,
-        show: false,
         webPreferences: {
             nodeIntegration: true,
             partition: partition,

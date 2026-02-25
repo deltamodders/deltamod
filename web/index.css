@@ -212,7 +212,7 @@ body {
     left: 0;
     width: calc(var(--sidebar-size) * 1 + 20px);
     height: 100%;
-    padding-top: 15px;
+    padding-top: 85px;
     box-shadow: unset;
     padding-bottom: 15px;
     backdrop-filter: blur(15px);
@@ -220,7 +220,7 @@ body {
     overflow-x: hidden;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: baseline;
     transition: 0.9s all cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 999;
     user-select: none;

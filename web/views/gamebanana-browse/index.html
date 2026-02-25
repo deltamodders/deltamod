@@ -4,18 +4,20 @@
         <button onclick="page('')">
             <span class="material-symbols-outlined smicon">home</span>
         </button>
-        <button onclick="window.currentPageStack.plusPage(-1)">
-            <span class="material-symbols-outlined smicon">arrow_back</span>
+        <button onclick="window.currentPageStack.featured()">
+            <span class="material-symbols-outlined smicon">star</span>
         </button>
-        <button onclick="window.currentPageStack.plusPage(1)">
-            <span class="material-symbols-outlined smicon">arrow_forward</span>
-        </button>
+        <div class="bfgroup">
+            <button onclick="window.currentPageStack.plusPage(-1)">
+                <span class="material-symbols-outlined smicon">arrow_back</span>
+            </button>
+            <button onclick="window.currentPageStack.plusPage(1)">
+                <span class="material-symbols-outlined smicon">arrow_forward</span>
+            </button>
+        </div>
         <input type="text" id="searchInput" placeholder="Search mods...">
         <button onclick="window.currentPageStack.search()">
             <span class="material-symbols-outlined smicon">search</span>
-        </button>
-        <button onclick="window.currentPageStack.featured()">
-            <span class="material-symbols-outlined smicon">star</span>
         </button>
     </div>
     <p id="searchInd" style="display: none; font-style: italic !important;">Currently showing results for "gendered"</p>
