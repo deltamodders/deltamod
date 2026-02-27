@@ -20,6 +20,10 @@ function brightenColor(r,g,b, amount) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
+function k(key, ...args) {
+    return window.electronAPI.invoke('obtainLangKeyAdv', [key, args]);
+}
+
 async function replaceLangKeys(html) {
     const regex = /\$\$(.*?)\$\$/g;
     const matches = [...html.matchAll(regex)];

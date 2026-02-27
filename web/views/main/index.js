@@ -112,7 +112,7 @@ async function createMod(mod) {
     imageContainer.style.marginLeft = '2px';
 
     tippy(imageContainer, {
-        content: 'Right click to view in library',
+        content: await k('main_rightclick'),
         placement: 'right',
         delay: [100, 0],
         onMount(instance) {
@@ -134,8 +134,8 @@ async function createMod(mod) {
     img.classList.add('mod-image');
     imageContainer.appendChild(img);
 
-    imageContainer.oncontextmenu = e => {
-        htmlAlert(mod.name,"Do you wish to view this mod in the Library?",[{text:'Yes',resolveWith:'accept'},{text:'No',rejectWith:'close'}]).then(result => {
+    imageContainer.oncontextmenu = async e => {
+        htmlAlert(mod.name,await k("main_rightclick_confirm"),[{text:await k("yes"),resolveWith:'accept'},{text:await k("no"),rejectWith:'close'}]).then(result => {
             if (result === 'accept') {
                 window._pageArguments = { highlightMod: mod.uid };
                 page('allmods');
@@ -204,7 +204,7 @@ async function createMod(mod) {
     versionSpan.className = 'calibri';
     versionSpan.style.fontSize = fontSize + 'px';
     versionSpan.style.color = '#ffffff';
-    versionSpan.innerHTML = `${icon('change_history', fontSize + 'px')} ${(mod.version ? mod.version : 'Unknown')}`;
+    versionSpan.innerHTML = `${icon('change_history', fontSize + 'px')} ${(mod.version ? mod.version : await k('unknown'))}`;
     versionSpan.id = `modsize-${mod.uid}`;
     flexContnainer.appendChild(versionSpan);
 
@@ -218,7 +218,7 @@ async function createMod(mod) {
         mergeSpan.className = 'calibri';
         mergeSpan.style.fontSize = fontSize + 'px';
         mergeSpan.style.color = '#ffffff';
-        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} This mod is uncompatible with multiple mod support`;
+        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} ${await k('main_incompatiblemerge')}`;
         mergeSpan.id = `modmerge-${mod.uid}`;
         infoContainer.appendChild(mergeSpan);
     }
@@ -284,7 +284,7 @@ async function createMod(mod) {
     return modRow;
 }
 
-function createErroringMods(errors) {
+async function createErroringMods(errors) {
     const dialogElement = document.getElementById("error-list-dialog");
     const errorList = document.getElementById("error-list-div");
 
@@ -312,7 +312,7 @@ function createErroringMods(errors) {
         selectSpan.className = 'calibri';
         selectSpan.style.marginTop = '18px';
         selectSpan.style.display = 'block';
-        selectSpan.innerText = 'How would you like to proceed?';
+        selectSpan.innerText = await k('modFail_howtoprocced');
         
 
         const actionRow = document.createElement("div");
@@ -320,12 +320,12 @@ function createErroringMods(errors) {
         {
             // Action Row
             const exploreBtn = document.createElement("button");
-            exploreBtn.innerText = "Open the mod's folder";
+            exploreBtn.innerText = await k("open_mod_folder");
             exploreBtn.onclick = () => window.electronAPI.invoke("openModFolder", [err.mod]);
             actionRow.appendChild(exploreBtn);
 
             const deleteBtn = document.createElement("button");
-            deleteBtn.innerText = "Delete the mod";
+            deleteBtn.innerText = await k("delete_mod");
             deleteBtn.onclick = () => window.electronAPI.invoke("removeMod", [err.mod]);
             actionRow.appendChild(deleteBtn);
         }
@@ -369,15 +369,15 @@ function loadInst(index) {
             td.style.fontWeight = 'bold';
             td.style.backgroundColor = '#222';
             td.style.color = '#fff';
-            td.innerText = 'Mods by ' + (x.author[0] || 'Unknown Author');
+            td.innerText = 'Mods by ' + (x.author[0] || await k('unknown'));
             tr.appendChild(td);
-            addedAuthors.push(x.author[0] || 'Unknown Author');
+            addedAuthors.push(x.author[0] || await k('unknown'));
             document.getElementById('modlist').appendChild(tr);
         }
         await createMod(x);
     }
 
-    document.getElementById('sortWay').onchange = (e) => {
+    document.getElementById('sortWay').onchange = async (e) => {
         switch (e.target.value) {
             case 'asc':
                 window._pageArguments = { sortfunc: (a, b) => a.name.localeCompare(b.name), sortid: 'asc' };
@@ -397,8 +397,8 @@ function loadInst(index) {
                 break;
             case 'author':
                 window._pageArguments = { sortfunc: (a, b) => {
-                    const authorA = a.author[0] || 'Unknown Author';
-                    const authorB = b.author[0] || 'Unknown Author';
+                    const authorA = a.author[0] || "Unknown Author";
+                    const authorB = b.author[0] || "Unknown Author";
                     return authorA.localeCompare(authorB);
                 }, sortid: 'author' };
                 page('');
@@ -420,13 +420,13 @@ function loadInst(index) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 3;
-        td.innerHTML = 'No compatible mods were found.' + (modList.filter(x => x.isIncompatible).length != 0 ? '<br><small class="calibri" style="color: #888;">' + modList.filter(x => x.isIncompatible).length + ' mods were detected but are incompatible.</small>' : '');
+        td.innerHTML = await k('main_nocompatiblemods') + (modList.filter(x => x.isIncompatible).length != 0 ? '<br><small class="calibri" style="color: #888;">' + await k('main_incompatiblemodsfound', modList.filter(x => x.isIncompatible).length) + '</small>' : '');
         td.style.paddingLeft = '10px';
         tr.appendChild(td);
         if ((await window.electronAPI.invoke('howManyMods', [])) == 0) {
             let small = document.createElement('small');
             var hasShop = await window.electronAPI.invoke('getUniqueFlag', ['SHOP']);
-            small.innerHTML = 'Mods can be downloaded from the GameBanana website' + (hasShop ? ', the <a href="javascript:page(\'gamebanana-browse\')">Mod Shop</a>,' : '') + ' or manually via the Import button.';
+            small.innerHTML = hasShop ? await k('main_wheremods_shop') : await k('main_wheremods_noshop');
             small.style.color = '#888';
             td.appendChild(document.createElement('br'));
             td.appendChild(small);

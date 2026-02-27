@@ -532,6 +532,17 @@ function createWindow() {
         var langdb = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'langdb.json'), 'utf8'));
         return langdb[key];
     });
+    ipcMain.handle('obtainLangKeyAdv', (event, args) => {
+        var key = args[0];
+        var langdb = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'langdb.json'), 'utf8'));
+        var result = langdb[key];
+        if (args.length > 1 && result) {
+            for (var i = 1; i < args.length; i++) {
+                result = result.replace(new RegExp('\\{' + (i - 1) + '\\}', 'g'), args[i]);
+            }
+        }
+        return result;
+    });
     ipcMain.handle('loginGamebanana', async () => {
         if (!safeStorage.isEncryptionAvailable()) {
             dialog.showMessageBoxSync({
