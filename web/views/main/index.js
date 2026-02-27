@@ -242,6 +242,9 @@ async function createMod(mod) {
             window.electronAPI.invoke('setModVariant', [selectedVariant, mod.folder]);
         };
         variantSelect.value = mod._selectedVariant || mod.variants[0].filename;
+        if (mod._selectedVariant == null || !mod.variants.some(v => v.filename === mod._selectedVariant)) {
+            window.electronAPI.invoke('setModVariant', [mod.variants[0].filename, mod.folder]);
+        }
         infoContainer.appendChild(variantSelect);
     }
 
