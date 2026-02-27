@@ -146,7 +146,7 @@ table {
 }
 
 table:hover {
-    box-shadow: 0 0 40px rgb(100, 100, 100);
+    box-shadow: 0 0 40px var(--theme-color);
 }
 
 th,

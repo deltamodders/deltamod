@@ -222,7 +222,7 @@ body {
     justify-content: center;
     align-items: baseline;
     transition: 0.9s all cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 999;
+    z-index: 2;
     user-select: none;
 }
 .sidebar > div {
@@ -294,6 +294,7 @@ h1 {
     padding: 20px;
     padding-left: 40px;
     padding-right: 80px;
+    z-index: 3;
     box-sizing: border-box;
     animation: 0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1);
 }
@@ -329,7 +330,7 @@ h1 {
     left: 15px;
     width: 50px;
     height: auto;
-    z-index: 1001;
+    z-index: 6;
 }
 
 * {
@@ -341,15 +342,15 @@ h1 {
 .topbar {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: calc(var(--sidebar-size) * 1 + 20px);
+    width: calc(100% - (var(--sidebar-size) + 20px));
     padding-left: 20px;
     height: calc(var(--topbar-height) * 1);
     font-size: 10px;
     backdrop-filter: blur(15px);
     background-color: rgba(40, 40, 40, 0.286);
     -webkit-app-region: drag;
-    z-index: 1000;
+    z-index: 1;
     user-select: none;
 }
 

@@ -36,10 +36,10 @@ tr {
     }
 
     .cat {
-        background: rgba(52, 52, 52, 0.2);
+        background: rgba(52, 52, 52, 0.1);
         width: 30%;
         height: 100%;
-        padding: 10px;
+        padding: 15px;
         margin-top: 0px;
         border: 2px solid var(--theme-color);
         border-radius: 10px;

@@ -111,7 +111,19 @@ async function createMod(mod, compatible) {
     compatSpan.innerHTML = comp ? `${icon('check', 'small')} Compatible with current version` : `${icon('error', 'small')} Incompatible: ${mod.incompatibilityReason}`;
     compatSpan.id = `modcompat-${mod.uid}`;
     modNameContainer.appendChild(compatSpan);
-
+    
+    if (mod.gamebanana.supports) {
+        let gbSpan = document.createElement('p');
+        gbSpan = adaptForIcons(gbSpan);
+        gbSpan.style.margin = '0px';
+        gbSpan.style.marginTop = '4px';
+        gbSpan.className = 'calibri';
+        gbSpan.style.fontSize = 'smaller';
+        gbSpan.style.color = '#888';
+        gbSpan.innerHTML = `${icon('shop', 'small')} Installed through the Mod Shop`;
+        gbSpan.id = `modgb-${mod.uid}`;
+        modNameContainer.appendChild(gbSpan);
+    }
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
     actionContainer.style.textAlign = 'center';

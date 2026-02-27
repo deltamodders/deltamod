@@ -10,6 +10,13 @@ function getThumbURL(mod) {
     }
 }
 
+
+function getAllThumbs(mod) {
+    let ar = mod._aPreviewMedia._aImages.map(x => x._sBaseUrl + "/" + x._sFile);
+    console.log(ar);
+    return ar;
+}
+    
 var isGBLoggedIn = false;
 
 async function gameBananaLogin() {
@@ -193,14 +200,37 @@ window.currentPageStack.plusPage = plusPage;
                 var div0 = document.createElement('div');
                 div0.className = 'modThumbDiv';
                 
+                let thumbs = getAllThumbs(mod);
                 var img = document.createElement('img');
                 img.className = 'modThumbImg';
-                img.src = (getThumbURL(mod));
+                img.src = (thumbs[0]);
+                let i = 0;
+                if (thumbs.length > 1) {
+                    window._intervals.push(setInterval(async () => {
+                        img.style.animation = 'imgFadeOut 0.5s';
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        img.style.opacity = '0';
+                        if (thumbs.length > 1) {
+                            i = (i + 1) % thumbs.length;
+                            img.src = thumbs[i];
+                        }
+                        img.onload = () => {
+                            img.style.animation = 'imgFadeIn 0.5s';
+                            img.style.opacity = '1';
+                            img.onload = null;
+                        };
+                        img.onerror = () => {
+                            img.style.animation = 'imgFadeIn 0.5s';
+                            img.style.opacity = '1';
+                            img.onerror = null;
+                        };
+                    }, 5000));
+                }
                 img.style.width = '120px';
                 img.style.margin = '4px';
                 img.style.aspectRatio = '16 / 9';
                 img.style.borderRadius = '4px';
-                img.style.border = '1px solid #ccc';
+                img.style.border = '2px solid var(--theme-color)';
                 img.style.height = 'auto';
                 img.style.objectFit = 'cover';
                 img.style.objectPosition = 'center';
@@ -222,7 +252,7 @@ window.currentPageStack.plusPage = plusPage;
                 var otherInfoSpan = document.createElement('div');
                 otherInfoSpan.className = 'modOtherInfoSpan';
                 otherInfoSpan.style.fontSize = '0.8em';
-                otherInfoSpan.style.color = '#7c7c7c';
+                otherInfoSpan.style.color = '#aaaaaa';
                 otherInfoSpan.style.marginTop = '8px';
                 otherInfoSpan.style.width = '100%';
 

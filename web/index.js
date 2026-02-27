@@ -272,6 +272,10 @@ let lockRandoms = false;
 })();
 async function page(name) {
     rew();
+
+    window._intervals = window._intervals || [];
+    window._intervals.forEach(clearInterval);
+    window._intervals = [];
     
     if (name == "") {
         name = pageN;

@@ -144,6 +144,11 @@ async function createMod(mod) {
     };
 
     var prevalColor = mod.customRGB || getPredominantColor(img);
+    if (prevalColor.r < 30 && prevalColor.g < 30 && prevalColor.b < 30) {
+        prevalColor.r = Math.min(prevalColor.r + 60, 255);
+        prevalColor.g = Math.min(prevalColor.g + 60, 255);
+        prevalColor.b = Math.min(prevalColor.b + 60, 255);
+    }
 
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
@@ -172,9 +177,9 @@ async function createMod(mod) {
     flexContnainer.style.justifyContent = 'left';
     flexContnainer.style.gap = '6px';
     flexContnainer.style.marginTop = '8px';
-    flexContnainer.style.backgroundColor = '#1d1d1d99';
+    flexContnainer.style.backgroundColor = 'rgba(' + prevalColor.r + ', ' + prevalColor.g + ', ' + prevalColor.b + ', 0.2)';
     flexContnainer.style.backdropFilter = 'blur(5px)';
-    flexContnainer.style.boxShadow = '0 0 5px #ffffff34';
+    flexContnainer.style.boxShadow = '0 0 5px ' + `rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5)`;
     flexContnainer.style.borderRadius = '50px';
     flexContnainer.style.width = 'fit-content';
     flexContnainer.style.padding = '4px';
@@ -188,7 +193,7 @@ async function createMod(mod) {
     authorSpan.style.margin = '0px';
     authorSpan.className = 'calibri';
     authorSpan.style.fontSize = fontSize + 'px';
-    authorSpan.style.color = '#888';
+    authorSpan.style.color = '#ffffff';
     authorSpan.innerHTML = `${icon('attribution', fontSize + 'px')} ${purify(mod.author.join(', '))}`;
     authorSpan.id = `modauthor-${mod.uid}`;
     flexContnainer.appendChild(authorSpan);
@@ -198,7 +203,7 @@ async function createMod(mod) {
     versionSpan.style.margin = '0px';
     versionSpan.className = 'calibri';
     versionSpan.style.fontSize = fontSize + 'px';
-    versionSpan.style.color = '#888';
+    versionSpan.style.color = '#ffffff';
     versionSpan.innerHTML = `${icon('change_history', fontSize + 'px')} ${(mod.version ? mod.version : 'Unknown')}`;
     versionSpan.id = `modsize-${mod.uid}`;
     flexContnainer.appendChild(versionSpan);
@@ -212,8 +217,8 @@ async function createMod(mod) {
         mergeSpan.style.marginTop = '10px';
         mergeSpan.className = 'calibri';
         mergeSpan.style.fontSize = fontSize + 'px';
-        mergeSpan.style.color = '#888';
-        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} It is recommended to not use mod merging with this mod. Merging may not work with this mod.`;
+        mergeSpan.style.color = '#ffffff';
+        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} This mod is uncompatible with multiple mod support`;
         mergeSpan.id = `modmerge-${mod.uid}`;
         infoContainer.appendChild(mergeSpan);
     }
@@ -232,6 +237,7 @@ async function createMod(mod) {
         enabled.type = 'checkbox';
         enabled.id = `modcheck-${mod.uid}`;
         enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
+        enabled.style.accentColor = `rgb(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b})`;
         enabled.onchange = e => {
             const c = e.target;
             const isEnabled = c.checked;
@@ -326,7 +332,25 @@ function loadInst(index) {
         // sort by name ascending by default
         modList = modList.sort((a, b) => a.name.localeCompare(b.name));
     }
-    modList.filter(x => !x.isIncompatible).forEach(x => createMod(x));
+    let addedAuthors = [];
+    for (const x of modList.filter(x => !x.isIncompatible)) {
+        if (window._pageArguments && window._pageArguments.sortid === "author" && !addedAuthors.includes(x.author[0] || 'Unknown Author')) {
+            // also create author tr
+            var tr = document.createElement('tr');
+            var td = document.createElement('td');
+            td.colSpan = 3;
+            td.style.paddingLeft = '10px';
+            td.style.fontSize = '18px';
+            td.style.fontWeight = 'bold';
+            td.style.backgroundColor = '#222';
+            td.style.color = '#fff';
+            td.innerText = 'Mods by ' + (x.author[0] || 'Unknown Author');
+            tr.appendChild(td);
+            addedAuthors.push(x.author[0] || 'Unknown Author');
+            document.getElementById('modlist').appendChild(tr);
+        }
+        await createMod(x);
+    }
 
     document.getElementById('sortWay').onchange = (e) => {
         switch (e.target.value) {
@@ -344,6 +368,14 @@ function loadInst(index) {
                 break;
             case 'size-desc':
                 window._pageArguments = { sortfunc: (a, b) => (b.size || 0) - (a.size || 0), sortid: 'size-desc' };
+                page('');
+                break;
+            case 'author':
+                window._pageArguments = { sortfunc: (a, b) => {
+                    const authorA = a.author[0] || 'Unknown Author';
+                    const authorB = b.author[0] || 'Unknown Author';
+                    return authorA.localeCompare(authorB);
+                }, sortid: 'author' };
                 page('');
                 break;
 
@@ -394,20 +426,12 @@ async function patchAndRun() {
         const modId = selectedMods[i];
         if (!goOn) break;
         if (noMergeMods.map(x => x.uid).includes(modId) && selectedMods.length > 1) {
-            try {
-                var resp = await htmlAlert(
-                    'Incompatible setting detected',
-                    `The author of "<i>${noMergeMods.find(x => x.uid === modId).name}</i>" has recommended not to merge this mod with others. Continue anyway?`,
-                    [{ text: 'No', resolveWith: 'no' }, { text: 'Yes', resolveWith: 'yes' }],
-                    'join'
-                );
-            } catch (e) {
-                // treat rejection like a "No"
-                resp = 'no';
-            }
-            if (resp === 'yes') {
-                continue;
-            }
+            await htmlAlert(
+                'Incompatible setting detected',
+                `${noMergeMods.find(x => x.uid === modId).name} is not compatible with multiple mod support, but you have multiple mods selected. Please deselect other mods or this mod to continue.`,
+                [{ text: 'OK', resolveWith: 'ok' }],
+                'join'
+            );
             goOn = false;
         }
     }
