@@ -945,6 +945,13 @@ function createWindow() {
         app.quit();
     });
 
+    ipcMain.handle('setModVariant', async (event, args) => {
+        var variant = args[0];
+        var modName = args[1];
+        var variantHost = path.join(System.getPacketDatabase(), modName, '__variant');
+        fs.writeFileSync(variantHost, variant);
+    });
+
     ipcMain.handle('executeArgumentCmd', async (event, args) => {
         if (process.argv.includes('---initialize_deltamod')) {
             win.hide();
@@ -1490,7 +1497,7 @@ function createWindow() {
             var log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0], BrowserWindow.fromWebContents(event.sender));
 
             if (!log.patched) {
-                dialog.showErrorBox('Patching failed', 'Please check the log and try again.\n\n' + log.log);
+                await dialog.showErrorBox('Patching failed', 'Please check the log and try again.\n\n' + log.log);
                 win.webContents.send('audio', true);
                 win.webContents.send('page', 'main');
                 //win.webContents.executeJavaScript('openAudio(); page(\'main\');');

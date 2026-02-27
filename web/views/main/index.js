@@ -223,6 +223,28 @@ async function createMod(mod) {
         infoContainer.appendChild(mergeSpan);
     }
 
+    if (mod.variants != null) {
+        let variantSelect = document.createElement('select');
+        variantSelect.style.marginTop = '10px';
+        variantSelect.className = 'calibri';
+        variantSelect.style.backgroundColor = 'rgba(' + (prevalColor.r - 80) + ', ' + (prevalColor.g - 80) + ', ' + (prevalColor.b - 80) + ', 1)';
+        variantSelect.style.border = '1px solid rgba(' + prevalColor.r + ', ' + prevalColor.g + ', ' + prevalColor.b + ', 0.5)';
+        variantSelect.style.fontSize = fontSize + 'px';
+        variantSelect.style.color = '#ffffff';
+        for (const variant of mod.variants) {
+            let option = document.createElement('option');
+            option.value = variant.filename;
+            option.innerText = variant.name;
+            variantSelect.appendChild(option);
+        }
+        variantSelect.onchange = e => {
+            const selectedVariant = e.target.value;
+            window.electronAPI.invoke('setModVariant', [selectedVariant, mod.folder]);
+        };
+        variantSelect.value = mod._selectedVariant || mod.variants[0].filename;
+        infoContainer.appendChild(variantSelect);
+    }
+
     bigAhhContainer.appendChild(imageContainer);
     bigAhhContainer.appendChild(infoContainer);
 
@@ -441,8 +463,10 @@ async function patchAndRun() {
         window.electronAPI.invoke('startGame', []);
     }
     else {
-        window.electronAPI.invoke('patchAndRun', [selectedMods]);
         page('patching');
+        setTimeout(() => {
+            window.electronAPI.invoke('patchAndRun', [selectedMods]);
+        }, 1000);
     }
 }
 

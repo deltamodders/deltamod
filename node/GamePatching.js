@@ -185,7 +185,11 @@ function findModRoot(root) {
     let fallback = null;
     while (stack.length) {
         const dir = stack.pop();
-        const hasXml  = fs.existsSync(path.join(dir, 'modding.xml'));
+        let searchFile = "modding.xml";
+        if (fs.existsSync(path.join(dir, '__variant'))) {
+            searchFile = fs.readFileSync(path.join(dir, '__variant'), 'utf8').trim() + '.xml';
+        }
+        const hasXml  = fs.existsSync(path.join(dir, searchFile));
         const hasId   = fs.existsSync(path.join(dir, '__deltaID.json'));
         const hasInfo = fs.existsSync(path.join(dir, 'meta.json'));
         if (hasXml && hasId) return dir;
@@ -306,7 +310,11 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
             const modRoot = findModRoot(modDir);
             const idf   = findFirstByName(modRoot, '__deltaID.json');
             const infof = findFirstByName(modRoot, 'meta.json');
-            const xmlf  = findFirstByName(modRoot, 'modding.xml');
+            let searchFile = "modding.xml";
+            if (fs.existsSync(path.join(modRoot, '__variant'))) {
+                searchFile = fs.readFileSync(path.join(modRoot, '__variant'), 'utf8').trim() + '.xml';
+            }
+            const xmlf  = findFirstByName(modRoot, searchFile);
             
             if (!idf || !xmlf) continue;
             if (!fs.existsSync(idf) || !fs.existsSync(xmlf)) {

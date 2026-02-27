@@ -345,23 +345,30 @@ function modList() {
             modSize = modSize === 0 ? 0 : Math.max(0.01, Math.round((modSize / (1024 * 1024)) * 100) / 100);
 
             var games = require('./GameDB').getGames();
-const Downloader = require('nodejs-file-downloader');
             if (!games.some(g => g.id === meta.game)) {
                 failureReason = `Mod targets unknown game: ${meta.game}`;
                 throw new Error(`Mod targets unknown game: ${meta.game}`);
             }
+
+            try {
+                var variant = fs.readFileSync(path.join(modPath, '__variant'), 'utf8').trim();
+            }
+            catch {
+                variant = null;
+            }
             // keep your return shape; just add ids (non-breaking)
             modList.push({
-                name:        meta.name || mod,
-                version:     require('./Utils').validateVersioning(meta.version) || "Unknown",
-                author:      meta.author || computerName,
-                description: meta.description || '',
-                folder:      mod,
-                size:        modSize, // New in 1.1.2
+                name:         meta.name || mod,
+                version:      require('./Utils').validateVersioning(meta.version) || "Unknown",
+                author:       meta.author || computerName,
+                description:  meta.description || '',
+                folder:       mod,
+                size:         modSize, // New in 1.1.2
                 mergeSupport: (meta.mergeSupport == undefined ? true : meta.mergeSupport), // default true
-                url:         meta.url || null,
-                customRGB:   meta.color || null,
-                game:        meta.game || "toby.deltarune",
+                url:          meta.url || null,
+                customRGB:    meta.color || null,
+                variants:     modInfo.variants || null,
+                game:         meta.game || "toby.deltarune",
                 dependencies: modInfo.dependencies || [],
                 packageID: pid,
                 gamebanana: {
@@ -370,6 +377,7 @@ const Downloader = require('nodejs-file-downloader');
                     model:    meta.gamebanana_model || null,
                 },
                 _incompatibleHASH: meta._incompatibleHASH || false,
+                _selectedVariant: variant || null,
                 // NEW: give the renderer stable identifiers
                 new: deltamodExclusive.new || false, // Used in UI
 
@@ -379,6 +387,10 @@ const Downloader = require('nodejs-file-downloader');
 
                 // TODO I don't know what the default values for these fields should be.
                 // I'm just adding them to satisfy the typechecker.
+                // 
+                // GHINORHINO NOTE:
+                // These are dynamically set one level above this function, before sending them off to the renderer,
+                // compatibility checks are performed in Runner.js
                 isIncompatible: false,
                 incompatibilityReason: "",
             });
