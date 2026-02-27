@@ -527,6 +527,11 @@ function createWindow() {
         }
         return { action: 'allow' };
     });
+    ipcMain.handle('obtainLangKey', (event, args) => {
+        var key = args[0];
+        var langdb = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'langdb.json'), 'utf8'));
+        return langdb[key];
+    });
     ipcMain.handle('loginGamebanana', async () => {
         if (!safeStorage.isEncryptionAvailable()) {
             dialog.showMessageBoxSync({

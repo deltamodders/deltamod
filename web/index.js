@@ -20,6 +20,21 @@ function brightenColor(r,g,b, amount) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
+async function replaceLangKeys(html) {
+    const regex = /\$\$(.*?)\$\$/g;
+    const matches = [...html.matchAll(regex)];
+
+    const values = await Promise.all(
+        matches.map(m =>
+            window.electronAPI.invoke('obtainLangKey', [m[1]])
+                .catch(() => m[0])
+        )
+    );
+
+    let i = 0;
+    return html.replace(regex, () => values[i++]);
+}
+
 function toggleFullscreen() {
     window.electronAPI.invoke('toggleFullscreen', []);
 }
@@ -318,6 +333,8 @@ async function page(name) {
 
     window.currentPageStack = {};
     var purifiedHTML =  await fetch('./views/' + name + '/index.html').then(response => response.text());
+    // match all the html with $$...$$ and replace the contents with the getLangKey invocation
+    purifiedHTML = await replaceLangKeys(purifiedHTML);
     var runScripts = false;
     var changeAudio = false;
     if (purifiedHTML.includes('JSL')) {

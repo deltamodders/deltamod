@@ -1,12 +1,18 @@
-<div>
-    <h1>Program information</h1>
-    <p class="calibri" id="version">Loading information...</p>
-    <h1>Credits</h1>
-    <div class="gbcredits">
-        <i>Loading...</i>
+<div style="display: flex; justify-content: left; align-items: baseline; gap: 30px;">
+    <div>
+        <h1>$$credits_proginfo$$</h1>
+        <p class="calibri" id="version">Loading information...</p>
+        <br>
+        <div class="calibri">
+            $$credits_licenseinfo$$
+        </div>
     </div>
-    <br>
-    <button onclick="window.electronAPI.invoke('deltamoddersDiscord',[])" id="discordBtn"><brand-icon>D</brand-icon> Join our Discord!</button>
+    <div>
+        <h1>$$credits_credits$$</h1>
+        <div class="gbcredits">
+            <i>$$loading$$</i>
+        </div>
+    </div>
 </div>
 JSL
 AUDIO[mainTheme.mp3]
