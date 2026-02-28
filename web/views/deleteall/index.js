@@ -1,6 +1,6 @@
-window.currentPageStack.unlockBtn = function(id,me) {
+window.currentPageStack.unlockBtn = async function(id,me) {
     me.disabled = true;
-    me.innerText = 'Done!';
+    me.innerText = await k('done');
 
     document.getElementById('btn'+id).disabled = false;
 }
