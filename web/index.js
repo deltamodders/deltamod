@@ -292,8 +292,13 @@ let lockRandoms = false;
 async function page(name) {
     rew();
 
+    try {
+        window._intervals.forEach(clearInterval);
+    }
+    catch(e) {
+        console.log('No intervals to clear');
+    }
     window._intervals = window._intervals || [];
-    window._intervals.forEach(clearInterval);
     window._intervals = [];
     
     if (name == "") {
@@ -447,6 +452,7 @@ async function page(name) {
     styleTag.innerHTML = generatedCSS;
     if (runScripts)
         eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
+
 }
 
 window.addEventListener('blur', () => {
