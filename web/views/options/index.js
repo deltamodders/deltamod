@@ -21,7 +21,7 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
         restartNote.style.display = 'block';
         restartNote.style.color = '#888';
         restartNote.style.fontSize = 'x-small';
-        restartNote.innerText = 'Requires a Deltamod restart to take effect.';
+        restartNote.innerText = await k('options_requiresrestart');
         tdLabel.appendChild(restartNote);
     }
 
@@ -137,69 +137,70 @@ window.currentPageStack.cat = async function(cat) {
     });
     switch (cat) {
         case 'gen':            
-            await addButton('Open mod folder', 'Open the folder where mods are stored. You can drag mod folders in Deltamod format there.', async () => {
+            await addButton(await k('options_gen0_title'), await k('options_gen0_desc'), async () => {
                 await window.electronAPI.invoke('openSysFolder', ['mods']);
-            }, 'Open');
-            await addButton('Delete all user data', 'Deletes all Deltamod data. Irreeversible!', async () => {
+            }, await k('open'));
+            await addButton(await k('options_gen1_title'), await k('options_gen1_desc'), async () => {
                 page('deleteall');
-            }, 'Delete', true, '', 'red');
-            await addCheckboxOption('Enable advanced mod checks', 'Enables advanced compatibility checks for mods that support it. Currently beta!', 'HASHCHECKS');
+            }, await k('delete'), true, '', 'red');
+            await addCheckboxOption(await k('options_gen2_title'), await k('options_gen2_desc'), 'HASHCHECKS');
             break;
         case 'ui':
-            await addCheckboxOption('Enable Mod Shop', 'Enables the Mod Shop. This service uses GameBanana to run. ' + (navigator.onLine ? '' : '<br><br><i style="color: gold;">This option is currently disregarded because there is no Internet.</i>'), 'SHOP', true);
-            await addCheckboxOption('Enable music in menus', 'Choose if you want music to play in the background.', 'audio');
-            await addCheckboxOption('Enable SFX in menus', 'Choose if you want SFX to play when you do some things. Some actions might still trigger SFX even with this off.', 'sfx');
-            await addCheckboxOption('Enable enhanced UI effects', 'Enables enhanced UI effects. May take a toll on performance.', 'PARALLAX', true);
+            await addCheckboxOption(await k('options_ui0_title'), await k('options_ui0_desc'), 'SHOP', true);
+            await addCheckboxOption(await k('options_ui1_title'), await k('options_ui1_desc'), 'audio');
+            await addCheckboxOption(await k('options_ui2_title'), await k('options_ui2_desc'), 'sfx');
+            await addCheckboxOption(await k('options_ui3_title'), await k('options_ui3_desc'), 'PARALLAX', true);
 
-            await addButton('Select a theme', 'Opens the theme selection menu.', async () => {
+            await addButton(await k('options_ui_theme_title'), await k('options_ui_theme_desc'), async () => {
                 page('themesel');
-            }, 'Open');
+            }, await k('open'));
 
             break;
         case 'inst':
             var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
 
-            await addButton('Disconnect Steam from Deltamod', 'Disconnects Steam from the current install and will delete the files for Steam. You\'ll have to redownload the game from Steam, but the current install will remain on Deltamod.', async () => {
+            await addButton(await k('options_inst0_title'), await k('options_inst0_desc'), async () => {
                 await window.electronAPI.invoke('removeSteamIntegration', []);
-            }, 'Disconnect', isSteam, 'Only available on Steam based installs.');
+            }, await k('disconnect'), isSteam, 'Only available on Steam based installs.');
 
-            await addButton('Open the Install Manager', 'Opens the install manager menu, which allows you to delete/create installations and create shortcuts for them.', async () => {
+            await addButton(await k('options_inst1_title'), await k('options_inst1_desc'), async () => {
                 page('installmanager');
-            }, 'Open');
+            }, await k('open'));
 
             break;
         case 'adv':
-            await addButton('Change patcher', 'Allows you to change your patching system. Only for advanced users!', async () => {
+            await addButton(await k('options_adv0_title'), await k('options_adv0_desc'), async () => {
                 page('gm3p-selector');
-            }, 'Open');
+            }, await k('open'));
 
-            await addButton('Reboot in Developer Mode', 'Reboots in developer mode, a mode which allows you to use the DevTools.', async () => {
+            await addButton(await k('options_adv1_title'), await k('options_adv1_desc'), async () => {
                 var goOn = await htmlAlert(
                         'Warning', 
                         'Are you sure you want to reboot in developer mode? This is only for people who know their shit!', 
                         [{text:'Yes',resolveWith:'ok'}, {text:'No',rejectWith:'cancel'}]
                     );
                 await window.electronAPI.invoke('rebootDev', [])
-            }, 'Open', !await window.electronAPI.invoke('isDevMode', []), 'You are already in dev mode.');
+            }, await k('open'), !await window.electronAPI.invoke('isDevMode', []), 'You are already in dev mode.');
 
-            await addButton('Precalculate game hashes', 'If you are using advanced mod checks, doing this operation may save you time when opening Deltamod, but it can be pretty lengthy.', async () => {
+            await addButton(await k('options_adv2_title'), await k('options_adv2_desc'), async () => {
                 await window.electronAPI.invoke('precalcGameHashes', []);
-                await htmlAlert('Done','The operation was successful.',[{text: 'OK', resolveWith:''}]);
-            }, 'Open');
+                await htmlAlert(await k('done'),await k('operation_successful'),[{text: await k('ok'), resolveWith:''}]);
+            }, await k('open'));
 
             break;
+        // dev isnt keyed and is always in english
         case "dev":
             await addButton('Open flag database (DEV-ONLY)', 'Opens the database holding flags.', async () => {
                 await window.electronAPI.invoke('openFlagDatabase', []);
-            }, 'Open');
+            }, await k('open'));
             await addButton('Decrypt GameBanana account token (DEV-ONLY)', 'Decrypts your GameBanana account token from the default encryption and saves it to your desktop.', async () => {
                 await window.electronAPI.invoke('dev_getGBToken', []);
-                await htmlAlert('Done','The operation was successful.',[{text: 'OK', resolveWith:''}]);
-            }, 'Open');
+                await htmlAlert(await k('done'),await k('operation_successful'),[{text: await k('ok'), resolveWith:''}]);
+            }, await k('open'));
             break;
         case 'gb':
             var loadtr = document.createElement('tr');
-            loadtr.innerHTML = '<td colspan="2" style="text-align:center;">Loading GameBanana user info...</td>';
+            loadtr.innerHTML = '<td colspan="2" style="text-align:center;">' + await k('loading') + '</td>';
             tbody.appendChild(loadtr);
 
             var tr = document.createElement('tr');
@@ -207,7 +208,7 @@ window.currentPageStack.cat = async function(cat) {
 
             var td = document.createElement('td');
             td.colSpan = 2;
-            td.innerHTML = 'Please wait...';
+            td.innerHTML = await k('loading');
 
             var gamebananaUserinfo = await window.electronAPI.invoke('getGamebananaUserinfo', []);
             tbody.removeChild(loadtr);
@@ -228,10 +229,10 @@ window.currentPageStack.cat = async function(cat) {
             img.style.borderRadius = '8px';
             var span = document.createElement('span');
             flexdiv.appendChild(span);
-            span.innerText = 'Currently logged in as ' + gamebananaUserinfo._sName;
+            span.innerText = await k('options_gb_loggedas', gamebananaUserinfo._sName);
 
             if (gamebananaUserinfo._sName == undefined) {
-                span.innerText = 'You aren\'t logged in to GameBanana.';
+                span.innerText = await k('options_gb_notlogged');
                 gamebananaUserinfo = { loggedIn: false };
             }
             else {
@@ -241,18 +242,18 @@ window.currentPageStack.cat = async function(cat) {
             tr.appendChild(td);
 
             if (gamebananaUserinfo.loggedIn && gamebananaUserinfo._sName != undefined) {
-                await addButton('Logout', 'Removes your GameBanana account from Deltamod.', async () => {
+                await addButton(await k('logout'), await k('options_gb_logout_desc'), async () => {
                     await window.electronAPI.invoke('logoutGamebanana', []);
                     window._pageArguments = {cat: 'gb'};
                     page('options');
-                }, 'Logout', gamebananaUserinfo.loggedIn, 'You are not logged in.', '');
+                }, await k('logout'), gamebananaUserinfo.loggedIn, await k('options_gb_notlogged'), '');
             }
             else {
-                await addButton('Login', 'Adds a GameBanana account to Deltamod.', async () => {
+                await addButton(await k('login'), await k('options_gb_login_desc'), async () => {
                     await window.electronAPI.invoke('loginGamebanana', []);
                     window._pageArguments = {cat: 'gb'};
                     page('options');
-                }, 'Login', !gamebananaUserinfo.loggedIn, 'You are already logged in.', '');
+                }, await k('login'), !gamebananaUserinfo.loggedIn, await k('options_gb_alreadylogged'), '');
             }
             break;
     }
