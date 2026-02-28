@@ -369,7 +369,7 @@ function loadInst(index) {
             td.style.fontWeight = 'bold';
             td.style.backgroundColor = '#222';
             td.style.color = '#fff';
-            td.innerText = 'Mods by ' + (x.author[0] || await k('unknown'));
+            td.innerText = await k('main_authorsortsub', ((x.author[0] || await k('unknown'))));
             tr.appendChild(td);
             addedAuthors.push(x.author[0] || await k('unknown'));
             document.getElementById('modlist').appendChild(tr);
@@ -452,9 +452,9 @@ async function patchAndRun() {
         if (!goOn) break;
         if (noMergeMods.map(x => x.uid).includes(modId) && selectedMods.length > 1) {
             await htmlAlert(
-                'Incompatible setting detected',
-                `${noMergeMods.find(x => x.uid === modId).name} is not compatible with multiple mod support, but you have multiple mods selected. Please deselect other mods or this mod to continue.`,
-                [{ text: 'OK', resolveWith: 'ok' }],
+                await k('main_incompatiblesetting'),
+                await k('main_incompatiblemodTxt', noMergeMods.find(x => x.uid === modId).name),
+                [{ text: await k('ok'), resolveWith: 'ok' }],
                 'join'
             );
             goOn = false;

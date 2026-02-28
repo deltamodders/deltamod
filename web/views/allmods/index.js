@@ -47,10 +47,10 @@ async function createMod(mod, compatible) {
     descSpan.style = 'font-size: 10px; color: #ffffffdd;';
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.style.cursor = 'pointer';
-    descSpan.onclick = () => {
+    descSpan.onclick = async () => {
         const fullDesc = purify(mod.description);
         if (fullDesc.length === 0) return;
-        htmlAlert(mod.name, fullDesc, [{ text: 'Close', resolveWith: 'Ok' }]);
+        htmlAlert(mod.name, fullDesc, [{ text: await k('close'), resolveWith: 'Ok' }]);
     }
     descSpan.id = `moddesc-${mod.uid}`;
     modNameContainer.appendChild(descSpan);
@@ -85,7 +85,7 @@ async function createMod(mod, compatible) {
     idSpan.className = 'calibri';
     idSpan.style.fontSize = 'smaller';
     idSpan.style.color = '#888';
-    idSpan.innerHTML = `${icon('sell', 'small')} ${mod.packageID == 'und.und.und' ? '<i>No ID was specified.</i>' : mod.packageID}`;
+    idSpan.innerHTML = `${icon('sell', 'small')} ${mod.packageID == 'und.und.und' ? '<i>' + await k('allmods_noID') + '</i>' : mod.packageID}`;
     idSpan.id = `modid-${mod.uid}`;
     modNameContainer.appendChild(idSpan);
 
@@ -108,7 +108,7 @@ async function createMod(mod, compatible) {
     compatSpan.className = 'calibri';
     compatSpan.style.fontSize = 'smaller';
     compatSpan.style.color = comp ? '#4caf50' : '#f44336';
-    compatSpan.innerHTML = comp ? `${icon('check', 'small')} Compatible with current version` : `${icon('error', 'small')} Incompatible: ${mod.incompatibilityReason}`;
+    compatSpan.innerHTML = comp ? `${icon('check', 'small')} ${await k('allmods_compatible')}` : `${icon('error', 'small')} ${await k('allmods_incompatible', mod.incompatibilityReason)}`;
     compatSpan.id = `modcompat-${mod.uid}`;
     modNameContainer.appendChild(compatSpan);
     
@@ -120,7 +120,7 @@ async function createMod(mod, compatible) {
         gbSpan.className = 'calibri';
         gbSpan.style.fontSize = 'smaller';
         gbSpan.style.color = '#888';
-        gbSpan.innerHTML = `${icon('shop', 'small')} Installed through the Mod Shop`;
+        gbSpan.innerHTML = `${icon('shop', 'small')} ${await k('allmods_throughShop')}`;
         gbSpan.id = `modgb-${mod.uid}`;
         modNameContainer.appendChild(gbSpan);
     }
@@ -163,21 +163,21 @@ async function createMod(mod, compatible) {
                         likeBtn.disabled = true;
                     }
                     else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
-                        await htmlAlert('Couldn\'t like the mod','You\'ve already liked this mod. Can\'t get any more likes than that!',[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
+                        await htmlAlert(await k('cant_like_mod'),await k('already_liked'),[{text:await k('ok'),resolveWith:'ok'}], 'sentiment_very_satisfied');
                         likeBtn.innerHTML = icon('sentiment_very_satisfied', '20px') + '';
                         likeBtn.disabled = true;
                     } else {
-                        await htmlAlert('Couldn\'t like the mod',res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
+                        await htmlAlert(await k('cant_like_mod'),res.data._sErrorCode,[{text:await k('ok'),resolveWith:'ok'}], 'error');
                     }
             };
             likeBtn.innerHTML = icon('mood_heart', '20px');
             bdiv.appendChild(likeBtn);
 
             tippy(likeBtn, {
-                content: 'Like this mod on GameBanana',
+                content: await k('like_mod_tooltip'),
             });
             tippy(gbModButton, {
-                content: 'Leave a comment on GameBanana',
+                content: await k('leave_comment_tooltip'),
             });
         }
     }
@@ -189,7 +189,7 @@ async function createMod(mod, compatible) {
     return modRow;
 }
 
-function createErroringMods(errors) {
+async function createErroringMods(errors) {
     const dialogElement = document.getElementById("error-list-dialog");
     const errorList = document.getElementById("error-list-div");
 
@@ -217,7 +217,7 @@ function createErroringMods(errors) {
         selectSpan.className = 'calibri';
         selectSpan.style.marginTop = '18px';
         selectSpan.style.display = 'block';
-        selectSpan.innerText = 'How would you like to proceed?';
+        selectSpan.innerText = await k('modFail_howtoproceed');
         
 
         const actionRow = document.createElement("div");
@@ -225,12 +225,12 @@ function createErroringMods(errors) {
         {
             // Action Row
             const exploreBtn = document.createElement("button");
-            exploreBtn.innerText = "Open the mod's folder";
+            exploreBtn.innerText = await k('open_mod_folder');
             exploreBtn.onclick = () => window.electronAPI.invoke("openModFolder", [err.mod]);
             actionRow.appendChild(exploreBtn);
 
             const deleteBtn = document.createElement("button");
-            deleteBtn.innerText = "Delete the mod";
+            deleteBtn.innerText = await k('delete_mod');
             deleteBtn.onclick = () => window.electronAPI.invoke("removeMod", [err.mod]);
             actionRow.appendChild(deleteBtn);
         }
@@ -294,7 +294,7 @@ function createErroringMods(errors) {
             rew();
             createErroringMods(errors);
         };
-        errorBanner.children[0].innerText = `${errors.length} mod${errors.length === 1 ? "" : "s"} failed to load`;
+        errorBanner.children[0].innerText = await k('modFail_bannerTitle', errors.length);
         errorBanner.style.display = "inherit";
     } else errorBanner.style.display = "none";
 
@@ -302,7 +302,7 @@ function createErroringMods(errors) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 2;
-        td.innerText = (modList.length === 0) ? 'No mods are installed.' : 'No mods match the selected filter.';
+        td.innerText = (modList.length === 0) ? await k('allmods_nomods') : await k('allmods_nomodsforfilter');
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
     }
