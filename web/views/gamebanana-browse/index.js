@@ -192,7 +192,7 @@ window.currentPageStack.plusPage = plusPage;
 
             var td0 = document.createElement('td');
             td0.style.display = 'flex';
-            td0.style.alignItems = 'center';
+            td0.style.alignItems = 'top';
             td0.style.gap = '8px';
             td0.style.justifyContent = 'left';
             // Rendering of td0
@@ -226,7 +226,7 @@ window.currentPageStack.plusPage = plusPage;
                         };
                     }, 5000));
                 }
-                img.style.width = '120px';
+                img.style.width = '115px';
                 img.style.margin = '4px';
                 img.style.aspectRatio = '16 / 9';
                 img.style.borderRadius = '4px';
@@ -237,23 +237,24 @@ window.currentPageStack.plusPage = plusPage;
                 div0.appendChild(img);
 
                 var div1 = document.createElement('div');
-                div1.style.display = 'inline-block';
-                div1.style.verticalAlign = 'top';
                 div1.style.marginLeft = '8px';
                 td0.appendChild(div0);
                 td0.appendChild(div1);
 
                 var biggerSpan = document.createElement('span');
                 biggerSpan.className = 'modTitleSpan';
-                biggerSpan.style.fontSize = '1.4em';
+                biggerSpan.style.fontSize = '1.2em';
+                biggerSpan.style.marginBottom = '0px';
                 biggerSpan.innerText = mod._sName;
                 div1.appendChild(biggerSpan);
 
                 var otherInfoSpan = document.createElement('div');
                 otherInfoSpan.className = 'modOtherInfoSpan';
-                otherInfoSpan.style.fontSize = '0.8em';
-                otherInfoSpan.style.color = '#aaaaaa';
-                otherInfoSpan.style.marginTop = '8px';
+                otherInfoSpan.style.fontSize = '0.9em';
+                otherInfoSpan.style.display = 'flex';
+                otherInfoSpan.style.flexDirection = 'column';
+                otherInfoSpan.style.color = '#cccccc';
+                otherInfoSpan.style.marginTop = '2px';
                 otherInfoSpan.style.width = '100%';
 
                 var nameauthor = mod._aSubmitter._sName;
@@ -263,7 +264,6 @@ window.currentPageStack.plusPage = plusPage;
                 }
                 var authorSpan = document.createElement('span');
                 authorSpan.className = 'modAuthorSpan iptspan';
-                authorSpan.style.display = 'block';
                 authorSpan.style.marginRight = '12px';
                 authorSpan.innerHTML = `${icon('attribution','0.9em')} ${nameauthor}`;
                 authorSpan.onclick = () => {
@@ -271,28 +271,9 @@ window.currentPageStack.plusPage = plusPage;
                 };
                 authorSpan.style.cursor = 'pointer';
 
-                var categorySpan = document.createElement('span');
-                categorySpan.className = 'modCategorySpan iptspan';
-                categorySpan.style.display = 'block';
-                categorySpan.style.marginRight = '12px';
-                categorySpan.innerHTML = `${icon('folder','0.9em')} ${mod._aRootCategory._sName}`;
-
-                if (!mod.featuredDataset) {
-                    var dateSpan = document.createElement('span');
-                    dateSpan.className = 'modDateSpan iptspan';
-                    dateSpan.style.display = 'block';
-                    dateSpan.innerHTML = `${icon('calendar_clock','0.9em')} ${new Date(mod._tsDateAdded*1000).toLocaleDateString()}`;
-
-                    var viewsSpan = document.createElement('span');
-                    viewsSpan.className = 'modViewsSpan iptspan';
-                    viewsSpan.style.display = 'block';
-                    viewsSpan.innerHTML = `${icon('visibility','0.9em')} ${roundViews(mod._nViewCount)}`;
-                }
-
                 var e = null;
                 if (featuredIDs.find(x => x.id === mod._idRow)) {
                     biggerSpan.style.color = 'gold';
-                    img.style.border = '1px solid gold';
                     var periodsDesc = [
                         ["today","Best of today"],
                         ["week","Best of this week"],
@@ -315,14 +296,7 @@ window.currentPageStack.plusPage = plusPage;
                     featSpan.style.marginRight = '12px';
                     e = featSpan;
                 }
-
                 otherInfoSpan.appendChild(authorSpan);
-                otherInfoSpan.appendChild(categorySpan);
-                try {
-                    otherInfoSpan.appendChild(dateSpan);
-                    otherInfoSpan.appendChild(viewsSpan);
-                }
-                catch {}
                 if (e) otherInfoSpan.appendChild(e);
                 div1.appendChild(otherInfoSpan);
             }

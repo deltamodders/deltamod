@@ -1,0 +1,9 @@
+{
+    "name": "Church (Chapter 4) Theme",
+    "background": "ch4.png",
+    "mainSong": "ch4.mp3",
+    "description": "A theme inspired by the Dark World Church in Chapter 4.",
+    "musicTrack": "Dark Sanctuary - Toby Fox",
+    "id": "church",
+    "color": "rgb(20, 62, 128)"
+}
