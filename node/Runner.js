@@ -3,6 +3,7 @@ const Paths = require('./Paths');
 const KeyValue = require('./KeyValue');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const Language = require('./Language');
 const mime = require('mime-types');
 const createDesktopShortcut = require('create-desktop-shortcuts');
 const _7z = require("7zip-min");
@@ -29,6 +30,16 @@ const { valid } = require('node-html-parser');
 const os = require('os');
 const { PARTITION } = require('./Config');
 const { errorWin } = require("./ErrorWin");
+
+var langFile = System.getSystemFile('language', true);
+if (fs.existsSync(langFile)) {
+    var lang = fs.readFileSync(langFile, 'utf8');
+    Language.loadLanguage(lang);
+}
+else {
+    Language.loadLanguage('en');
+    fs.writeFileSync(langFile, 'en', 'utf8');
+}
 
 let abortController;
 let updateAvailable = false;
@@ -521,21 +532,29 @@ function createWindow() {
         }
         return { action: 'allow' };
     });
+    ipcMain.handle('obtainLangs', () => {
+        return Language.getAvailableLanguages();
+    });
+    ipcMain.handle('setLang', (event, args) => {
+        var langFile = System.getSystemFile('language', true);
+        fs.writeFileSync(langFile, args[0], 'utf8');
+        Language.loadLanguage(args[0]);
+
+        return true;
+    });
+    ipcMain.handle('getLang', () => {
+        var langFile = System.getSystemFile('language', true);
+        if (fs.existsSync(langFile)) {
+            var lang = fs.readFileSync(langFile, 'utf8');
+            return lang;
+        }
+        return 'en';
+    });
     ipcMain.handle('obtainLangKey', (event, args) => {
-        var key = args[0];
-        var langdb = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'langdb.json'), 'utf8'));
-        return langdb[key];
+        return Language.loadString(args[0]) || `$${args[0]}`; // doesnt allow for arguments, use obtainLangKeyAdv for that
     });
     ipcMain.handle('obtainLangKeyAdv', (event, args) => {
-        var key = args[0];
-        var langdb = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'langdb.json'), 'utf8'));
-        var result = langdb[key];
-        if (args.length > 1 && result) {
-            for (var i = 1; i < args.length; i++) {
-                result = result.replace(new RegExp('\\{' + (i - 1) + '\\}', 'g'), args[i]);
-            }
-        }
-        return result;
+        return Language.loadString(args[0], ...(args.slice(1))) || `$${args[0]} ${args.slice(1).join(' + ')}`; // allows for arguments, but if the key is missing it will just return the key and arguments joined
     });
     ipcMain.handle('loginGamebanana', async () => {
         if (!safeStorage.isEncryptionAvailable()) {

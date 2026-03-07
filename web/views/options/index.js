@@ -119,6 +119,7 @@ window.currentPageStack.cat = async function(cat) {
     document.getElementById('b_inst').classList.remove('selected');
     document.getElementById('b_adv').classList.remove('selected');
     document.getElementById('b_gb').classList.remove('selected');
+    document.getElementById('b_lang').classList.remove('selected');
     try {
         document.getElementById('b_dev').classList.remove('selected');
     }
@@ -256,6 +257,50 @@ window.currentPageStack.cat = async function(cat) {
                 }, await k('login'), !gamebananaUserinfo.loggedIn, await k('options_gb_alreadylogged'), '');
             }
             break;
+        case 'lang':
+            var langs = await window.electronAPI.invoke('obtainLangs', []);
+            var currentLang = await window.electronAPI.invoke('getLang', []);
+
+            for (let i = 0; i < langs.length; i++) {
+                const lang = langs[i];
+                const tr = document.createElement('tr');
+                
+                const tdContent = document.createElement('td');
+                const img = document.createElement('img');
+                img.src = 'deltapack://langs/' + lang.code + '/flag.png';
+                img.style.width = '30px';
+                img.style.height = '30px';
+                img.style.marginRight = '10px';
+                img.style.verticalAlign = 'middle';
+                tdContent.appendChild(img);
+                
+                const span = document.createElement('span');
+                span.innerText = lang.name;
+                tdContent.appendChild(span);
+                tdContent.appendChild(document.createElement('br'));
+
+                const small = document.createElement('small');
+                small.className = 'calibri';
+                small.style.marginTop = '10px';
+                small.innerHTML = `${icon('attribution', '15px')} ${lang.author}`;
+                tdContent.appendChild(small);
+                tr.appendChild(tdContent);
+                
+                const tdButton = document.createElement('td');
+                tdButton.className = 'center';
+                const button = document.createElement('button');
+                button.innerText = await k('select');
+                button.disabled = lang.code == currentLang;
+                button.addEventListener('click', async () => {
+                    await window.electronAPI.invoke('setLang', [lang.code]);
+                    window._pageArguments = {cat: 'lang'};
+                    page('options');
+                });
+                tdButton.appendChild(button);
+                tr.appendChild(tdButton);
+                
+                tbody.appendChild(tr);
+            }
     }
     // theme adjustments
     // as far as i know this page is the only page that needs ts
