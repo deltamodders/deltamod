@@ -403,7 +403,7 @@ window.currentPageStack.plusPage = plusPage;
             tr.appendChild(td1);
 
             table.appendChild(tr);
-        });
+        };
     }
     catch (e) {
         console.error(e);
