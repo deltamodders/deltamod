@@ -1,0 +1,3 @@
+Portughese
+Crowdin Community
+0.1
