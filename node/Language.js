@@ -6,13 +6,23 @@ const { version } = require('os');
 var language = {};
 
 function loadLanguage(lang) {
-    let langpath = path.join(__dirname, "../", "langs", lang, "language.json");
-    if (!fs.existsSync(langpath)) {
-        console.error(`Language file not found: ${langpath}`);
-        return;
+    try {
+        let langpath = path.join(__dirname, "../", "langs", lang, "language.json");
+        if (!fs.existsSync(langpath)) {
+            console.error(`Language file not found: ${langpath}`);
+            return false;
+        }
+        let langData = fs.readFileSync(langpath, 'utf8');
+        // remove text between /* and */ (comments)
+        langData = langData.replace(/\/\*[\s\S]*?\*\//g, '');
+        language = JSON.parse(langData);
+
+        return true;
     }
-    const langData = fs.readFileSync(langpath, 'utf8');
-    language = JSON.parse(langData);
+    catch (e) {
+        console.error(`Failed to load language: ${e}`);
+        return false;
+    }
 }
 
 function getAvailableLanguages() {

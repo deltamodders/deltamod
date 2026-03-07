@@ -1,4 +1,6 @@
+
 {
+    /* first batch */
     "mod": "Mod",
     "download": "Download",
     "enabled": "Enabled",
@@ -8,6 +10,7 @@
     "warning": "Warning",
     "steam": "Steam",
     "manual": "Manual",
+    "save_and_close": "Save and close",
     "no": "No",
     "delete": "Delete",
     "disconnect": "Disconnect",
@@ -166,5 +169,10 @@
     "locate_other_methods": "These other methods are also available for importing the game:",
     "locate_steam_import": "Import from Steam",
     "locate_autodownload": "Automatic download",
-    "locate_pls_selectgame": "Please select a game."
+    "locate_pls_selectgame": "Please select a game.",
+    "gm3psel_title": "Select a patcher",
+    "gm3psel_desc1": "This page allows you to select a new patching tool for Deltamod. You can use this to troubleshoot issues with your current patcher.",
+    "gm3psel_desc2": "Warning: this is only for advanced users. Make sure you know what you're doing before changing your patcher, as it may cause issues with your installation.",
+    "gm3psel_availablereleases": "Available releases"
+    /* end of first batch */
 }

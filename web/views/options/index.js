@@ -292,9 +292,13 @@ window.currentPageStack.cat = async function(cat) {
                 button.innerText = await k('select');
                 button.disabled = lang.code == currentLang;
                 button.addEventListener('click', async () => {
-                    await window.electronAPI.invoke('setLang', [lang.code]);
-                    window._pageArguments = {cat: 'lang'};
-                    page('options');
+                    var res = await window.electronAPI.invoke('setLang', [lang.code]);
+                    if (!res) {
+                        // hardcode ts since we can't fetch language strings without a language
+                        await htmlAlert("Error", "This language could not be loaded correctly.", [{text: await k('ok'), resolveWith:''}]);
+                        return;
+                    }
+                    window.location.reload();
                 });
                 tdButton.appendChild(button);
                 tr.appendChild(tdButton);

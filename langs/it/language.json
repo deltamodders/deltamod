@@ -1,4 +1,6 @@
+
 {
+    /* primo gruppo */
     "mod": "Mod",
     "download": "Scarica",
     "enabled": "Attivo",
@@ -8,6 +10,7 @@
     "warning": "Avviso",
     "steam": "Steam",
     "manual": "Manuale",
+    "save_and_close": "Salva e chiudi",
     "no": "No",
     "delete": "Elimina",
     "disconnect": "Disconnetti",
@@ -166,5 +169,10 @@
     "locate_other_methods": "Puoi anche importare il gioco con questi metodi:",
     "locate_steam_import": "Importa da Steam",
     "locate_autodownload": "Download automatico",
-    "locate_pls_selectgame": "Seleziona un gioco."
+    "locate_pls_selectgame": "Seleziona un gioco.",
+    "gm3psel_title": "Seleziona un patcher",
+    "gm3psel_desc1": "Tramite questa pagina puoi selezionare un nuovo strumento di modifica (patcher) per Deltamod. Puoi usarlo per risolvere problemi con il tuo patcher attuale.",
+    "gm3psel_desc2": "Attenzione: questa opzione è solo per utenti avanzati. Assicurati di sapere cosa stai facendo prima di cambiare il tuo patcher, poiché potrebbe causare problemi con la tua installazione. Inoltre nota che le descrizioni degli aggiornamenti sono in lingua inglese.",
+    "gm3psel_availablereleases": "Versioni disponibili"
+    /* fine del primo gruppo */
 }
