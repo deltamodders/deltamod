@@ -161,7 +161,7 @@ window.currentPageStack.cat = async function(cat) {
 
             await addButton(await k('options_inst0_title'), await k('options_inst0_desc'), async () => {
                 await window.electronAPI.invoke('removeSteamIntegration', []);
-            }, await k('disconnect'), isSteam, 'Only available on Steam based installs.');
+            }, await k('disconnect'), isSteam, await k('options_inst0_onlysteam'));
 
             await addButton(await k('options_inst1_title'), await k('options_inst1_desc'), async () => {
                 page('installmanager');
@@ -176,11 +176,11 @@ window.currentPageStack.cat = async function(cat) {
             await addButton(await k('options_adv1_title'), await k('options_adv1_desc'), async () => {
                 var goOn = await htmlAlert(
                         'Warning', 
-                        'Are you sure you want to reboot in developer mode? This is only for people who know their shit!', 
-                        [{text:'Yes',resolveWith:'ok'}, {text:'No',rejectWith:'cancel'}]
+                        await k('options_adv1_warning'), 
+                        [{text:await k('yes'),resolveWith:'ok'}, {text:await k('no'),rejectWith:'cancel'}]
                     );
                 await window.electronAPI.invoke('rebootDev', [])
-            }, await k('open'), !await window.electronAPI.invoke('isDevMode', []), 'You are already in dev mode.');
+            }, await k('open'), !await window.electronAPI.invoke('isDevMode', []), await k('options_adv1_alreadydev'));
 
             await addButton(await k('options_adv2_title'), await k('options_adv2_desc'), async () => {
                 await window.electronAPI.invoke('precalcGameHashes', []);
