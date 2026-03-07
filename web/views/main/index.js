@@ -312,7 +312,7 @@ async function createErroringMods(errors) {
         selectSpan.className = 'calibri';
         selectSpan.style.marginTop = '18px';
         selectSpan.style.display = 'block';
-        selectSpan.innerText = await k('modFail_howtoprocced');
+        selectSpan.innerText = await k('modFail_howtoproceed');
         
 
         const actionRow = document.createElement("div");
@@ -412,7 +412,7 @@ function loadInst(index) {
             rew();
             createErroringMods(errors);
         };
-        errorBanner.children[0].innerText = `${errors.length} mod${errors.length === 1 ? "" : "s"} failed to load`;
+        errorBanner.children[0].innerText = await k('modFail_bannerTitle', errors.length);
         errorBanner.style.display = "inherit";
     } else errorBanner.style.display = "none";
 

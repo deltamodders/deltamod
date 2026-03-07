@@ -48,7 +48,7 @@
     "modFail_bannerClick": "Click on this banner to view more details.",
     "modFail_bannerTitle": "{0} mod(s) failed to load",
     "modFail_dialogTitle": "Some mods failed to load",
-    "modFail_howtoprocced": "How do you want to proceed?",
+    "modFail_howtoproceed": "How do you want to proceed?",
     "modFail_dialogSubtitle": "Some mods didn't load correctly. Here are the details:",
     "options": "Options",
     "optcat_general": "General",

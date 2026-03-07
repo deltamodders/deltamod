@@ -46,7 +46,7 @@
     "modFail_bannerClick": "Kliknij baner, aby uzyskać więcej informacji",
     "modFail_bannerTitle": "{0} mod(ów) nie zostało wczytanych",
     "modFail_dialogTitle": "Niektóre mody nie zostały wczytane",
-    "modFail_howtoprocced": "Jak chcesz kontynuować",
+    "modFail_howtoproceed": "Jak chcesz kontynuować",
     "modFail_dialogSubtitle": "Niektóre mody nie wczytały się poprawnie. Oto szczegóły:",
     "options": "Ustawienia",
     "optcat_general": "Ogólne",
