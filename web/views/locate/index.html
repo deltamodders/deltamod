@@ -1,47 +1,39 @@
 <div>
-    <h1>Locate your game</h1>
-    <p class="calibri">Welcome, and thanks for downloading Deltamod! <br><br>Please use the picker below to choose your game installation.</p>
+    <h1>$$locate_title$$</h1>
+    <p class="calibri">$$locate_desc$$</p>
     <hr>
     <div>
-        
         <p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
         <span class="material-symbols-outlined">gamepad_up</span>
-        Select the game you are trying to add.
+        $$locate_selectgame$$
         </p>
         <div class="gOptions">
 
         </div>
         <p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
         <span class="material-symbols-outlined">folder</span>
-        Select your game installation folder.
+        $$locate_selectfolder$$
         </p>
         <div class="fileInput" style="display: flex; justify-content: left; align-items: center; gap: 5px;">
-            <input type="text" name="" id="dpath" placeholder="Path to your existing game installation" style="width: 100%;">
+            <input type="text" name="" id="dpath" placeholder="$$locate_path_placeholder$$" style="width: 100%;">
             <button onclick="window.currentPageStack.locateDelta()">
                 <span class="material-symbols-outlined" style="font-size: 17px;">folder_open</span>
             </button>
         </div>
-        <p class="smaller">These other methods are also available for importing the game:</p>
+        <p class="smaller">$$locate_other_methods$$</p>
         <div class="otherImports">
             <button onclick="window.currentPageStack.steam()" id="feat_steam">
-                <brand-icon style="font-size: 14px;">S</brand-icon> Import from Steam
+                <brand-icon style="font-size: 14px;">S</brand-icon> $$locate_steam_import$$
             </button>
             <button onclick="window.currentPageStack.downloadDelta()" id="feat_autodownload">
-                <span class="material-symbols-outlined" style="font-size: 14px;">cloud_download</span> Automatic download
+                <span class="material-symbols-outlined" style="font-size: 14px;">cloud_download</span> $$locate_autodownload$$
             </button>
         </div>
     </div>
     <br>
     <hr>
-    <p class="calibri" style="font-size: 12px;">
-        <span class="material-symbols-outlined" style="font-size: 12px;">info</span> Deltamod will copy your install to a separate folder. If you are using Steam, it will be pointed automatically to the new folder using a junction (folder shortcut).
-    </p>
     <button onclick="window.currentPageStack.id()">Save and close</button>
     <br><br>
-    <small class="calibri">
-        <input type="checkbox" name="audioCHECK" id="audioCHECK" style="cursor: pointer;">
-        Play background music
-    </small>
 </div>
 <style>
     .otherImports {

@@ -181,12 +181,6 @@ process.on('uncaughtException', (err) => {
     }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-    if (win) {
-        errorWin(new Error('Unhandled Rejection at: ' + promise + ' reason: ' + reason));
-    }
-});
-
 function isNaN(value) {
     return typeof value === 'number' && !Number.isNaN(value);
 }

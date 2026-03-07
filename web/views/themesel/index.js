@@ -50,43 +50,20 @@
         var ogTag = document.createElement('span');
         ogTag.style.display = 'block';
         ogTag.style.marginTop = '0.5em';
-        ogTag.innerHTML = icon('where_to_vote', '0.8em') + ` ${theme.builtIn ? 'Built-In Theme' : 'Custom Theme'}`;
+        ogTag.innerHTML = icon('where_to_vote', '0.8em') + ` ${theme.builtIn ? await k('themesel_builtin') : await k('themesel_custom')}`;
         ogTag.classList.add('calibri');
         ogTag.style.fontSize = '0.8em';
         td1.appendChild(ogTag);
-
-        if (theme.timed) {
-            var tdTimed = document.createElement('span');
-            tdTimed.style.display = 'block';
-            tdTimed.style.marginTop = '0.5em';
-            if (Date.now() > theme.timedExpire) {
-                tdTimed.style.color = '#ff4c4cff';
-                tdTimed.innerHTML = icon('event_busy', '0.8em') + ` This theme has expired. It was available until: ${new Date(theme.timedExpire).toLocaleString()}`;
-            }
-            else {
-                tdTimed.style.color = '#cbd94fff';
-                tdTimed.innerHTML = icon('schedule', '0.8em') + ` This theme expires: ${new Date(theme.timedExpire).toLocaleString()}`;
-            }
-            tdTimed.classList.add('calibri');
-            tdTimed.style.fontSize = '0.8em';
-            td1.appendChild(tdTimed);
-        }
 
         var td2 = document.createElement('td');
         td2.classList.add('theme-entry');
 
         var selectbtn = document.createElement('button');
-        selectbtn.innerText = 'Select';
+        selectbtn.innerText = await k('select');
         if (theme.id == currentTheme) {
             selectbtn.disabled = true;
             selectbtn.style.opacity = 0.5;
-            selectbtn.innerText = 'Select';
-            selectbtn.style.cursor = 'not-allowed';
-        }
-        if (theme.timed && Date.now() > theme.timedExpire) {
-            selectbtn.disabled = true;
-            selectbtn.style.opacity = 0.5;
-            selectbtn.innerText = 'Expired';
+            selectbtn.innerText = await k('select') + ' ✓';
             selectbtn.style.cursor = 'not-allowed';
         }
         selectbtn.addEventListener('click', async () => {

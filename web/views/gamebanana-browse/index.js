@@ -68,7 +68,7 @@ async function search() {
     let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
     let query = document.getElementById('searchInput').value;
     if (query.length < 3) {
-        await htmlAlert('Search query too short','Please enter at least 3 characters to search.',[{text:'Ok',resolveWith:'ok'}], 'error');
+        await htmlAlert(await k('shop_tooshortquery'),await k('shop_tooshortquery_desc'),[{text:await k('ok'),resolveWith:'ok'}], 'error');
         return;
     }
     window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Util/Search/Results?_sModelName=Mod&_sOrder=best_match&_sSearchString=' + encodeURIComponent(query) + '&_csvFields=name%2Cdescription%2Carticle%2Cattribs%2Cstudio%2Cowner%2Ccredits&_idGameRow=' + gameID + '&_nPage=$PAGE';
@@ -135,7 +135,7 @@ window.currentPageStack.plusPage = plusPage;
 
 (async () => {
     if (navigator.onLine === false) {
-        await htmlAlert('You\'re offline','To access the shopping page, you must have an active Internet connection.',[{text:'Ok',resolveWith:'ok'}], 'cloud_alert');
+        await htmlAlert(await k('shop_offline'),await k('shop_offline_desc'),[{text:await k('ok'),resolveWith:'ok'}], 'cloud_alert');
         page('main');
         return;
     }
@@ -157,7 +157,7 @@ window.currentPageStack.plusPage = plusPage;
 
         let searchInd = document.getElementById('searchInd');
         searchInd.style.display = 'block';
-        searchInd.innerText = `Currently showing results for "${csearch}"`;
+        searchInd.innerText = await k('shop_showingresults', csearch);
     }
 
     capi = GB_API;
@@ -181,14 +181,14 @@ window.currentPageStack.plusPage = plusPage;
             var tr = document.createElement('tr');
             var td = document.createElement('td');
             td.colSpan = 2;
-            td.innerText = 'No mods found were found matching your query.';
+            td.innerText = await k('shop_noresults');
             tr.appendChild(td);
             table.appendChild(tr);
             return;
         }
-        data._aRecords.forEach(mod => {
-            if (mod._sModelName == 'Wip' && !mod._bHasFiles) return;
-            if (mod._sModelName != 'Wip' && mod._sModelName != 'Mod') return;
+        for (const mod of data._aRecords) {
+            if (mod._sModelName == 'Wip' && !mod._bHasFiles) continue;
+            if (mod._sModelName != 'Wip' && mod._sModelName != 'Mod') continue;
 
             var td0 = document.createElement('td');
             td0.style.display = 'flex';
@@ -197,108 +197,108 @@ window.currentPageStack.plusPage = plusPage;
             td0.style.justifyContent = 'left';
             // Rendering of td0
             {
-                var div0 = document.createElement('div');
-                div0.className = 'modThumbDiv';
-                
-                let thumbs = getAllThumbs(mod);
-                var img = document.createElement('img');
-                img.className = 'modThumbImg';
-                img.src = (thumbs[0]);
-                let i = 0;
+            var div0 = document.createElement('div');
+            div0.className = 'modThumbDiv';
+            
+            let thumbs = getAllThumbs(mod);
+            var img = document.createElement('img');
+            img.className = 'modThumbImg';
+            img.src = (thumbs[0]);
+            let i = 0;
+            if (thumbs.length > 1) {
+                window._intervals.push(setInterval(async () => {
+                img.style.animation = 'imgFadeOut 0.5s';
+                await new Promise(resolve => setTimeout(resolve, 500));
+                img.style.opacity = '0';
                 if (thumbs.length > 1) {
-                    window._intervals.push(setInterval(async () => {
-                        img.style.animation = 'imgFadeOut 0.5s';
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                        img.style.opacity = '0';
-                        if (thumbs.length > 1) {
-                            i = (i + 1) % thumbs.length;
-                            img.src = thumbs[i];
-                        }
-                        img.onload = () => {
-                            img.style.animation = 'imgFadeIn 0.5s';
-                            img.style.opacity = '1';
-                            img.onload = null;
-                        };
-                        img.onerror = () => {
-                            img.style.animation = 'imgFadeIn 0.5s';
-                            img.style.opacity = '1';
-                            img.onerror = null;
-                        };
-                    }, 5000));
+                    i = (i + 1) % thumbs.length;
+                    img.src = thumbs[i];
                 }
-                img.style.width = '115px';
-                img.style.margin = '4px';
-                img.style.aspectRatio = '16 / 9';
-                img.style.borderRadius = '4px';
-                img.style.border = '2px solid var(--theme-color)';
-                img.style.height = 'auto';
-                img.style.objectFit = 'cover';
-                img.style.objectPosition = 'center';
-                div0.appendChild(img);
-
-                var div1 = document.createElement('div');
-                div1.style.marginLeft = '8px';
-                td0.appendChild(div0);
-                td0.appendChild(div1);
-
-                var biggerSpan = document.createElement('span');
-                biggerSpan.className = 'modTitleSpan';
-                biggerSpan.style.fontSize = '1.2em';
-                biggerSpan.style.marginBottom = '0px';
-                biggerSpan.innerText = mod._sName;
-                div1.appendChild(biggerSpan);
-
-                var otherInfoSpan = document.createElement('div');
-                otherInfoSpan.className = 'modOtherInfoSpan';
-                otherInfoSpan.style.fontSize = '0.9em';
-                otherInfoSpan.style.display = 'flex';
-                otherInfoSpan.style.flexDirection = 'column';
-                otherInfoSpan.style.color = '#cccccc';
-                otherInfoSpan.style.marginTop = '2px';
-                otherInfoSpan.style.width = '100%';
-
-                var nameauthor = mod._aSubmitter._sName;
-                // easter egg for the tenna lover
-                if (mod._aSubmitter._idRow == 1712567) {
-                    nameauthor += ' (Tenna lover)';
-                }
-                var authorSpan = document.createElement('span');
-                authorSpan.className = 'modAuthorSpan iptspan';
-                authorSpan.style.marginRight = '12px';
-                authorSpan.innerHTML = `${icon('attribution','0.9em')} ${nameauthor}`;
-                authorSpan.onclick = () => {
-                    window.open(mod._aSubmitter._sProfileUrl, '_blank');
+                img.onload = () => {
+                    img.style.animation = 'imgFadeIn 0.5s';
+                    img.style.opacity = '1';
+                    img.onload = null;
                 };
-                authorSpan.style.cursor = 'pointer';
+                img.onerror = () => {
+                    img.style.animation = 'imgFadeIn 0.5s';
+                    img.style.opacity = '1';
+                    img.onerror = null;
+                };
+                }, 5000));
+            }
+            img.style.width = '115px';
+            img.style.margin = '4px';
+            img.style.aspectRatio = '16 / 9';
+            img.style.borderRadius = '4px';
+            img.style.border = '2px solid var(--theme-color)';
+            img.style.height = 'auto';
+            img.style.objectFit = 'cover';
+            img.style.objectPosition = 'center';
+            div0.appendChild(img);
 
-                var e = null;
-                if (featuredIDs.find(x => x.id === mod._idRow)) {
-                    biggerSpan.style.color = 'gold';
-                    var periodsDesc = [
-                        ["today","Best of today"],
-                        ["week","Best of this week"],
-                        ["month","Best of this month"],
-                        ["3month","Best of last 3 months"],
-                        ["6month","Best of last 6 months"],
-                        ["year","Best of this year"],
-                        ["alltime","All-Time Best"]
-                    ]
-                    var featSpan = document.createElement('span');
-                    featSpan.className = 'modFeaturedSpan iptspan';
-                    featSpan.style.display = 'inline-block';
-                    for (let pd of periodsDesc) {
-                        if (featuredIDs.find(x => x.id === mod._idRow && x.period === pd[0])) {
-                            featSpan.innerHTML = `${icon((pd[0] == 'alltime' ? "award_star" : "editor_choice"),'0.9em')} ${pd[1]}`;
-                            break;
-                        }
-                    }
-                    featSpan.style.color = 'gold';
-                    featSpan.style.marginRight = '12px';
-                    e = featSpan;
+            var div1 = document.createElement('div');
+            div1.style.marginLeft = '8px';
+            td0.appendChild(div0);
+            td0.appendChild(div1);
+
+            var biggerSpan = document.createElement('span');
+            biggerSpan.className = 'modTitleSpan';
+            biggerSpan.style.fontSize = '1.2em';
+            biggerSpan.style.marginBottom = '0px';
+            biggerSpan.innerText = mod._sName;
+            div1.appendChild(biggerSpan);
+
+            var otherInfoSpan = document.createElement('div');
+            otherInfoSpan.className = 'modOtherInfoSpan';
+            otherInfoSpan.style.fontSize = '0.9em';
+            otherInfoSpan.style.display = 'flex';
+            otherInfoSpan.style.flexDirection = 'column';
+            otherInfoSpan.style.color = '#cccccc';
+            otherInfoSpan.style.marginTop = '2px';
+            otherInfoSpan.style.width = '100%';
+
+            var nameauthor = mod._aSubmitter._sName;
+            // easter egg for the tenna lover
+            if (mod._aSubmitter._idRow == 1712567) {
+                nameauthor += ' (Tenna lover)';
+            }
+            var authorSpan = document.createElement('span');
+            authorSpan.className = 'modAuthorSpan iptspan';
+            authorSpan.style.marginRight = '12px';
+            authorSpan.innerHTML = `${icon('attribution','0.9em')} ${nameauthor}`;
+            authorSpan.onclick = () => {
+                window.open(mod._aSubmitter._sProfileUrl, '_blank');
+            };
+            authorSpan.style.cursor = 'pointer';
+
+            var e = null;
+            if (featuredIDs.find(x => x.id === mod._idRow)) {
+                biggerSpan.style.color = 'gold';
+                var periodsDesc = [
+                ["today",await k('shop_featuredtoday')],
+                ["week",await k('shop_featuredweek')],
+                ["month",await k('shop_featuredmonth')],
+                ["3month",await k('shop_featured3month')],
+                ["6month",await k('shop_featured6month')],
+                ["year",await k('shop_featuredyear')],
+                ["alltime",await k('shop_featuredalltime')]
+                ]
+                var featSpan = document.createElement('span');
+                featSpan.className = 'modFeaturedSpan iptspan';
+                featSpan.style.display = 'inline-block';
+                for (let pd of periodsDesc) {
+                if (featuredIDs.find(x => x.id === mod._idRow && x.period === pd[0])) {
+                    featSpan.innerHTML = `${icon((pd[0] == 'alltime' ? "award_star" : "editor_choice"),'0.9em')} ${pd[1]}`;
+                    break;
                 }
-                otherInfoSpan.appendChild(authorSpan);
-                if (e) otherInfoSpan.appendChild(e);
-                div1.appendChild(otherInfoSpan);
+                }
+                featSpan.style.color = 'gold';
+                featSpan.style.marginRight = '12px';
+                e = featSpan;
+            }
+            otherInfoSpan.appendChild(authorSpan);
+            if (e) otherInfoSpan.appendChild(e);
+            div1.appendChild(otherInfoSpan);
             }
 
             var td1 = document.createElement('td');
@@ -331,7 +331,7 @@ window.currentPageStack.plusPage = plusPage;
 
                     if (eligibleDownloads.length === 0) {
                         dlBtn.innerHTML = icon('cancel', '0.9em');
-                        var open = await htmlAlert('One click not available','This mod cannot be downloaded via Deltamod because the owner did not package it for usage with the tool.',[{text:'Ok',resolveWith:'no',},{text:'Open mod page on GameBanana',resolveWith:'yes'}], 'web_traffic');
+                        var open = await htmlAlert(await k('shop_nooneclick'), await k('shop_nooneclick_desc'),[{text:await k('ok'),resolveWith:'no',},{text:await k('shop_open_mod_page'),resolveWith:'yes'}], 'web_traffic');
                         if (open === 'yes') {
                             window.open(mod._sProfileUrl, '_blank');
                         }
@@ -340,7 +340,7 @@ window.currentPageStack.plusPage = plusPage;
 
                     if (eligibleDownloads.length > 1) {
                         dlBtn.innerHTML = icon('indeterminate_question_box', '0.9em');
-                        var res = await htmlAlert('Multiple compatible files','This mod has multiple files compatible with Deltamod. Please choose the one to download.',eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
+                        var res = await htmlAlert(await k('shop_multiple_files'), await k('shop_multiple_files_desc'),eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
                         if (!res) {
                             return;
                         }
@@ -386,11 +386,11 @@ window.currentPageStack.plusPage = plusPage;
                         likeBtn.disabled = true;
                     }
                     else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
-                        await htmlAlert('Couldn\'t like the mod','You\'ve already liked this mod. Can\'t get any more likes than that!',[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
+                        await htmlAlert(await k('shop_cant_like'),await k('shop_already_liked'),[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
                         likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + '';
                         likeBtn.disabled = true;
                     } else {
-                        await htmlAlert('Couldn\'t like the mod',res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
+                        await htmlAlert(await k('shop_cant_like'),res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
                     }
                 };
                 td1.appendChild(likeBtn);
@@ -408,7 +408,7 @@ window.currentPageStack.plusPage = plusPage;
     catch (e) {
         console.error(e);
         
-        await htmlAlert('Error loading mods','An error occurred while loading mods from GameBanana. Please try again later.',[{text:'Ok',resolveWith:'ok'}], 'error');
+        await htmlAlert(await k('shop_error'),await k('shop_error_desc'),[{text:'Ok',resolveWith:'ok'}], 'error');
 
         page('main');
         return;

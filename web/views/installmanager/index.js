@@ -53,7 +53,7 @@
             const details = document.createElement('small');
             {
                 var gname = await (window.electronAPI.invoke('getGameInfo', [install.pid])).then(g => g.name);
-                details.innerHTML = `${icon('stadia_controller', '14px')} ${gname} <br> ${icon('gite', '14px')} ${(install.steam ? 'Steam' : 'Manual')}`;
+                details.innerHTML = `${icon('stadia_controller', '14px')} ${gname} <br> ${icon('gite', '14px')} ${(install.steam ? await k('steam') : await k('manual'))}`;
             }
             details.classList.add('calibri');
             details.style.color = '#888';

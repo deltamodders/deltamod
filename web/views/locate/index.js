@@ -5,21 +5,21 @@ async function locateDelta() {
     }
 }
 
-function id() {
+async function id() {
     console.log(document.getElementById('dpath').value.replaceAll('\\', '/'));
     if (window.gid == 'noid') {
-        htmlAlert('Warning','Please select a game.',[{text:'OK',resolveWith:'ok'}]);
+        htmlAlert(await k('warning'),await k('locate_pls_selectgame'),[{text:await k('ok'),resolveWith:'ok'}]);
         return;
     }
-    window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/'), (window.fromIM == undefined ? false : window.fromIM), window.gid]);
+    await window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/'), (window.fromIM == undefined ? false : window.fromIM), window.gid]);
 }
 
-function steam() {
+async function steam() {
     if (window.gid == 'noid') {
-        htmlAlert('Warning','Please select a game.',[{text:'OK',resolveWith:'ok'}]);
+        htmlAlert(await k('warning'),await k('locate_pls_selectgame'),[{text:await k('ok'),resolveWith:'ok'}]);
         return;
     }
-    window.electronAPI.invoke("createNewInstallation", ["steam", "", "", window.fromIM, window.gid]);
+    await window.electronAPI.invoke("createNewInstallation", ["steam", "", "", window.fromIM, window.gid]);
 }
 
 window.currentPageStack.id = id;
@@ -34,22 +34,14 @@ window.currentPageStack.steam = steam;
 
 window.currentPageStack.downloadDelta = async function() {
     if (window.gid == 'noid') {
-        htmlAlert('Warning','Please select a game.',[{text:'OK',resolveWith:'ok'}]);
+        htmlAlert(await k('warning'),await k('locate_pls_selectgame'),[{text:await k('ok'),resolveWith:'ok'}]);
         return;
     }
     var path = await window.electronAPI.invoke("downloadGame", [window.gid]);
     if (path) {
         document.querySelector('input[type="text"]').value = path;
     }
-}
-
-document.getElementById('audioCHECK').addEventListener('change', (event) => {
-    window.electronAPI.invoke('setUniqueFlag', ['AUDIO', event.target.checked]);
-});
-
-window.electronAPI.invoke('getUniqueFlag', ['AUDIO']).then((result) => {
-    document.getElementById('audioCHECK').checked = result;
-});
+};
 
 (async() => {
     var allFeat = ['steam','autodownload'];
