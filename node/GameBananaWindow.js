@@ -49,7 +49,14 @@ function obtainLogin() {
     });
 }
 
+let uiConfCache = null;
+
 async function getGBUIConf() {
+    if (uiConfCache) {
+        console.log('Using cached GameBanana UI Config for user ID ' + uiConfCache._idMemberRow);
+        return uiConfCache;
+    }
+
     try {
         var file = getSystemFile('bananapwd', true);
         var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
@@ -67,6 +74,8 @@ async function getGBUIConf() {
         });
 
         console.log('Fetched GameBanana UI Config for user ID ' + uiconf.data._idMemberRow);
+
+        uiConfCache = uiconf.data;
 
     return uiconf.data;
 }
