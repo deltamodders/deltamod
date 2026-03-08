@@ -568,6 +568,7 @@ window.preloadAPI.onAudio((stat) => {
     else closeAudio();
 });
 
+/*
 Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
     tippy(button, {
         content: button.getAttribute('data-label') || uppercaseFirst(button.getAttribute('data-page')),
@@ -575,6 +576,7 @@ Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => 
         delay: [0, 0],
     });
 });
+*/
 
 (async () => {
     var gbflag = await window.electronAPI.invoke('getUniqueFlag', ['SHOP']);
