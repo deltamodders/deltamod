@@ -91,7 +91,7 @@
             deleteBtn = adaptForIcons(deleteBtn);
             deleteBtn.innerHTML = icon('delete', '18px');
             deleteBtn.onclick = async () => {
-                var resp = await htmlAlert(await k('confirmation'), `Are you sure you want to delete the installation "${install.name || await k('install_default', install.index + 1)}"? This action cannot be undone.`, [
+                var resp = await htmlAlert(await k('warning'), `Are you sure you want to delete the installation "${install.name || await k('install_default', install.index + 1)}"? This action cannot be undone.`, [
                     {text: await k('yes'), resolveWith: 'Y'},
                     {text: await k('no'), resolveWith: 'N'}
                 ]);
