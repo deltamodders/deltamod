@@ -338,6 +338,7 @@ function showError(errorCode) {
 }
 
 function createWindow() {
+    process.stdout.write(fs.readFileSync(path.join(__dirname, '..', 'ascii.txt'), 'utf8') + "\r\n\r\n");
     KeyValue.upgradeStores();
     if (!KeyValue.readUniqueFlag('setup')) {
         KeyValue.writeUniqueFlag('setup', 'true');

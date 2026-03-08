@@ -189,220 +189,222 @@ window.currentPageStack.plusPage = plusPage;
         for (const mod of data._aRecords) {
             if (mod._sModelName == 'Wip' && !mod._bHasFiles) continue;
             if (mod._sModelName != 'Wip' && mod._sModelName != 'Mod') continue;
+            await (async () => {
 
-            var td0 = document.createElement('td');
-            td0.style.display = 'flex';
-            td0.style.alignItems = 'top';
-            td0.style.gap = '8px';
-            td0.style.justifyContent = 'left';
-            // Rendering of td0
-            {
-            var div0 = document.createElement('div');
-            div0.className = 'modThumbDiv';
-            
-            let thumbs = getAllThumbs(mod);
-            var img = document.createElement('img');
-            img.className = 'modThumbImg';
-            img.src = (thumbs[0]);
-            let i = 0;
-            if (thumbs.length > 1) {
-                window._intervals.push(setInterval(async () => {
-                img.style.animation = 'imgFadeOut 0.5s';
-                await new Promise(resolve => setTimeout(resolve, 500));
-                img.style.opacity = '0';
+                var td0 = document.createElement('td');
+                td0.style.display = 'flex';
+                td0.style.alignItems = 'top';
+                td0.style.gap = '8px';
+                td0.style.justifyContent = 'left';
+                // Rendering of td0
+                {
+                var div0 = document.createElement('div');
+                div0.className = 'modThumbDiv';
+                
+                let thumbs = getAllThumbs(mod);
+                var img = document.createElement('img');
+                img.className = 'modThumbImg';
+                img.src = (thumbs[0]);
+                let i = 0;
                 if (thumbs.length > 1) {
-                    i = (i + 1) % thumbs.length;
-                    img.src = thumbs[i];
-                }
-                img.onload = () => {
-                    img.style.animation = 'imgFadeIn 0.5s';
-                    img.style.opacity = '1';
-                    img.onload = null;
-                };
-                img.onerror = () => {
-                    img.style.animation = 'imgFadeIn 0.5s';
-                    img.style.opacity = '1';
-                    img.onerror = null;
-                };
-                }, 5000));
-            }
-            img.style.width = '115px';
-            img.style.margin = '4px';
-            img.style.aspectRatio = '16 / 9';
-            img.style.borderRadius = '4px';
-            img.style.border = '2px solid var(--theme-color)';
-            img.style.height = 'auto';
-            img.style.objectFit = 'cover';
-            img.style.objectPosition = 'center';
-            div0.appendChild(img);
-
-            var div1 = document.createElement('div');
-            div1.style.marginLeft = '8px';
-            td0.appendChild(div0);
-            td0.appendChild(div1);
-
-            var biggerSpan = document.createElement('span');
-            biggerSpan.className = 'modTitleSpan';
-            biggerSpan.style.fontSize = '1.2em';
-            biggerSpan.style.marginBottom = '0px';
-            biggerSpan.innerText = mod._sName;
-            div1.appendChild(biggerSpan);
-
-            var otherInfoSpan = document.createElement('div');
-            otherInfoSpan.className = 'modOtherInfoSpan';
-            otherInfoSpan.style.fontSize = '0.9em';
-            otherInfoSpan.style.display = 'flex';
-            otherInfoSpan.style.flexDirection = 'column';
-            otherInfoSpan.style.color = '#cccccc';
-            otherInfoSpan.style.marginTop = '2px';
-            otherInfoSpan.style.width = '100%';
-
-            var nameauthor = mod._aSubmitter._sName;
-            // easter egg for the tenna lover
-            if (mod._aSubmitter._idRow == 1712567) {
-                nameauthor += ' (Tenna lover)';
-            }
-            var authorSpan = document.createElement('span');
-            authorSpan.className = 'modAuthorSpan iptspan';
-            authorSpan.style.marginRight = '12px';
-            authorSpan.innerHTML = `${icon('attribution','0.9em')} ${nameauthor}`;
-            authorSpan.onclick = () => {
-                window.open(mod._aSubmitter._sProfileUrl, '_blank');
-            };
-            authorSpan.style.cursor = 'pointer';
-
-            var e = null;
-            if (featuredIDs.find(x => x.id === mod._idRow)) {
-                biggerSpan.style.color = 'gold';
-                var periodsDesc = [
-                ["today",await k('shop_featuredtoday')],
-                ["week",await k('shop_featuredweek')],
-                ["month",await k('shop_featuredmonth')],
-                ["3month",await k('shop_featured3month')],
-                ["6month",await k('shop_featured6month')],
-                ["year",await k('shop_featuredyear')],
-                ["alltime",await k('shop_featuredalltime')]
-                ]
-                var featSpan = document.createElement('span');
-                featSpan.className = 'modFeaturedSpan iptspan';
-                featSpan.style.display = 'inline-block';
-                for (let pd of periodsDesc) {
-                if (featuredIDs.find(x => x.id === mod._idRow && x.period === pd[0])) {
-                    featSpan.innerHTML = `${icon((pd[0] == 'alltime' ? "award_star" : "editor_choice"),'0.9em')} ${pd[1]}`;
-                    break;
-                }
-                }
-                featSpan.style.color = 'gold';
-                featSpan.style.marginRight = '12px';
-                e = featSpan;
-            }
-            otherInfoSpan.appendChild(authorSpan);
-            if (e) otherInfoSpan.appendChild(e);
-            div1.appendChild(otherInfoSpan);
-            }
-
-            var td1 = document.createElement('td');
-            td1.style.textAlign = 'center';
-            // Rendering of td1
-            {
-                var dlBtn = document.createElement('button');
-                dlBtn.innerHTML = icon('download', '0.9em') + '';
-                dlBtn.onclick = async () => {
-                    dlBtn.disabled = true;
-                    dlBtn.innerHTML = icon('downloading', '0.9em');
-                    dlBtn.style.opacity = '0.6';
-
-                    var dlpage = await fetch(`https://gamebanana.com/apiv11/${mod._sModelName}/${mod._idRow}/ProfilePage`);
-                    dlpage = await dlpage.json();
-
-                    var eligibleDownloads = [];
-
-                    dlpage._aFiles.forEach(file => {
-                        try {
-                            var mmo = file._aModManagerIntegrations.map(x => x._idToolRow);
-                            if (mmo.includes(20575)) {
-                                eligibleDownloads.push(file);
-                            }
-                        }
-                        catch {
-                            //nothing, file is just not compatible
-                        }
-                    });
-
-                    if (eligibleDownloads.length === 0) {
-                        dlBtn.innerHTML = icon('cancel', '0.9em');
-                        var open = await htmlAlert(await k('shop_nooneclick'), await k('shop_nooneclick_desc'),[{text:await k('ok'),resolveWith:'no',},{text:await k('shop_open_mod_page'),resolveWith:'yes'}], 'web_traffic');
-                        if (open === 'yes') {
-                            window.open(mod._sProfileUrl, '_blank');
-                        }
-                        return;
+                    window._intervals.push(setInterval(async () => {
+                    img.style.animation = 'imgFadeOut 0.5s';
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    img.style.opacity = '0';
+                    if (thumbs.length > 1) {
+                        i = (i + 1) % thumbs.length;
+                        img.src = thumbs[i];
                     }
+                    img.onload = () => {
+                        img.style.animation = 'imgFadeIn 0.5s';
+                        img.style.opacity = '1';
+                        img.onload = null;
+                    };
+                    img.onerror = () => {
+                        img.style.animation = 'imgFadeIn 0.5s';
+                        img.style.opacity = '1';
+                        img.onerror = null;
+                    };
+                    }, 5000));
+                }
+                img.style.width = '115px';
+                img.style.margin = '4px';
+                img.style.aspectRatio = '16 / 9';
+                img.style.borderRadius = '4px';
+                img.style.border = '2px solid var(--theme-color)';
+                img.style.height = 'auto';
+                img.style.objectFit = 'cover';
+                img.style.objectPosition = 'center';
+                div0.appendChild(img);
 
-                    if (eligibleDownloads.length > 1) {
-                        dlBtn.innerHTML = icon('indeterminate_question_box', '0.9em');
-                        var res = await htmlAlert(await k('shop_multiple_files'), await k('shop_multiple_files_desc'),eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
-                        if (!res) {
+                var div1 = document.createElement('div');
+                div1.style.marginLeft = '8px';
+                td0.appendChild(div0);
+                td0.appendChild(div1);
+
+                var biggerSpan = document.createElement('span');
+                biggerSpan.className = 'modTitleSpan';
+                biggerSpan.style.fontSize = '1.2em';
+                biggerSpan.style.marginBottom = '0px';
+                biggerSpan.innerText = mod._sName;
+                div1.appendChild(biggerSpan);
+
+                var otherInfoSpan = document.createElement('div');
+                otherInfoSpan.className = 'modOtherInfoSpan';
+                otherInfoSpan.style.fontSize = '0.9em';
+                otherInfoSpan.style.display = 'flex';
+                otherInfoSpan.style.flexDirection = 'column';
+                otherInfoSpan.style.color = '#cccccc';
+                otherInfoSpan.style.marginTop = '2px';
+                otherInfoSpan.style.width = '100%';
+
+                var nameauthor = mod._aSubmitter._sName;
+                // easter egg for the tenna lover
+                if (mod._aSubmitter._idRow == 1712567) {
+                    nameauthor += ' (Tenna lover)';
+                }
+                var authorSpan = document.createElement('span');
+                authorSpan.className = 'modAuthorSpan iptspan';
+                authorSpan.style.marginRight = '12px';
+                authorSpan.innerHTML = `${icon('attribution','0.9em')} ${nameauthor}`;
+                authorSpan.onclick = () => {
+                    window.open(mod._aSubmitter._sProfileUrl, '_blank');
+                };
+                authorSpan.style.cursor = 'pointer';
+
+                var e = null;
+                if (featuredIDs.find(x => x.id === mod._idRow)) {
+                    biggerSpan.style.color = 'gold';
+                    var periodsDesc = [
+                    ["today",await k('shop_featuredtoday')],
+                    ["week",await k('shop_featuredweek')],
+                    ["month",await k('shop_featuredmonth')],
+                    ["3month",await k('shop_featured3month')],
+                    ["6month",await k('shop_featured6month')],
+                    ["year",await k('shop_featuredyear')],
+                    ["alltime",await k('shop_featuredalltime')]
+                    ]
+                    var featSpan = document.createElement('span');
+                    featSpan.className = 'modFeaturedSpan iptspan';
+                    featSpan.style.display = 'inline-block';
+                    for (let pd of periodsDesc) {
+                    if (featuredIDs.find(x => x.id === mod._idRow && x.period === pd[0])) {
+                        featSpan.innerHTML = `${icon((pd[0] == 'alltime' ? "award_star" : "editor_choice"),'0.9em')} ${pd[1]}`;
+                        break;
+                    }
+                    }
+                    featSpan.style.color = 'gold';
+                    featSpan.style.marginRight = '12px';
+                    e = featSpan;
+                }
+                otherInfoSpan.appendChild(authorSpan);
+                if (e) otherInfoSpan.appendChild(e);
+                div1.appendChild(otherInfoSpan);
+                }
+
+                var td1 = document.createElement('td');
+                td1.style.textAlign = 'center';
+                // Rendering of td1
+                {
+                    var dlBtn = document.createElement('button');
+                    dlBtn.innerHTML = icon('download', '0.9em') + '';
+                    dlBtn.onclick = async () => {
+                        dlBtn.disabled = true;
+                        dlBtn.innerHTML = icon('downloading', '0.9em');
+                        dlBtn.style.opacity = '0.6';
+
+                        var dlpage = await fetch(`https://gamebanana.com/apiv11/${mod._sModelName}/${mod._idRow}/ProfilePage`);
+                        dlpage = await dlpage.json();
+
+                        var eligibleDownloads = [];
+
+                        dlpage._aFiles.forEach(file => {
+                            try {
+                                var mmo = file._aModManagerIntegrations.map(x => x._idToolRow);
+                                if (mmo.includes(20575)) {
+                                    eligibleDownloads.push(file);
+                                }
+                            }
+                            catch {
+                                //nothing, file is just not compatible
+                            }
+                        });
+
+                        if (eligibleDownloads.length === 0) {
+                            dlBtn.innerHTML = icon('cancel', '0.9em');
+                            var open = await htmlAlert(await k('shop_nooneclick'), await k('shop_nooneclick_desc'),[{text:await k('ok'),resolveWith:'no',},{text:await k('shop_open_mod_page'),resolveWith:'yes'}], 'web_traffic');
+                            if (open === 'yes') {
+                                window.open(mod._sProfileUrl, '_blank');
+                            }
                             return;
                         }
-                        else {
-                            dlmod(res, dlBtn);
+
+                        if (eligibleDownloads.length > 1) {
+                            dlBtn.innerHTML = icon('indeterminate_question_box', '0.9em');
+                            var res = await htmlAlert(await k('shop_multiple_files'), await k('shop_multiple_files_desc'),eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
+                            if (!res) {
+                                return;
+                            }
+                            else {
+                                dlmod(res, dlBtn);
+                            }
+                            return;
                         }
-                        return;
-                    }
 
-                    dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName);
-                };
-
-                var vwBtn = document.createElement('button');
-                vwBtn.innerHTML = icon('open_in_new', '0.9em') + '';
-                vwBtn.style.marginRight = '8px';
-                vwBtn.onclick = () => {
-                    window.open(mod._sProfileUrl, '_blank');
-                }
-                td1.appendChild(vwBtn);
-                td1.appendChild(dlBtn);
-
-                var commentBtn = document.createElement('button');
-                commentBtn.innerHTML = icon('comment', '0.9em') + '';
-                commentBtn.style.marginLeft = '8px';
-                commentBtn.onclick = async () => {
-                    window._pageArguments = {
-                        id: mod._idRow,
-                        model: mod._sModelName
+                        dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName);
                     };
-                    page('gamebanana-leave-comment');
-                };
-                commentBtn.disabled = !isGBLoggedIn;
-                td1.appendChild(commentBtn);
 
-                var likeBtn = document.createElement('button');
-                likeBtn.innerHTML = icon('mood_heart', '0.9em') + '';
-                likeBtn.style.marginLeft = '8px';
-                likeBtn.disabled = !isGBLoggedIn;
-                likeBtn.onclick = async () => {
-                    let res = await window.electronAPI.invoke('gbLikeMod',[mod._sModelName, mod._idRow]);
-                    if (res.status == 200) {
-                        likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + '';
-                        likeBtn.disabled = true;
+                    var vwBtn = document.createElement('button');
+                    vwBtn.innerHTML = icon('open_in_new', '0.9em') + '';
+                    vwBtn.style.marginRight = '8px';
+                    vwBtn.onclick = () => {
+                        window.open(mod._sProfileUrl, '_blank');
                     }
-                    else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
-                        await htmlAlert(await k('shop_cant_like'),await k('shop_already_liked'),[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
-                        likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + '';
-                        likeBtn.disabled = true;
-                    } else {
-                        await htmlAlert(await k('shop_cant_like'),res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
-                    }
-                };
-                td1.appendChild(likeBtn);
-            }
+                    td1.appendChild(vwBtn);
+                    td1.appendChild(dlBtn);
+
+                    var commentBtn = document.createElement('button');
+                    commentBtn.innerHTML = icon('comment', '0.9em') + '';
+                    commentBtn.style.marginLeft = '8px';
+                    commentBtn.onclick = async () => {
+                        window._pageArguments = {
+                            id: mod._idRow,
+                            model: mod._sModelName
+                        };
+                        page('gamebanana-leave-comment');
+                    };
+                    commentBtn.disabled = !isGBLoggedIn;
+                    td1.appendChild(commentBtn);
+
+                    var likeBtn = document.createElement('button');
+                    likeBtn.innerHTML = icon('mood_heart', '0.9em') + '';
+                    likeBtn.style.marginLeft = '8px';
+                    likeBtn.disabled = !isGBLoggedIn;
+                    likeBtn.onclick = async () => {
+                        let res = await window.electronAPI.invoke('gbLikeMod',[mod._sModelName, mod._idRow]);
+                        if (res.status == 200) {
+                            likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + '';
+                            likeBtn.disabled = true;
+                        }
+                        else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
+                            await htmlAlert(await k('shop_cant_like'),await k('shop_already_liked'),[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
+                            likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + '';
+                            likeBtn.disabled = true;
+                        } else {
+                            await htmlAlert(await k('shop_cant_like'),res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
+                        }
+                    };
+                    td1.appendChild(likeBtn);
+                }
 
 
-            // tr-ify and add
-            var tr = document.createElement('tr');
-            tr.appendChild(td0);
-            tr.appendChild(td1);
+                // tr-ify and add
+                var tr = document.createElement('tr');
+                tr.appendChild(td0);
+                tr.appendChild(td1);
 
-            table.appendChild(tr);
+                table.appendChild(tr);
+            })();
         };
     }
     catch (e) {

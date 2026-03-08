@@ -34,6 +34,7 @@ function downloadModFromURL(url, onProgress, mID, mModel) {
 }
 
 async function importMod(filePath, nextPage = "main", mID = null, mModel = null) {
+    console.log("Importing mod (gb info)", mID, mModel, "from file:", filePath);
     // create unique mod folder
     const modPath = path.join(system.getPacketDatabase(), "Mod_" + randomString(32));
     fs.mkdirSync(modPath, { recursive: true });
