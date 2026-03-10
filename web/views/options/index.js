@@ -134,6 +134,7 @@ window.currentPageStack.cat = async function(cat) {
         }
         else {
             btn.classList.remove('blur');
+            subtitle(btn.innerText);
         }
     });
     switch (cat) {

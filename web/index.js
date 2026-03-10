@@ -5,6 +5,10 @@ var pageN = null;
 var addedStyle = null;
 var update = false;
 var TARGET_MUSIC_VOLUME = 0.5;
+function subtitle(text) {
+    document.querySelector('.titleTxt').innerText = document.querySelector('h1').innerText + " - " + text;
+}
+
 async function rew() {
     if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === false) {
         return;
@@ -316,6 +320,7 @@ async function page(name) {
     window.electronAPI.invoke('showWindow', []);
     theme = await fetch('themeprot://data/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
+
     // first render the fantastidynamic
     try {
         theme.dynamic.forEach(dynamicEvent => {
@@ -426,6 +431,7 @@ async function page(name) {
         window.scrollTo(0, 0);
     }
     pageN = name;
+    document.querySelector('.titleTxt').innerText = document.querySelector('h1').innerText;
     /*
     Array.from(document.querySelectorAll('th')).forEach(th => {
         th.style.backgroundColor = theme.color;
@@ -441,6 +447,7 @@ async function page(name) {
     :root {
         --theme-color: ${theme.color};
         --theme-color-rgbaless: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.8);
+        --theme-color-point2: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.2);
     }
     button:not(.sidebar-button), input, select {
         border: 1.3px solid ${theme.color};
@@ -454,6 +461,7 @@ async function page(name) {
 
     ${theme.specialCSS || ''}
     `;
+
     var styleTag = document.getElementById('dynamic-theme-styles');
     styleTag.innerHTML = generatedCSS;
     if (runScripts)

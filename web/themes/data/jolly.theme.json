@@ -5,6 +5,6 @@
     "id": "jolly",
     "musicTrack": "Gingerbread House - Toby Fox",
     "description": "A Christmas theme for Deltamod.",
-    "color": "rgba(187, 111, 111, 1)",
+    "color": "rgb(187, 111, 111)",
     "specialCSS": "th { background: url('themes/img/christmasTH.png'); }"
 }
