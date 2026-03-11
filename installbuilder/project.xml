@@ -1,7 +1,7 @@
 <project>
     <shortName>deltamod</shortName>
     <fullName>Deltamod</fullName>
-    <version>1.5.1</version>
+    <version>1.6.0</version>
     <leftImage>${build_project_directory}/../build/installer/leftImage.png</leftImage>
     <logoImage>${build_project_directory}/../build/icon-small.png</logoImage>
     <splashImage>${build_project_directory}/../build/installer/installersplash.png</splashImage>
@@ -173,6 +173,14 @@ If you have any Deltamod installation to delete, please do so now by going to th
             <explanation></explanation>
             <file>${build_project_directory}/../LICENSE.txt</file>
             <fileEncoding>utf-8</fileEncoding>
+            <htmlFile></htmlFile>
+        </licenseParameter>
+        <licenseParameter>
+            <name>PrivacyPolicy</name>
+            <title>Privacy Policy</title>
+            <description>Please read the following Privacy Policy. You must accept the terms of this agreement before continuing with the installation.</description>
+            <explanation></explanation>
+            <file>${build_project_directory}/../PRIVACY.txt</file>
             <htmlFile></htmlFile>
         </licenseParameter>
     </parameterList>
