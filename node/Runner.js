@@ -1,3 +1,5 @@
+const SentryEndpoint = require('./Sentry.js'); // must be first for error handling
+
 const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification, safeStorage } = require('electron');
 const Paths = require('./Paths');
 const KeyValue = require('./KeyValue');
@@ -29,7 +31,11 @@ const { isFeatureEnabled } = require('./FeatureFlags');
 const { valid } = require('node-html-parser');
 const os = require('os');
 const { PARTITION } = require('./Config');
-const { errorWin } = require("./ErrorWin");
+
+function errorWin(error) {
+    SentryEndpoint.error(new Error(error instanceof Error ? error.message : error));
+    return require('./ErrorWin.js').errorWin(error);
+}
 
 var langFile = System.getSystemFile('language', true);
 if (fs.existsSync(langFile)) {
@@ -532,6 +538,9 @@ function createWindow() {
             return { action: 'deny' };
         }
         return { action: 'allow' };
+    });
+    ipcMain.handle('sampleError', () => {
+        errorWin('This is a sample error triggered from the renderer process.');
     });
     ipcMain.handle('obtainLangs', () => {
         return Language.getAvailableLanguages();
