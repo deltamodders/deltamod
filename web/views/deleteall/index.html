@@ -1,5 +1,5 @@
 <div>
-    <h1 style="color: red;">$$deleteall_title$$</h1>
+    <h1>$$deleteall_title$$</h1>
     <p class="calibri">$$deleteall_description$$</p>
     <div style="font-family: 'Calibri';">
         <p><b>$$deleteall_warning0$$</b></p>
@@ -10,37 +10,17 @@
         </ul>
         <p><i>$$deleteall_warning4$$</i></p>
     </div>
-    <p>$$deleteall_puzzle$$</p>
-    <div class="puzzle">
-        <marquee behavior="left" direction="left" scrollamount="10" style="margin-top: 20px;">
-            <button class="puzBtn" style="background-color: green;" id="btn0" onclick="window.currentPageStack.unlockBtn(1,this)">$$deleteall_clickme$$</button>
-        </marquee>
-        <marquee behavior="right" direction="right" scrollamount="15" style="margin-top: 20px;">
-            <button class="puzBtn" style="background-color: blue;" id="btn1" onclick="window.currentPageStack.unlockBtn(2,this)" disabled>$$deleteall_clickme$$</button>
-        </marquee>
-        <marquee behavior="left" direction="left" scrollamount="19" style="margin-top: 20px;">
-            <button class="puzBtn" style="background-color: gold;" id="btn2" onclick="window.currentPageStack.unlockBtn(3,this)" disabled>$$deleteall_clickme$$</button>
-        </marquee>
-        <marquee behavior="right" direction="right" scrollamount="25" style="margin-top: 20px;">
-            <button class="puzBtn" style="background-color: red;" id="btn3" onclick="document.querySelector('.puzzle').style.display='none'; document.querySelector('.puzzleExpired').style.display='block';" disabled>$$deleteall_clickme$$</button>
-        </marquee>
-    </div>
-    <div class="puzzleExpired" style="display: none; margin-top: 20px;">
-        <button onclick="window.electronAPI.invoke('initialize',[])">
-            <b>$$deleteall_deleteall$$</b>
-            <br>
-            <small>$$deleteall_warning5$$</small>
-        </button>
-    </div>
+    <p>$$deleteall_sure$$</p>
+    <button onclick="window.currentPageStack.init()" style="display: flex; align-items: center; gap: 10px;">
+        <span class="material-symbols-outlined">bomb</span> <b>$$deleteall_deleteall$$</b>
+    </button>
 </div>
-
 <style>
-    .puzBtn {
-        font-family: 'Calibri'; color: white; padding: 10px 20px; border: none; cursor: pointer;
-    }
-    .puzBtn:disabled {
-        opacity: 0.5; cursor: not-allowed;
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 </style>
 JSL
 AUDIO[views/deleteall/minigame.mp3]
+TITLEKEY[deleteall_title]

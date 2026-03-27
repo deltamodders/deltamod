@@ -10,6 +10,29 @@
     padding-right: 10px;
 }
 
+.glyph {
+    position: fixed;
+    bottom: 20px;
+    padding: 20px;
+    padding-left: 30px;
+    padding-right: 30px;
+    right: 20px;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    font-size: 19px;
+    font-family: "Calibri";
+    gap: 12px;
+    color: white;
+    opacity: 0.5;
+    border-radius: 50px;
+    background-color: rgba(0, 0, 0, 0.5);
+    text-shadow: 3px 3px 0px var(--theme-color);
+    z-index: 10000;
+    pointer-events: none;
+    user-select: none;
+
+}
 .titleTxt {
     position: fixed;
     top: 12px;

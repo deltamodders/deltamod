@@ -109,16 +109,16 @@
         <runProgram>
             <program>${installdir}/dotnet.exe</program>
             <programArguments>/silent /norestart</programArguments>
-            <progressText>Executing .NET installer</progressText>
-            <run>${installnet}</run>
+            <progressText>Running .NET installer</progressText>
+            <run>${installnet} /passive /norestart</run>
         </runProgram>
         <runProgram>
             <abortOnError>0</abortOnError>
-            <explanation>Running GIT installer (please check for new windows)</explanation>
+            <explanation>Running GIT installer</explanation>
             <program>${installdir}/git.exe</program>
             <programArguments></programArguments>
-            <progressText>Running GIT installer (please check for new windows)</progressText>
-            <run>${installgit}</run>
+            <progressText>Running GIT installer</progressText>
+            <run>${installgit} /SILENT /NORESTART /DIR="C:\Program Files\Git" /NOICONS /SP-</run>
             <showMessageOnError>0</showMessageOnError>
         </runProgram>
     </postInstallationActionList>

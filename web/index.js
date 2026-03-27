@@ -5,8 +5,37 @@ var pageN = null;
 var addedStyle = null;
 var update = false;
 var TARGET_MUSIC_VOLUME = 0.5;
-function subtitle(text) {
-    document.querySelector('.titleTxt').innerText = document.querySelector('h1').innerText + " - " + text;
+var cmode = false;
+
+async function invoke(...params) {
+    return window.electronAPI.invoke(...params);
+}
+
+async function makeGlyphs(jsonArr) {
+    var glyphContainer = document.querySelector('.glyph');
+    glyphContainer.innerHTML = '';
+    jsonArr.forEach(glyph => {
+        var glyphIconElement = document.createElement('span');
+        glyphIconElement.classList.add('material-symbols-outlined');
+        glyphIconElement.innerText = glyph.icon;
+
+        var glyphDescElement = document.createElement('span');
+        glyphDescElement.innerText = glyph.description;
+
+        glyphContainer.appendChild(glyphIconElement);
+        glyphContainer.appendChild(glyphDescElement);
+    });
+}
+
+async function promptLeaveCMode() {
+    htmlAlert(await k('leave_cmode_title'), await k('leave_cmode_message'), [
+        { text: await k('yes'), resolveWith: true },
+        { text: await k('no'), resolveWith: false }
+    ], 'stadia_controller').then((result) => {
+        if (result) {
+            window.electronAPI.invoke('cmode-off', []);
+        }
+    });
 }
 
 async function rew() {
@@ -381,6 +410,8 @@ async function page(name) {
             button.disabled = false;
         });
     }
+    var title = purifiedHTML.match(/TITLEKEY\[(.*?)\]/);
+    purifiedHTML = purifiedHTML.replace(/TITLEKEY\[(.*?)\]/g, '');
     if (true) {
         var audioSrc = purifiedHTML.match(/AUDIO\[(.*?)\]/);
         console.log('Audio source found:' + audioSrc);
@@ -431,7 +462,7 @@ async function page(name) {
         window.scrollTo(0, 0);
     }
     pageN = name;
-    document.querySelector('.titleTxt').innerText = document.querySelector('h1').innerText;
+    document.querySelector('.titleTxt').innerText = await k(title[1]);
     /*
     Array.from(document.querySelectorAll('th')).forEach(th => {
         th.style.backgroundColor = theme.color;
@@ -495,8 +526,35 @@ if (!window.electronAPI) {
     //     await window.electronAPI.invoke('modalTest', []);
     // }
 
+    cmode = await window.electronAPI.invoke('isCMode', []);
+    if (cmode) {
+        // 1.5 zoom to everything
+        document.body.style.zoom = '120%';
+
+        document.querySelector('.glyph').style.display = 'flex';
+
+        document.querySelector('.minimize-button').style.display = 'none';
+        document.querySelector('.maximize-button').style.display = 'none';
+
+        makeGlyphs([
+            { icon: 'game_stick_left', description: await k('cmode_leftstick_glydesc') },
+            { icon: 'game_stick_right', description: await k('cmode_rightstick_glydesc') },
+            { icon: 'square_circle', description: await k('cmode_abutton_glydesc') },
+        ])
+
+        if (!localStorage.getItem('seenCModeAlert')) {
+            localStorage.setItem('seenCModeAlert', 'true');
+            htmlAlert(await k('controllermode_alert_title'), await k('controllermode_alert_message'), [
+                { text: await k('ok') }
+            ], 'stadia_controller');
+        }
+    }
+    else {
+        document.querySelector('.glyph').style.display = 'none';
+    }
+
     var os = await window.electronAPI.invoke('getOS',[]);
-    if (os.platform == 'win32' && os.version.startsWith('Windows 11')) {
+    if (os.platform == 'win32' && os.version.startsWith('Windows 11') && !cmode) {
         document.getElementsByClassName('winb')[0].style.borderRadius = "8px";
     }
     // Check if deltarune is loaded

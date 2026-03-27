@@ -1,1 +1,0 @@
-// make when controller is connected, show a red square at the position of the controller

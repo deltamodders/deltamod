@@ -1,11 +1,19 @@
-window.currentPageStack.unlockBtn = async function(id,me) {
-    me.disabled = true;
-    me.innerText = await k('done');
+window.currentPageStack.init = function() {
+    var white = document.createElement('div');
+    white.style.position = 'absolute';
+    white.style.left = '0px';
+    white.style.top = '0px';
+    white.style.width = '100%';
+    white.style.height = '100%';
+    white.style.backgroundColor = 'white';
+    white.style.zIndex = '1000000000';
+    white.style.animation = 'fadeIn 5s ease-out forwards';
+    document.body.appendChild(white);
 
-    document.getElementById('btn'+id).disabled = false;
-}
+    var audSFX = new Audio('audio/fadewh.ogg');
+    audSFX.play();
 
-setTimeout(() => {
-    document.querySelector('.puzzle').style.display='none'; 
-    document.querySelector('.puzzleExpired').style.display='block';
-}, 30 * 1000);
+    setTimeout(function() {
+        window.electronAPI.invoke('initialize',[])
+    }, 6000);
+};

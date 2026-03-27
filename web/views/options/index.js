@@ -1,4 +1,4 @@
-async function addCheckboxOption(name, description, flagid, requiresRestart = false) {
+async function addCheckboxOption(name, description, flagid, requiresRestart = false, changeHandler = (e) => {}) {
     const table = document.querySelector('tbody');
     const tr = document.createElement('tr');
 
@@ -34,13 +34,7 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
     input.id = 'FLAG-' + flagid.toUpperCase();
     input.checked = await window.electronAPI.invoke('getUniqueFlag', [flagid]);
     input.addEventListener('change', async (e) => {
-        if (flagid == 'sfx' && e.target.checked) {
-            var a = new Audio();
-            a.src = 'audio/orch2.mp3';
-            a.playbackRate = 1.1;
-            a.currentTime = 0.6;
-            a.play();
-        }
+        changeHandler(e.target.checked);
         await window.electronAPI.invoke('setUniqueFlag', [flagid, e.target.checked]);
     });
     tdInput.appendChild(input);
@@ -106,6 +100,17 @@ async function addButton(name, description, click, buttonText, enabled = true, d
     table.appendChild(tr);
 }
 
+async function addRowHeader(name) {
+    const table = document.querySelector('tbody');
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 2;
+    td.className = 'rowheader';
+    td.innerHTML = "<div style='display:flex; align-items:center; gap:10px;'>" + name + "</div>"; // make it aligned
+    tr.appendChild(td);
+    table.appendChild(tr);
+}
+
 var tempLock = false;
 
 window.currentPageStack.cat = async function(cat) {
@@ -134,7 +139,6 @@ window.currentPageStack.cat = async function(cat) {
         }
         else {
             btn.classList.remove('blur');
-            subtitle(btn.innerText);
         }
     });
     switch (cat) {
@@ -149,8 +153,26 @@ window.currentPageStack.cat = async function(cat) {
             break;
         case 'ui':
             await addCheckboxOption(await k('options_ui0_title'), await k('options_ui0_desc'), 'SHOP', true);
-            await addCheckboxOption(await k('options_ui1_title'), await k('options_ui1_desc'), 'audio');
-            await addCheckboxOption(await k('options_ui2_title'), await k('options_ui2_desc'), 'sfx');
+            await addCheckboxOption(await k('options_ui1_title'), await k('options_ui1_desc'), 'audio', false, (enabled) => {
+                if (enabled) {
+                    var a = new Audio();
+                    a.src = 'audio/orch1.mp3';
+                    a.playbackRate = 1.3;
+                    a.play();
+                    audio.play();
+                }
+                else {
+                    audio.pause();
+                }
+            });
+            await addCheckboxOption(await k('options_ui2_title'), await k('options_ui2_desc'), 'sfx', false, (enabled) => {
+                if (enabled) {
+                    var a = new Audio();
+                    a.src = 'audio/orch1.mp3';
+                    a.playbackRate = 1.1;
+                    a.play();
+                }
+            });
             await addCheckboxOption(await k('options_ui3_title'), await k('options_ui3_desc'), 'PARALLAX', true);
 
             await addButton(await k('options_ui_theme_title'), await k('options_ui_theme_desc'), async () => {
@@ -171,6 +193,8 @@ window.currentPageStack.cat = async function(cat) {
 
             break;
         case 'adv':
+            await addRowHeader(icon('warning', '20px') + ' ' + await k('options_adv0_warn'));
+
             await addButton(await k('options_adv0_title'), await k('options_adv0_desc'), async () => {
                 page('gm3p-selector');
             }, await k('open'));
@@ -192,6 +216,7 @@ window.currentPageStack.cat = async function(cat) {
             break;
         // dev isnt keyed and is always in english
         case "dev":
+            await addRowHeader(icon('warning', '20px') + ' ' + await k('options_dev0_warn'));
             await addButton('Open flag database (DEV-ONLY)', 'Opens the database holding flags.', async () => {
                 await window.electronAPI.invoke('openFlagDatabase', []);
             }, await k('open'));

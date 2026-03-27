@@ -1,6 +1,4 @@
-const SentryEndpoint = require('./Sentry.js'); // must be first for error handling
-
-const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification, safeStorage, Menu } = require('electron');
 const Paths = require('./Paths');
 const KeyValue = require('./KeyValue');
 const fs = require('fs');
@@ -14,6 +12,7 @@ const crypto = require('crypto');
 const { setWindow, page, getSharedVar, setSharedVar, properRelaunch, getSteamDirectory } = require('./Utils');
 const { exec } = require('child_process');
 const Modstore = require('./Modstore');
+const CMode = require('./ControllerMode');
 const Updates = require('./Updates');
 const GameDB = require('./GameDB');
 const { createProgressModal, updateProgressModal, closeAllProgressModals } = require('./ProgressModal');
@@ -33,7 +32,7 @@ const os = require('os');
 const { PARTITION } = require('./Config');
 
 function errorWin(error) {
-    SentryEndpoint.error(new Error(error instanceof Error ? error.message : error));
+    win.setFullScreen(false);
     return require('./ErrorWin.js').errorWin(error);
 }
 
@@ -344,6 +343,7 @@ function showError(errorCode) {
 }
 
 function createWindow() {
+    var isControllerMode = process.argv.includes('-controller');
     process.stdout.write(fs.readFileSync(path.join(__dirname, '..', 'ascii.txt'), 'utf8') + "\r\n\r\n");
     KeyValue.upgradeStores();
     if (!KeyValue.readUniqueFlag('setup')) {
@@ -475,12 +475,41 @@ function createWindow() {
         height: h,
         resizable: true,
         frame: false,
+        fullscreen: isControllerMode,
         webPreferences: {
             nodeIntegration: true,
             partition: partition,
             preload: Paths.file('web', 'preload.js'),
         }
     });
+
+    if (isControllerMode) {
+        CMode.start();
+        const menu = Menu.buildFromTemplate([
+            {
+            label: 'View',
+            submenu: [
+                {
+                    label: 'Exit Controller Mode',
+                    accelerator: 'F11',
+                    click: () => {
+                        win.webContents.executeJavaScript('promptLeaveCMode()');
+                    }
+                },
+                {
+                    label: 'Toggle Developer Tools',
+                    accelerator: 'F12',
+                    click: () => {
+                        if (devToolsEnabled) {
+                            win.webContents.toggleDevTools();
+                        }
+                    }
+                }
+            ]
+            }
+        ]);
+        win.setMenu(menu);
+    }
 
     // I put this at the start so that we could use getWindow() in window setup functions
     // Because I want createWindow() to not be a giant function
@@ -539,6 +568,21 @@ function createWindow() {
         }
         return { action: 'allow' };
     });
+
+    ipcMain.handle('isCMode', () => {
+        return isControllerMode;
+    });
+
+    ipcMain.handle('cmode-on', () => {
+        app.relaunch({ args: [...process.argv.slice(1).filter(x => !x.toLowerCase().startsWith("deltamod://")), '---controller'] });
+        app.exit(0);
+    });
+
+    ipcMain.handle('cmode-off', () => {
+        app.exit(0);
+    });
+
+
     ipcMain.handle('sampleError', () => {
         errorWin('This is a sample error triggered from the renderer process.');
     });
@@ -980,7 +1024,22 @@ function createWindow() {
     });
 
     ipcMain.handle('initialize', async (event, args) => {
-        app.relaunch(properRelaunch(['---initialize_deltamod']));
+        var appdata = path.join(app.getPath('appData'), 'deltamod');
+
+        fs.readdirSync(appdata).forEach(file => {
+            if (file.startsWith('deltamod_system')) {
+                const fullPath = path.join(appdata, file);
+                console.log('Removing old system folder: ' + fullPath);
+                try {
+                    fs.rmSync(fullPath, { recursive: true, force: true });
+                } catch (e) {
+                    console.error(`Failed to remove ${fullPath}:`, e);
+                }
+            }
+        });
+
+        fs.rmSync(path.join(app.getPath('appData'), 'deltamod', 'pkg.db'), { recursive: true, force: true });
+
         app.quit();
     });
 
@@ -992,47 +1051,7 @@ function createWindow() {
     });
 
     ipcMain.handle('executeArgumentCmd', async (event, args) => {
-        if (process.argv.includes('---initialize_deltamod')) {
-            win.hide();
-            const confirm = dialog.showMessageBoxSync({
-                type: 'warning',
-                buttons: ['Yes', 'No'],
-                defaultId: 1,
-                cancelId: 1,
-                title: 'Initialize Deltamod',
-                message: 'A request was received for Deltamod to initialize and remove every installation and mod from the system. This action is irreversible. Do you want to continue?'
-            });
-            if (confirm !== 0) {
-                process.exit(0);
-                app.quit();
-                return;
-            }
-            page('busy');
-
-            console.log('Initializing Deltamod...');
-
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            var appdata = path.join(app.getPath('appData'), 'deltamod');
-
-            fs.readdirSync(appdata).forEach(file => {
-                if (file.startsWith('deltamod_system')) {
-                    const fullPath = path.join(appdata, file);
-                    console.log('Removing old system folder: ' + fullPath);
-                    try {
-                        fs.rmSync(fullPath, { recursive: true, force: true });
-                    } catch (e) {
-                        console.error(`Failed to remove ${fullPath}:`, e);
-                    }
-                }
-            });
-
-            fs.rmSync(path.join(app.getPath('appData'), 'deltamod', 'pkg.db'), { recursive: true, force: true });
-
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            app.quit();
-        }
+        // no argument cmds for now
     });
 
     ipcMain.handle('myCommitInfo', async (event, args) => {
@@ -1483,7 +1502,11 @@ function createWindow() {
             return true;
         }
 
+        if (isControllerMode) {
+            CMode.stop();
+        }
         // Launch executable
+
         exec(`"${exe}" ${argsStr}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
             // Always restore originals after the game closes
             try {
@@ -1491,6 +1514,8 @@ function createWindow() {
             } catch (e) {
                 console.error('Failed to restore originals after run:', e);
             }
+
+            if (isControllerMode) { CMode.start(); }
 
             win.show();
             win.webContents.send('audio', true);
@@ -1507,6 +1532,52 @@ function createWindow() {
     */
     ipcMain.handle('patchAndRun', async (event, args) => {
         try {
+            console.log('running preliminary checks before patching...');
+            // do a small check: see if git is installed
+            try {
+                await new Promise((resolve, reject) => {
+                    exec('git --version', (error, stdout, stderr) => {
+                        if (error) {
+                            reject(new Error('Git is not installed or not added to PATH. Please install Git to use Deltamod\'s patching features.'));
+                            return;
+                        }
+                        resolve();
+                    });
+                });
+            }
+            catch (e) {
+                dialog.showErrorBox('Git not found', 'Git is required to patch Deltarune. Please install Git and make sure it is added to your system PATH. The web page will now open with instructions on how to do this.');
+                shell.openExternal('https://git-scm.com/downloads');
+                page('main');
+                return false;
+            }
+
+            // see if .net 8.0 is installed
+            try {
+                await new Promise((resolve, reject) => {
+                    exec('dotnet --list-runtimes', (error, stdout, stderr) => {
+                        if (error) {
+                            reject(new Error('.NET is not installed or not added to PATH. Please install .NET 8.0 to use Deltamod\'s patching features.'));
+                            return;
+                        }
+
+                        if (!stdout.includes('Microsoft.NETCore.App 8.0')) {
+                            reject(new Error('.NET 8.0 is not installed. Please install .NET 8.0 to use Deltamod\'s patching features.'));
+                            return;
+                        }
+
+                        resolve();
+                    });
+                });
+            }
+            catch (e) {
+                dialog.showErrorBox('.NET not found', '.NET 8.0 is required to patch Deltarune. Please install .NET 8.0 and make sure it is added to your system PATH. The web page will now open with instructions on how to do this.');
+                shell.openExternal('https://dotnet.microsoft.com/en-us/download/dotnet/8.0');
+                page('main');
+                return false;
+            }
+
+
             var baking = args[1] == 'baker';
             var pathname = KeyValue.readKVS('deltarunePath');
             if (!pathname) {
@@ -1879,6 +1950,7 @@ function createWindow() {
     ipcMain.handle('removeSteamIntegration', async (event, args) => {
         var currentIndex = require('./System.js').getCurrentSystemIndex();
 const https = require('https');
+const robot = require('robotjs');
         Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(currentIndex)));
         KeyValue.setKVSOfIndex('isSteam', false, parseInt(currentIndex));
         KeyValue.setKVSOfIndex('originalSteamPath', "", parseInt(currentIndex));

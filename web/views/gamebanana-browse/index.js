@@ -1,3 +1,5 @@
+let PAGE = (window._pageArguments && window._pageArguments.lp) ? parseInt(window._pageArguments.lp) : 1;
+
 function getThumbURL(mod) {
     try {
         if (mod._sImageUrl && mod._sImageUrl.length > 0) {
@@ -10,6 +12,19 @@ function getThumbURL(mod) {
     }
 }
 
+const element = document.querySelector('.scrollBottomDetector');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+        plusPage(1);
+    }
+  });
+}, {
+  threshold: 0.1 // triggers when 10% of element is visible
+});
+
+observer.observe(element);
 
 function getAllThumbs(mod) {
     let ar = mod._aPreviewMedia._aImages.map(x => x._sBaseUrl + "/" + x._sFile);
@@ -48,21 +63,6 @@ function roundViews(views) {
 
 let capi = '';
 let csearch = '';
-
-let PAGE = (window._pageArguments && window._pageArguments.lp) ? parseInt(window._pageArguments.lp) : 1;
-
-function plusPage(ind) {
-    PAGE += ind;
-    if (PAGE < 1) PAGE = 1;
-    window._pageArguments = window._pageArguments || {};
-    window._pageArguments.lp = PAGE.toString();
-    window._pageArguments.gbAPI = capi;
-    window._pageArguments.gbAPIFilter = async function(data) {
-        return data;
-    };
-    window._pageArguments.leSearchQuery = csearch;
-    page('gamebanana-browse');
-}
 
 async function search() {
     let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
@@ -133,38 +133,9 @@ window.currentPageStack.search = search;
 
 window.currentPageStack.plusPage = plusPage;
 
-(async () => {
-    if (navigator.onLine === false) {
-        await htmlAlert(await k('shop_offline'),await k('shop_offline_desc'),[{text:await k('ok'),resolveWith:'ok'}], 'cloud_alert');
-        page('main');
-        return;
-    }
-    let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
-    let GB_API = 'https://gamebanana.com/apiv11/Game/' + gameID + '/Subfeed?_sSort=default&_nPage=$PAGE';
-    let table = document.getElementById('modsBody');
-    let filter = async function(a) {
-        return a;
-    };
+var firstgeneration = true;
 
-    if (window._pageArguments && window._pageArguments.gbAPI && window._pageArguments.gbAPIFilter) {
-        GB_API = window._pageArguments.gbAPI;
-        filter = window._pageArguments.gbAPIFilter;
-    }
-
-    if (window._pageArguments && window._pageArguments.leSearchQuery) {
-        document.getElementById('searchInput').value = window._pageArguments.leSearchQuery;
-        csearch = window._pageArguments.leSearchQuery;
-
-        let searchInd = document.getElementById('searchInd');
-        searchInd.style.display = 'block';
-        searchInd.innerText = await k('shop_showingresults', csearch);
-    }
-
-    capi = GB_API;
-    window._pageArguments = {}; // reset page arguments
-
-    await gameBananaLogin();
-
+async function renderMods(table, GB_API, filter, gameID) {
     var furl = GB_API.replace('$PAGE', PAGE.toString());
     console.log('Fetching from URL: ' + furl);
     var response = await fetch(furl);
@@ -174,16 +145,16 @@ window.currentPageStack.plusPage = plusPage;
     var featuredData = await featured.json();
     var featuredIDs = featuredData.map(x => {return {id: x._idRow, period: x._sPeriod};});
 
-    table.innerHTML = '';
-
     try {
         if (data._aRecords.length === 0) {
             var tr = document.createElement('tr');
             var td = document.createElement('td');
             td.colSpan = 2;
-            td.innerText = await k('shop_noresults');
+            td.innerText = (firstgeneration ? await k('shop_noresults') : await k('shop_endlist'));
             tr.appendChild(td);
             table.appendChild(tr);
+            observer.disconnect(); // stop observing since there's no more content to load
+            document.querySelector('.scrollBottomDetector').style.display = 'none'; // hide the loading indicator
             return;
         }
         for (const mod of data._aRecords) {
@@ -206,27 +177,6 @@ window.currentPageStack.plusPage = plusPage;
                 img.className = 'modThumbImg';
                 img.src = (thumbs[0]);
                 let i = 0;
-                if (thumbs.length > 1) {
-                    window._intervals.push(setInterval(async () => {
-                    img.style.animation = 'imgFadeOut 0.5s';
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    img.style.opacity = '0';
-                    if (thumbs.length > 1) {
-                        i = (i + 1) % thumbs.length;
-                        img.src = thumbs[i];
-                    }
-                    img.onload = () => {
-                        img.style.animation = 'imgFadeIn 0.5s';
-                        img.style.opacity = '1';
-                        img.onload = null;
-                    };
-                    img.onerror = () => {
-                        img.style.animation = 'imgFadeIn 0.5s';
-                        img.style.opacity = '1';
-                        img.onerror = null;
-                    };
-                    }, 5000));
-                }
                 img.style.width = '115px';
                 img.style.margin = '4px';
                 img.style.aspectRatio = '16 / 9';
@@ -308,6 +258,7 @@ window.currentPageStack.plusPage = plusPage;
                 {
                     var dlBtn = document.createElement('button');
                     dlBtn.innerHTML = icon('download', '0.9em') + '';
+                    dlBtn.class = 'download-btn';
                     dlBtn.onclick = async () => {
                         dlBtn.disabled = true;
                         dlBtn.innerHTML = icon('downloading', '0.9em');
@@ -397,6 +348,14 @@ window.currentPageStack.plusPage = plusPage;
                     td1.appendChild(likeBtn);
                 }
 
+                if (cmode) {
+                    tippy(td0, {
+                        content: icon('game_button_l1', '20px'),
+                        placement: 'left',
+                        allowHTML: true,
+                        delay: [0, 0],
+                    });
+                }
 
                 // tr-ify and add
                 var tr = document.createElement('tr');
@@ -413,8 +372,61 @@ window.currentPageStack.plusPage = plusPage;
         await htmlAlert(await k('shop_error'),await k('shop_error_desc'),[{text:'Ok',resolveWith:'ok'}], 'error');
 
         page('main');
+        firstgeneration = true;
         return;
     }
+
+    firstgeneration = false;
+}
+
+async function plusPage(amt) {
+    PAGE += amt;
+    await renderMods(window.currentPageStack.table, window.currentPageStack.GB_API, window.currentPageStack.filter, window.currentPageStack.gameID);
+}
+
+(async () => {
+    if (navigator.onLine === false) {
+        await htmlAlert(await k('shop_offline'),await k('shop_offline_desc'),[{text:await k('ok'),resolveWith:'ok'}], 'cloud_alert');
+        page('main');
+        return;
+    }
+    let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
+    let GB_API = 'https://gamebanana.com/apiv11/Game/' + gameID + '/Subfeed?_sSort=default&_nPage=$PAGE';
+    let table = document.getElementById('modsBody');
+    let filter = async function(a) {
+        return a;
+    };
+
+    if (window._pageArguments && window._pageArguments.gbAPI && window._pageArguments.gbAPIFilter) {
+        GB_API = window._pageArguments.gbAPI;
+        filter = window._pageArguments.gbAPIFilter;
+    }
+
+    if (window._pageArguments && window._pageArguments.leSearchQuery) {
+        document.getElementById('searchInput').value = window._pageArguments.leSearchQuery;
+        csearch = window._pageArguments.leSearchQuery;
+
+        let searchInd = document.getElementById('searchInd');
+        searchInd.style.display = 'block';
+        searchInd.innerText = await k('shop_showingresults', csearch);
+    }
+
+    capi = GB_API;
+    window._pageArguments = {}; // reset page arguments
+
+    await gameBananaLogin();
+
+    table.innerHTML = '';
+
+    window.currentPageStack = {
+        ...window.currentPageStack,
+        table,
+        GB_API,
+        filter,
+        gameID
+    };
+
+    await renderMods(table, GB_API, filter, gameID);
 
     genbtnstyles();
 })();

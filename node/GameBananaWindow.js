@@ -9,8 +9,6 @@ function obtainLogin() {
         let loginWindow = new BrowserWindow({
             width: 800,
             height: 600,
-            resizable: false,
-            fullscreenable: false,
             minimizable: false,
             webPreferences: {
                 nodeIntegration: false,
@@ -18,6 +16,15 @@ function obtainLogin() {
                 contextIsolation: true,
             }
         });
+
+        if (process.argv.includes('---controller')) {
+            loginWindow.setFullScreen(true);
+        }
+        else {
+            loginWindow.center();
+            loginWindow.setResizable(false);
+            loginWindow.setFullScreenable(false);
+        }
 
         loginWindow.setMenuBarVisibility(false);
     
