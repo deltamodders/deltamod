@@ -7,6 +7,8 @@ var update = false;
 var TARGET_MUSIC_VOLUME = 0.5;
 var cmode = false;
 
+window._onClosePage = window._onClosePage || [];
+
 async function invoke(...params) {
     return window.electronAPI.invoke(...params);
 }
@@ -91,6 +93,13 @@ window.preloadAPI.onWRA(() => {
 function error() {
     fetch('http://google.com');
 }
+
+document.addEventListener("mousemove", function (event) {
+  const x = event.clientX;
+  const y = event.clientY;
+
+  window.mouseCoords = { x, y };
+});
 
 var alertCache = [];
 var isAlertShowing = false;
@@ -499,6 +508,12 @@ async function page(name) {
     ${theme.specialCSS || ''}
     `;
 
+    window._onClosePage = window._onClosePage || [];
+
+    window._onClosePage.forEach(func => func());
+
+    window._onClosePage = [];
+    
     var styleTag = document.getElementById('dynamic-theme-styles');
     styleTag.innerHTML = generatedCSS;
     if (runScripts)
@@ -639,6 +654,9 @@ if (!window.electronAPI) {
         }
     } else {
         await page('locate');
+        document.querySelectorAll('.sidebar-button').forEach(button => {
+            button.disabled = true;
+        });
         window.electronAPI.invoke('executeArgumentCmd',[]);
     }
 

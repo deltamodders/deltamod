@@ -1,5 +1,11 @@
 let PAGE = (window._pageArguments && window._pageArguments.lp) ? parseInt(window._pageArguments.lp) : 1;
 
+window.PAGE = PAGE;
+
+window._onClosePage.push(() => {
+    delete window.PAGE;
+});
+
 function getThumbURL(mod) {
     try {
         if (mod._sImageUrl && mod._sImageUrl.length > 0) {
@@ -25,6 +31,10 @@ const observer = new IntersectionObserver((entries) => {
 });
 
 observer.observe(element);
+
+window._onClosePage.push(() => {
+    observer.disconnect();
+});
 
 function getAllThumbs(mod) {
     let ar = mod._aPreviewMedia._aImages.map(x => x._sBaseUrl + "/" + x._sFile);
@@ -136,7 +146,10 @@ window.currentPageStack.plusPage = plusPage;
 var firstgeneration = true;
 
 async function renderMods(table, GB_API, filter, gameID) {
-    var furl = GB_API.replace('$PAGE', PAGE.toString());
+    if (window.PAGE == null) {
+        window.PAGE = 1;
+    }
+    var furl = GB_API.replace('$PAGE', window.PAGE);
     console.log('Fetching from URL: ' + furl);
     var response = await fetch(furl);
     var data = await filter(await response.json());
@@ -371,7 +384,7 @@ async function renderMods(table, GB_API, filter, gameID) {
 }
 
 async function plusPage(amt) {
-    PAGE += amt;
+    window.PAGE += amt;
     await renderMods(window.currentPageStack.table, window.currentPageStack.GB_API, window.currentPageStack.filter, window.currentPageStack.gameID);
 }
 

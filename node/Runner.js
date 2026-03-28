@@ -2085,9 +2085,7 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
     try {
-        if (process.argv.includes('-controller')) {
-            CMode.stop();
-        }
+        CMode.stop();
         if (process.platform === 'win32') {
             console.log('Killing GM3P.exe processes...');
             execSync('taskkill /IM GM3P.exe /F', { stdio: 'ignore' });
