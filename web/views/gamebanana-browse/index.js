@@ -348,15 +348,6 @@ async function renderMods(table, GB_API, filter, gameID) {
                     td1.appendChild(likeBtn);
                 }
 
-                if (cmode) {
-                    tippy(td0, {
-                        content: icon('game_button_l1', '20px'),
-                        placement: 'left',
-                        allowHTML: true,
-                        delay: [0, 0],
-                    });
-                }
-
                 // tr-ify and add
                 var tr = document.createElement('tr');
                 tr.appendChild(td0);

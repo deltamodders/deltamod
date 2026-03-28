@@ -1,7 +1,7 @@
 <project>
     <shortName>deltamod</shortName>
     <fullName>Deltamod</fullName>
-    <version>1.6.0</version>
+    <version>1.7.0</version>
     <leftImage>${build_project_directory}/../build/installer/leftImage.png</leftImage>
     <logoImage>${build_project_directory}/../build/icon-small.png</logoImage>
     <splashImage>${build_project_directory}/../build/installer/installersplash.png</splashImage>
@@ -36,12 +36,6 @@
                         <distributionDirectory>
                             <origin>${build_project_directory}/../dist/win-unpacked</origin>
                         </distributionDirectory>
-                        <distributionFile>
-                            <origin>${build_project_directory}/dotnet.exe</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>${build_project_directory}/git.exe</origin>
-                        </distributionFile>
                     </distributionFileList>
                     <shortcutList>
                         <shortcut>
@@ -105,28 +99,19 @@
             </startMenuShortcutList>
         </component>
     </componentList>
-    <postInstallationActionList>
-        <runProgram>
-            <program>${installdir}/dotnet.exe</program>
-            <programArguments>/silent /norestart</programArguments>
-            <progressText>Running .NET installer</progressText>
-            <run>${installnet} /passive /norestart</run>
-        </runProgram>
-        <runProgram>
-            <abortOnError>0</abortOnError>
-            <explanation>Running GIT installer</explanation>
-            <program>${installdir}/git.exe</program>
-            <programArguments></programArguments>
-            <progressText>Running GIT installer</progressText>
-            <run>${installgit} /SILENT /NORESTART /DIR="C:\Program Files\Git" /NOICONS /SP-</run>
-            <showMessageOnError>0</showMessageOnError>
-        </runProgram>
-    </postInstallationActionList>
     <compressionAlgorithm>lzma</compressionAlgorithm>
     <disableSplashScreen>1</disableSplashScreen>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <vendor>Deltamodders</vendor>
+    <finalPageActionList>
+        <runProgram>
+            <explanation>Open Deltamod</explanation>
+            <program>${installdir}\win-unpacked\deltamod.exe</program>
+            <programArguments></programArguments>
+            <run>${rundmod}</run>
+        </runProgram>
+    </finalPageActionList>
     <parameterList>
         <directoryParameter>
             <name>installdir</name>
@@ -141,31 +126,6 @@
             <mustExist>0</mustExist>
             <width>60</width>
         </directoryParameter>
-        <booleanParameter>
-            <name>installnet</name>
-            <title>Install .NET</title>
-            <description></description>
-            <explanation>Would you like to install the .NET framework?</explanation>
-            <value></value>
-            <default></default>
-        </booleanParameter>
-        <booleanParameter>
-            <name>installgit</name>
-            <title>Install Git</title>
-            <description></description>
-            <explanation>Would you like to install Git?</explanation>
-            <value>0</value>
-            <default>0</default>
-        </booleanParameter>
-        <parameterGroup>
-            <name>legacynotice</name>
-            <title>Old versions</title>
-            <explanation>Before you install Deltamod, you will have to uninstall previous versions of Deltamod.
-
-If you have any Deltamod installation to delete, please do so now by going to the Control Panel.</explanation>
-            <value></value>
-            <default></default>
-        </parameterGroup>
         <licenseParameter>
             <name>License</name>
             <title>License Agreement</title>
@@ -173,14 +133,6 @@ If you have any Deltamod installation to delete, please do so now by going to th
             <explanation></explanation>
             <file>${build_project_directory}/../LICENSE.txt</file>
             <fileEncoding>utf-8</fileEncoding>
-            <htmlFile></htmlFile>
-        </licenseParameter>
-        <licenseParameter>
-            <name>PrivacyPolicy</name>
-            <title>Privacy Policy</title>
-            <description>Please read the following Privacy Policy. You must accept the terms of this agreement before continuing with the installation.</description>
-            <explanation></explanation>
-            <file>${build_project_directory}/../PRIVACY.txt</file>
             <htmlFile></htmlFile>
         </licenseParameter>
     </parameterList>

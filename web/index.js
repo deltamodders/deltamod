@@ -551,6 +551,26 @@ if (!window.electronAPI) {
     }
     else {
         document.querySelector('.glyph').style.display = 'none';
+        window.addEventListener("gamepadconnected", async (event) => {
+            var res = await htmlAlert(
+                await k('prompt_cmode_title'),
+                await k('prompt_cmode_message'),
+                [
+                    {
+                        text: await k('yes'),
+                        resolveWith: true
+                    },
+                    {
+                        text: await k('no'),
+                        resolveWith: false
+                    }
+                ]
+            );
+
+            if (res) {
+                invoke('cmode-on', []);
+            }
+        });
     }
 
     var os = await window.electronAPI.invoke('getOS',[]);

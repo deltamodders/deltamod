@@ -14,3 +14,5 @@ installbuilder/git.exe
 /.idea
 /cache
 /unreleased
+tools/dotnetinstaller.exe
+tools/gitinstaller.exe

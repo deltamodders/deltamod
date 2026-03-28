@@ -574,11 +574,12 @@ function createWindow() {
     });
 
     ipcMain.handle('cmode-on', () => {
-        app.relaunch({ args: [...process.argv.slice(1).filter(x => !x.toLowerCase().startsWith("deltamod://")), '---controller'] });
+        app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://')),  '-controller'] });
         app.exit(0);
     });
 
     ipcMain.handle('cmode-off', () => {
+        app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://'))] });
         app.exit(0);
     });
 
@@ -1546,9 +1547,11 @@ function createWindow() {
                 });
             }
             catch (e) {
-                dialog.showErrorBox('Git not found', 'Git is required to patch Deltarune. Please install Git and make sure it is added to your system PATH. The web page will now open with instructions on how to do this.');
-                shell.openExternal('https://git-scm.com/downloads');
-                page('main');
+                dialog.showErrorBox('Git not found', 'Looks like you\'re missing an important piece of software to mod your game. But no worries, we\'ll install it for you! Just grant us the legendary administrator perms.');
+                win.hide();
+                exec('"' + path.join(__dirname, '..', 'tools', 'gitinstaller.exe') + '" /SILENT /NORESTART /DIR="C:/Program Files/Git" /NOICONS /SP-');
+                app.relaunch(properRelaunch());
+                app.exit(0);
                 return false;
             }
 
@@ -1571,9 +1574,11 @@ function createWindow() {
                 });
             }
             catch (e) {
-                dialog.showErrorBox('.NET not found', '.NET 8.0 is required to patch Deltarune. Please install .NET 8.0 and make sure it is added to your system PATH. The web page will now open with instructions on how to do this.');
-                shell.openExternal('https://dotnet.microsoft.com/en-us/download/dotnet/8.0');
-                page('main');
+                dialog.showErrorBox('.NET not found', 'Looks like you\'re missing an important piece of software to mod your game. But no worries, we\'ll install it for you! Just grant us the legendary administrator perms.');
+                win.hide();
+                execSync('"' + path.join(__dirname, '..', 'tools', 'dotnetinstaller.exe') + '" /passive /norestart');
+                app.relaunch(properRelaunch());
+                app.exit(0);
                 return false;
             }
 
