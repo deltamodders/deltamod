@@ -192,6 +192,7 @@
     "leave_cmode_message": "Are you sure you want to exit controller mode? If you exit controller mode, Deltamod will close.",
     "cmode_leftstick_glydesc": "Move cursor",
     "cmode_rightstick_glydesc": "Scroll",
+    "cmode_bbutton_glydesc": "Right click",
     "cmode_abutton_glydesc": "Click",
     "shop_dlmod_cmodequick": "Download hovered mod",
     "prompt_cmode_title": "Controller mode",

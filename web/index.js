@@ -428,7 +428,13 @@ async function page(name) {
             else {
                 audio.src = './' + audioSrc[1];
             }
-            audio.loop = true;
+            audio.addEventListener('timeupdate', function(){
+                    var buffer = .44
+                    if(this.currentTime > this.duration - buffer){
+                        this.currentTime = 0
+                        this.play()
+                    }
+            });
             audio.volume = TARGET_MUSIC_VOLUME;
 
             changeAudio = true;
@@ -539,7 +545,8 @@ if (!window.electronAPI) {
         makeGlyphs([
             { icon: 'game_stick_left', description: await k('cmode_leftstick_glydesc') },
             { icon: 'game_stick_right', description: await k('cmode_rightstick_glydesc') },
-            { icon: 'square_circle', description: await k('cmode_abutton_glydesc') },
+            { icon: 'cancel', description: await k('cmode_abutton_glydesc') },
+            { icon: 'square_circle', description: await k('cmode_bbutton_glydesc') },
         ])
 
         if (!localStorage.getItem('seenCModeAlert')) {

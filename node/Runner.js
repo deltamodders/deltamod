@@ -509,6 +509,15 @@ function createWindow() {
             }
         ]);
         win.setMenu(menu);
+
+        // when is win lost focus...
+        win.on('blur', () => {
+            CMode.stop();
+        });
+
+        win.on('focus', () => {
+            CMode.start();
+        });
     }
 
     // I put this at the start so that we could use getWindow() in window setup functions
@@ -1315,7 +1324,8 @@ function createWindow() {
 
             // i trust the deltamod team to not fuck up the version and put invalid characters into the file name
             await fs.writeFileSync(installerpath, Buffer.from(bytes));
-            shell.openPath(installerpath);
+            exec(`cmd /c \""${installerpath}" --mode unattended --unattendedmodeui minimal\"`);
+            
             app.exit(0);
         } catch (e) {
             console.error(e);
@@ -2075,6 +2085,9 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
     try {
+        if (process.argv.includes('-controller')) {
+            CMode.stop();
+        }
         if (process.platform === 'win32') {
             console.log('Killing GM3P.exe processes...');
             execSync('taskkill /IM GM3P.exe /F', { stdio: 'ignore' });
