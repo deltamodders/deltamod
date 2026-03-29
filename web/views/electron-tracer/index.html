@@ -8,9 +8,9 @@
 <body>
     <table>
         <colgroup>
-            <col style="width: 30%;">
-            <col style="width: 30%;">
-            <col style="width: 40%;">
+            <col style="width: 20%;">
+            <col style="width: 20%;">
+            <col style="width: 60%;">
         </colgroup>
         <thead>
             <tr>
@@ -28,10 +28,14 @@
         const newRow = document.createElement('tr');
         const newCell = document.createElement('td');
         newCell.textContent = args.channel;
+        newCell.style.fontWeight = 'bold';
+        newCell.style.fontSize = '1.1em';
         const evenNewerCell = document.createElement('td');
         evenNewerCell.textContent = JSON.stringify(args.args.join(', '));
+        evenNewerCell.style.fontSize = '0.9em';
         const evenNewerCell2 = document.createElement('td');
         evenNewerCell2.textContent = JSON.stringify(args.leResponse);
+        evenNewerCell2.style.fontSize = '0.9em';
     
         newRow.appendChild(newCell);
         newRow.appendChild(evenNewerCell);
@@ -52,8 +56,9 @@
     }
     th, td {
         border: 1px solid #ddd;
-        padding: 8px;
+        padding: 12px;
         text-align: left;
+        white-space: collapse;
     }
     th {
         background-color: #f2f2f2;

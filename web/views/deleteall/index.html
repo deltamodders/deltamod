@@ -11,9 +11,11 @@
         <p><i>$$deleteall_warning4$$</i></p>
     </div>
     <p>$$deleteall_sure$$</p>
-    <button onclick="window.currentPageStack.init()" style="display: flex; align-items: center; gap: 10px;">
+    <button style="display: flex; align-items: center; gap: 10px;" id="initbtn">
         <span class="material-symbols-outlined">bomb</span> <b>$$deleteall_deleteall$$</b>
     </button>
+    <br>
+    <progress id="progbar" value="0" max="100"></progress>
 </div>
 <style>
     @keyframes fadeIn {

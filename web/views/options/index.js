@@ -152,8 +152,8 @@ window.currentPageStack.cat = async function(cat) {
             await addCheckboxOption(await k('options_gen2_title'), await k('options_gen2_desc'), 'HASHCHECKS');
             break;
         case 'ui':
-            await addCheckboxOption(await k('options_ui0_title'), await k('options_ui0_desc'), 'SHOP', true);
-            await addCheckboxOption(await k('options_ui1_title'), await k('options_ui1_desc'), 'audio', false, (enabled) => {
+            await addCheckboxOption(await k('options_ui0_title'), "", 'SHOP', true);
+            await addCheckboxOption(await k('options_ui1_title'), "", 'audio', false, (enabled) => {
                 if (enabled) {
                     var a = new Audio();
                     a.src = 'audio/orch1.mp3';
@@ -165,7 +165,7 @@ window.currentPageStack.cat = async function(cat) {
                     audio.pause();
                 }
             });
-            await addCheckboxOption(await k('options_ui2_title'), await k('options_ui2_desc'), 'sfx', false, (enabled) => {
+            await addCheckboxOption(await k('options_ui2_title'), "", 'sfx', false, (enabled) => {
                 if (enabled) {
                     var a = new Audio();
                     a.src = 'audio/orch1.mp3';
@@ -173,7 +173,6 @@ window.currentPageStack.cat = async function(cat) {
                     a.play();
                 }
             });
-            await addCheckboxOption(await k('options_ui3_title'), await k('options_ui3_desc'), 'PARALLAX', true);
 
             await addButton(await k('options_ui_theme_title'), await k('options_ui_theme_desc'), async () => {
                 page('themesel');
@@ -324,7 +323,7 @@ window.currentPageStack.cat = async function(cat) {
                         await htmlAlert("Error", "This language could not be loaded correctly.", [{text: await k('ok'), resolveWith:''}]);
                         return;
                     }
-                    window.location.reload();
+                    page("");
                 });
                 tdButton.appendChild(button);
                 tr.appendChild(tdButton);

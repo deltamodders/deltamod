@@ -319,17 +319,15 @@ window.preloadAPI.onThemeChange(refreshTheme);
 let lockRandoms = false;
 
 (async () => {
-    if (await window.electronAPI.invoke('getUniqueFlag', ["PARALLAX"]) == true) {
-        document.addEventListener('mousemove', (e) => {
-            const bg = document.querySelector('.bg');
-            if (bg) {
-                const x = (e.clientX / window.innerWidth) * 20 - 10;
-                const y = (e.clientY / window.innerHeight) * 20 - 10;
-                bg.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
-                document.querySelector('.viewport').style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
-            }
-        });
-    }
+    document.addEventListener('mousemove', (e) => {
+        const bg = document.querySelector('.bg');
+        if (bg) {
+            const x = (e.clientX / window.innerWidth) * 20 - 10;
+            const y = (e.clientY / window.innerHeight) * 20 - 10;
+            bg.style.transform = `translate(${x * 0.12}px, ${y * 0.12}px)`;
+            document.querySelector('.viewport').style.transform = `translate(${x * 0.07}px, ${y * 0.07}px)`;
+        }
+    });
 })();
 async function page(name) {
     rew();
