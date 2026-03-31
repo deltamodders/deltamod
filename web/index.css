@@ -1,3 +1,7 @@
+* {
+    user-select: none;
+}
+
 :root {
     --topbar-height: 40px;
     --sidebar-size: 50px;
@@ -201,7 +205,7 @@ button:disabled {
 
 .winb {
     z-index: 100000;
-    border: 3px solid var(--theme-color);
+    border: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -324,7 +328,7 @@ h1 {
     top: calc(var(--topbar-height) * 1);
     left: calc(var(--sidebar-size) * 1 + 20px);
     width: calc(100% - (var(--sidebar-size) * 1));
-    border: 2.5px solid var(--theme-color);
+    border: 1px solid var(--theme-color);
     border-top-left-radius: 20px;
     height: calc(100% - calc(var(--topbar-height) * 1) - 20px);
     overflow-y: scroll;

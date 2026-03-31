@@ -325,7 +325,7 @@ let lockRandoms = false;
             const x = (e.clientX / window.innerWidth) * 20 - 10;
             const y = (e.clientY / window.innerHeight) * 20 - 10;
             bg.style.transform = `translate(${x * 0.12}px, ${y * 0.12}px)`;
-            document.querySelector('.viewport').style.transform = `translate(${x * 0.07}px, ${y * 0.07}px)`;
+            document.querySelector('.viewport').style.transform = `translate(${x * 0.17}px, ${y * 0.17}px)`;
         }
     });
 })();
@@ -608,8 +608,8 @@ if (!window.electronAPI) {
     var hasCore = await window.electronAPI.invoke('hasPatchingCore',[]);
     if (!hasCore) {
         page('busy');
-        await htmlAlert('Important error', 'There is no patcher installed. Please install a new GM3P version to continue using Deltamod.', [
-            { text: 'OK', resolveWith: 'ok' }
+        htmlAlert(await k('criterrors_gm3palert_title'), await k('criterrors_gm3palert_message'), [
+            { text: await k('ok'), resolveWith: 'ok' }
         ], 'error_med');
 
         await page('gm3p-selector');
