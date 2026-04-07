@@ -196,6 +196,8 @@
     "prompt_cmode_title": "Tryb kontrolera",
     "prompt_cmode_message": "Wygląda na to, że masz podłączony kontroler. Czy chcesz włączyć tryb kontrolera? Tryb kontrolera pozwala ci korzystać z Deltamod przy pomocy kontrolera. Lewa gałka ruchu kontroluje twój kursor myszy.",
     "criterrors_gm3palert_title": "Error patchera",
-    "criterrors_gm3palert_message": "Nie masz zainstalowanego żadnego patchera. Patcher jest narzędziem niezbędnym dla Deltamod do modyfikowania gier. Zainstaluj dowolny, wspierany patcher, aby korzystać z Deltamod."
-    
+    "criterrors_gm3palert_message": "Nie masz zainstalowanego żadnego patchera. Patcher jest narzędziem niezbędnym dla Deltamod do modyfikowania gier. Zainstaluj dowolny, wspierany patcher, aby korzystać z Deltamod.",
+    "shop_addedon": "Ostatnia aktualizacja: {0}",
+    "options_gen3_title": "Tryb sterowania promptem, gdy dostępny",
+    "options_gen3_desc": "Po włączeniu zostaniesz poproszony o aktywowanie trybu kontrolera, gdy podłączony zostanie kompatybilny kontroler. Obecnie kompatybilny tylko z DualSense."
 }
