@@ -23,7 +23,7 @@ function createProgressModal() {
         webPreferences: {
             devTools: process.env.DELTAMOD_ENV === 'dev',
             nodeIntegration: true,
-            preload: Paths.file('web', 'views', 'gm3p-modal', 'preload.js'),
+            preload: Paths.file('web', 'views', 'dlmodal', 'preload.js'),
             partition: PARTITION
         }
     });
@@ -37,7 +37,7 @@ function createProgressModal() {
         console.log("IT SHOULD BE CLOSED BY NOW.");
     });
 
-    modal.loadURL('deltapack://web/views/gm3p-modal/index.html');
+    modal.loadURL('deltapack://web/dlmodal/index.html');
     modal.setMenuBarVisibility(false);
 
     return modal;

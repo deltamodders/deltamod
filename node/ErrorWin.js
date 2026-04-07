@@ -22,11 +22,14 @@ function errorWin(err) {
     var whereWrite = path.join(app.getPath('documents'), 'deltamodErrors', filename);
     var error = (err.stack || err.toString());
 
+    setSharedVar('errorPath', whereWrite);
+    setSharedVar('errorMessage', error);
+
     fs.writeFileSync(whereWrite, error, 'utf8');
 
     const win = getWindow();
     win.show();
-    win.loadURL('deltapack://web/views/errorWrt/index.html');
+    win.loadURL('deltapack://web/error/index.html');
 }
 
 module.exports = {

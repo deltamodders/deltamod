@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deltamod error</title>
+    <link rel="stylesheet" href="../../commons/base.css">
+</head>
+<body>
+    <div style="display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center;">
+        <img src="./dog.gif" alt="" width="128">
+        <br>
+        <p>Deltamod was halted due to an error. Here is the error log:</p>
+        <br>
+        <div class="error">
+
+        </div>
+        <br>
+        <button onclick="window.close()">Close</button>
+    </div>
+    <div class="border">
+
+    </div>
+    <p class="credit" onclick="showDiagnostic(this)">This Dogcheck remix is by SilvaGunner!</p>
+</body>
+<style>
+    :root {
+        --theme-color: #2a2a2a;
+    }
+    .credit {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        font-size: 0.7em;
+        font-family: monospace;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.405);
+        opacity: 0.5;
+    }
+    .border {
+       z-index: 100000;
+        border: 6px solid #2a2a2a8d;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0;
+        margin: 0;
+        pointer-events: none;
+    }
+    body {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgb(24, 24, 24);
+    }
+    .error {
+        width: 600px;
+        height: 100px;
+        text-align: left;
+        font-family: monospace;
+        overflow-y: auto;
+        background-color: rgb(0, 0, 0, 0.5);
+        padding: 10px;
+        border-radius: 5px;
+    }
+</style>
+<script>
+    async function showDiagnostic(element) {
+        element.innerText = await window.electronAPI.invoke('diagnosticInfo', []);
+    }
+    var audio = new Audio('./ost.mp3');
+    audio.loop = true;
+    audio.play();
+
+    (async () => {
+        document.querySelector('.error').innerText = await window.electronAPI.invoke('fetchSharedVariable', ['errorMessage']);
+    })();
+</script>
+</html>

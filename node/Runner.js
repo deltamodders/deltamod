@@ -580,6 +580,10 @@ function createWindow() {
         return isControllerMode;
     });
 
+    ipcMain.handle('diagnosticInfo', () => {
+        return `Deltamod ${app.getVersion()} - Running on ${os.platform()} ${os.release()} - cmode ${isControllerMode ? 'on' : 'off'} - devtools ${devToolsEnabled ? 'enabled' : 'disabled'} - ${updateAvailable ? 'update available' : 'no update'}`;
+    });
+
     ipcMain.handle('cmode-on', () => {
         app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://')),  '-controller'] });
         app.exit(0);
