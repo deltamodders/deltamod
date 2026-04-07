@@ -78,7 +78,7 @@ async function crawlComment(comment, div, depth = 0) {
     div.appendChild(commentDiv);
 
     if ((comment._nReplyCount || 0) > 0) {
-        var replies = await fetch('https://gamebanana.com/apiv11/Post/' + comment._idRow + '/Posts?_nPage=1&_nPerpage=20');
+        var replies = await fetch('https://gamebanana.com/apiv11/Post/' + comment._idRow + '/Posts?_nPage=1&_nPerpage=20&' + new Date().getTime());
         var repliesJson = await replies.json();
         try {
             for (let i = 0; i < repliesJson._aRecords.length; i++) {
@@ -94,7 +94,7 @@ async function crawlComment(comment, div, depth = 0) {
 
 (async () => {
     document.getElementById('gbPic').src = await window.electronAPI.invoke('getGamebananaPic',[]);
-    var comments = await fetch('https://gamebanana.com/apiv11/' + gbModel + '/' + gbModID + '/Posts?_nPage=1&_nPerpage=30&_sSort=popular');
+    var comments = await fetch('https://gamebanana.com/apiv11/' + gbModel + '/' + gbModID + '/Posts?_nPage=1&_nPerpage=30&_sSort=popular&' + new Date().getTime());
     var commentsJson = await comments.json();
     var div = document.querySelector('.comments');
 
