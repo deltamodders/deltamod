@@ -58,7 +58,18 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
         }
         const realRoot = findModRoot(modPath);
         if (realRoot && path.resolve(realRoot) !== path.resolve(modPath)) {
-            throw new Error('Please repackage the mod so that its contents are at the root level.');
+            // flatten the mod by moving all files up to the root and deleting the wrapper folder
+            console.log("Flattening mod structure by moving files from", realRoot, "to", modPath);
+            const items = fs.readdirSync(realRoot);
+            for (const item of items) {
+                const src = path.join(realRoot, item);
+                const dest = path.join(modPath, item);
+                fs.renameSync(src, dest);
+            }
+            // delete the wrapper folder if it's not the same as the modPath
+            if (path.resolve(realRoot) !== path.resolve(modPath)) {
+                fs.rmSync(realRoot, { recursive: true, force: true });
+            }
         }
 
         // Check manifest anywhere in the tree (now usually at root after flatten)
@@ -91,6 +102,12 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
         }
 
 
+        if (modInfo.metadata.packageID.toString().trim() != "") {
+            if (fs.existsSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID))) {
+                fs.rmSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID), { recursive: true, force: true });
+            }
+            fs.renameSync(modPath, path.join(system.getPacketDatabase(), modInfo.metadata.packageID));
+        }
 
 
         /*await dialog.showMessageBox(win, {

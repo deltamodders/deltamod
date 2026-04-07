@@ -87,6 +87,10 @@ async function getGBUIConf() {
     return uiconf.data;
 }
 
+function clearCache() {
+    uiConfCache = null;
+}
+
 async function leaveComment(id, comment, model) {
     try {
         var file = getSystemFile('bananapwd', true);
@@ -140,5 +144,6 @@ module.exports = {
     obtainLogin,
     getGBUIConf,
     leaveComment,
-    likeMod
+    likeMod,
+    clearCache
 };

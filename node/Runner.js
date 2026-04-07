@@ -56,8 +56,6 @@ let STEAM_BASE;
 
 app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
 
-let cachedUIConf = null;
-
 const { getGBUIConf } = require('./GameBananaWindow');
 function obtainThemes() {
     if (!fs.existsSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes'))) {
@@ -342,18 +340,18 @@ function showError(errorCode) {
     dialog.showErrorBox('Error', `An error occurred: ${errorCode}`);
 }
 
+function writeTopPart() {
+    process.stdout.write('\x1b]0;Deltamod\x07');
+    console.clear();
+    process.stdout.write(fs.readFileSync(path.join(__dirname, '..', 'ascii.txt'), 'utf8') + "\r\n\r\n");
+    process.stdout.write('[ version ' + app.getVersion() + ' ]\r\n\r\n');
+}
+
 function createWindow() {
     var isControllerMode = process.argv.includes('-controller');
-    process.stdout.write(fs.readFileSync(path.join(__dirname, '..', 'ascii.txt'), 'utf8') + "\r\n\r\n");
+    writeTopPart();
     KeyValue.upgradeStores();
-    if (!KeyValue.readUniqueFlag('setup')) {
-        KeyValue.writeUniqueFlag('setup', 'true');
-        KeyValue.writeUniqueFlag('audio', 'true');
-    }
-
-    if (!KeyValue.readUniqueFlag('sfx')) {
-        KeyValue.writeUniqueFlag('sfx', 'true');
-    }
+    KeyValue.loadUniqueDefaults();
 
     try {
         if (process.platform === 'win32') {
@@ -639,7 +637,12 @@ function createWindow() {
     ipcMain.handle('logoutGamebanana', async () => {
         var file = getSystemFile('bananapwd', true);
         fs.unlinkSync(file);
-        cachedUIConf = null;
+        require('./GameBananaWindow.js').clearCache();
+        return true;
+    });
+
+    ipcMain.handle('eraseGamebananaCache', async () => {
+        require('./GameBananaWindow.js').clearCache();
         return true;
     });
 

@@ -32,4 +32,5 @@ module.exports = {
     error: (...a) => log('ERROR', ...a),
     info: (...a) => log('INFO', ...a),
     debug: (...a) => log('DEBUG', ...a),
+    clear: () => process.stdout.write('\x1b[2J\x1b[0f'),
 };

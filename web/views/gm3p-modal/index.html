@@ -6,16 +6,62 @@
     <title>Downloading...</title>
 </head>
 <body>
-    <div class="progbar">
-
-    </div>
     <img src="./logo.png" alt="" width="70" class="deltamodLogo">
 </body>
 <script>
     function updateProgress(percent) {
-        const progressBar = document.querySelector('.progbar');
-        progressBar.style.width = percent + '%';
+        const value = Math.max(0, Math.min(100, Number(percent) || 0));
+        const logo = document.querySelector(".deltamodLogo");
+        if (!logo) return;
+
+        let canvas = document.getElementById("progressCircle");
+        if (!canvas) {
+            canvas = document.createElement("canvas");
+            canvas.id = "progressCircle";
+            canvas.width = 200;
+            canvas.height = 200;
+            canvas.style.position = "fixed";
+            canvas.style.zIndex = "3";
+            canvas.style.pointerEvents = "none";
+            document.body.appendChild(canvas);
+
+            const placeCircle = () => {
+                const r = logo.getBoundingClientRect();
+                canvas.style.left = `${r.left + r.width / 2 - canvas.width / 2}px`;
+                canvas.style.top = `${r.top + r.height / 2 - canvas.height / 2}px`;
+            };
+
+            placeCircle();
+            window.addEventListener("resize", placeCircle);
+            window.addEventListener("scroll", placeCircle, true);
+        }
+
+        const ctx = canvas.getContext("2d");
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const radius = 54;
+        const start = -Math.PI / 2;
+        const end = start + (Math.PI * 2 * value) / 100;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Track
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Progress (0 -> 360)
+        ctx.strokeStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, start, end, false);
+        ctx.stroke();
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        updateProgress(0);
+    });
 </script>
 <style>
     body {
@@ -29,6 +75,8 @@
         width: 100%;
         overflow: hidden;
         background: url(./anotherhim.webp);
+        background-repeat: no-repeat;
+        background-size: cover;
         color: white;
         display: flex;
         justify-content: center;
@@ -41,8 +89,8 @@
         border-top-right-radius: 5px;
         border-bottom-right-radius: 5px;
         z-index: 2;
-        bottom: 0;
-        left: 0;
+        bottom: 10px;
+        left: 10px;
         background-color: rgba(255, 255, 255, 0.741);
     }
 </style>

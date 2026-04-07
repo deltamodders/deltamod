@@ -359,18 +359,21 @@ h1 {
 @keyframes fadeIn {
     from {
         scale: 1.1;
+        transform: scaleX(0.8);
     }
     to {
         scale: 1;
+        transform: scaleX(1);
     }
 }
 
 .dmodicon {
     position: fixed;
-    top: calc(var(--topbar-height) - 25px);
-    left: 15px;
-    width: 50px;
+    top: -22px;
+    left: -20px;
+    width: 95px;
     height: auto;
+    opacity: 0.4;
     z-index: 6;
 }
 

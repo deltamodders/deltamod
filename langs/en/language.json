@@ -198,5 +198,8 @@
     "prompt_cmode_title": "Controller mode",
     "prompt_cmode_message": "It looks like you have a controller connected. Do you want to enable controller mode? Controller mode allows you to use Deltamod with your controller. Your left stick can help you move your mouse.",
     "criterrors_gm3palert_title": "Patcher error",
-    "criterrors_gm3palert_message": "There is no patcher core installed. A patcher core is the tool needed to modify your game. Please install a patcher to continue using Deltamod."
+    "criterrors_gm3palert_message": "There is no patcher core installed. A patcher core is the tool needed to modify your game. Please install a patcher to continue using Deltamod.",
+    "shop_addedon": "Last updated on {0}",
+    "options_gen3_title": "Prompt controller mode when available",
+    "options_gen3_desc": "When enabled, you will be asked to activate Controller Mode when a compatible controller is attached. Currently only compatible with DualSense."
 }

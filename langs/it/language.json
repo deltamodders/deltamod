@@ -197,5 +197,8 @@
     "prompt_cmode_title": "Modalità controller",
     "prompt_cmode_message": "Sembra che tu abbia un controller collegato. Vuoi abilitare la modalità controller? La modalità controller ti permette di usare Deltamod con il tuo controller. Lo stick sinistro può aiutarti a muovere il mouse.",
     "criterrors_gm3palert_title": "Errore del patcher",
-    "criterrors_gm3palert_message": "Non è installato alcun patcher. Il patcher è lo strumento necessario per modificare il tuo gioco. Per favore installa un patcher per continuare a usare Deltamod."
+    "criterrors_gm3palert_message": "Non è installato alcun patcher. Il patcher è lo strumento necessario per modificare il tuo gioco. Per favore installa un patcher per continuare a usare Deltamod.",
+    "shop_addedon": "Aggiornato il {0}",
+    "options_gen3_title": "Chiedi di attivare la modalità controller",
+    "options_gen3_desc": "Quando attivato, Deltamod ti chiederà se attivare la modalità controller quando rileva un controller collegato. Compatibile solo con DualSense."
 }

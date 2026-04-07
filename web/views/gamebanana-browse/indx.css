@@ -19,6 +19,10 @@
     border: 1px solid var(--theme-color);
     overflow: hidden;
 }
+.serietast {
+    padding: 8px;
+    transition: 0.5s all;
+}
 
 @keyframes imgFadeIn {
     from { opacity: 0; }

@@ -59,6 +59,21 @@ function writeUniqueFlag(name, val) {
     }
 }
 
+function existsUniqueFlag(name) {
+    try {
+        var database = getSystemFile('flagDB.config', true);
+        if (!fs.existsSync(database)) {
+            fs.writeFileSync(database, "");
+        }
+        var databaseContent = fs.readFileSync(database, 'utf8');
+
+        return databaseContent.split('\n').some(l => l.startsWith(name.toUpperCase() + ' = '));
+    }
+    catch (e) {
+        console.log('Error checking unique flag existence: ' + e);
+        return false;
+    }
+}
 function readUniqueFlag(name) {
     try {
         var database = getSystemFile('flagDB.config', true);
@@ -125,6 +140,23 @@ function upgradeStores() {
     }
 }
 
+function loadUniqueDefaults() {
+    var defaults = {
+        'setup': true,
+        'audio': true,
+        'sfx': true,
+        'controller': false,
+    };
+
+    for (var key in defaults) {
+        if (!existsUniqueFlag(key)) {
+            console.log('Setting flag default for ' + key + ' to ' + defaults[key]);
+            // set unique flags
+            writeUniqueFlag(key, defaults[key]);
+        }
+    }
+}
+
 function setKVSOfIndex(name, value, index) {
     try {
         var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
@@ -156,5 +188,6 @@ module.exports = {
     upgradeStores,
     setKVSOfIndex,
     readKVSOfIndex,
-    readKVS
+    readKVS,
+    loadUniqueDefaults,
 };

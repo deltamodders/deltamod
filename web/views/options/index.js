@@ -150,6 +150,7 @@ window.currentPageStack.cat = async function(cat) {
                 page('deleteall');
             }, await k('delete'), true, '', 'red');
             await addCheckboxOption(await k('options_gen2_title'), await k('options_gen2_desc'), 'HASHCHECKS');
+            await addCheckboxOption(await k('options_gen3_title'), await k('options_gen3_desc'), 'CONTROLLER');
             break;
         case 'ui':
             await addCheckboxOption(await k('options_ui0_title'), "", 'SHOP', true);
@@ -223,8 +224,12 @@ window.currentPageStack.cat = async function(cat) {
                 await window.electronAPI.invoke('dev_getGBToken', []);
                 await htmlAlert(await k('done'),await k('operation_successful'),[{text: await k('ok'), resolveWith:''}]);
             }, await k('open'));
+            await addButton('Force controller mode (DEV-ONLY)', 'Forces Controller Mode on, regardless of controller detection status', async () => {
+                await window.electronAPI.invoke('cmode-on', []);
+            }, await k('open'));
             break;
         case 'gb':
+            await invoke('eraseGamebananaCache', []);
             var loadtr = document.createElement('tr');
             loadtr.innerHTML = '<td colspan="2" style="text-align:center;">' + await k('loading') + '</td>';
             tbody.appendChild(loadtr);

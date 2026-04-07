@@ -45,7 +45,10 @@ function getAllThumbs(mod) {
 var isGBLoggedIn = false;
 
 async function gameBananaLogin() {
-    var loggedin = await window.electronAPI.invoke('validateGamebananaToken',[]);
+    var loggedin = await Promise.race([
+        window.electronAPI.invoke('validateGamebananaToken', []),
+        new Promise(resolve => setTimeout(() => resolve(false), 5000))
+    ]);
 
     isGBLoggedIn = loggedin;
 
@@ -119,6 +122,17 @@ async function dlmod(dlurl, buttonElem=null, modid, modmodel) {
             buttonElem.innerHTML = icon('cancel', '0.9em')
             return;
         }
+
+        const p = Math.max(0, Math.min(100, Number(info.progress) || 0));
+        buttonElem.style.transition = 'none';
+        buttonElem.style.background = `linear-gradient(
+            90deg,
+            var(--theme-color) 0%,
+            var(--theme-color) ${p}%,
+            rgba(255,255,255,0.14) ${p}%,
+            rgba(255,255,255,0.14) 100%
+        )`;
+
     };
 
     var res = await window.electronAPI.invoke('dlmodURL',[dlurl, queryme, modid, modmodel]);
@@ -202,6 +216,9 @@ async function renderMods(table, GB_API, filter, gameID) {
 
                 var div1 = document.createElement('div');
                 div1.style.marginLeft = '8px';
+                div1.style.display = 'flex';
+                div1.style.flexDirection = 'column';
+                div1.style.justifyContent = 'space-between';
                 td0.appendChild(div0);
                 td0.appendChild(div1);
 
@@ -218,7 +235,7 @@ async function renderMods(table, GB_API, filter, gameID) {
                 otherInfoSpan.style.display = 'flex';
                 otherInfoSpan.style.flexDirection = 'column';
                 otherInfoSpan.style.color = '#cccccc';
-                otherInfoSpan.style.marginTop = '2px';
+                otherInfoSpan.style.marginTop = '7px';
                 otherInfoSpan.style.width = '100%';
 
                 var nameauthor = mod._aSubmitter._sName;
@@ -238,14 +255,16 @@ async function renderMods(table, GB_API, filter, gameID) {
                 var e = null;
                 if (featuredIDs.find(x => x.id === mod._idRow)) {
                     biggerSpan.style.color = 'gold';
+                    img.style.borderColor = 'gold';
+
                     var periodsDesc = [
-                    ["today",await k('shop_featuredtoday')],
-                    ["week",await k('shop_featuredweek')],
-                    ["month",await k('shop_featuredmonth')],
-                    ["3month",await k('shop_featured3month')],
-                    ["6month",await k('shop_featured6month')],
-                    ["year",await k('shop_featuredyear')],
-                    ["alltime",await k('shop_featuredalltime')]
+                        ["today",await k('shop_featuredtoday')],
+                        ["week",await k('shop_featuredweek')],
+                        ["month",await k('shop_featuredmonth')],
+                        ["3month",await k('shop_featured3month')],
+                        ["6month",await k('shop_featured6month')],
+                        ["year",await k('shop_featuredyear')],
+                        ["alltime",await k('shop_featuredalltime')]
                     ]
                     var featSpan = document.createElement('span');
                     featSpan.className = 'modFeaturedSpan iptspan';
@@ -263,6 +282,35 @@ async function renderMods(table, GB_API, filter, gameID) {
                 otherInfoSpan.appendChild(authorSpan);
                 if (e) otherInfoSpan.appendChild(e);
                 div1.appendChild(otherInfoSpan);
+
+                var addDate = mod._tsDateAdded || 0;
+                var modDate = mod._tsDateModified || 0;
+
+                var date = new Date(Math.max(addDate, modDate) * 1000);
+
+                var desc = document.createElement('span');
+                desc.className = 'modDescSpan iptspan';
+                const relativeDate = (() => {
+                    const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+                    const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+                    const units = [
+                        { limit: 60, value: 1, unit: 'second' },
+                        { limit: 3600, value: 60, unit: 'minute' },
+                        { limit: 86400, value: 3600, unit: 'hour' },
+                        { limit: 2592000, value: 86400, unit: 'day' },
+                        { limit: 31536000, value: 2592000, unit: 'month' },
+                        { limit: Infinity, value: 31536000, unit: 'year' }
+                    ];
+
+                    for (const { limit, value, unit } of units) {
+                        if (Math.abs(diffSeconds) < limit) {
+                            return rtf.format(Math.round(diffSeconds / value), unit);
+                        }
+                    }
+                })();
+
+                desc.innerHTML = icon('acute', '0.9em') + ' ' + relativeDate;
+                otherInfoSpan.appendChild(desc);
                 }
 
                 var td1 = document.createElement('td');
@@ -271,11 +319,11 @@ async function renderMods(table, GB_API, filter, gameID) {
                 {
                     var dlBtn = document.createElement('button');
                     dlBtn.innerHTML = icon('download', '0.9em') + '';
-                    dlBtn.class = 'download-btn';
+                    dlBtn.className = 'serietast';
                     dlBtn.onclick = async () => {
                         dlBtn.disabled = true;
                         dlBtn.innerHTML = icon('downloading', '0.9em');
-                        dlBtn.style.opacity = '0.6';
+                        dlBtn.style.opacity = '0.7';
 
                         var dlpage = await fetch(`https://gamebanana.com/apiv11/${mod._sModelName}/${mod._idRow}/ProfilePage`);
                         dlpage = await dlpage.json();
@@ -315,12 +363,14 @@ async function renderMods(table, GB_API, filter, gameID) {
                             return;
                         }
 
+                        rew();
                         dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName);
                     };
 
                     var vwBtn = document.createElement('button');
                     vwBtn.innerHTML = icon('open_in_new', '0.9em') + '';
                     vwBtn.style.marginRight = '8px';
+                    vwBtn.className = 'serietast';
                     vwBtn.onclick = () => {
                         window.open(mod._sProfileUrl, '_blank');
                     }
@@ -330,6 +380,7 @@ async function renderMods(table, GB_API, filter, gameID) {
                     var commentBtn = document.createElement('button');
                     commentBtn.innerHTML = icon('comment', '0.9em') + '';
                     commentBtn.style.marginLeft = '8px';
+                    commentBtn.className = 'serietast';
                     commentBtn.onclick = async () => {
                         window._pageArguments = {
                             id: mod._idRow,
@@ -343,6 +394,7 @@ async function renderMods(table, GB_API, filter, gameID) {
                     var likeBtn = document.createElement('button');
                     likeBtn.innerHTML = icon('mood_heart', '0.9em') + '';
                     likeBtn.style.marginLeft = '8px';
+                    likeBtn.className = 'serietast';
                     likeBtn.disabled = !isGBLoggedIn;
                     likeBtn.onclick = async () => {
                         let res = await window.electronAPI.invoke('gbLikeMod',[mod._sModelName, mod._idRow]);

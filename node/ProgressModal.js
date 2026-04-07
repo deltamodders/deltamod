@@ -10,8 +10,8 @@ const progressModals = new Set();
  */
 function createProgressModal() {
     const modal = new BrowserWindow({
-        width: 350,
-        height: 170,
+        width: 450,
+        height: 210,
         resizable: false,
         maximizable: false,
         frame: false,

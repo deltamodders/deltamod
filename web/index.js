@@ -120,7 +120,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         var alertMsgR = alertMain.getElementsByClassName('alertMsg')[0];
 
         var animOptions = 'cubic-bezier(0.22, 1, 0.36, 1) forwards';
-        var animLength = 0.5;
+        var animLength = 0.3;
 
         alertMsgR.innerHTML = '';
 
@@ -206,6 +206,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
 
         var a = new Audio();
         a.src = 'audio/ooow.mp3';
+        a.playbackRate = 1.2;
         if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === true) {
             a.play();
         }
@@ -351,7 +352,7 @@ async function page(name) {
     document.querySelector('.viewport').style.animation = 'none';
     document.querySelector('.viewport').style.pointerEvents = 'none';
     await new Promise(resolve => setTimeout(resolve, 50));
-    document.querySelector('.viewport').style.animation = '0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1)';
+    document.querySelector('.viewport').style.animation = '0.34s fadeIn cubic-bezier(0, 0.55, 0.45, 1)';
     document.querySelector('.viewport').style.pointerEvents = 'auto';
     window.electronAPI.invoke('showWindow', []);
     theme = await fetch('themeprot://data/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
@@ -572,6 +573,13 @@ if (!window.electronAPI) {
     else {
         document.querySelector('.glyph').style.display = 'none';
         window.addEventListener("gamepadconnected", async (event) => {
+            if (await window.electronAPI.invoke('getUniqueFlag', ["CONTROLLER"]) === false) {
+                return;
+            }
+            // check if the connected controller is a dualsense
+            if (!event.gamepad.id.toLowerCase().includes('dualshock') && !event.gamepad.id.toLowerCase().includes('dualsense')) {
+                return;
+            }
             var res = await htmlAlert(
                 await k('prompt_cmode_title'),
                 await k('prompt_cmode_message'),
