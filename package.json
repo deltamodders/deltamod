@@ -11,7 +11,9 @@
     "test": "electron . --developer",
     "build-windows": "electron-builder --win",
     "build-linux": "electron-builder --linux",
-    "erase-data": "Erase.bat"
+    "erase-data": "Erase.bat",
+    "build-g3mtool-win": "dotnet publish G3MToolCLI/G3MToolCLI.csproj -c Release -r win-x64 --self-contained true -o tools",
+    "build-g3mtool-linux": "dotnet publish G3MToolCLI/G3MToolCLI.csproj -c Release -r linux-x64 --self-contained true -o tools"
   },
   "build": {
     "icon": "build/icon-big.png",
@@ -30,7 +32,8 @@
     },
     "files": [
       "!**/output",
-      "!**/installbuilder"
+      "!**/installbuilder",
+      "!G3MToolCLI/**"
     ],
     "linux": {
       "target": "AppImage",

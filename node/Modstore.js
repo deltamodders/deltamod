@@ -72,6 +72,37 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
             }
         }
 
+        // [Zork's PATCH]: G3M mod format bridge — generate meta.json + __deltaID.json from mod_config.json
+        const g3mConfigPath = path.join(modPath, 'mod_config.json');
+        if (fs.existsSync(g3mConfigPath)) {
+            try {
+                const g3m = JSON.parse(fs.readFileSync(g3mConfigPath, 'utf8'));
+                if (!fs.existsSync(path.join(modPath, 'meta.json'))) {
+                    const meta = {
+                        metadata: {
+                            name:        g3m.name        || g3m.id  || 'Unknown G3M Mod',
+                            description: g3m.description || '',
+                            version:     g3m.version     || '1.0',
+                            author:      g3m.author       || 'Unknown',
+                            game:        g3m.game         || 'toby.deltarune',
+                            packageID:   '',
+                        },
+                        source: 'g3m'
+                    };
+                    fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(meta, null, 2), 'utf8');
+                    console.log('G3M bridge: wrote meta.json for', meta.metadata.name);
+                }
+                if (!fs.existsSync(path.join(modPath, '__deltaID.json'))) {
+                    const uniqueId = 'g3m-' + (g3m.id || require('crypto').randomBytes(8).toString('hex'));
+                    fs.writeFileSync(path.join(modPath, '__deltaID.json'), JSON.stringify({ uniqueId }, null, 2), 'utf8');
+                    console.log('G3M bridge: wrote __deltaID.json, uniqueId:', uniqueId);
+                }
+            } catch (e) {
+                console.error('G3M bridge: failed to generate metadata:', e.message);
+                // Non-fatal — manifest check below will catch it if truly broken
+            }
+        }
+
         // Check manifest anywhere in the tree (now usually at root after flatten)
         const manifestPath = findFirstByName(modPath, 'meta.json') || path.join(modPath, 'meta.json');
         if (!fs.existsSync(manifestPath)) {
@@ -102,7 +133,7 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
         }
 
 
-        if (modInfo.metadata.packageID.toString().trim() != "") {
+        if (modInfo.metadata.packageID?.toString().trim()) {
             if (fs.existsSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID))) {
                 fs.rmSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID), { recursive: true, force: true });
             }

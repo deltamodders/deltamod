@@ -759,6 +759,10 @@ function createWindow() {
     });
 
     ipcMain.handle('hasPatchingCore', () => {
+        // [Zork's PATCH]: G3M_NATIVE needs no external binary — always report core as present
+        const KeyValue = require('./KeyValue');
+        const selectedPatcher = KeyValue.readKVS('selectedPatcher');
+        if (selectedPatcher !== 'GM3P' && selectedPatcher !== 'DEVICE_FUSION') return true;
         return fs.existsSync(path.join(__dirname, '..', 'gm3p'));
     });
 
