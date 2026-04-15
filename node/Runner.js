@@ -1681,7 +1681,7 @@ function createWindow() {
                 app.exit();
             }
         } catch (err) {
-            errorWin('Coudn\'t patch and run Deltarune: ' + err.toString());
+            errorWin('Couldn\'t patch and run game: ' + err.toString() + " --- " + (err.stack || ''));
             return false;
         }
     });

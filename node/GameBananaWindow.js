@@ -42,10 +42,30 @@ function obtainLogin() {
                 "https://gamebanana.com/members/account/login",
                 "https://gamebanana.com/"
             ];
-            loginWindow.webContents.executeJavaScript('document.title = "Login to GameBanana to continue in Deltamod."; document.querySelectorAll(\'.Description\')[0].innerHTML = "To continue in Deltamod, login here. Please create an account in your browser if you do not have one. Only login with GameBanana on apps you trust. <b>This page is not endorsed by GameBanana.</b><br><br><b>This action will grant full account control to Deltamod.</b>"');
+            var text = "Please log in to your GameBanana account to continue in Deltamod. Your account access token will be stored securely. No passwords are stored.";
+
+            loginWindow.webContents.executeJavaScript(`
+                document.title = "Login to GameBanana to continue in Deltamod."; 
+                document.querySelectorAll(\'.Description\')[0].innerHTML = "${text}";
+                document.querySelector('#PrimaryNav').style.opacity = '0.5';
+                document.querySelector('#PrimaryNav').style.pointerEvents = 'none';
+                document.querySelector('#PageFooter').style.display = 'none';
+                (() => {
+                    const onFullyLoaded = () => {
+                        document.querySelector('.fc-cta-do-not-consent').click();
+                    };
+
+                    if (document.readyState === 'complete') {
+                        onFullyLoaded();
+                    } else {
+                        window.addEventListener('load', onFullyLoaded, { once: true });
+                    }
+                })();
+            `);
+
             if (!url.includes('gamebanana.com/members/account')) {
                 const allCookies = (await loginWindow.webContents.session.cookies.get({})).filter(c => {
-                    return ['sess', 'rmc', 'muid'].includes(c.name.toLowerCase()) && c.domain.includes('gamebanana.com');
+                    return ['sess', 'rmc', 'muid'].includes(c.name.toLowerCase()) || c.domain.includes('gamebanana.com');
                 });
                 console.log('Found ' + allCookies.length + ' GameBanana account cookies after login.');
                 const cookieHeader = allCookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');

@@ -104,7 +104,7 @@ async function createMod(mod) {
     bigAhhContainer.style.gap = '10px';
     bigAhhContainer.style.justifyContent = 'left';
 
-    let IMAGE_DIMENSION = 50;
+    let IMAGE_DIMENSION = 70;
     let imageContainer = document.createElement('div');
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
@@ -129,9 +129,9 @@ async function createMod(mod) {
 
     let img = document.createElement('img');
     img.src = imeta.path;
-    img.style.width = IMAGE_DIMENSION + 'px';
-    img.style.height = IMAGE_DIMENSION + 'px';
+    img.style.height = "100%";
     img.classList.add('mod-image');
+    img.style.border = '3px solid ';
     imageContainer.appendChild(img);
 
     imageContainer.oncontextmenu = async e => {
@@ -150,6 +150,8 @@ async function createMod(mod) {
         prevalColor.b = Math.min(prevalColor.b + 60, 255);
     }
 
+    img.style.border = '3px solid ' + `rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5)`;
+    
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
@@ -157,7 +159,7 @@ async function createMod(mod) {
     if (mod.new) {
         titleSpan = adaptForIconsA(titleSpan);
         titleSpan.style.marginBottom = '0px';
-        titleSpan.innerHTML += ` ${icon('fiber_new', '20px')}`;
+        titleSpan.innerHTML = `${icon('fiber_new', '30px')} ${titleSpan.innerHTML}`;
     }
     titleSpan.id = `modtitle-${mod.uid}`;
     infoContainer.appendChild(titleSpan);
@@ -474,12 +476,3 @@ async function patchAndRun() {
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
-
-window.currentPageStack.disableMusic = async function (button) {
-    audio.pause();
-    audio.currentTime = 0;
-    button.style.display = 'none';
-    button.disabled = true;
-    await window.electronAPI.invoke('setUniqueFlag', ["AUDIO", false]);
-    await window.electronAPI.invoke('setUniqueFlag', ["DAB", true]);
-};
