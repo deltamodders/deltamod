@@ -16,3 +16,6 @@ installbuilder/git.exe
 /unreleased
 tools/dotnetinstaller.exe
 tools/gitinstaller.exe
+tools/G3MTool.exe
+tools/G3MTool
+/G3MToolCLI

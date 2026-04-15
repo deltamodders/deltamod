@@ -1,18 +1,18 @@
-// Hello Ghino! this is the new GamePatching module, I hope you like it!
-// I also modified a bit of Runner.js and Modstore.js to support the new features.
-// Everything new will be marked with [Zork's PATCH] so you can easily find it.
+// Hello Ghino! this is the new GamePatching module, with G3M Support!, I hope you like it!
+// I also did a small change to Runner.js so I could test G3M, in lines 762-765, but that should be easily reversible if you want to keep the old flow for now.
+// Everything new will be marked with [Zork’s PATCH] so you can easily find it.
 // ------------------------------------------------------------------
-// Exports:
-//   - startGamePatch(gamePath, dbPath, enableMods)
-//   - restoreOriginalsIfAny(gamePath)
-// What’s new here:
-//   - Now reads all the zip file when importing mods, even if it has a wrapper folder inside (for example, mod.zip has a "Mod" folder).
-//   - Group xdelta patches by their target `to` and run GM3P once per target, using GM3P new Multi Chapter support.
-//   - Backups to *.original + restore helper, this was to avoid doing a temp deltarune install every time, overbloating.
-//   - Uses execFile (no shell) with big buffers
-//   - **Verbose console logging with timestamps** for each step, this was for me to discover what was going on with the patching.
-//   - Detects file conflicts for external file overrides (data.win is merged by GM3P) and shows a dialog with the list of conflicting mods.
-//   - Restores original files if they exist (with *.original suffix) in the gamePath root or one level deep.
+// [Zork’s PATCH] — G3M native patcher support (see also Modstore.js):
+//   - Added G3M_NATIVE patcher as default. GM3P and DEVICE_FUSION fully preserved.
+//   - G3M mods (mod_config.json manifest) recognised by findModRoot() and import flow in Modstore.js.
+//   - .xdelta mods: pure-JS via @chainsafe/xdelta3-node decodeSync (single) or G3MTool CLI (multi-mod).
+//   - .g3mpatch mods: two-tier resolution —
+//       1. extractVcdiffFromG3MPatch: checks VCDIFF magic (0xD6 0xC3 0xC4) inside ZIP. If detected, applied
+//          in-process with decodeSync — no external binary needed. (Most likely code path for G3MTool-generated patches.)
+//       2. G3MTool CLI: if binary entry is not VCDIFF. Bundled in deltamod/tools/.
+//   - Chapter mapping: G3M IDs (‘deltarune_0’, ‘deltarune_1’, ...) resolved via trailing-digit extraction.
+//   - Idempotent patching: always reads from .original backup so re-patching never operates on an already-patched file.
+//   - Patcher selection: KeyValue.writeKVS(‘selectedPatcher’, ‘GM3P’|’DEVICE_FUSION’|’G3M_NATIVE’) for first-boot UI.
 
 const fs = require('fs');
 const path = require('path');
@@ -34,7 +34,23 @@ let DOTNET_UNIX;
 
 const GM3P_OUTPUT = path.join(__dirname, '../gm3p/output')
 const UTMT_FOLD = path.join(__dirname, '../gm3p/UTMTCLI')
+
+// [Zork's PATCH]: Read user-selected patcher from KeyValue store before platform detection
+{
+    const KeyValue = require('./KeyValue');
+    const selectedPatcher = KeyValue.readKVS('selectedPatcher');
+    if (selectedPatcher === 'GM3P' || selectedPatcher === 'DEVICE_FUSION') {
+        // User explicitly chose a binary patcher — let platform detection below confirm and set EXE paths
+        Patcher = selectedPatcher;
+    } else {
+        // null, undefined, or 'G3M_NATIVE' → use pure-JS native path, skip GM3P binary detection
+        Patcher = 'G3M_NATIVE';
+    }
+}
+
 // Checks to see what platform DeltaMOD is running on and set constants accordingly
+// [Zork's PATCH]: Only run binary detection when not using G3M_NATIVE
+if (Patcher !== 'G3M_NATIVE') {
 if (process.platform === 'win32') {
     if (fs.existsSync(path.join(__dirname, '../gm3p/GM3P.exe'))) {
         GM3P_EXE = 'start /B \"DeltaMOD GM3P run\" \"' + (path.join(__dirname, '../gm3p/GM3P.exe')) + '\"';
@@ -58,6 +74,7 @@ if (process.platform === 'win32') {
     }
     UTMT_EXE = path.join(UTMT_FOLD, 'UndertaleModCli.dll');
     DOTNET_UNIX = '/usr/bin/dotnet';
+}
 }
 const BACKUP_SUFFIX = '.original';
 
@@ -192,8 +209,9 @@ function findModRoot(root) {
         const hasXml  = fs.existsSync(path.join(dir, searchFile));
         const hasId   = fs.existsSync(path.join(dir, '__deltaID.json'));
         const hasInfo = fs.existsSync(path.join(dir, 'meta.json'));
-        if (hasXml && hasId) return dir;
-        if (!fallback && (hasXml || hasId || hasInfo)) fallback = dir;
+        const hasG3M  = fs.existsSync(path.join(dir, 'mod_config.json')); // [Zork's PATCH]: G3M mod format recognition
+        if ((hasXml && hasId) || hasG3M) return dir;
+        if (!fallback && (hasXml || hasId || hasInfo || hasG3M)) fallback = dir;
 
         let ents;
         try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
@@ -285,6 +303,128 @@ const onKeyPress = (input, key, close) => {
     }
 };
 
+// [Zork's PATCH]: parseG3MManifest — reads mod_config.json and returns patch entries for G3M mods
+/**
+ * @param {string} modRoot - Absolute path to the mod root directory
+ * @param {string} modName - Human-readable mod name for conflict reporting
+ * @returns {Array<{type: 'g3m-xdelta'|'g3m-patch', patchFile: string, chapterKey: string, modName: string}>}
+ */
+// [Zork's PATCH]: classifyG3MPatchFile — mirrors G3M's mod_content_utils.classify_patch_file logic.
+// Priority order: g3mpatch > xdelta > datafile (csx unsupported in G3M_NATIVE).
+function classifyG3MPatchFile(filePath) {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.g3mpatch' || ext === '.zip') return 'g3m-patch';   // ZIP container (may hold g3mpatch.json)
+    if (ext === '.xdelta' || ext === '.xdelta3' || ext === '.vcdiff') return 'g3m-xdelta';
+    if (ext === '.csx') return 'g3m-csx';                            // not supported, will warn at apply time
+    return 'g3m-datafile';                                           // raw data.win replacement (MOD_TYPE_DATAFILE in G3M)
+}
+
+function parseG3MManifest(modRoot, modName) {
+    try {
+        const configPath = path.join(modRoot, 'mod_config.json');
+        const raw = fs.readFileSync(configPath, 'utf8');
+        const config = JSON.parse(raw);
+        const files = config.files || {};
+        const entries = [];
+        for (const [chapterKey, entry] of Object.entries(files)) {
+            // [Zork's PATCH]: support both data_file_path (current) and data_file_url (legacy G3M field)
+            const dataFilePath = entry?.data_file_path || entry?.data_file_url;
+            if (!entry || !dataFilePath) continue;
+            const type = classifyG3MPatchFile(dataFilePath);
+            const patchFile = path.join(modRoot, dataFilePath);
+            entries.push({ type, patchFile, chapterKey, modName });
+        }
+        clog('[parseG3MManifest]', modName, '- entries:', entries.length);
+        return entries;
+    } catch (e) {
+        clog('[parseG3MManifest] error reading manifest for', modName, ':', e.message);
+        return [];
+    }
+}
+
+// [Zork's PATCH]: extractVcdiffFromG3MPatch — attempt to extract a VCDIFF stream from a .g3mpatch file.
+// .g3mpatch is a ZIP (g3mpatch.json metadata + binary patch entry). The binary entry is most likely
+// a raw VCDIFF stream — the same format @chainsafe/xdelta3-node already handles for .xdelta files.
+// VCDIFF magic: 0xD6 0xC3 0xC4 (first 3 bytes). If detected, we can apply the patch purely in-process
+// without G3MTool. Returns the VCDIFF Buffer on success, null on format mismatch or read error.
+function extractVcdiffFromG3MPatch(patchPath) {
+    try {
+        const buf = fs.readFileSync(patchPath);
+        // Must be a ZIP (PK\x03\x04)
+        if (buf.length < 4 || buf[0] !== 0x50 || buf[1] !== 0x4B || buf[2] !== 0x03 || buf[3] !== 0x04) {
+            return null;
+        }
+        // Minimal ZIP local-file-header reader (stored or deflated entries only)
+        const zlib = require('zlib');
+        let pos = 0;
+        while (pos + 30 <= buf.length) {
+            if (buf.readUInt32LE(pos) !== 0x04034B50) break;
+            const flags    = buf.readUInt16LE(pos + 6);
+            const method   = buf.readUInt16LE(pos + 8);
+            const compSize = buf.readUInt32LE(pos + 18);
+            const nameLen  = buf.readUInt16LE(pos + 26);
+            const extraLen = buf.readUInt16LE(pos + 28);
+            const name     = buf.slice(pos + 30, pos + 30 + nameLen).toString('utf8');
+            const dataStart = pos + 30 + nameLen + extraLen;
+            if (flags & 0x0008) break; // data-descriptor flag — skip
+            if (dataStart + compSize > buf.length) break;
+            // Only look at the binary (non-JSON) entry
+            if (!name.toLowerCase().endsWith('.json')) {
+                const compData = buf.slice(dataStart, dataStart + compSize);
+                let raw;
+                try { raw = method === 8 ? zlib.inflateRawSync(compData) : compData; } catch { break; }
+                // VCDIFF magic: 0xD6 0xC3 0xC4
+                if (raw.length >= 4 && raw[0] === 0xD6 && raw[1] === 0xC3 && raw[2] === 0xC4) {
+                    return raw;
+                }
+                return null; // binary entry found but not VCDIFF — unknown format
+            }
+            pos = dataStart + compSize;
+        }
+        return null;
+    } catch {
+        return null;
+    }
+}
+
+// [Zork's PATCH]: findG3MTool — locate the G3MTool CLI binary (non-VCDIFF .g3mpatch and multi-mod merging).
+// G3MTool is bundled in tools/ alongside Deltamod.
+// Search order: user config → deltamod/tools/.
+function findG3MTool() {
+    // 1. User-configured path (KeyValue 'g3mToolPath')
+    try {
+        const KeyValue = require('./KeyValue');
+        const configured = KeyValue.readKVS('g3mToolPath');
+        if (configured && fs.existsSync(configured)) return configured;
+    } catch { /* KeyValue unavailable */ }
+
+    // 2. Bundled in deltamod's tools/ directory
+    const toolsDir = path.join(__dirname, '../tools');
+    const toolExe = process.platform === 'win32' ? 'G3MTool.exe' : 'G3MTool';
+    const localPath = path.join(toolsDir, toolExe);
+    if (fs.existsSync(localPath)) return localPath;
+
+    return null;
+}
+
+// [Zork's PATCH]: runG3MToolAsync — async spawn wrapper for G3MTool CLI.
+// Returns { code, stdout, stderr }.
+function runG3MToolAsync(g3mToolPath, args) {
+    return new Promise((resolve, reject) => {
+        const { spawn } = require('child_process');
+        const proc = spawn(g3mToolPath, args, {
+            windowsHide: true,
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        let stdout = '';
+        let stderr = '';
+        proc.stdout.on('data', d => { stdout += String(d); });
+        proc.stderr.on('data', d => { stderr += String(d); });
+        proc.on('close', code => resolve({ code: code ?? -1, stdout, stderr }));
+        proc.on('error', err => reject(err));
+    });
+}
+
 // ------------------------------ main ----------------------------------------
 
 async function startGamePatch(gamePath, dbPath, enableMods, window) {
@@ -316,6 +456,26 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
             }
             const xmlf  = findFirstByName(modRoot, searchFile);
             
+            // [Zork's PATCH]: G3M mod format — detect mod_config.json and route to G3M_NATIVE pipeline
+            const g3mConfigPath = path.join(modRoot, 'mod_config.json');
+            if (fs.existsSync(g3mConfigPath)) {
+                if (Patcher === 'G3M_NATIVE' && idf && fs.existsSync(idf)) {
+                    const { uniqueId } = JSON.parse(fs.readFileSync(idf, 'utf8'));
+                    if (enabled.has(uniqueId)) {
+                        const info = infof && fs.existsSync(infof) ? JSON.parse(fs.readFileSync(infof, 'utf8')) : {};
+                        const modName = info?.metadata?.name || uniqueId;
+                        logln(`Applying G3M mod: ${uniqueId}${info?.metadata?.name ? ` (${info.metadata.name})` : ''}`);
+                        const g3mEntries = parseG3MManifest(modRoot, modName);
+                        for (const entry of g3mEntries) {
+                            objects.push({ type: entry.type, patch: entry.patchFile, to: entry.chapterKey, modName });
+                        }
+                    } else {
+                        clog('Skip G3M (not enabled):', idf);
+                    }
+                }
+                continue; // always skip modding.xml logic for G3M mods
+            }
+
             if (!idf || !xmlf) continue;
             if (!fs.existsSync(idf) || !fs.existsSync(xmlf)) {
                 clog('Skip (missing id/xml):', mod);
@@ -410,6 +570,8 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
     }
     for (const f of overrides) ensureBackup(f.to);
 
+    // [Zork's PATCH]: GM3P pipeline only runs when Patcher !== 'G3M_NATIVE'
+    if (Patcher !== 'G3M_NATIVE') {
     // 1) Discover chapters in the install (absolute data.win paths)
     const chapterTargets = discoverChapters(gamePath);  // uses the helper you pasted
     if (chapterTargets.length === 0) {
@@ -531,6 +693,190 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
         }
     }
 
+    } // [Zork's PATCH]: end of GM3P pipeline block
+
+    // [Zork's PATCH]: G3M_NATIVE in-process patching pipeline — pure JS, no external binaries
+    if (Patcher === 'G3M_NATIVE') {
+        // [Zork's PATCH]: include all G3M entry types; g3m-datafile and g3m-csx handled below
+        const g3mAllEntries = objects.filter(o =>
+            o.type === 'xdelta' || o.type === 'g3m-xdelta' || o.type === 'g3m-patch' ||
+            o.type === 'g3m-datafile' || o.type === 'g3m-csx'
+        );
+
+        if (g3mAllEntries.length === 0) {
+            clog('[G3M_NATIVE] No patch entries; skipping G3M pipeline (overrides only).');
+        } else {
+            const chapters = discoverChapters(gamePath);
+            if (chapters.length === 0) {
+                ret.log = log.concat('No data.win found under gamePath.').join('\n');
+                dialog.showErrorBox('Patching failed', ret.log);
+                return ret;
+            }
+            clog('[G3M_NATIVE] Chapters:', chapters);
+
+            // [Zork's PATCH]: Find G3MTool once — needed for .g3mpatch mods
+            const g3mTool = findG3MTool();
+            if (g3mTool) {
+                clog('[G3M_NATIVE] G3MTool found:', g3mTool);
+            } else {
+                clog('[G3M_NATIVE] G3MTool not found — g3mpatch mods will be skipped. Add G3MTool.exe to deltamod/tools/ to enable g3mpatch support.');
+            }
+
+            // Back up all chapter data.wins before touching them
+            for (const c of chapters) ensureBackup(c);
+
+            // Group entries by chapter index
+            // - legacy xdelta (from modding.xml): resolve target path → chapter index
+            // - g3m entries: chapterKey is either a numeric string ("0", "1", ...)
+            //   or a G3M chapter ID ("deltarune_0", "deltarune_1", "chapter_1", etc.)
+            //   G3M uses trailing-number IDs: extract the digit suffix to get the index.
+            const perChapter = Array.from({ length: chapters.length }, () => []);
+            for (const entry of g3mAllEntries) {
+                let idx = null;
+                if (entry.type === 'xdelta') {
+                    const targetAbs = resolveAbsTarget(gamePath, entry.to);
+                    idx = chapters.findIndex(c => path.normalize(c) === path.normalize(targetAbs));
+                } else {
+                    // [Zork's PATCH]: G3M chapter IDs use format 'deltarune_0', 'deltarune_1', etc.
+                    // parseInt would return NaN for these — extract trailing digit instead.
+                    const keyInt = parseInt(entry.to, 10);
+                    if (!isNaN(keyInt) && keyInt < chapters.length) {
+                        idx = keyInt;
+                    } else {
+                        const numMatch = entry.to.match(/(\d+)$/);
+                        if (numMatch) {
+                            const n = parseInt(numMatch[1], 10);
+                            if (n < chapters.length) idx = n;
+                        }
+                    }
+                }
+                if (idx == null || idx < 0) {
+                    clog('[G3M_NATIVE] Cannot map entry to chapter:', entry.to, '— skipping');
+                    continue;
+                }
+                perChapter[idx].push(entry);
+            }
+
+            try {
+                for (let i = 0; i < chapters.length; i++) {
+                    const entries = perChapter[i];
+                    if (entries.length === 0) continue;
+
+                    const backupPath = chapters[i] + BACKUP_SUFFIX;
+                    await new Promise(r => setImmediate(r));
+
+                    const validEntries = entries.filter(e => {
+                        if (!fs.existsSync(e.patch)) {
+                            clog('[G3M_NATIVE] Missing patch (skip):', e.patch);
+                            return false;
+                        }
+                        return true;
+                    });
+                    if (validEntries.length === 0) continue;
+
+                    clog(`[G3M_NATIVE] Chapter ${i}: ${validEntries.length} entry(ies)`);
+
+                    // [Zork's PATCH]: g3m-datafile = raw data.win replacement (MOD_TYPE_DATAFILE in G3M).
+                    // G3M handles this with shutil.copy2 — we just write the file directly. Last writer wins.
+                    const datafileEntries = validEntries.filter(e => e.type === 'g3m-datafile');
+                    for (const e of datafileEntries) {
+                        clog(`[G3M_NATIVE] Chapter ${i}: datafile replacement from`, e.patch);
+                        await fs.promises.copyFile(e.patch, chapters[i]);
+                        clog(`[G3M_NATIVE] Chapter ${i}: datafile applied.`);
+                    }
+                    if (datafileEntries.length > 0 && datafileEntries.length === validEntries.length) continue;
+
+                    // [Zork's PATCH]: g3m-csx = UndertaleModTool C# script — not supported in G3M_NATIVE.
+                    for (const e of validEntries.filter(e2 => e2.type === 'g3m-csx')) {
+                        logln(`Warning: chapter ${i} mod '${e.modName}' uses a .csx script which is not supported by G3M_NATIVE — skipped.`);
+                    }
+
+                    // [Zork's PATCH]: Patching strategy mirrors G3M source exactly:
+                    //   xdelta    → pure-JS decodeSync (single) or G3MTool CLI (multi-mod)
+                    //   g3mpatch  → VCDIFF magic check → G3MTool CLI
+                    //   datafile  → direct copy (handled above)
+                    //   multi-mod → g3mtool patch merge (handles both xdelta and g3mpatch)
+                    const g3mpatchEntries = validEntries.filter(e => e.type === 'g3m-patch');
+                    const xdeltaEntries   = validEntries.filter(e => e.type === 'xdelta' || e.type === 'g3m-xdelta');
+
+                    // [Zork's PATCH]: g3mpatch resolution — two-tier approach:
+                    //   1. extractVcdiffFromG3MPatch: check if binary entry inside ZIP is VCDIFF (magic 0xD6 0xC3 0xC4).
+                    //      If yes → treat as xdelta, apply purely in-process. No G3MTool needed.
+                    //   2. G3MTool CLI: if VCDIFF check fails (unknown binary format). Always bundled in tools/.
+                    // [Zork's PATCH]: Resolve g3mpatch format
+                    const resolvedG3MPatches = g3mpatchEntries.map(e => ({
+                        entry: e,
+                        vcdiffBuf: extractVcdiffFromG3MPatch(e.patch),
+                    }));
+                    const allVcdiff = resolvedG3MPatches.length > 0 && resolvedG3MPatches.every(r => r.vcdiffBuf !== null);
+                    const hasNonVcdiffPatch = g3mpatchEntries.length > 0 && !allVcdiff;
+                    // [Zork's PATCH]: GameMaker FORM files encode chunk sizes, offsets, and pointers that
+                    // interrelate across the entire binary. Byte-level chunk merge produces conflicting
+                    // structural declarations when >1 mod targets the same chapter — both mods rewrite
+                    // FORM header bytes with different values and last-write-wins corrupts the file.
+                    // G3MTool patch merge understands FORM structure and is the only correct path for
+                    // multi-mod merging. Route there whenever more than one patch targets this chapter.
+                    const isMultiMod = xdeltaEntries.length + g3mpatchEntries.length > 1;
+                    const needsG3MTool = hasNonVcdiffPatch || isMultiMod;
+
+                    if (needsG3MTool) {
+                        if (!g3mTool) {
+                            throw new Error(`G3MTool not found — required for chapter ${i} (${hasNonVcdiffPatch ? 'non-VCDIFF g3mpatch' : 'multi-mod merging'}). Ensure G3MTool is present in tools/.`);
+                        }
+                        const allPatches = [...xdeltaEntries, ...g3mpatchEntries].map(e => e.patch);
+                        const sourcePath = fs.existsSync(backupPath) ? backupPath : chapters[i];
+                        let result;
+                        if (allPatches.length === 1) {
+                            result = await runG3MToolAsync(g3mTool, ['patch', 'apply', sourcePath, allPatches[0], chapters[i]]);
+                        } else {
+                            result = await runG3MToolAsync(g3mTool, ['patch', 'merge', sourcePath, ...allPatches, '--apply', chapters[i]]);
+                        }
+                        if (result.code !== 0) {
+                            const detail = (result.stderr || result.stdout || '').trim().slice(0, 500);
+                            throw new Error(`G3MTool failed for chapter ${i} (exit ${result.code})${detail ? ': ' + detail : ''}`);
+                        }
+                        clog(`[G3M_NATIVE] Chapter ${i}: G3MTool applied ${allPatches.length} patch(es).`);
+                        continue;
+                    }
+
+                    // [Zork's PATCH]: Build the effective patch list for single-mod in-process path.
+                    // g3mpatch entries that are VCDIFF are treated identically to xdelta (Buffer instead of path).
+                    const effectiveEntries = [
+                        ...xdeltaEntries.map(e => ({ ...e, _patchBuf: null })),
+                        ...(allVcdiff
+                            ? resolvedG3MPatches.map(r => ({ ...r.entry, type: 'g3m-xdelta', _patchBuf: r.vcdiffBuf }))
+                            : []
+                        ),
+                    ];
+                    if (effectiveEntries.length === 0) continue;
+
+                    // [Zork's PATCH]: Always patch from the vanilla backup so re-patching is idempotent.
+                    const originalBuf = await fs.promises.readFile(
+                        fs.existsSync(backupPath) ? backupPath : chapters[i]
+                    );
+
+                    // Decode in-process (mirrors g3mtool xpatch apply for single-mod VCDIFF).
+                    const entry = effectiveEntries[0];
+                    const { decodeSync } = require('@chainsafe/xdelta3-node');
+                    const patchData = entry._patchBuf ?? await fs.promises.readFile(entry.patch);
+                    await new Promise(r => setImmediate(r));
+                    const patched = Buffer.from(decodeSync(originalBuf, patchData));
+                    const label = entry._patchBuf ? 'g3mpatch(vcdiff)' : 'xdelta';
+                    clog(`[G3M_NATIVE] Chapter ${i}: ${label} applied. Size: ${patched.length} bytes`);
+
+                    await fs.promises.writeFile(chapters[i], patched);
+                    clog(`[G3M_NATIVE] Chapter ${i} written.`);
+                }
+            } catch (e) {
+                clog('[G3M_NATIVE] Error during patching, restoring backups:', e.message);
+                for (const c of chapters) restoreIfBackup(c);
+                ret.log = log.concat('G3M_NATIVE error: ' + e.message).join('\n');
+                dialog.showErrorBox('Patching failed', ret.log);
+                return ret;
+            }
+        }
+    }
+
     // External file overrides (after merge)
     const conflicts = detectFileConflicts(overrides);
     if (conflicts.found) {
@@ -553,7 +899,7 @@ async function startGamePatch(gamePath, dbPath, enableMods, window) {
     }
 
     ret.patched = true;
-    ret.log = log.concat('Patched via GM3P + overrides.').join('\n');
+    ret.log = log.concat(`Patched via ${Patcher} + overrides.`).join('\n'); // [Zork's PATCH]: patcher-aware log message
     clog('== startGamePatch DONE ==');
 
     await timeoutPromise(1000); // Needed for UI to work properly.
