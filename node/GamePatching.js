@@ -37,8 +37,11 @@ const UTMT_FOLD = path.join(__dirname, '../gm3p/UTMTCLI')
 
 // [Zork's PATCH]: Read user-selected patcher from KeyValue store before platform detection
 {
-    const KeyValue = require('./KeyValue');
-    const selectedPatcher = KeyValue.readKVS('selectedPatcher');
+    let selectedPatcher = (
+        fs.existsSync(path.join(__dirname, '../gm3p/GM3P.exe')) ? 'GM3P' :
+        fs.existsSync(path.join(__dirname, '../gm3p/GamemakerModMerger.exe')) ? 'DEVICE_FUSION' :
+        'G3M_NATIVE'
+    );
     if (selectedPatcher === 'GM3P' || selectedPatcher === 'DEVICE_FUSION') {
         // User explicitly chose a binary patcher — let platform detection below confirm and set EXE paths
         Patcher = selectedPatcher;
