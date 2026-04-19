@@ -1,5 +1,0 @@
-Deltamod uses Sentry for anonymous error collecting in order to fix bugs in better ways and have access to more info even if you don't report it to us in our Discord. This cannot be opted out. However, here is a transparent overview of what will be collected.
-
-- Access to your data is secured and is not accessible by anyone except the lead developer.
-- Sentry only collects data when errors occur, and does not collect data in other cases.
-- We do not have access to other data, but we do collect an anonymous identifier. Simply speaking, we can tell if 2 errors occur in the same user or not.
