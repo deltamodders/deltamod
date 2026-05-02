@@ -11,7 +11,7 @@ async function id() {
         htmlAlert(await k('warning'),await k('locate_pls_selectgame'),[{text:await k('ok'),resolveWith:'ok'}]);
         return;
     }
-    await window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/'), (window.fromIM == undefined ? false : window.fromIM), window.gid]);
+    await window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/'), (window.fromIM == undefined ? false : window.fromIM), window.gid, document.getElementById('copyAnyways').checked ? 'copy' : 'ncopy']);
 }
 
 async function steam() {
@@ -19,7 +19,7 @@ async function steam() {
         htmlAlert(await k('warning'),await k('locate_pls_selectgame'),[{text:await k('ok'),resolveWith:'ok'}]);
         return;
     }
-    await window.electronAPI.invoke("createNewInstallation", ["steam", "", "", window.fromIM, window.gid]);
+    await window.electronAPI.invoke("createNewInstallation", ["steam", "", "", window.fromIM, window.gid, document.getElementById('copyAnyways').checked ? 'copy' : 'ncopy']);
 }
 
 window.currentPageStack.id = id;
@@ -41,6 +41,10 @@ window.currentPageStack.downloadDelta = async function() {
     if (path) {
         document.querySelector('input[type="text"]').value = path;
     }
+
+    document.querySelector('.copyAnyways').style.opacity = 0.5;
+    document.querySelector('.copyAnyways').style.pointerEvents = 'none';
+    document.querySelector('#copyAnyways').checked = true;
 };
 
 (async() => {
@@ -61,17 +65,15 @@ window.currentPageStack.downloadDelta = async function() {
             var game = games[l];
 
             var img = document.createElement('img');
-            img.style.width = '30px';
-            img.style.opacity = '0.4';
-            img.style.cursor = 'pointer';
             img.id = game.id;
-            img.classList.add('gameico');
+            img.classList.add('gameIco');
             img.addEventListener('click', function() {
                 window.gid = game.id;
-                document.querySelectorAll('.gameico:not(#' + game.id + ')').forEach(x =>{
-                    x.style.opacity = 0.4;
-                    img.style.opacity = 1;
+                document.querySelectorAll('.gameIco').forEach(x =>{
+                    x.classList.remove('selectedGameIco');
                 });
+
+                img.classList.add('selectedGameIco');
 
                 var allFeat = ['steam','autodownload'];
                 allFeat.forEach(f => {

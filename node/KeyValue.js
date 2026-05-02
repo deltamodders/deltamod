@@ -2,7 +2,7 @@ const path = require('path');
 const app = require('electron').app;
 const fs = require('fs');
 let kvs = {};
-const { getSystemFile, getSystemFolder, healthCheck, getSystemFileOfIndex } = require('./System.js');
+const { getSystemFile, getSystemFolder, healthCheck, getSystemFileOfIndex, getSystemFolderOfIndex } = require('./System.js');
 const { get } = require('http');
 const crypto = require('crypto');
 const console = require('./Console.js');
@@ -118,8 +118,11 @@ function upgradeStores() {
 
         fs.readdirSync(oldStorePath).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
             if (file.endsWith('unique')) return;
+
             var indx = file.split('-')[1];
             console.log('Checking install index ' + indx);
+
+            // upgrade edition flag to gamePid
             var fff = readKVSOfIndex('deltaruneEdition', indx, "none");
             console.log('Found edition ' + fff + ' in index ' + indx);
             if (fff != "rem") {
@@ -131,7 +134,12 @@ function upgradeStores() {
                 setKVSOfIndex('gamePid', pid, indx);
                 setKVSOfIndex('deltaruneEdition', "rem", indx);
                 console.log('Upgraded index ' + indx);
-                return;
+            }
+
+            // upgrade deltaruneInstall path to store
+            var gamePath = readKVSOfIndex('gamePath', indx, "none");
+            if (gamePath == "none") {
+                setKVSOfIndex('gamePath', path.join(getSystemFolderOfIndex('deltaruneInstall', indx)), indx);
             }
         });
     }

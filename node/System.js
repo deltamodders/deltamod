@@ -46,10 +46,18 @@ function getSystemFileOfIndex(fileid, index) {
 }
 
 function getSystemFolder(folderid, unique) {
+    if (folderid === "deltaruneInstall") {
+        var store = JSON.parse(fs.existsSync(getSystemFile('store.json', unique)) ? fs.readFileSync(getSystemFile('store.json', unique), 'utf8') : '{}');
+        return store.gamePath || path.join(app.getPath('userData'), 'deltamod_system-' + (unique ? "unique" : systemIndex), 'deltaruneInstall');
+    }
     return path.join(app.getPath('userData'), 'deltamod_system-' + (unique ? "unique" : systemIndex), folderid);
 }
 
 function getSystemFolderOfIndex(folderid, si) {
+    if (folderid === "deltaruneInstall") {
+        var store = JSON.parse(fs.existsSync(getSystemFile('store.json')) ? fs.readFileSync(getSystemFile('store.json'), 'utf8') : '{}');
+        return store.gamePath || path.join(app.getPath('userData'), 'deltamod_system-' + systemIndex, 'deltaruneInstall');
+    }
     return path.join(app.getPath('userData'), 'deltamod_system-' + si, folderid);
 }
 

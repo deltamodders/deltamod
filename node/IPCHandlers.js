@@ -27,7 +27,7 @@ const { PARTITION } = require('./Config');
 // --- IPC Helper Functions ---
 
 async function dominantColor(imagePath) {
-    return 'rgb(255,255,255)'; // TODO: implement
+    return 'rgb(93, 93, 93)'; // TODO: implement
 }
 
 function obtainThemes() {
@@ -81,7 +81,10 @@ async function getInstallations(suppressWarnings = false) {
         const installPath = path.join(userDataPath, file);
         const index = parseInt(file.split('-')[1], 10);
         const storeJSON = path.join(installPath, 'store.json');
-        const deltaruneInstall = path.join(installPath, 'deltaruneInstall');
+
+        var storeData = JSON.parse(fs.existsSync(storeJSON) ? fs.readFileSync(storeJSON, 'utf8') : '{}');
+        const deltaruneInstall = validateDeltarune(storeData.gamePath);
+
         const cnamePath = path.join(installPath, '_cname');
 
         if (!fs.existsSync(deltaruneInstall) || !fs.existsSync(storeJSON)) {
@@ -92,7 +95,7 @@ async function getInstallations(suppressWarnings = false) {
                 dialog.showMessageBoxSync({
                     type: 'warning',
                     title: 'Invalid Installation Found',
-                    message: `An invalid or not fully imported installation of Deltarune was found and will be removed from Deltamod: ${cname}.`,
+                    message: `An invalid or not fully imported installation of Deltarune was found and will be removed from Deltamod: ${cname}.\n\n${storeJSON}\n\n${deltaruneInstall}`,
                 });
             }
 
@@ -507,7 +510,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('startGame', (event, args) => ipcMain.emit('startGame', event, args));
     ipcMain.on('startGame', () => {
         const win = getWindow();
-        const installPath = path.join(app.getPath('userData'), `deltamod_system-${System.getCurrentSystemIndex()}`, 'deltaruneInstall');
+        const installPath = KeyValue.readKVS('gamePath');
         if (!fs.existsSync(installPath)) return dialog.showErrorBox('Cannot run', 'Please import a Deltarune install first.');
 
         if (win) {
@@ -680,7 +683,9 @@ module.exports = function registerIPCHandlers(context) {
             for (const file of systemFiles) {
                 const index = file.split('-')[1];
                 if (index === 'unique') continue;
-                if (!fs.existsSync(path.join(app.getPath('userData'), file, 'deltaruneInstall'))) {
+                var store = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), file, 'store.json'), 'utf8'));
+
+                if (!fs.existsSync(store.gamePath)) {
                     fs.rmSync(path.join(app.getPath('userData'), file), { recursive: true, force: true });
                     invalidInstalls.push(index);
                     continue;
@@ -706,6 +711,7 @@ module.exports = function registerIPCHandlers(context) {
         const specifiedLocatePath = isFromLocate ? args[2] : null;
         const fromIM = args[3];
         let selectedGame = args[4];
+        let copyToDMod = args[5] == 'copy';
 
         let i = 0;
         fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
@@ -753,15 +759,48 @@ module.exports = function registerIPCHandlers(context) {
             return false;
         }
 
-        const destPath = getSystemFolderOfIndex('deltaruneInstall', i);
-        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+        if (!fs.existsSync(path.join(app.getPath('userData'), `deltamod_system-${i}`))) {
+            console.log('Initialized sysdir for new installation at index', i);
+            fs.mkdirSync(path.join(app.getPath('userData'), `deltamod_system-${i}`), { recursive: true });
+        }
+
+        let destPath;
+        if (copyToDMod) {
+            destPath = path.join(app.getPath('userData'), `deltamod_system-${i}`, 'deltaruneInstall');
+            console.log(`Copying files from ${sourcePath} to Deltamod storage (${destPath})...`);
+            fs.mkdirSync((destPath), { recursive: true });
+            try {
+                const copyDir = (src, dest) => {
+                    const stats = fs.statSync(src);
+                    if (stats.isDirectory()) {
+                        fs.mkdirSync(dest, { recursive: true });
+                        for (const entry of fs.readdirSync(src)) {
+                            copyDir(path.join(src, entry), path.join(dest, entry));
+                        }
+                    } else {
+                        fs.copyFileSync(src, dest);
+                    }
+                };
+
+                copyDir(sourcePath, destPath);
+            }
+            catch (err) {
+                dialog.showErrorBox('Copy failed', `Failed to copy files: ${err.message}`);
+                console.error('Error during copy:', err);
+                return false;
+            }
+
+            console.log('Copy completed successfully.');
+        }
+        else {
+            destPath = sourcePath;
+        }
 
         try {
-            copyRecursiveSync(sourcePath, destPath);
             KeyValue.setKVSOfIndex('loadedDeltarune', true, i);
-            KeyValue.setKVSOfIndex('deltarunePath', destPath, i);
+            KeyValue.setKVSOfIndex('gamePath', destPath, i);
             KeyValue.setKVSOfIndex('gamePid', selectedGame, i);
-            KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i);
+            KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i); // stub to signal it has been upgraded
             KeyValue.setKVSOfIndex('enabledMods', [], i);
             KeyValue.setKVSOfIndex('isSteam', steam, i);
             KeyValue.setKVSOfIndex('originalSteamPath', steam ? sourcePath : "", i);
@@ -775,7 +814,7 @@ module.exports = function registerIPCHandlers(context) {
             page(fromIM ? "installmanager" : "main");
             return true;
         } catch (err) {
-            dialog.showErrorBox('Import failed', `Failed: ${err.message}`);
+            dialog.showErrorBox('Import failed', `Failed: ${err.message}\n\n${err.stack}`);
             return false;
         }
     });
@@ -813,6 +852,13 @@ module.exports = function registerIPCHandlers(context) {
                 if (fs.existsSync(cnamePath) && fs.readFileSync(cnamePath, 'utf8').startsWith('Install #')) {
                     fs.writeFileSync(cnamePath, `Install #${cNum + 1}`);
                 }
+            }
+
+            var store = JSON.parse(fs.readFileSync(path.join(newPath, 'store.json'), 'utf8'));
+            if (store.gamePath.endsWith('deltaruneInstall')) {
+                console.log(`Updating game path for system index ${cNum} to reflect new index after deletion.`);
+                store.gamePath = path.join(app.getPath('userData'), `deltamod_system-${cNum}`, 'deltaruneInstall');
+                fs.writeFileSync(path.join(newPath, 'store.json'), JSON.stringify(store, null, 4), 'utf8');
             }
         });
 
