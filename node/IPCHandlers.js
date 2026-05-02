@@ -27,7 +27,7 @@ const { PARTITION } = require('./Config');
 // --- IPC Helper Functions ---
 
 async function dominantColor(imagePath) {
-    return 'rgb(93, 93, 93)'; // TODO: implement
+    return 'rgb(52, 52, 52)'; // TODO: implement
 }
 
 function obtainThemes() {
@@ -258,21 +258,21 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('importTheme', async () => {
         const win = getWindow();
         const musicPath = (await dialog.showOpenDialog(win, { title: 'Select your music file', filters: [{ name: 'MP3 files', extensions: ['mp3'] }] })).filePaths[0];
-        const bgPath = (await dialog.showOpenDialog(win, { title: 'Select your background image', filters: [{ name: 'Image files', extensions: ['png', 'jpg', 'jpeg'] }] })).filePaths[0];
+        const bgPath = (await dialog.showOpenDialog(win, { title: 'Select your background image', filters: [{ name: 'Image files', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif' ] }] })).filePaths[0];
         if (!musicPath || !bgPath) return;
 
         const randomSeed = Math.random().toString(36).substring(2, 15);
         const themeId = `custom_${randomSeed}`;
-        const themeName = `Custom Theme (${new Date().toLocaleString()})`;
+        const themeName = `Custom Theme #${randomSeed.substring(0, 5).toUpperCase()}`;
         const customThemesDir = path.join(app.getPath('appData'), 'deltamod', 'customThemes');
 
         fs.copyFileSync(musicPath, path.join(customThemesDir, 'mus', `${themeId}.mp3`));
-        fs.copyFileSync(bgPath, path.join(customThemesDir, 'img', `${themeId}.png`));
+        fs.copyFileSync(bgPath, path.join(customThemesDir, 'img', `${themeId}.${path.extname(bgPath).slice(1)}`));
 
         const config = {
             name: themeName,
-            background: `${themeId}.png`,
-            description: `Custom theme imported by the user - ${new Date().toLocaleString()}`,
+            background: `${themeId}.${path.extname(bgPath).slice(1)}`,
+            description: `This is a custom theme by the user.`,
             mainSong: `${themeId}.mp3`,
             id: themeId,
             musicTrack: "Custom music",
