@@ -47,8 +47,10 @@ function filterAssets(assets) {
     var viewport = document.querySelector('.releases');
     var code = releases.status;
     if (code != 200) {
-        await htmlAlert("An error occurred", `An error occurred while fetching releases from GitHub. Your requests may have been blocked by their servers. (Status code: ${code})`, [{text:'OK',resolveWith:'ok'}],'cloud_alert');
-        page('options');
+        await htmlAlert("An error occurred", `An error occurred while fetching releases from GitHub. Your requests may have been blocked by their servers. (Status code: ${code}). You can only import your own patcher at the moment.`, [{text:'OK',resolveWith:'ok'}],'cloud_alert');
+        
+        document.querySelector('#viewPatcher').style.display = 'none';
+        document.querySelector('.releases').innerHTML = 'Not available.';
         return;
     }
     var releasesData = await releases.json();
@@ -110,6 +112,17 @@ function filterAssets(assets) {
     genbtnstyles();
 })();
 
+async function importPatcher() {
+    htmlAlert(
+        await k('gm3psel_importown_title'),
+        await k('gm3psel_importown_desc'),
+        [],
+        'hand_gesture_off'
+    );
+
+    invoke('importPatcher',[]);
+}
+window.currentPageStack.importPatcher = importPatcher;
 document.getElementById('viewPatcher').oninput = () => {
     window._pageArguments = {};
     window._pageArguments.curpatch = document.getElementById('viewPatcher').value;

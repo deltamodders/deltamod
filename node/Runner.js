@@ -580,6 +580,78 @@ function createWindow() {
         return isControllerMode;
     });
 
+    ipcMain.handle('importPatcher', async () => {
+        var zip = (await dialog.showOpenDialog(win, {
+            title: 'Select a mod patcher ZIP file',
+            filters: [
+                { name: 'ZIP files', extensions: ['zip'] }
+            ]
+        })).filePaths[0];
+
+        if (!zip) return;
+
+        var patcherPath = path.join(__dirname, '..', 'gm3p');
+        var tempPath = path.join(app.getPath('temp'), 'deltamod_patcher_' + Date.now());
+
+        await new Promise((resolve, reject) => {
+            _7z.unpack(zip, tempPath, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        var possibleExecutables = [
+            ['GM3P', 'GM3P.exe'],
+            ['DEVICE_FUSION', 'GamemakerModMerger.exe'],
+            ['G3MTool', 'G3MTool.exe']
+        ];
+
+        var found = false;
+        for (const [name, exe] of possibleExecutables) {
+            var exepath = path.join(tempPath, exe);
+            if (fs.existsSync(exepath)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'No compatible patcher found',
+                message: 'The selected ZIP file does not contain a supported patching core.'
+            }); 
+
+            fs.rmSync(tempPath, { recursive: true, force: true });
+
+            app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://')), ...(isControllerMode ? ['-controller'] : [])] });
+            app.exit(0);
+            
+            return;
+        }
+        else {
+            // move the extracted folder to the patcherPath
+            if (fs.existsSync(patcherPath)) {
+                fs.rmSync(patcherPath, { recursive: true, force: true });
+            }
+
+            fs.renameSync(tempPath, patcherPath);
+
+            dialog.showMessageBoxSync({
+                type: 'info',
+                title: 'Patcher Imported',
+                message: 'The patcher was successfully imported and is now ready to use.'
+            });
+
+            app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://')), ...(isControllerMode ? ['-controller'] : [])] });
+            app.exit(0);
+        }
+
+    });
+
     ipcMain.handle('diagnosticInfo', () => {
         return `Deltamod ${app.getVersion()} - Running on ${os.platform()} ${os.release()} - cmode ${isControllerMode ? 'on' : 'off'} - devtools ${devToolsEnabled ? 'enabled' : 'disabled'} - ${updateAvailable ? 'update available' : 'no update'}`;
     });
@@ -1076,31 +1148,25 @@ function createWindow() {
     });
 
     ipcMain.handle('myCommitInfo', async (event, args) => {
-        var toreturn = "";
+        var possibleExecutables = [
+            ['GM3P', 'GM3P.exe'],
+            ['DEVICE_FUSION', 'GamemakerModMerger.exe'],
+            ['G3MTool', 'G3MTool.exe']
+        ];
 
-        var gm3ppath = path.join(__dirname, '..', 'gm3p', 'GM3P.exe');
-        var devicefusionpath = path.join(__dirname, '..', 'gm3p', 'GamemakerModMerger.exe');
-        if (fs.existsSync(gm3ppath) && !fs.existsSync(devicefusionpath)) {
-            var attributes = require('./Utils.js').getFileVersion(gm3ppath);
-            if (attributes) {
-                toreturn += `<br>GM3P ${attributes}`;
-            }
-            else {
-                toreturn += `<br>GM3P, version unknown`;
+        for (const [name, exe] of possibleExecutables) {
+            var exepath = path.join(__dirname, '..', 'gm3p', exe);
+            if (fs.existsSync(exepath)) {
+                try {
+                    var version = require('./Utils').getFileVersion(exepath);
+                    return "<br>" + name + ', version ' + version;
+                } catch (e) {
+                    console.error(`Failed to get version for ${name}:`, e);
+                }
             }
         }
 
-        if (fs.existsSync(devicefusionpath)) {
-            var attributes = require('./Utils.js').getFileVersion(devicefusionpath);
-            if (attributes) {
-                toreturn += `<br>DEVICE_FUSION ${attributes}`;
-            }
-            else {
-                toreturn += `<br>DEVICE_FUSION, version unknown`;
-            }
-        }
-
-        return toreturn;
+        return '<br>No external patching core detected';
     });
 
     ipcMain.handle('showWindow', (event) => {

@@ -201,5 +201,10 @@
     "criterrors_gm3palert_message": "There is no patcher core installed. A patcher core is the tool needed to modify your game. Please install a patcher to continue using Deltamod.",
     "shop_addedon": "Last updated on {0}",
     "options_gen3_title": "Prompt controller mode when available",
-    "options_gen3_desc": "When enabled, you will be asked to activate Controller Mode when a compatible controller is attached. Currently only compatible with DualSense."
+    "options_gen3_desc": "When enabled, you will be asked to activate Controller Mode when a compatible controller is attached. Currently only compatible with DualSense.",
+    /* third batch */
+    "gm3psel_importown": "...or import your own",
+    "gm3psel_importown_title": "Importing",
+    "gm3psel_importown_desc": "Please wait while your patching core is being imported. Do not close Deltamod."
+     /* end of third batch */
 }

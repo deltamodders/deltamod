@@ -10,6 +10,13 @@
     gap: 10px;
 }
 
+.spbt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
 strong {
     font-weight: bold !important;
 }
