@@ -30,10 +30,14 @@ const { isFeatureEnabled } = require('./FeatureFlags');
 const { valid } = require('node-html-parser');
 const os = require('os');
 const { PARTITION } = require('./Config');
-
 function errorWin(error) {
     win.setFullScreen(false);
     return require('./ErrorWin.js').errorWin(error);
+}
+
+async function dominantColor(path) {
+   let dominant = 'rgb(255,255,255)';
+   return dominant; // todo implement
 }
 
 var langFile = System.getSystemFile('language', true);
@@ -1248,6 +1252,47 @@ function createWindow() {
     ipcMain.handle('getThemes', async () => {
         return obtainThemes();
     });
+
+
+    ipcMain.handle('importTheme', async (event, args) => {
+        var music = (await dialog.showOpenDialog(win, {
+            title: 'Select your music file',
+            filters: [
+                { name: 'MP3 files', extensions: ['mp3'] }
+            ]
+        })).filePaths[0];
+
+        var bg = (await dialog.showOpenDialog(win, {
+            title: 'Select your background image',
+            filters: [
+                { name: 'Image files', extensions: ['png', 'jpg', 'jpeg'] }
+            ]
+        })).filePaths[0];
+
+        var randomSeed = Math.random().toString(36).substring(2, 15);
+        var themeId = 'custom_' + randomSeed;
+        var themeName = 'Custom Theme (' + new Date().toLocaleString() + ')';
+
+        var customthemesDir = path.join(app.getPath('appData'), 'deltamod', 'customThemes');
+
+        fs.copyFileSync(music, path.join(customthemesDir, 'mus', themeId + '.mp3'));
+        fs.copyFileSync(bg, path.join(customthemesDir, 'img', themeId + '.png'));
+
+        var config = {
+            "name": themeName,
+            "background": themeId + '.png',
+            "description": "Custom theme imported by the user - " + new Date().toLocaleString(),
+            "mainSong": themeId + '.mp3',
+            "id": themeId,
+            "musicTrack": "Custom music",
+            "color": await dominantColor(bg)
+        };
+
+        fs.writeFileSync(path.join(customthemesDir, 'data', themeId + '.theme.json'), JSON.stringify(config, null, 4), 'utf8');
+
+        page('themesel');
+    });
+
     /*
      * getTheme
      * returns theme name as specified in the themes folder.
@@ -1256,8 +1301,23 @@ function createWindow() {
         var themeHost = System.getSystemFile('_theme', true);
         try {
             var theme = fs.readFileSync(themeHost, 'utf8');
-            var themeData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', 'data', theme + '.theme.json'), 'utf8'));
-            
+            var possiblePaths = [
+                (path.join(__dirname, '..', 'web', 'themes', 'data', theme + '.theme.json')),
+                (path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', theme + '.theme.json'))
+            ];
+            console.log('Checking for theme in the following paths:');
+            possiblePaths.forEach(p => console.log(' - ' + p));
+            var found = false;
+            for (const p of possiblePaths) {
+                if (fs.existsSync(p)) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                throw new Error('Theme file not found in any of the expected locations.');
+            }
         }
         catch(e) {
             theme = 'base';
