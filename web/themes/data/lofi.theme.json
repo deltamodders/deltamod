@@ -1,0 +1,9 @@
+{
+    "name": "Blank Theme",
+    "background": "lofi.png",
+    "description": "A blank theme. Not specific to DELTARUNE... just chill.",
+    "mainSong": "lofi.mp3",
+    "id": "lofi",
+    "musicTrack": "Music by Monume on Pixabay",
+    "color": "rgb(87, 87, 87)"
+}

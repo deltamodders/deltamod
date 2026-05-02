@@ -22,13 +22,23 @@ function purify(text) {
 async function createMod(mod, compatible) {
     const modRow = document.createElement('tr');
 
+    let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
+    if (!imeta.path) {
+        imeta.path = 'deltapack://web/img/mod-placeholder.png';
+    }
+
     // Column 1 (Mod)
     const modNameContainer = document.createElement('td');
-    const titleSpan = document.createElement('span');
-    titleSpan.innerText = mod.name;
+    const titleSpan = document.createElement('div');
+    titleSpan.innerHTML = `
+    <img src="${imeta.path}" width="25" height="25" onerror="this.onerror=null; this.src='deltapack://web/img/mod-placeholder.png'" style="border-radius: 4px; object-fit: cover;"> 
+    <span>${purify(mod.name)}</span>`;
+    titleSpan.style.display = 'flex';
+    titleSpan.style.alignItems = 'center';
+    titleSpan.style.gap = '8px';
+    titleSpan.style.marginBottom = '4px';
     titleSpan.id = `modtitle-${mod.uid}`;
     modNameContainer.appendChild(titleSpan);
-    modNameContainer.appendChild(document.createElement('br'));
 
     if (window._pageArguments && window._pageArguments.highlightMod === mod.uid) {
         modNameContainer.style.backgroundColor = '#b5b5b544';
@@ -99,7 +109,18 @@ async function createMod(mod, compatible) {
     gameSpan.innerHTML = `${icon('stadia_controller', 'small')} ${await window.electronAPI.invoke('getGameInfo', [mod.game]).then(g => g.name)}`;
     gameSpan.id = `modgame-${mod.uid}`;
     modNameContainer.appendChild(gameSpan);
-    
+
+    let versionSpan = document.createElement('p');
+    versionSpan = adaptForIcons(versionSpan);
+    versionSpan.style.margin = '0px';
+    versionSpan.style.marginTop = '4px';
+    versionSpan.className = 'calibri';
+    versionSpan.style.fontSize = 'smaller';
+    versionSpan.style.color = '#888';
+    versionSpan.innerHTML = `${icon('change_history', 'small')} ${purify(mod.version)}`;
+    versionSpan.id = `modversion-${mod.uid}`;
+    modNameContainer.appendChild(versionSpan);
+
     var comp = !mod.isIncompatible;
     let compatSpan = document.createElement('p');
     compatSpan = adaptForIcons(compatSpan);

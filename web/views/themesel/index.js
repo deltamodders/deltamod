@@ -33,8 +33,10 @@
         name.style.fontSize = '1.2em';
         td1.appendChild(name);
 
+        td1.appendChild(document.createElement('br'));
+        
         var desc = document.createElement('span');
-        desc.innerText = `\n${theme.description}`;
+        desc.innerText = `${theme.description}`;
         desc.classList.add('calibri');
         desc.style.fontSize = '0.9em';
         td1.appendChild(desc);
@@ -59,11 +61,11 @@
         td2.classList.add('theme-entry');
 
         var selectbtn = document.createElement('button');
-        selectbtn.innerText = await k('select');
+        selectbtn.innerHTML = icon('check_box_outline_blank', '25px');
         if (theme.id == currentTheme) {
             selectbtn.disabled = true;
             selectbtn.style.opacity = 0.5;
-            selectbtn.innerText = await k('select') + ' ✓';
+            selectbtn.innerHTML = icon('check_box', '25px');
             selectbtn.style.cursor = 'not-allowed';
         }
         selectbtn.addEventListener('click', async () => {
@@ -72,7 +74,40 @@
             audio.pause();
             page('');
         });
+
+        td2.style.textAlign = 'center';
+
         td2.appendChild(selectbtn);
+
+        if (!theme.builtIn) {
+            var deletebtn = document.createElement('button');
+            deletebtn.innerHTML = icon('delete', '25px');
+            deletebtn.style.marginLeft = '0.5em';
+            deletebtn.addEventListener('click', async () => {
+                if (theme.id == currentTheme) { 
+                    await window.electronAPI.invoke('setTheme', ['base']);
+                    currentAudio = "";
+                    audio.pause();
+                }
+                await window.electronAPI.invoke('deleteCustomTheme', [theme.id]);
+                page('themesel');
+            });
+            td2.appendChild(deletebtn);
+
+            name.contentEditable = true;
+            desc.contentEditable = true;
+
+            name.addEventListener('blur', async () => {
+                if (name.innerText.trim() === "") name.innerText = theme.name;
+                await window.electronAPI.invoke('renameCustomTheme', [theme.id, name.innerText.trim(), desc.innerText.trim()]);
+            });
+
+            desc.addEventListener('blur', async () => {
+                if (desc.innerText.trim() === "") desc.innerText = theme.description;
+                await window.electronAPI.invoke('renameCustomTheme', [theme.id, name.innerText.trim(), desc.innerText.trim()]);
+            });
+        }
+
         tr.appendChild(td1);
         tr.appendChild(td2);
     }

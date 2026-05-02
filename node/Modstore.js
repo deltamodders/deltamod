@@ -135,7 +135,28 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
 
         if (modInfo.metadata.packageID?.toString().trim()) {
             if (fs.existsSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID))) {
-                fs.rmSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID), { recursive: true, force: true });
+                var existingModInfo = safeReadJSON(path.join(system.getPacketDatabase(), modInfo.metadata.packageID, 'meta.json'));
+                var oldVersion = existingModInfo?.metadata?.version || "Unknown";
+                var newVersion = modInfo.metadata.version || "Unknown";
+                
+                var response = dialog.showMessageBoxSync({
+                    type: 'error',
+                    title: 'Import Failed',
+                    message: `The mod "${modInfo.metadata.name}" is already present in your mods.\n\nPresent version: ${oldVersion}\nTo be imported version: ${newVersion}\n\nHow would you like to proceed?`,
+                    buttons: ['Delete old version', 'Keep old version', 'Cancel import'],
+                    defaultId: 0,
+                    cancelId: 2,
+                });
+
+                if (response == 0) {
+                    fs.rmSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID), { recursive: true, force: true });
+                } else if (response == 1) {
+                    fs.rmSync(modPath, { recursive: true, force: true });
+                    return;
+                } else {
+                    fs.rmSync(modPath, { recursive: true, force: true });
+                    return;
+                }
             }
             fs.renameSync(modPath, path.join(system.getPacketDatabase(), modInfo.metadata.packageID));
         }
@@ -259,6 +280,17 @@ function modList() {
             };
             var meta = modInfo.metadata || {};
             meta.isIncompatible = false;
+
+            if (meta.packageID && meta.packageID.toString().trim().split('.').length === 3) {
+                console.log('detected valid pid for mod', mod, ':', meta.packageID);
+                meta.packageID = validatePID(meta.packageID);
+
+                if (modPath !== path.join(system.getPacketDatabase(), meta.packageID)) {
+                    console.log('upgrading modstore to have folder named by packageID for mod', mod);
+                    fs.renameSync(modPath, path.join(system.getPacketDatabase(), meta.packageID));
+                    modPath = path.join(system.getPacketDatabase(), meta.packageID);
+                }
+            }
 
             try {
                 if (meta.demoMod !== undefined) {

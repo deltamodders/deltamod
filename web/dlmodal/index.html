@@ -54,6 +54,9 @@
 
         // Progress (0 -> 360)
         ctx.strokeStyle = "#ffffff";
+        if (value >= 100) {
+            ctx.strokeStyle = "#006600";
+        }
         ctx.beginPath();
         ctx.arc(cx, cy, radius, start, end, false);
         ctx.stroke();

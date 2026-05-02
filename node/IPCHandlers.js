@@ -7,6 +7,7 @@ const { exec, execSync } = require('child_process');
 const axios = require('axios').default;
 const createDesktopShortcut = require('create-desktop-shortcuts');
 const _7z = require('7zip-min');
+const { createCanvas, loadImage } = require('canvas');
 
 // Local modules
 const KeyValue = require('./KeyValue');
@@ -27,7 +28,40 @@ const { PARTITION } = require('./Config');
 // --- IPC Helper Functions ---
 
 async function dominantColor(imagePath) {
-    return 'rgb(52, 52, 52)'; // TODO: implement
+    try {
+        const img = await loadImage(imagePath);
+        // downscale for performance
+        const w = 100;
+        const h = Math.max(1, Math.round((img.height / img.width) * w));
+        const canvas = createCanvas(w, h);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+
+        const counts = new Map();
+        let maxCount = 0;
+        let dominant = null;
+
+        // quantize to reduce unique colors (to nearest 16)
+        for (let i = 0; i < data.length; i += 4) {
+            const r = Math.round(data[i] / 16) * 16;
+            const g = Math.round(data[i + 1] / 16) * 16;
+            const b = Math.round(data[i + 2] / 16) * 16;
+            const key = `${r},${g},${b}`;
+            const v = (counts.get(key) || 0) + 1;
+            counts.set(key, v);
+            if (v > maxCount) {
+                maxCount = v;
+                dominant = { r, g, b };
+            }
+        }
+
+        if (!dominant) return 'rgb(0, 0, 0)';
+        return `rgb(${Math.max(dominant.r - 20, 0)}, ${Math.max(dominant.g - 20, 0)}, ${Math.max(dominant.b - 20, 0)})`;
+    } catch (e) {
+        console.log('dominantColor error', e);
+        return 'rgb(0, 0, 0)';
+    }
 }
 
 function obtainThemes() {
@@ -257,7 +291,7 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('importTheme', async () => {
         const win = getWindow();
-        const musicPath = (await dialog.showOpenDialog(win, { title: 'Select your music file', filters: [{ name: 'MP3 files', extensions: ['mp3'] }] })).filePaths[0];
+        const musicPath = (await dialog.showOpenDialog(win, { title: 'Select your music file', filters: [{ name: 'Song files', extensions: ['mp3', 'ogg'] }] })).filePaths[0];
         const bgPath = (await dialog.showOpenDialog(win, { title: 'Select your background image', filters: [{ name: 'Image files', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif' ] }] })).filePaths[0];
         if (!musicPath || !bgPath) return;
 
@@ -266,14 +300,14 @@ module.exports = function registerIPCHandlers(context) {
         const themeName = `Custom Theme #${randomSeed.substring(0, 5).toUpperCase()}`;
         const customThemesDir = path.join(app.getPath('appData'), 'deltamod', 'customThemes');
 
-        fs.copyFileSync(musicPath, path.join(customThemesDir, 'mus', `${themeId}.mp3`));
+        fs.copyFileSync(musicPath, path.join(customThemesDir, 'mus', `${themeId}.${path.extname(musicPath).slice(1)}`));
         fs.copyFileSync(bgPath, path.join(customThemesDir, 'img', `${themeId}.${path.extname(bgPath).slice(1)}`));
 
         const config = {
             name: themeName,
             background: `${themeId}.${path.extname(bgPath).slice(1)}`,
             description: `This is a custom theme by the user.`,
-            mainSong: `${themeId}.mp3`,
+            mainSong: `${themeId}.${path.extname(musicPath).slice(1)}`,
             id: themeId,
             musicTrack: "Custom music",
             color: await dominantColor(bgPath)
@@ -281,6 +315,26 @@ module.exports = function registerIPCHandlers(context) {
 
         fs.writeFileSync(path.join(customThemesDir, 'data', `${themeId}.theme.json`), JSON.stringify(config, null, 4), 'utf8');
         page('themesel');
+    });
+
+    ipcMain.handle('renameCustomTheme', async (event, args) => {
+        const [themeId, newName, newDesc] = args;
+
+        const customJSON = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', `${themeId}.theme.json`);
+        var themeConfig = JSON.parse(fs.readFileSync(customJSON, 'utf8'));
+        themeConfig.name = newName;
+        themeConfig.description = newDesc;
+        fs.writeFileSync(customJSON, JSON.stringify(themeConfig, null, 4), 'utf8');
+    });
+
+    ipcMain.handle('deleteCustomTheme', async (event, args) => {
+        const themeId = args[0];
+
+        const customJSON = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', `${themeId}.theme.json`);
+        var themeConfig = JSON.parse(fs.readFileSync(customJSON, 'utf8'));
+        if (fs.existsSync(customJSON)) {
+            fs.unlinkSync(customJSON);
+        }
     });
 
     // Sponsors
@@ -511,7 +565,6 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.on('startGame', () => {
         const win = getWindow();
         const installPath = KeyValue.readKVS('gamePath');
-        if (!fs.existsSync(installPath)) return dialog.showErrorBox('Cannot run', 'Please import a Deltarune install first.');
 
         if (win) {
             win.hide();
@@ -575,7 +628,7 @@ module.exports = function registerIPCHandlers(context) {
             });
 
             const baking = args[1] === 'baker';
-            const pathname = KeyValue.readKVS('deltarunePath');
+            const pathname = KeyValue.readKVS('gamePath');
             if (!pathname) return dialog.showErrorBox('Error', 'Please import a Deltarune install first.');
 
             GamePatching.restoreOriginalsIfAny(pathname);
