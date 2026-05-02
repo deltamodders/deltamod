@@ -1,16 +1,23 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, session, shell, screen, Notification, safeStorage, Menu } = require('electron');
-const Paths = require('./Paths');
-const KeyValue = require('./KeyValue');
+const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
-const Language = require('./Language');
+const os = require('os');
+const crypto = require('crypto');
+const { exec, execSync } = require('child_process');
+const axios = require('axios').default;
 const mime = require('mime-types');
 const createDesktopShortcut = require('create-desktop-shortcuts');
-const _7z = require("7zip-min");
+const _7z = require('7zip-min');
+const { getConfig, config } = require('7zip-min');
+const { path7za } = require('7zip-bin');
+
+// Local modules
+const Paths = require('./Paths');
+const KeyValue = require('./KeyValue');
+const Language = require('./Language');
 const { getSystemFile, getSystemFolder, getPacketDatabase, setSystemIndex, getSystemFolderOfIndex } = require('./System');
-const crypto = require('crypto');
-const { setWindow, page, getSharedVar, setSharedVar, properRelaunch, getSteamDirectory } = require('./Utils');
-const { exec } = require('child_process');
+const System = require('./System');
+const { setWindow, page, getSharedVar, setSharedVar, properRelaunch, getSteamDirectory, getFileVersion, between } = require('./Utils');
 const Modstore = require('./Modstore');
 const CMode = require('./ControllerMode');
 const Updates = require('./Updates');
@@ -18,128 +25,230 @@ const GameDB = require('./GameDB');
 const { createProgressModal, updateProgressModal, closeAllProgressModals } = require('./ProgressModal');
 const GamePatching = require('./GamePatching');
 const Junction = require('./Junction');
-const { default: axios } = require('axios');
-const System = require('./System');
 const Netlayer = require('./Netlayer');
-const path = require('path');
-const { getConfig, config } = require('7zip-min');
-const { path7za } = require('7zip-bin');
 const console = require('./Console');
 const { handleProtocolLaunch, registerProtocolSchemesAsPrivileged, registerProtocolHandlers } = require('./Protocol');
 const { isFeatureEnabled } = require('./FeatureFlags');
-const { valid } = require('node-html-parser');
-const os = require('os');
 const { PARTITION } = require('./Config');
-function errorWin(error) {
-    win.setFullScreen(false);
-    return require('./ErrorWin.js').errorWin(error);
+
+// --- Global State ---
+let win;
+let elecTracer;
+let abortController;
+let updateAvailable = false;
+let ignoreUpdate = false;
+let callbackNPS;
+let callbackNPSPassWith;
+let STEAM_BASE;
+
+const isControllerMode = process.argv.includes('-controller');
+const isDevToolsEnabled = process.argv.includes('--developer') || process.env.DELTAMOD_ENV === 'dev';
+
+// --- Initialization ---
+app.commandLine.appendSwitch('disable-features', 'MediaSessionService');
+registerProtocolSchemesAsPrivileged(protocol);
+
+if (process.argv.includes('--developer') && !isFeatureEnabled("AutoupdateNoMatterWhat")) {
+    ignoreUpdate = true;
 }
 
-async function dominantColor(path) {
-   let dominant = 'rgb(255,255,255)';
-   return dominant; // todo implement
+if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient('deltamod', process.execPath, [path.resolve(process.argv[1])]);
+    }
+} else {
+    app.setAsDefaultProtocolClient('deltamod');
 }
 
-var langFile = System.getSystemFile('language', true);
+// --- Setup Language ---
+const langFile = System.getSystemFile('language', true);
 if (fs.existsSync(langFile)) {
-    var lang = fs.readFileSync(langFile, 'utf8');
-    Language.loadLanguage(lang);
-}
-else {
+    Language.loadLanguage(fs.readFileSync(langFile, 'utf8'));
+} else {
     Language.loadLanguage('en');
     fs.writeFileSync(langFile, 'en', 'utf8');
 }
 
-let abortController;
-let updateAvailable = false;
-let callbackNPS;
-let callbackNPSPassWith;
-let devToolsEnabled;
-// TODO should this have CONST_CASE or not?
-let STEAM_BASE;
+// --- Utilities ---
 
-app.commandLine.appendSwitch('disable-features', 'MediaSessionService'); // Causes issues when enabled
-
-const { getGBUIConf } = require('./GameBananaWindow');
-function obtainThemes() {
-    if (!fs.existsSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes'))) {
-        fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes'));
-        fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data'));
-        fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'img'));
-        fs.mkdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'mus'));
-    }
-    var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes', 'data')).filter(f => f.endsWith('.theme.json'));
-        var available2 = fs.readdirSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data')).filter(f => f.endsWith('.theme.json'));
-        return [...available.map(f => {
-            return {
-                ...JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', 'data', f), 'utf8')),
-                builtIn: true
-            };
-        }), ...available2.map(f => {
-            return {
-                ...JSON.parse(fs.readFileSync(path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', f), 'utf8')),
-                builtIn: false
-            };
-        }).filter(x => {
-            var include = !available.map(n => n.replace('.theme.json','')).includes(x.id);
-            if (!include) {
-                console.log('Custom theme "' + x.id + '" ignored because a built-in theme with the same ID exists.');
-            }
-            return include;
-        })];
-}
-function validateDeltarune(deltapath) {
-    const keyItems = ['data.win'];
-    const missingItems = [];
-    let isValid = true;
-
-    keyItems.forEach((item) => {
-        if (!fs.existsSync(`${deltapath}/${item}`)) {
-            console.log(`Missing key item: ${deltapath}/${item}`);
-            isValid = false;
-            missingItems.push(item);
-        }
-    });
-
-    if (isValid) {
-        return deltapath;
-    } else {
-        return null;
-    }
+/**
+ * Triggers the fallback error window when a critical failure occurs.
+ * @param {Error|string} error - The error to display.
+ */
+function errorWin(error) {
+    if (win) win.setFullScreen(false);
+    return require('./ErrorWin.js').errorWin(error);
 }
 
-/** @type {BrowserWindow} */
-let win; // Main window
-let ignoreUpdate = false;
-
-if (process.argv.includes('--developer') && !isFeatureEnabled("AutoupdateNoMatterWhat") /* for testing lol */) {
-    ignoreUpdate = true;
-}
-
+/**
+ * Helper to direct the main window to a specific URL.
+ * @param {string} url - The URL to load.
+ */
 function loadUrl(url) {
     win.loadURL(url);
 }
 
-async function getInstallations(suppressWarnings = false) {
-    const systemFiles = fs
-        .readdirSync(path.join(app.getPath('userData')))
-        .filter(file => file.startsWith('deltamod_system-'));
+/**
+ * Determines the dominant color of an image (currently a stub).
+ * @param {string} imagePath - Path to the image file.
+ * @returns {Promise<string>} The RGB string.
+ */
+async function dominantColor(imagePath) {
+    return 'rgb(255,255,255)'; // TODO: implement
+}
 
+/**
+ * Generates a SHA-256 hash for a given string.
+ * @param {string} str - Input string.
+ * @returns {string} The computed hex hash.
+ */
+function hashString(str) {
+    return crypto.createHash('sha256').update(str).digest('hex');
+}
+
+/**
+ * Utility to pause execution for a set duration using async/await.
+ * @param {number} amount - Milliseconds to wait.
+ * @returns {Promise<void>}
+ */
+function asyncTimeout(amount) {
+    return new Promise(resolve => setTimeout(resolve, amount));
+}
+
+/**
+ * Modifies the launch arguments to route the app directly into the Install Manager mode.
+ * @returns {Object} Relaunch argument payload.
+ */
+function intoIM() {
+    return { args: [...process.argv.slice(1).filter(x => !x.toLowerCase().startsWith('deltamod://')), '---im'] };
+}
+
+/**
+ * Clears the standard console and prints the ASCII logo and current version.
+ */
+function writeTopPart() {
+    process.stdout.write('\x1b]0;Deltamod\x07');
+    console.clear();
+    process.stdout.write(`${fs.readFileSync(path.join(__dirname, '..', 'ascii.txt'), 'utf8')}\r\n\r\n`);
+    process.stdout.write(`[ version ${app.getVersion()} ]\r\n\r\n`);
+}
+
+/**
+ * Detects and kills active patcher processes on Windows to prevent lock conflicts during startup.
+ */
+function killConflictProcesses() {
+    if (process.platform !== 'win32') return;
+
+    try {
+        const procs = execSync('tasklist', { encoding: 'utf8' }).toLowerCase();
+        const found = [];
+        if (procs.includes('gm3p.exe')) found.push('GM3P.exe');
+        if (procs.includes('gamemakermodmerger.exe')) found.push('GamemakerModMerger.exe');
+
+        if (found.length > 0) {
+            const res = dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Close running processes',
+                message: `Deltamod detected these running process${found.length > 1 ? 'es' : ''}: ${found.join(', ')}.\n\nPlease close them before opening Deltamod as when the app closes these may terminate.`,
+                buttons: ['Kill them for me', 'Close the app', 'Ignore (may cause issues)'],
+            });
+
+            if (res === 0) {
+                if (found.includes('GM3P.exe')) execSync('taskkill /IM GM3P.exe /F', { stdio: 'ignore' });
+                if (found.includes('GamemakerModMerger.exe')) execSync('taskkill /IM GamemakerModMerger.exe /F', { stdio: 'ignore' });
+                console.log('Conflict processes terminated.');
+            } else if (res === 1) {
+                app.quit();
+                process.exit(0);
+            }
+        }
+    } catch (e) {
+        console.warn('Process-check wrapper failed:', e?.message || e);
+    }
+}
+
+// --- System & File Management ---
+
+/**
+ * Retrieves and merges built-in themes with user-created custom themes.
+ * @returns {Array<Object>} An array of theme configuration objects.
+ */
+function obtainThemes() {
+    const customThemeDir = path.join(app.getPath('appData'), 'deltamod', 'customThemes');
+    if (!fs.existsSync(customThemeDir)) {
+        fs.mkdirSync(path.join(customThemeDir, 'data'), { recursive: true });
+        fs.mkdirSync(path.join(customThemeDir, 'img'), { recursive: true });
+        fs.mkdirSync(path.join(customThemeDir, 'mus'), { recursive: true });
+    }
+
+    const available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes', 'data'))
+        .filter(f => f.endsWith('.theme.json'));
+    const available2 = fs.readdirSync(path.join(customThemeDir, 'data'))
+        .filter(f => f.endsWith('.theme.json'));
+
+    const builtInThemes = available.map(f => ({
+        ...JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', 'data', f), 'utf8')),
+        builtIn: true
+    }));
+
+    const customThemes = available2.map(f => ({
+        ...JSON.parse(fs.readFileSync(path.join(customThemeDir, 'data', f), 'utf8')),
+        builtIn: false
+    })).filter(x => {
+        const include = !available.map(n => n.replace('.theme.json', '')).includes(x.id);
+        if (!include) console.log(`Custom theme "${x.id}" ignored because a built-in theme with the same ID exists.`);
+        return include;
+    });
+
+    return [...builtInThemes, ...customThemes];
+}
+
+/**
+ * Validates a Deltarune installation path by ensuring `data.win` exists.
+ * @param {string} deltapath - The path to the game folder.
+ * @returns {string|null} The path if valid, null otherwise.
+ */
+function validateDeltarune(deltapath) {
+    const keyItems = ['data.win'];
+    const isValid = keyItems.every(item => {
+        const exists = fs.existsSync(path.join(deltapath, item));
+        if (!exists) console.log(`Missing key item: ${path.join(deltapath, item)}`);
+        return exists;
+    });
+    return isValid ? deltapath : null;
+}
+
+/**
+ * Similar to validateDeltarune, returns boolean instead of path.
+ * @param {string} deltapath - The path to the game folder.
+ * @returns {boolean} True if data.win exists.
+ */
+function validateMyInstall(deltapath) {
+    return ['data.win'].every(item => fs.existsSync(path.join(deltapath, item)));
+}
+
+/**
+ * Scans the app user data directory for valid Deltarune installations managed by Deltamod.
+ * @param {boolean} suppressWarnings - Whether to hide popups for invalid installations.
+ * @returns {Promise<Array<Object>>} Array of installation profiles.
+ */
+async function getInstallations(suppressWarnings = false) {
+    const userDataPath = app.getPath('userData');
+    const systemFiles = fs.readdirSync(userDataPath).filter(file => file.startsWith('deltamod_system-'));
     const installations = [];
 
-    systemFiles.forEach((file) => {
-        if (file.endsWith('unique')) return;
+    for (const file of systemFiles) {
+        if (file.endsWith('unique')) continue;
 
-        const storeJSON = path.join(app.getPath('userData'), file, 'store.json');
-        const deltaruneInstall = path.join(app.getPath('userData'), file, 'deltaruneInstall');
+        const installPath = path.join(userDataPath, file);
+        const index = parseInt(file.split('-')[1], 10);
+        const storeJSON = path.join(installPath, 'store.json');
+        const deltaruneInstall = path.join(installPath, 'deltaruneInstall');
+        const cnamePath = path.join(installPath, '_cname');
 
         if (!fs.existsSync(deltaruneInstall) || !fs.existsSync(storeJSON)) {
-            let cname = path.join(app.getPath('userData'), file, '_cname');
-            if (fs.existsSync(cname)) {
-                cname = fs.readFileSync(cname, 'utf8');
-            } else {
-                cname = "Install #" + (parseInt(file.split('-')[1]) + 1);
-            }
+            const defaultCName = `Install #${index + 1}`;
+            const cname = fs.existsSync(cnamePath) ? fs.readFileSync(cnamePath, 'utf8') : defaultCName;
 
             if (!suppressWarnings) {
                 dialog.showMessageBoxSync({
@@ -149,75 +258,36 @@ async function getInstallations(suppressWarnings = false) {
                 });
             }
 
-            fs.rmdirSync(path.join(app.getPath('userData'), file), { recursive: true });
+            fs.rmSync(installPath, { recursive: true, force: true });
             console.log(`Removed invalid installation: ${file}`);
-            return; // Skip invalid installations
+            continue;
         }
 
-        let commonName = "";
+        let commonName = `Install #${index + 1}`;
         try {
-            commonName = fs.readFileSync(path.join(app.getPath('userData'), file, '_cname'), 'utf8');
+            commonName = fs.readFileSync(cnamePath, 'utf8');
         } catch {
-            commonName = "Install #" + (parseInt(file.split('-')[1]) + 1);
-            fs.writeFileSync(path.join(app.getPath('userData'), file, '_cname'), commonName);
+            fs.writeFileSync(cnamePath, commonName);
         }
 
         installations.push({
-            index: parseInt(file.split('-')[1]),
+            index,
             name: commonName,
-            steam: KeyValue.readKVSOfIndex('isSteam', parseInt(file.split('-')[1])) === true,
-            pid: KeyValue.readKVSOfIndex('gamePid', parseInt(file.split('-')[1])),
-            appid: KeyValue.readKVSOfIndex('steamAppId', parseInt(file.split('-')[1]))
+            steam: KeyValue.readKVSOfIndex('isSteam', index) === true,
+            pid: KeyValue.readKVSOfIndex('gamePid', index),
+            appid: KeyValue.readKVSOfIndex('steamAppId', index)
         });
-    });
+    }
 
     return installations;
 }
 
-function intoIM() {
-    return { args: [...process.argv.slice(1).filter(x => !x.toLowerCase().startsWith("deltamod://")), '---im'] };
-}
-
-function validateMyInstall(deltapath) {
-    const keyItems = ['data.win'];
-    let isValid = true;
-    keyItems.forEach((item) => {
-        if (!fs.existsSync(`${deltapath}/${item}`)) {
-            isValid = false;
-        }
-    });
-    return isValid;
-}
-
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
-    if (win) {
-        errorWin(err);
-    }
-    else {
-        app.quit();
-    }
-});
-
-function isNaN(value) {
-    return typeof value === 'number' && !Number.isNaN(value);
-}
-
-function hash(str) {
-    return crypto.createHash('sha256').update(str).digest('hex');
-}
-
-function asyncTimeout(amount) {
-    return new Promise((resolve,reject) => {
-        setTimeout(resolve, amount);
-    })
-}
-
-let elecTracer;
-
-registerProtocolSchemesAsPrivileged(protocol);
-
-// find the first file named `name` anywhere under `root`
+/**
+ * Recursively searches a directory tree for the first file matching a specific name.
+ * @param {string} root - Directory to start the search.
+ * @param {string} name - Name of the file to find.
+ * @returns {string|null} The full path to the file, or null if not found.
+ */
 function findFirstByName(root, name) {
     const stack = [root];
     const needle = name.toLowerCase();
@@ -234,50 +304,50 @@ function findFirstByName(root, name) {
     return null;
 }
 
+/**
+ * Recursively reads a directory and writes `.hash` files for every file inside.
+ * @param {string} root - Target directory.
+ */
 async function precalculateHashes(root) {
-    if (!fs.existsSync(root)) return;
-    if (fs.lstatSync(root).isFile()) return;
+    if (!fs.existsSync(root) || fs.lstatSync(root).isFile()) return;
 
-    var allFiles = [];
-
+    const allFiles = [];
     function walkDir(dir) {
-        const files = fs.readdirSync(dir);
-        for (const file of files) {
+        for (const file of fs.readdirSync(dir)) {
             const fullPath = path.join(dir, file);
-            const stat = fs.lstatSync(fullPath);
-            if (stat.isDirectory()) {
-                walkDir(fullPath);
-            } else if (stat.isFile()) {
-                allFiles.push(fullPath);
-            }
+            if (fs.lstatSync(fullPath).isDirectory()) walkDir(fullPath);
+            else allFiles.push(fullPath);
         }
     }
-
     walkDir(root);
 
     console.log(`Precalculating hashes for ${allFiles.length} files...`);
-    for (let i = 0; i < allFiles.length; i++) {
-        const filePath = allFiles[i];
-
-        if (filePath.endsWith('.hash')) continue; // skip existing hashes
-
-        var fileBuffer = fs.readFileSync(filePath);
-
-        var hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
-
-        fs.writeFileSync(filePath + '.hash', hash, 'utf8');
-
+    allFiles.forEach((filePath, i) => {
+        if (filePath.endsWith('.hash')) return;
+        const fileBuffer = fs.readFileSync(filePath);
+        const hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+        fs.writeFileSync(`${filePath}.hash`, hash, 'utf8');
         console.log(`Hashed file ${i + 1} / ${allFiles.length}`);
-    }
+    });
 }
 
+/**
+ * Checks if a specific path is a child (subpath) of a parent directory.
+ * @param {string} parent - The parent path.
+ * @param {string} child - The subpath to test.
+ * @returns {boolean}
+ */
 function isSubpath(parent, child) {
-    const P = p => path.resolve(p).toLowerCase();
-    const a = P(parent), b = P(child);
+    const a = path.resolve(parent).toLowerCase();
+    const b = path.resolve(child).toLowerCase();
     return b.startsWith(a + path.sep) || a === b;
 }
 
-// Zork's Patch: move/copy everything from `wrapper` → `dest`, then delete `wrapper`
+/**
+ * Moves/copies all files from a wrapper directory into a destination, then deletes the wrapper.
+ * @param {string} dest - Destination folder.
+ * @param {string} wrapper - Source folder to flatten.
+ */
 function flattenInto(dest, wrapper) {
     const destR = path.resolve(dest);
     const wrapR = path.resolve(wrapper);
@@ -289,1953 +359,1090 @@ function flattenInto(dest, wrapper) {
 
     for (const name of fs.readdirSync(wrapR)) {
         const from = path.join(wrapR, name);
-        const to   = path.join(destR, name);
-
-        // overwrite if already exists
+        const to = path.join(destR, name);
         try { fs.rmSync(to, { recursive: true, force: true }); } catch {}
-
         try {
-            fs.renameSync(from, to); // fast path
+            fs.renameSync(from, to);
         } catch {
-            const st = fs.statSync(from);
-            if (st.isDirectory()) {
+            if (fs.statSync(from).isDirectory()) {
                 copyRecursiveSync(from, to);
             } else {
                 fs.mkdirSync(path.dirname(to), { recursive: true });
                 fs.copyFileSync(from, to);
             }
-            // remove original
             fs.rmSync(from, { recursive: true, force: true });
         }
     }
-
-    // remove now-empty wrapper dir
     try { fs.rmSync(wrapR, { recursive: true, force: true }); } catch {}
 }
 
+/**
+ * Synchronously deep-copies a directory and all its contents to a new destination.
+ * @param {string} src - Source file/folder.
+ * @param {string} dest - Destination file/folder.
+ */
 function copyRecursiveSync(src, dest) {
-    const stat = fs.statSync(src);
-    if (stat.isDirectory()) {
-        if (!fs.existsSync(dest)) {
-            fs.mkdirSync(dest, { recursive: true });
+    if (fs.statSync(src).isDirectory()) {
+        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+        for (const child of fs.readdirSync(src)) {
+            copyRecursiveSync(path.join(src, child), path.join(dest, child));
         }
-        fs.readdirSync(src).forEach((child) => {
-            copyRecursiveSync(
-                path.join(src, child),
-                path.join(dest, child)
-            );
-        });
     } else {
         fs.copyFileSync(src, dest);
     }
 }
 
-if (process.defaultApp) {
-    if (process.argv.length >= 2) {
-        app.setAsDefaultProtocolClient('deltamod', process.execPath, [path.resolve(process.argv[1])])
-    }
-} else {
-    app.setAsDefaultProtocolClient('deltamod')
-}
+// --- IPC Initialization ---
 
+/**
+ * Centralizes all Electron `ipcMain` handler registrations for frontend-to-backend communication.
+ */
+function registerIPCHandlers() {
+    const { getGBUIConf } = require('./GameBananaWindow');
 
-function showError(errorCode) {
-    let errorMessage = '';
-    dialog.showErrorBox('Error', `An error occurred: ${errorCode}`);
-}
-
-function writeTopPart() {
-    process.stdout.write('\x1b]0;Deltamod\x07');
-    console.clear();
-    process.stdout.write(fs.readFileSync(path.join(__dirname, '..', 'ascii.txt'), 'utf8') + "\r\n\r\n");
-    process.stdout.write('[ version ' + app.getVersion() + ' ]\r\n\r\n');
-}
-
-function createWindow() {
-    var isControllerMode = process.argv.includes('-controller');
-    writeTopPart();
-    KeyValue.upgradeStores();
-    KeyValue.loadUniqueDefaults();
-
-    try {
-        if (process.platform === 'win32') {
-            try {
-                const procs = execSync('tasklist', { encoding: 'utf8' }).toLowerCase();
-                const found = [];
-                if (procs.includes('gm3p.exe')) found.push('GM3P.exe');
-                if (procs.includes('gamemakermodmerger.exe')) found.push('GamemakerModMerger.exe');
-
-                if (found.length > 0) {
-                    var res = dialog.showMessageBoxSync({
-                        type: 'warning',
-                        title: 'Close running processes',
-                        message: `Deltamod detected these running process${found.length > 1 ? 'es' : ''}: ${found.join(', ')}.\n\nPlease close them before opening Deltamod as when the app closes these may terminate.`,
-                        buttons: ['Kill them for me', 'Close the app', 'Ignore (may cause issues)'],
-                    });
-                    if (res === 0) {
-                        try {
-                            if (found.includes('GM3P.exe')) {
-                                console.log('Killing GM3P.exe processes...');
-                                execSync('taskkill /IM GM3P.exe /F', { stdio: 'ignore' });
-                            }
-                            if (found.includes('GamemakerModMerger.exe')) {
-                                console.log('Killing DEVICE_FUSION.exe processes...');
-                                execSync('taskkill /IM GamemakerModMerger.exe /F', { stdio: 'ignore' });
-                            }
-                            console.log('Processes terminated.');
-                        } catch (e) {
-                            console.warn('Failed to kill processes:', e && e.message ? e.message : e);
-                        }
-                    } else if (res === 1) {
-                        app.quit();
-                        return;
-                    }
-                    // if 2, ignore
-                }
-            } catch (e) {
-                console.warn('Could not enumerate processes to check for GM3P/Device Fusion:', e && e.message ? e.message : e);
-            }
-        }
-    } catch (e) {
-        console.warn('Process-check wrapper failed:', e && e.message ? e.message : e);
-    }
-
-    // 7-zip fix for electron
-    config({ ...getConfig(), binaryPath: path7za });
-
-    // clear out the temporary folder, contains modarchives (that failed to import) and deltamod installers
-    try { System.clearTemporary(); } catch (e) { console.error(e); }
-
-    // lets check if we need to change part
-    var threrror = "";
-    var partOverride = getSystemFile('_sysindex',true);
-    // if caller passed ---system_index=<n> on CLI, persist it to the _sysindex file
-    const sysArg = process.argv.find(a => a.startsWith('---system_index='));
-    if (sysArg) {
-        try {
-            const val = sysArg.split('=')[1];
-            if (val !== undefined && /^-?\d+$/.test(val)) {
-                const sysIndexPath = getSystemFile('_sysindex', true);
-                fs.writeFileSync(sysIndexPath, val.toString(), 'utf8');
-                console.log(`Wrote system index override ${val} to ${sysIndexPath}`);
-            } else {
-                console.warn('Invalid ---system_index value:', val);
-            }
-        } catch (e) {
-            console.error('Failed to write system index override:', e);
-        }
-    }
-    if (fs.existsSync(partOverride)) {
-        var overrideData = fs.readFileSync(partOverride, 'utf8');
-        if (parseInt(overrideData) < 0) {
-            console.error('The specified installation of Deltarune is invalid.');
-            threrror = 'The specified installation of Deltarune is invalid.';
-        }
-        setSystemIndex(overrideData);
-    }
-    else {
-        console.log('No system index override found, using default index.');
-        setSystemIndex('0');
-    }
-
-    const partition = PARTITION; 
-    const ses = session.fromPartition(partition);
-
-    registerProtocolHandlers(ses);
-
-    let unmetConditions = require('./RunConditions.js').checkConditions();
-
-    if (unmetConditions.length > 0) {
-        if (unmetConditions.filter((c => c.required)).length > 0) {
-            let message = 'The following PC requirements for running Deltamod are not met in this machine:\n' + unmetConditions.map(n => n.name).join('\n') + "\n\nDeltamod will not run on this machine.";
-            dialog.showMessageBoxSync({
-                type: 'error',
-                title: 'PC Requirements Not Met',
-                message: message,
-            });
-            app.exit(1);
-            return;
-        }
-        else {
-            let message = 'The following suggested PC requirements for running Deltamod are not met in this machine:\n' + unmetConditions.map(n => n.name).join('\n') + "\n\nYou might experience issues or crashes if you continue.";
-            dialog.showMessageBoxSync({
-                type: 'warning',
-                title: 'PC Requirements Not Met',
-                message: message,
-            });
-        }
-    }
-
-    var totalScreenWidth = screen.getPrimaryDisplay().workAreaSize.width;
-    var totalScreenHeight = screen.getPrimaryDisplay().workAreaSize.height;
-    var w = totalScreenWidth * 0.4;
-    var h = totalScreenHeight * 0.7;
-
-    KeyValue.retrieve();
-    win = new BrowserWindow({
-        width: w,
-        height: h,
-        resizable: true,
-        frame: false,
-        fullscreen: isControllerMode,
-        webPreferences: {
-            nodeIntegration: true,
-            partition: partition,
-            preload: Paths.file('web', 'preload.js'),
-        }
-    });
-
-    if (isControllerMode) {
-        CMode.start();
-        const menu = Menu.buildFromTemplate([
-            {
-            label: 'View',
-            submenu: [
-                {
-                    label: 'Exit Controller Mode',
-                    accelerator: 'F11',
-                    click: () => {
-                        win.webContents.executeJavaScript('promptLeaveCMode()');
-                    }
-                },
-                {
-                    label: 'Toggle Developer Tools',
-                    accelerator: 'F12',
-                    click: () => {
-                        if (devToolsEnabled) {
-                            win.webContents.toggleDevTools();
-                        }
-                    }
-                }
-            ]
-            }
-        ]);
-        win.setMenu(menu);
-
-        // when is win lost focus...
-        win.on('blur', () => {
-            CMode.stop();
-        });
-
-        win.on('focus', () => {
-            CMode.start();
-        });
-    }
-
-    // I put this at the start so that we could use getWindow() in window setup functions
-    // Because I want createWindow() to not be a giant function
-    setWindow(win);
+    // Returns whether the app was launched in Controller Mode.
+    ipcMain.handle('isCMode', () => isControllerMode);
     
-    win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
-        // check if it https
-        if (details.url.startsWith('https://')) {
-            console.log('Request to: ' + details.url);
-            var locked = !Netlayer.approve(require('./Utils.js').between(details.url, 'https://', '/'));
-            callback({ cancel: locked });
-            if (locked) {
-                errorWin('A request to an unapproved URL was blocked: ' + details.url);
-            }
-            return;
-        }
+    // Checks if the CLI arguments request jumping straight to Install Manager.
+    ipcMain.handle('shouldGoIM', () => process.argv.includes('---im'));
+    
+    // Returns diagnostic string (Version, OS, Mode flags, Update status).
+    ipcMain.handle('diagnosticInfo', () => `Deltamod ${app.getVersion()} - Running on ${os.platform()} ${os.release()} - cmode ${isControllerMode ? 'on' : 'off'} - devtools ${isDevToolsEnabled ? 'enabled' : 'disabled'} - ${updateAvailable ? 'update available' : 'no update'}`);
+    
+    // Returns true if running as a packaged app vs dev build.
+    ipcMain.handle('isPackaged', () => app.isPackaged);
+    
+    // Returns the app version from package.json.
+    ipcMain.handle('version', () => require('../package.json').version);
+    
+    // Returns basic OS platform/version details.
+    ipcMain.handle('getOS', () => ({ platform: process.platform, release: os.release(), version: os.version() }));
+    
+    // Returns whether developer mode is enabled via arguments.
+    ipcMain.handle('isDevMode', () => process.argv.includes('--developer'));
 
-        callback({ cancel: false });
+    // Triggers an artificial error window for testing UI bounds/reactions.
+    ipcMain.handle('sampleError', () => errorWin('This is a sample error triggered from the renderer process.'));
+    
+    // Bridges frontend console.log to the backend terminal out.
+    ipcMain.handle('log', (event, args) => console.rendererLog(args[1], args[2], args[0]));
+    
+    // Unhides the sender's BrowserWindow.
+    ipcMain.handle('showWindow', (event) => BrowserWindow.fromWebContents(event.sender).show());
+    
+    // Minimizes the sender's BrowserWindow.
+    ipcMain.handle('minimizeMe', (event) => BrowserWindow.fromWebContents(event.sender)?.minimize());
+    
+    // Toggles the sender's BrowserWindow fullscreen state.
+    ipcMain.handle('toggleFullscreen', (event) => {
+        const senderWin = BrowserWindow.fromWebContents(event.sender);
+        if (senderWin) senderWin.setFullScreen(!senderWin.isFullScreen());
     });
+    
+    // Opens a given URL in the user's default external web browser.
+    ipcMain.handle('openExternal', (event, args) => shell.openExternal(args[0]));
+    
+    // Opens the file explorer highlighting the specified item.
+    ipcMain.handle('showItem', (event, args) => shell.showItemInFolder(args[0]));
 
-    win.on('resized', () => {
-        var [width, height] = win.getSize();
-
-        if (width < 800) width = 800;
-        if (height < 600) height = 600;
-        win.setSize(width, height);
-
-        win.webContents.send('winResAlert', []);
-    });
-
-    win.loadURL('deltapack://web/index.html');
-
-    devToolsEnabled = (process.argv.includes('--developer') || process.env.DELTAMOD_ENV === 'dev' ? true : false);
-
-    if (!devToolsEnabled) {
-        win.setMenu(null);
-    }
-
-    win.webContents.on('devtools-opened', () => {
-        if (!devToolsEnabled) {
-            win.webContents.closeDevTools();
-        }
-    });
-
-    win.webContents.on('will-navigate', (event, url) => {
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-            event.preventDefault();
-            shell.openExternal(url);
-        }
-    });
-
-    win.webContents.setWindowOpenHandler(({ url }) => {
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-            shell.openExternal(url);
-            return { action: 'deny' };
-        }
-        return { action: 'allow' };
-    });
-
-    ipcMain.handle('isCMode', () => {
-        return isControllerMode;
-    });
-
-    ipcMain.handle('importPatcher', async () => {
-        var zip = (await dialog.showOpenDialog(win, {
-            title: 'Select a mod patcher ZIP file',
-            filters: [
-                { name: 'ZIP files', extensions: ['zip'] }
-            ]
-        })).filePaths[0];
-
-        if (!zip) return;
-
-        var patcherPath = path.join(__dirname, '..', 'gm3p');
-        var tempPath = path.join(app.getPath('temp'), 'deltamod_patcher_' + Date.now());
-
-        await new Promise((resolve, reject) => {
-            _7z.unpack(zip, tempPath, (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-
-        var possibleExecutables = [
-            ['GM3P', 'GM3P.exe'],
-            ['DEVICE_FUSION', 'GamemakerModMerger.exe'],
-            ['G3MTool', 'G3MTool.exe']
-        ];
-
-        var found = false;
-        for (const [name, exe] of possibleExecutables) {
-            var exepath = path.join(tempPath, exe);
-            if (fs.existsSync(exepath)) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            dialog.showMessageBoxSync({
-                type: 'error',
-                title: 'No compatible patcher found',
-                message: 'The selected ZIP file does not contain a supported patching core.'
-            }); 
-
-            fs.rmSync(tempPath, { recursive: true, force: true });
-
-            app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://')), ...(isControllerMode ? ['-controller'] : [])] });
-            app.exit(0);
-            
-            return;
-        }
-        else {
-            // move the extracted folder to the patcherPath
-            if (fs.existsSync(patcherPath)) {
-                fs.rmSync(patcherPath, { recursive: true, force: true });
-            }
-
-            fs.renameSync(tempPath, patcherPath);
-
-            dialog.showMessageBoxSync({
-                type: 'info',
-                title: 'Patcher Imported',
-                message: 'The patcher was successfully imported and is now ready to use.'
-            });
-
-            app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://')), ...(isControllerMode ? ['-controller'] : [])] });
-            app.exit(0);
-        }
-
-    });
-
-    ipcMain.handle('diagnosticInfo', () => {
-        return `Deltamod ${app.getVersion()} - Running on ${os.platform()} ${os.release()} - cmode ${isControllerMode ? 'on' : 'off'} - devtools ${devToolsEnabled ? 'enabled' : 'disabled'} - ${updateAvailable ? 'update available' : 'no update'}`;
-    });
-
+    // Relaunches the application into Controller Mode.
     ipcMain.handle('cmode-on', () => {
-        app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://')),  '-controller'] });
+        app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')), '-controller'] });
         app.exit(0);
-    });
-
-    ipcMain.handle('cmode-off', () => {
-        app.relaunch({ args: [...process.argv.slice(1).filter(arg => arg != '-controller' && !arg.startsWith('deltamod://'))] });
-        app.exit(0);
-    });
-
-
-    ipcMain.handle('sampleError', () => {
-        errorWin('This is a sample error triggered from the renderer process.');
-    });
-    ipcMain.handle('obtainLangs', () => {
-        return Language.getAvailableLanguages();
-    });
-    ipcMain.handle('setLang', (event, args) => {
-        var langFile = System.getSystemFile('language', true);
-        fs.writeFileSync(langFile, args[0], 'utf8');
-        Language.loadLanguage(args[0]);
-
-        return true;
-    });
-    ipcMain.handle('getLang', () => {
-        var langFile = System.getSystemFile('language', true);
-        if (fs.existsSync(langFile)) {
-            var lang = fs.readFileSync(langFile, 'utf8');
-            return lang;
-        }
-        return 'en';
-    });
-    ipcMain.handle('obtainLangKey', (event, args) => {
-        return Language.loadString(args[0]) || `$${args[0]}`; // doesnt allow for arguments, use obtainLangKeyAdv for that
-    });
-    ipcMain.handle('obtainLangKeyAdv', (event, args) => {
-        return Language.loadString(args[0], ...(args.slice(1))) || `$${args[0]} ${args.slice(1).join(' + ')}`; // allows for arguments, but if the key is missing it will just return the key and arguments joined
-    });
-    ipcMain.handle('loginGamebanana', async () => {
-        if (!safeStorage.isEncryptionAvailable()) {
-            dialog.showMessageBoxSync({
-                type: 'warning',
-                title: 'Reduced security',
-                message: 'Your system does not support secure storage. GameBanana login information will be stored without encryption, which may pose a security risk. It is recommended to use Deltamod on a system that supports secure storage for enhanced security.',
-            });
-        }
-        var token = await require('./GameBananaWindow.js').obtainLogin();
-
-        var file = getSystemFile('bananapwd', true);
-        fs.writeFileSync(file, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(token) : token, 'utf8');
-
-        return true;
-    });
-
-    ipcMain.handle('logoutGamebanana', async () => {
-        var file = getSystemFile('bananapwd', true);
-        fs.unlinkSync(file);
-        require('./GameBananaWindow.js').clearCache();
-        return true;
-    });
-
-    ipcMain.handle('eraseGamebananaCache', async () => {
-        require('./GameBananaWindow.js').clearCache();
-        return true;
-    });
-
-    ipcMain.handle('leaveCommentGamebanana', async (event, args) => {
-        var uiconf = await getGBUIConf();
-
-        var cond = uiconf._idMemberRow > 0;
-
-        if (cond) {
-            return (await require('./GameBananaWindow.js').leaveComment(args[0], args[1], args[2]));
-        }
-    });
-
-    ipcMain.handle('gbLikeMod', async (event, args) => {
-        var uiconf = await getGBUIConf();
-
-        var cond = uiconf._idMemberRow > 0;
-
-        if (cond) {
-            return (await require('./GameBananaWindow.js').likeMod(args[0], args[1]));
-        }
-    });
-
-    ipcMain.handle('validateGamebananaToken', async () => {
-        var uiconf = await getGBUIConf();
-
-        var cond = uiconf._idMemberRow > 0;
-        console.log('GameBanana logged in status: ' + cond);
-
-        return cond;
-    });
-
-    ipcMain.handle('dev_getGBToken', async () => {
-        var file = getSystemFile('bananapwd', true);
-        if (!fs.existsSync(file)) {
-            dialog.showMessageBoxSync({
-                type: 'error',
-                title: 'No GameBanana Token',
-                message: 'No GameBanana token found.',
-            });
-            return null;
-        }
-
-        var contents = fs.readFileSync(file);
-        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(contents) : contents.toString('utf8');
-
-        dialog.showSaveDialog(win, {
-            title: 'Save GameBanana Token',
-            defaultPath: path.join(os.homedir(), 'gamebanana_token.txt'),
-            buttonLabel: 'Save Token',
-        }).then(result => {
-            if (!result.canceled && result.filePath) {
-                fs.writeFileSync(result.filePath, token, 'utf8');
-            }
-        });
-    });
-
-    ipcMain.handle('getGamebananaPic', async () => {
-        var uiconf = await getGBUIConf();
-
-        console.log('GameBanana avatar URL: ' + uiconf._sAvatarUrl);
-
-        return uiconf._sAvatarUrl;
-    });
-
-    ipcMain.handle('getGamebananaID', async () => {
-        var uiconf = await getGBUIConf();
-
-        console.log('GameBanana user ID: ' + uiconf._idMemberRow);
-
-        return uiconf._idMemberRow;
-    });
-
-    ipcMain.handle('getGamebananaUserinfo', async () => {
-        var uiconf = await getGBUIConf();
-        var id = uiconf._idMemberRow;
-
-        var cond = id > 0;
-        if (!cond) {
-            return {loggedIn: false};
-        }
-
-        var profilepage = await axios.get('https://gamebanana.com/apiv11/Member/' + id + '/ProfilePage');
-
-        return {
-            ...profilepage.data,
-            loggedIn: true
-        };
-    });
-
-    ipcMain.handle('shouldGoIM', () => {
-        return process.argv.includes('---im');
-    });
-
-    ipcMain.handle('precalcGameHashes', () => {
-        return precalculateHashes(getSystemFolder('deltaruneInstall'));
-    });
-
-    ipcMain.handle('getCurrentGameInfo', (event, args) => {
-        return GameDB.getGameById(KeyValue.readKVS('gamePid'));
-    });
-
-    ipcMain.handle('openFlagDatabase', (event, args) => {
-        const flagDBPath = path.join(app.getPath('userData'), 'deltamod_system-unique', 'flagDB.config');
-        shell.openPath(flagDBPath);
-    });
-
-    ipcMain.handle('isPackaged', () => {
-        return app.isPackaged;
-    });
-
-    ipcMain.handle('hasPatchingCore', () => {
-        // [Zork's PATCH]: G3M_NATIVE needs no external binary — always report core as present
-        const KeyValue = require('./KeyValue');
-        const selectedPatcher = KeyValue.readKVS('selectedPatcher');
-        if (selectedPatcher !== 'GM3P' && selectedPatcher !== 'DEVICE_FUSION') return true;
-        return fs.existsSync(path.join(__dirname, '..', 'gm3p'));
-    });
-
-    ipcMain.handle('openElectronTracer', (event, args) => {
-        if (elecTracer) {
-            return;
-        }
-
-        elecTracer = new BrowserWindow({
-            width: 500,
-            height: 300,
-            webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: true,
-                partition: partition,
-                preload: path.join(__dirname, '..', 'web', 'views', 'electron-tracer', 'preload.js'),
-            }
-        });
-
-        elecTracer.setAlwaysOnTop(true);
-        elecTracer.setMenuBarVisibility(false);
-
-        elecTracer.loadURL('deltapack://web/views/electron-tracer/index.html');
-    });
-    ipcMain.handle('logElectronAPI' , (event, args) => {
-        try {
-            if (elecTracer) {
-                elecTracer.webContents.send('log', args[0]);
-            }
-        }
-        catch (e) {
-            console.error('Failed to log to Electron Tracer:', e);
-            elecTracer = null;
-        }
     });
     
-    ipcMain.handle('minimizeMe', (event, args) => {
-        const senderWin = BrowserWindow.fromWebContents(event.sender);
-        
-        if (senderWin) {
-            senderWin.minimize();
-        }
+    // Relaunches the application disabling Controller Mode.
+    ipcMain.handle('cmode-off', () => {
+        app.relaunch({ args: process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')) });
+        app.exit(0);
     });
-
-    ipcMain.handle('toggleFullscreen', (event, args) => {
-        const senderWin = BrowserWindow.fromWebContents(event.sender);
-        
-        if (senderWin) {
-            senderWin.setFullScreen(!senderWin.isFullScreen());
-        }
-    });
-
-    ipcMain.handle('deltamoddersDiscord', async (event, args) => {
-        var guildAPI = require('../package.json').discordAPI;
-        var get = await axios.get(guildAPI);
-        var data = get.data;
-
-        shell.openExternal(data.instant_invite);
-    });
-
-    ipcMain.handle('showItem', (event, args) => {
-        shell.showItemInFolder(args[0]);
-    });
-
-    ipcMain.handle('dlmodURL', async (event, args) => {
-        var url = args[0];
-        var queryme = args[1];
-        var modid = args[2];
-        var modmodel = args[3];
-        console.log('Downloading mod from URL: ' + url + ' (modid: ' + modid + ', model: ' + modmodel + ', queryme: ' + queryme + ')');
-        return await Modstore.downloadModFromURL(url, function(progress, downloaded) {
-            event.sender.send('dlmodURL-progress', { progress, downloaded, queryme: args[1], error: false });
-        }, modid, modmodel);
-    });
-    ipcMain.handle('getOS', () => {
-        return {
-            platform: process.platform,
-            release: require('os').release(),
-            version: require('os').version()
-        };
-    });
+    
+    // Relaunches the app explicitly appending the --developer flag.
     ipcMain.handle('rebootDev', async () => {
-        if (process.argv.includes('--developer')) {
-            return false;
-        }
-        var existingArgs = process.argv.slice(1).filter(a => !a.startsWith('---system_index=') || a === '---initialize_deltamod' || a.startsWith('deltamod:') );
+        if (process.argv.includes('--developer')) return false;
+        const existingArgs = process.argv.slice(1).filter(a => !a.startsWith('---system_index=') || a === '---initialize_deltamod' || a.startsWith('deltamod:'));
         app.relaunch({ args: [...existingArgs, '--developer'] });
         app.exit(0);
-        return true; // should not reach here
     });
 
-    ipcMain.handle('createInstallLink', async (event, args) => {
-        if (process.platform !== 'win32') {
-            dialog.showErrorBox('Unsupported OS', 'Creating installation links is only supported on Windows.');
-            return;
-        }
-
-        if (!args[0]) {
-            dialog.showErrorBox('Invalid Argument', 'Please provide a valid system index.');
-            return;
-        }
-
-        var iName = fs.readFileSync(System.getSystemFileOfIndex('_cname', args[0]), 'utf8');
-        var thisProgramEXE = process.execPath;
-        console.log('This program EXE: ' + thisProgramEXE); 
-
-        const shortcutsCreated = createDesktopShortcut({
-            windows: { filePath: thisProgramEXE.replaceAll('\\','\\\\'), name: 'Deltamod (' + iName + ')', arguments: '---system_index=' + args[0]  },
-        });
-
-        if (shortcutsCreated) {
-            dialog.showMessageBox(win, {
-                type: 'info',
-                title: 'Shortcut Created',
-                message: 'The installation shortcut has been created on your desktop.',
-            });
-        } else {
-            dialog.showErrorBox('Shortcut Creation Failed', 'Failed to create the installation shortcut.');
-        }
+    // --- Language Handlers ---
+    // Gets all available localizations.
+    ipcMain.handle('obtainLangs', () => Language.getAvailableLanguages());
+    
+    // Sets and persists the UI language.
+    ipcMain.handle('setLang', (event, args) => {
+        fs.writeFileSync(getSystemFile('language', true), args[0], 'utf8');
+        Language.loadLanguage(args[0]);
+        return true;
     });
+    
+    // Fetches the currently set language key.
+    ipcMain.handle('getLang', () => fs.existsSync(langFile) ? fs.readFileSync(langFile, 'utf8') : 'en');
+    
+    // Retrieves a translation string by its key.
+    ipcMain.handle('obtainLangKey', (event, args) => Language.loadString(args[0]) || `$${args[0]}`);
+    
+    // Retrieves a formatted translation string using parameterized arguments.
+    ipcMain.handle('obtainLangKeyAdv', (event, args) => Language.loadString(args[0], ...args.slice(1)) || `$${args[0]} ${args.slice(1).join(' + ')}`);
 
-    ipcMain.handle('isBaked', async (event, args) => {
-        return KeyValue.readKVS('baked');
-    });
-
-    // NPS callbacks can be used for everything, so feel free.
-    ipcMain.handle('npsCallback', async (event, args) => {
-        if (!callbackNPS) return;
-        callbackNPS(...callbackNPSPassWith);
-        callbackNPS = null;
-    });
-
-    ipcMain.handle('deltahubMessageGet', async (event, args) => {
-        var url = 'https://us-central1-dh-data-5a818.cloudfunctions.net/deltamodGetChatMessages?channel=' + args[0];
-
-        var get = await axios.get(url);
-
-        return get.data;
-    });
-
-    ipcMain.handle('deltahubMessagePost', async (event, args) => {
-        console.log('Requesting signature for Deltahub message...');
-        var url = 'https://us-central1-dh-data-5a818.cloudfunctions.net/deltamodSendChatMessage';
-        var hash = "";
-
-        var tool = path.join(__dirname, '..', 'tools', 'dhubsign.exe'); // this exe is not distributed on github
-
-        if (fs.existsSync(tool)) {
-            try {
-                hash = (await new Promise((resolve, reject) => {
-                    exec(`"${tool}" "${btoa(args[1])}"`, (error, stdout, stderr) => {
-                        if (error) {
-                            console.error('Error signing message for Deltahub:', error);
-                            resolve("");
-                            return;
-                        }
-                        resolve(stdout);
-                    });
-                })).replaceAll('\r','').replaceAll('\n','').replaceAll('[start]','').replaceAll('[end]','').trim(); // long;
-            } catch (e) {
-                console.error('Failed to sign message for Deltahub:', e);
-            }
-        }
-
-        hash = hash.trim();
-
-        var post = await axios.post(url, {
-            channel: args[0],
-            message: args[1],
-        }, {
-            headers: {
-                'X-Signature': hash
-            }
-        }).catch((error) => {
-            throw error.data.message;
-        });
-
-        if (post.data.ok !== true) {
-            throw post.data.message;
-        }
-
-        return;
-    });
-
-    ipcMain.handle('modalTest', async (event, args) => {
-        var modal = createProgressModal();
-
-        let x = 0.0;
-        function doit() {
-            x += 0.1;
-            updateProgressModal(modal, win, x, null);
-        }
-
-        setTimeout(function doit1234() {
-            doit();
-            if (x < 1.0)
-                setTimeout(doit1234, 250);
-            else
-                setTimeout(() => {
-                    console.log('IM GONNA ATTEMPT TO CLOSE THE WINDOW!!!');
-                    modal.close();
-                    // modal.destroy();
-                }, 250);
-        }, 250)
-    })
-
-    ipcMain.handle('downloadGM3P', async (event, args) => {
-        var url = args[0];
-
-        var modal = createProgressModal();
-
-        const fileName = "gm3p_pkg.zip";
-        const destPath = path.join(app.getPath('downloads'), fileName);
-
-        const writer = fs.createWriteStream(destPath);
-
-        const response = await axios({
-            method: 'get',
-            url,
-            responseType: 'stream'
-        });
-
-        const totalLength = response.headers['content-length'] ? parseInt(response.headers['content-length'], 10) : null;
-        let downloaded = 0;
-
-        response.data.on('data', (chunk) => {
-            downloaded += chunk.length;
-            if (totalLength) {
-                updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded');
-            } else {
-                console.log(`Downloaded ${downloaded} bytes`);
-            }
-        });
-
-        response.data.pipe(writer);
-
-        writer.on('finish', async () => {
-            win.setProgressBar(0);
-            console.log("download completed successfully");
-            console.log("removing old gm3p folder...");
-            try {
-                fs.rmSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
-            }
-            catch (e) {
-                console.error('Failed to remove old gm3p folder:', e);
-            }
-            console.log('creating new gm3p folder...');
-            fs.mkdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true });
-            console.log(`unpacking ${fileName}...`);
-            await _7z.unpack(destPath, path.join(__dirname, '..', 'gm3p'));
-            console.log("showing success box...");
-
-            // TODO I REALLY want to figure out how electron works
-            // and why it modal.close() does ABSOLUTELY NOTHING here
-            // modal.close() does NOT close the window and it does NOT
-            // call the 'close' event handler either!!!
-            modal.destroy();
-
-            dialog.showMessageBoxSync(win, {
-                type: 'info',
-                title: 'Download Complete',
-                message: 'Patcher package downloaded and extracted successfully.',
-            });
-            console.log("relaunching...");
-            app.relaunch(properRelaunch());
-            app.quit();
-            process.exit(0);
-        });
-
-        writer.on('error', (err) => {
-            modal.close();
-            console.error('Error downloading file:', err);
-            dialog.showErrorBox('Download Error', 'An error occurred while downloading the Patcher package. The app will now reboot.');
-            app.relaunch(properRelaunch());
-            app.quit();
-            process.exit(1);
-        });
-
-        return destPath;
-    });
-
-    ipcMain.handle('initialize', async (event, args) => {
-        var appdata = path.join(app.getPath('appData'), 'deltamod');
-
-        fs.readdirSync(appdata).forEach(file => {
-            if (file.startsWith('deltamod_system')) {
-                const fullPath = path.join(appdata, file);
-                console.log('Removing old system folder: ' + fullPath);
-                try {
-                    fs.rmSync(fullPath, { recursive: true, force: true });
-                } catch (e) {
-                    console.error(`Failed to remove ${fullPath}:`, e);
-                }
-            }
-        });
-
-        fs.rmSync(path.join(app.getPath('appData'), 'deltamod', 'pkg.db'), { recursive: true, force: true });
-
-        app.quit();
-    });
-
-    ipcMain.handle('setModVariant', async (event, args) => {
-        var variant = args[0];
-        var modName = args[1];
-        var variantHost = path.join(System.getPacketDatabase(), modName, '__variant');
-        fs.writeFileSync(variantHost, variant);
-    });
-
-    ipcMain.handle('executeArgumentCmd', async (event, args) => {
-        // no argument cmds for now
-    });
-
-    ipcMain.handle('myCommitInfo', async (event, args) => {
-        var possibleExecutables = [
-            ['GM3P', 'GM3P.exe'],
-            ['DEVICE_FUSION', 'GamemakerModMerger.exe'],
-            ['G3MTool', 'G3MTool.exe']
-        ];
-
-        for (const [name, exe] of possibleExecutables) {
-            var exepath = path.join(__dirname, '..', 'gm3p', exe);
-            if (fs.existsSync(exepath)) {
-                try {
-                    var version = require('./Utils').getFileVersion(exepath);
-                    return "<br>" + name + ', version ' + version;
-                } catch (e) {
-                    console.error(`Failed to get version for ${name}:`, e);
-                }
-            }
-        }
-
-        return '<br>No external patching core detected';
-    });
-
-    ipcMain.handle('showWindow', (event) => {
-        BrowserWindow.fromWebContents(event.sender).show();
-    });
-    ipcMain.handle('openExternal', (event, args) => {
-        shell.openExternal(args[0]);
-    });
-
-    ipcMain.handle('version', () => {
-        return require('../package.json').version;
-    });
-
-    ipcMain.handle('log', (event, args) => {
-        console.rendererLog(args[1], args[2], args[0]);
-    });
-
+    // --- Themes ---
+    // Opens a selection dialog for users to pick an active theme.
     ipcMain.handle('chooseTheme', async () => {
-        var available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes')).filter(f => f.endsWith('.theme.json'));
-        var themeObjects = available.map(f => {
-            return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', f), 'utf8'));
-        });
+        const themesDir = path.join(__dirname, '..', 'web', 'themes');
+        const themeObjects = fs.readdirSync(themesDir)
+            .filter(f => f.endsWith('.theme.json'))
+            .map(f => JSON.parse(fs.readFileSync(path.join(themesDir, f), 'utf8')));
 
-        var choice = dialog.showMessageBoxSync(win, {
+        const choice = dialog.showMessageBoxSync(win, {
             type: 'question',
             title: 'Select a theme',
             message: 'Select a theme from the list below:',
             buttons: [...themeObjects.map(t => t.name), 'Cancel'],
             cancelId: themeObjects.length
         });
-        if (choice === themeObjects.length) return; // Cancel
-        var theme = themeObjects[choice];
-        var themeHost = System.getSystemFile('_theme', true);
-        fs.writeFileSync(themeHost, theme.id);
+        
+        if (choice === themeObjects.length) return;
+        
+        const themeId = themeObjects[choice].id;
+        fs.writeFileSync(System.getSystemFile('_theme', true), themeId);
         win.webContents.send('themeChange');
     });
-    ipcMain.handle('setSponsor', async (event, args) => {
-        let base = path.join(__dirname, '..', 'web', 'views', 'patching', 'sponsors');
 
-        let buttons = [];
-        let names = [];
-
-        var sponsors = fs.readdirSync(base);
-        if (Math.random() >= 0.08) {
-            sponsors = sponsors.filter(s => s !== 'musical');
+    // Forces a specific theme ID to be active.
+    ipcMain.handle('setTheme', (event, args) => fs.writeFileSync(System.getSystemFile('_theme', true), args[0]));
+    
+    // Retrieves all loaded custom and built-in themes.
+    ipcMain.handle('getThemes', () => obtainThemes());
+    
+    // Validates and retrieves the currently active theme's ID, defaulting to 'base'.
+    ipcMain.handle('getTheme', async () => {
+        const themeHost = System.getSystemFile('_theme', true);
+        let themeId = 'base';
+        
+        if (fs.existsSync(themeHost)) {
+            themeId = fs.readFileSync(themeHost, 'utf8');
+            const validThemes = obtainThemes();
+            if (!validThemes.find(t => t.id === themeId)) themeId = 'base';
         }
-        sponsors.forEach(s => {
-            var json = JSON.parse(fs.readFileSync(path.join(base, s, 'config.sponsor.json'), 'utf8'));
-            names.push(s);
-            buttons.push(json.name);
-        });
+        
+        fs.writeFileSync(themeHost, themeId);
+        return themeId;
+    });
 
-        var choice = dialog.showMessageBoxSync(win, {
+    // Prompts the user for a bg and music track, builds a custom theme, and saves it.
+    ipcMain.handle('importTheme', async () => {
+        const musicPath = (await dialog.showOpenDialog(win, { title: 'Select your music file', filters: [{ name: 'MP3 files', extensions: ['mp3'] }] })).filePaths[0];
+        const bgPath = (await dialog.showOpenDialog(win, { title: 'Select your background image', filters: [{ name: 'Image files', extensions: ['png', 'jpg', 'jpeg'] }] })).filePaths[0];
+        if (!musicPath || !bgPath) return;
+
+        const randomSeed = Math.random().toString(36).substring(2, 15);
+        const themeId = `custom_${randomSeed}`;
+        const themeName = `Custom Theme (${new Date().toLocaleString()})`;
+        const customThemesDir = path.join(app.getPath('appData'), 'deltamod', 'customThemes');
+
+        fs.copyFileSync(musicPath, path.join(customThemesDir, 'mus', `${themeId}.mp3`));
+        fs.copyFileSync(bgPath, path.join(customThemesDir, 'img', `${themeId}.png`));
+
+        const config = {
+            name: themeName,
+            background: `${themeId}.png`,
+            description: `Custom theme imported by the user - ${new Date().toLocaleString()}`,
+            mainSong: `${themeId}.mp3`,
+            id: themeId,
+            musicTrack: "Custom music",
+            color: await dominantColor(bgPath)
+        };
+
+        fs.writeFileSync(path.join(customThemesDir, 'data', `${themeId}.theme.json`), JSON.stringify(config, null, 4), 'utf8');
+        page('themesel');
+    });
+
+    // --- Sponsors ---
+    // Opens dialog to select the character (sponsor) shown during patching screens.
+    ipcMain.handle('setSponsor', async () => {
+        const base = path.join(__dirname, '..', 'web', 'views', 'patching', 'sponsors');
+        let sponsors = fs.readdirSync(base);
+        if (Math.random() >= 0.08) sponsors = sponsors.filter(s => s !== 'musical');
+
+        const buttons = sponsors.map(s => JSON.parse(fs.readFileSync(path.join(base, s, 'config.sponsor.json'), 'utf8')).name);
+
+        const choice = dialog.showMessageBoxSync(win, {
             type: 'question',
             title: 'Select a patching character',
             message: 'Select a patching character from the list below:',
             buttons: [...buttons, 'Cancel'],
         });
 
-        if (choice === buttons.length) return; // Cancel
-
-        fs.writeFileSync(System.getSystemFile('_sponsor', true), names[choice]);
+        if (choice === buttons.length) return;
+        fs.writeFileSync(System.getSystemFile('_sponsor', true), sponsors[choice]);
     });
-    ipcMain.handle('getSponsor', async () => {
-        var sponsorHost = System.getSystemFile('_sponsor', true);
-        if (fs.existsSync(sponsorHost)) {
-            var sponsor = fs.readFileSync(sponsorHost, 'utf8');
-            return sponsor;
+    
+    // Gets the current sponsor ID, defaulting to 'cd'.
+    ipcMain.handle('getSponsor', () => {
+        const sponsorHost = System.getSystemFile('_sponsor', true);
+        if (fs.existsSync(sponsorHost)) return fs.readFileSync(sponsorHost, 'utf8');
+        fs.writeFileSync(sponsorHost, 'cd');
+        return 'cd';
+    });
+
+    // --- GameBanana Auth & API ---
+    // Prompts GameBanana login and securely stores the API token.
+    ipcMain.handle('loginGamebanana', async () => {
+        if (!safeStorage.isEncryptionAvailable()) {
+            dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Reduced security',
+                message: 'Your system does not support secure storage. GameBanana login information will be stored without encryption.',
+            });
         }
-        else {
-            fs.writeFileSync(sponsorHost, 'cd');
-            return 'cd';
+        const token = await require('./GameBananaWindow.js').obtainLogin();
+        const file = getSystemFile('bananapwd', true);
+        fs.writeFileSync(file, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(token) : token, 'utf8');
+        return true;
+    });
+    
+    // Logs out by destroying the stored GameBanana token file.
+    ipcMain.handle('logoutGamebanana', async () => {
+        try { fs.unlinkSync(getSystemFile('bananapwd', true)); } catch {}
+        require('./GameBananaWindow.js').clearCache();
+        return true;
+    });
+    
+    // Clears local GameBanana cache details.
+    ipcMain.handle('eraseGamebananaCache', () => require('./GameBananaWindow.js').clearCache());
+    
+    // Submits a comment to GameBanana if the user is authenticated.
+    ipcMain.handle('leaveCommentGamebanana', async (event, args) => {
+        const uiconf = await getGBUIConf();
+        if (uiconf._idMemberRow > 0) return await require('./GameBananaWindow.js').leaveComment(args[0], args[1], args[2]);
+    });
+    
+    // Likes a mod on GameBanana via API.
+    ipcMain.handle('gbLikeMod', async (event, args) => {
+        const uiconf = await getGBUIConf();
+        if (uiconf._idMemberRow > 0) return await require('./GameBananaWindow.js').likeMod(args[0], args[1]);
+    });
+    
+    // Confirms if the GameBanana token in memory is valid/authenticated.
+    ipcMain.handle('validateGamebananaToken', async () => (await getGBUIConf())._idMemberRow > 0);
+    
+    // Exports the decrypted GameBanana token to a text file for developers.
+    ipcMain.handle('dev_getGBToken', async () => {
+        const file = getSystemFile('bananapwd', true);
+        if (!fs.existsSync(file)) return dialog.showMessageBoxSync({ type: 'error', title: 'No GameBanana Token', message: 'No token found.' });
+        
+        const contents = fs.readFileSync(file);
+        const token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(contents) : contents.toString('utf8');
+        const result = await dialog.showSaveDialog(win, { title: 'Save GameBanana Token', defaultPath: path.join(os.homedir(), 'gamebanana_token.txt') });
+        if (!result.canceled && result.filePath) fs.writeFileSync(result.filePath, token, 'utf8');
+    });
+    
+    // Gets the logged-in GameBanana user's avatar URL.
+    ipcMain.handle('getGamebananaPic', async () => (await getGBUIConf())._sAvatarUrl);
+    
+    // Gets the logged-in GameBanana user's ID.
+    ipcMain.handle('getGamebananaID', async () => (await getGBUIConf())._idMemberRow);
+    
+    // Fetches extended user profile info from GameBanana API.
+    ipcMain.handle('getGamebananaUserinfo', async () => {
+        const id = (await getGBUIConf())._idMemberRow;
+        if (id <= 0) return { loggedIn: false };
+        const profile = await axios.get(`https://gamebanana.com/apiv11/Member/${id}/ProfilePage`);
+        return { ...profile.data, loggedIn: true };
+    });
+
+    // --- Patcher ---
+    // Prompts user to select a zip file to import an updated GM3P/DEVICE_FUSION patcher core.
+    ipcMain.handle('importPatcher', async () => {
+        const zip = (await dialog.showOpenDialog(win, { title: 'Select a mod patcher ZIP file', filters: [{ name: 'ZIP files', extensions: ['zip'] }] })).filePaths[0];
+        if (!zip) return;
+
+        const patcherPath = path.join(__dirname, '..', 'gm3p');
+        const tempPath = path.join(app.getPath('temp'), `deltamod_patcher_${Date.now()}`);
+
+        await new Promise((resolve, reject) => _7z.unpack(zip, tempPath, err => err ? reject(err) : resolve()));
+
+        const possibleExecutables = ['GM3P.exe', 'GamemakerModMerger.exe', 'G3MTool.exe'];
+        const found = possibleExecutables.some(exe => fs.existsSync(path.join(tempPath, exe)));
+
+        if (!found) {
+            dialog.showMessageBoxSync({ type: 'error', title: 'No compatible patcher found', message: 'The selected ZIP file does not contain a supported patching core.' });
+            fs.rmSync(tempPath, { recursive: true, force: true });
+        } else {
+            if (fs.existsSync(patcherPath)) fs.rmSync(patcherPath, { recursive: true, force: true });
+            fs.renameSync(tempPath, patcherPath);
+            dialog.showMessageBoxSync({ type: 'info', title: 'Patcher Imported', message: 'The patcher was successfully imported and is ready to use.' });
         }
+
+        app.relaunch({ args: process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')).concat(isControllerMode ? ['-controller'] : []) });
+        app.exit(0);
     });
-    ipcMain.handle('setTheme', async (event, args) => {
-        var themeHost = System.getSystemFile('_theme', true);
-        fs.writeFileSync(themeHost, args[0]);
+    
+    // Validates if the required external patching executable exists locally.
+    ipcMain.handle('hasPatchingCore', () => {
+        const selectedPatcher = KeyValue.readKVS('selectedPatcher');
+        if (selectedPatcher !== 'GM3P' && selectedPatcher !== 'DEVICE_FUSION') return true;
+        return fs.existsSync(path.join(__dirname, '..', 'gm3p'));
     });
-    ipcMain.handle('getThemes', async () => {
-        return obtainThemes();
-    });
-
-
-    ipcMain.handle('importTheme', async (event, args) => {
-        var music = (await dialog.showOpenDialog(win, {
-            title: 'Select your music file',
-            filters: [
-                { name: 'MP3 files', extensions: ['mp3'] }
-            ]
-        })).filePaths[0];
-
-        var bg = (await dialog.showOpenDialog(win, {
-            title: 'Select your background image',
-            filters: [
-                { name: 'Image files', extensions: ['png', 'jpg', 'jpeg'] }
-            ]
-        })).filePaths[0];
-
-        var randomSeed = Math.random().toString(36).substring(2, 15);
-        var themeId = 'custom_' + randomSeed;
-        var themeName = 'Custom Theme (' + new Date().toLocaleString() + ')';
-
-        var customthemesDir = path.join(app.getPath('appData'), 'deltamod', 'customThemes');
-
-        fs.copyFileSync(music, path.join(customthemesDir, 'mus', themeId + '.mp3'));
-        fs.copyFileSync(bg, path.join(customthemesDir, 'img', themeId + '.png'));
-
-        var config = {
-            "name": themeName,
-            "background": themeId + '.png',
-            "description": "Custom theme imported by the user - " + new Date().toLocaleString(),
-            "mainSong": themeId + '.mp3',
-            "id": themeId,
-            "musicTrack": "Custom music",
-            "color": await dominantColor(bg)
-        };
-
-        fs.writeFileSync(path.join(customthemesDir, 'data', themeId + '.theme.json'), JSON.stringify(config, null, 4), 'utf8');
-
-        page('themesel');
-    });
-
-    /*
-     * getTheme
-     * returns theme name as specified in the themes folder.
-    */
-    ipcMain.handle('getTheme', async () => {
-        var themeHost = System.getSystemFile('_theme', true);
-        try {
-            var theme = fs.readFileSync(themeHost, 'utf8');
-            var possiblePaths = [
-                (path.join(__dirname, '..', 'web', 'themes', 'data', theme + '.theme.json')),
-                (path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', theme + '.theme.json'))
-            ];
-            console.log('Checking for theme in the following paths:');
-            possiblePaths.forEach(p => console.log(' - ' + p));
-            var found = false;
-            for (const p of possiblePaths) {
-                if (fs.existsSync(p)) {
-                    found = true;
-                    break;
+    
+    // Grabs file properties/versions to trace the commit info of the patcher core.
+    ipcMain.handle('myCommitInfo', () => {
+        const exes = ['GM3P.exe', 'GamemakerModMerger.exe', 'G3MTool.exe'];
+        for (const exe of exes) {
+            const exepath = path.join(__dirname, '..', 'gm3p', exe);
+            if (fs.existsSync(exepath)) {
+                try {
+                    return `<br>${exe.replace('.exe', '')}, version ${getFileVersion(exepath)}`;
+                } catch (e) {
+                    console.error(`Failed to get version for ${exe}:`, e);
                 }
             }
+        }
+        return '<br>No external patching core detected';
+    });
+    
+    // Downloads a fresh copy of the GM3P patcher package from an online URL.
+    ipcMain.handle('downloadGM3P', async (event, args) => {
+        const url = args[0];
+        const modal = createProgressModal();
+        const destPath = path.join(app.getPath('downloads'), "gm3p_pkg.zip");
+        const writer = fs.createWriteStream(destPath);
 
-            if (!found) {
-                throw new Error('Theme file not found in any of the expected locations.');
-            }
+        try {
+            const response = await axios({ method: 'get', url, responseType: 'stream' });
+            const totalLength = parseInt(response.headers['content-length'] || '0', 10);
+            let downloaded = 0;
+
+            response.data.on('data', chunk => {
+                downloaded += chunk.length;
+                if (totalLength) updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded');
+            });
+
+            response.data.pipe(writer);
+            await new Promise((resolve, reject) => {
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });
+
+            if (win) win.setProgressBar(0);
+            fs.rmSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
+            fs.mkdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true });
+            await _7z.unpack(destPath, path.join(__dirname, '..', 'gm3p'));
+            
+            modal.destroy();
+            dialog.showMessageBoxSync(win, { type: 'info', title: 'Download Complete', message: 'Patcher package downloaded and extracted successfully.' });
+            
+            app.relaunch(properRelaunch());
+            app.quit();
+            process.exit(0);
+
+        } catch (err) {
+            modal.destroy();
+            console.error('Error downloading patcher:', err);
+            dialog.showErrorBox('Download Error', 'An error occurred while downloading the Patcher package.');
+            app.relaunch(properRelaunch());
+            app.quit();
+            process.exit(1);
         }
-        catch(e) {
-            theme = 'base';
-            fs.writeFileSync(themeHost, theme);
-        }
-        if (obtainThemes().filter(t => t.id === theme).length === 0) {
-            theme = 'base';
-            fs.writeFileSync(themeHost, theme);
-        }
-        return theme;
+        return destPath;
     });
 
-    /*
-     * importMod
-     * Imports a mod from a zip file.
-    */
+    // --- Mod Management ---
+    // Opens file dialog for user to select a zip/7z to import into Modstore.
     ipcMain.handle('importMod', async () => {
         const { canceled, filePaths } = await dialog.showOpenDialog(win, {
             properties: ['openFile'],
             filters: [{ name: 'Deltamod compatible archive', extensions: ['zip', '7z', 'tar.gz', 'lzma'] }]
         });
-        if (canceled || !filePaths || !filePaths[0]) return;
-
-        const filePath = filePaths[0];
-        Modstore.importMod(filePath);
+        if (!canceled && filePaths?.[0]) Modstore.importMod(filePaths[0]);
     });
-
-    /*
-     * removeMod
-     * Removes the folder containing the mod and reloads the list.
-     * args[0] is the ID of the mod.
-     */
-    ipcMain.handle('removeMod', async (event, args) => {
-        await Modstore.removeModSafe(args[0]);
+    
+    // Requests deletion of a mod folder by ID.
+    ipcMain.handle('removeMod', async (event, args) => await Modstore.removeModSafe(args[0]));
+    
+    // Toggles a mod ID into or out of the "enabledMods" array.
+    ipcMain.handle('toggleModState', (event, args) => {
+        const enabled = KeyValue.readKVS("enabledMods", []);
+        KeyValue.setKVS("enabledMods", args[1] ? [...enabled, args[0]] : enabled.filter(x => x !== args[0]));
     });
-
-    /*
-     * toggleModState
-     * Changes the mod availability status for the current system profile.
-     * args[0] is the ID of the mod.
-     * args[1] is the new state of the mod.
-     */
-    ipcMain.handle('toggleModState', async (event, args) => {
-        if (args[1]) KeyValue.setKVS("enabledMods", [...KeyValue.readKVS("enabledMods", []), args[0]]);
-        else KeyValue.setKVS("enabledMods", KeyValue.readKVS("enabledMods", []).filter(x => x !== args[0]));
-    });
-
-    /*
-     * getModState
-     * Gets the mod availability status for the current system profile.
-     * args[0] is the ID of the mod.
-     */
-    ipcMain.handle('getModState', async (event, args) => {
-        return KeyValue.readKVS("enabledMods", []).includes(args[0]);
-    });
-
-    /*
-     * openSysFolder
-     * Opens the specified system folder.
-     * args[0] is the name of the folder to open.
-    */
-    ipcMain.handle('openSysFolder', async (event, args) => {
-        var folder = args[0];
-        switch (folder) {
-            case 'mods':
-                shell.openPath(getPacketDatabase());
-                break;
-            case 'delta':
-                shell.openPath(getSystemFolder('deltaruneInstall', false));
-                break;
-        }
-    });
-
-    /*
-     * getModImage
-     * Returns the URL of a mod image using the packet:// protocol.
-    */
-    ipcMain.handle('getModImage', async (event, args) => {
-        return Modstore.getModImage(args[0]);
-    });
-
-    /*
-     * openModFolder
-     * Opens the specified mod's data folder.
-     * args[0] is the ID of the mod to open the folder of.
-     */
-    ipcMain.handle('openModFolder', async (event, args) => {
-        shell.openPath(path.join(getPacketDatabase(), args[0]));
-    });
-
-    /*
-     * getUniqueFlag
-     * Returns the value of a unique flag.
-     * args[0] is the name of the flag.
-    */
-    ipcMain.handle('getUniqueFlag', async (event, args) => {
-        return KeyValue.readUniqueFlag(args[0].toUpperCase());
-    });
-
-    /*
-     * setUniqueFlag
-     * Sets a unique flag.
-     * args[0] is the name of the flag.
-     * args[1] is the value of the flag.
-    */
-    ipcMain.handle('setUniqueFlag', async (event, args) => {
-        KeyValue.writeUniqueFlag(args[0].toUpperCase(), args[1]);
-    });
-
-    /*
-     * fetchSharedVariable
-     * Fetches a variable in the shared vars object
-     * args[0] is the name of the variable.
-    */
-    ipcMain.handle('fetchSharedVariable', async (event, args) => {
-        return getSharedVar(args[0]);
-    });
-
-    if (threrror !== "") {
-        errorWin(threrror);
-        return;
-    }
-
-    ipcMain.handle('start-update', async (event, args) => {
-        console.log(`Downloading ${args[0].version} from GameBanana...`);
-        page("autoupdate");
-
-        try {
-            const installerpath = path.join(System.getTemporary(), `installer.${args[0].version.replaceAll(".", "")}.exe`);
-            const { data: bytes } = await axios.get(args[0].newVersionLink, {
-                responseType: 'arraybuffer',
-                onDownloadProgress: (progressEvent) => {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    console.log(`Download progress: ${percentCompleted}%`);
-                    win.webContents.send('updateProgress', {
-                        perc: percentCompleted
-                    });
-                }
-            });
-            console.log(`Fetched ${bytes.byteLength} bytes from ${args[0].newVersionLink}. Prompting for installation.`);
-
-            // i trust the deltamod team to not fuck up the version and put invalid characters into the file name
-            await fs.writeFileSync(installerpath, Buffer.from(bytes));
-            exec(`cmd /c \""${installerpath}" --mode unattended --unattendedmodeui minimal\"`);
-            
-            app.exit(0);
-        } catch (e) {
-            console.error(e);
-            dialog.showErrorBox("Failed to download update", "An unknown error occured while attempting to download the new Deltamod update. Please reinstall Deltamod from GameBanana. The page will now open in your browser.");
-            shell.openExternal('https://gamebanana.com/tools/20575');
-
-            ignoreUpdate = true;
-            page("main");
-        }
-    });
-
-    ipcMain.handle('ignore-update', async (event, args) => {
-        ignoreUpdate = true;
-        page("main");
-    });
-
-    // A collection of IPC handlers for handling of sysindexes.
-    ipcMain.handle('getSystemIndex', async (event, args) => {
-        var partOverride = getSystemFile('_sysindex',true);
-        if (fs.existsSync(partOverride)) {
-            var overrideData = fs.readFileSync(partOverride, 'utf8');
-            return overrideData;
-        }
-        else {
-            console.log('No system index override found, using default index.');
-            return 0;
-        }
-    });
-    // DEPRECATED 1.2: Use 'getInstallations'
-    ipcMain.handle('getMaxExistingIndex', async (event, args) => {
-        try {
-            var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
-            var maxIndex = 0;
-            var invalidInstalls = [];
-            systemFiles.forEach((file) => {
-                var index = file.split('-')[1];
-                var contents = fs.readdirSync(path.join(app.getPath('userData'), file));
-                if (!contents.includes('deltaruneInstall') && index != 'unique') {
-                    fs.rmdirSync(path.join(app.getPath('userData'), file), { recursive: true });
-                    console.log(`Removed empty directory: ${file}`);
-                    invalidInstalls.push(index);
-                    return; // Skip empty directories
-                }
-
-                if (index === 'unique') return;
-
-                if (index) {
-                    maxIndex = Math.max(maxIndex, parseInt(index));
-                }
-            });
-            console.log(`Max existing index: ${maxIndex}`);
-            return [maxIndex, invalidInstalls];
-        }
-        catch (err) {
-            console.error('Error getting max existing index:', err);
-            return [0, []];
-        }
-    });
-
-    // Returns array of indexes with edition, ui name and index.
-    ipcMain.handle('getInstallations', async (event, args) => {
-        try {
-            return await getInstallations();
-        }
-        catch (err) {
-            errorWin('Error getting installations: ' + err.toString());
-            return [];
-        }
-    });
-
-    // Changes C(ommon)Name of the specified installation.
-    ipcMain.handle('setInstallationCName', async (event, args) => {
-        var index = args[0];
-        var newName = args[1];
-
-        fs.writeFileSync(path.join(app.getPath('userData'), 'deltamod_system-'+index, '_cname'), newName);
-    });
-
-    ipcMain.handle('changeSystemIndex', async (event, args) => {
-        fs.writeFileSync(getSystemFile('_sysindex',true), args[0]);
-        app.relaunch(intoIM());
-        app.exit();
-    });
-
-    /*
-     * getEditionByIndex
-     * Returns the edition of the game by index.
-    */
-    ipcMain.handle('getEditionByIndex', async (event, args) => {
-        var index = args[0];
-        var edition = KeyValue.readKVSOfIndex('gamePid', index);
-        if (edition) {
-            return edition;
-        }
-        else {
-            return "Unknown";
-        }
-    });
-    /*
-     * getModList
-     * Returns the list of mods from the KVS.
-    */
-    ipcMain.handle('getModList', async (event, args) => {
-        var { modList, errors } = Modstore.modList();
-        var edition = KeyValue.readKVS('gamePid');
-        
-
-        let datalist = modList;
-        for (let i = datalist.length - 1; i >= 0; i--) {
-            datalist[i].isIncompatible = false;
-            let mod = datalist[i];
-            var editionCompatible = (mod.game == edition);
-            console.log(`Mod ${mod.name} (${mod.uniqueId}) compatibility check: mod game=${mod.game} vs edition=${edition} => ${editionCompatible ? 'compatible' : 'incompatible'}`);
+    
+    // Checks if a mod ID is currently in the "enabledMods" array.
+    ipcMain.handle('getModState', (event, args) => KeyValue.readKVS("enabledMods", []).includes(args[0]));
+    
+    // Gets list of all mods and tags incompatible ones with reasons.
+    ipcMain.handle('getModList', () => {
+        const { modList, errors } = Modstore.modList();
+        const edition = KeyValue.readKVS('gamePid');
+        const processedList = modList.map(mod => {
+            mod.isIncompatible = false;
             if (mod._incompatibleHASH) {
-                datalist[i].isIncompatible = true;
-                datalist[i].incompatibilityReason = 'Mismatching hashes (disable advanced mod compatibility checks to ignore)';
-                delete datalist[i]._incompatibleHASH;
+                mod.isIncompatible = true;
+                mod.incompatibilityReason = 'Mismatching hashes (disable advanced mod compatibility checks to ignore)';
+                delete mod._incompatibleHASH;
             }
-            if (!editionCompatible) {
-                datalist[i].isIncompatible = true;
-                datalist[i].incompatibilityReason = 'Mod not made for this game';
+            if (mod.game !== edition) {
+                mod.isIncompatible = true;
+                mod.incompatibilityReason = 'Mod not made for this game';
             }
+            return mod;
+        });
+        return { modList: processedList, errors };
+    });
+    
+    // Gets the raw, unfiltered list of all installed mods.
+    ipcMain.handle('getModListFull', () => Modstore.modList());
+    
+    // Counts total installed mods.
+    ipcMain.handle('howManyMods', () => Modstore.howmany());
+    
+    // Requests the Modstore to download a remote mod file by URL.
+    ipcMain.handle('dlmodURL', async (event, args) => {
+        const [url, queryme, modid, modmodel] = args;
+        return await Modstore.downloadModFromURL(url, (progress, downloaded) => {
+            event.sender.send('dlmodURL-progress', { progress, downloaded, queryme, error: false });
+        }, modid, modmodel);
+    });
+    
+    // Overrides or assigns the sub-variant string of a given mod folder.
+    ipcMain.handle('setModVariant', (event, args) => fs.writeFileSync(path.join(System.getPacketDatabase(), args[1], '__variant'), args[0]));
+    
+    // Resolves and returns the local file URL path to a mod's icon/image.
+    ipcMain.handle('getModImage', (event, args) => Modstore.getModImage(args[0]));
+
+    // --- Game Operations ---
+    // Hashes vanilla game files for quick verification against mod hashes.
+    ipcMain.handle('precalcGameHashes', () => precalculateHashes(getSystemFolder('deltaruneInstall')));
+    
+    // Gets GameDB info object corresponding to the current loaded PID.
+    ipcMain.handle('getCurrentGameInfo', () => GameDB.getGameById(KeyValue.readKVS('gamePid')));
+    
+    // Gets GameDB info object for an arbitrary provided PID.
+    ipcMain.handle('getGameInfo', (event, args) => GameDB.getGameById(args[0]));
+    
+    // Fetches the entire array of predefined target game profiles.
+    ipcMain.handle('getAvailableGames', () => GameDB.getGames());
+    
+    // Checks if the executable for the current active PID physically exists locally.
+    ipcMain.handle('loadedDeltarune', () => {
+        try {
+            const kvs = KeyValue.readKVS('gamePid');
+            const gameInfo = GameDB.getGameById(kvs);
+            return { loaded: fs.existsSync(path.join(System.getSystemFolder('deltaruneInstall'), gameInfo.exeName)), path: kvs };
+        } catch {
+            return { loaded: false, path: "" };
         }
-
-        return { modList: datalist, errors };
     });
 
-    /*
-     * getModListFull
-     * Returns the list of mods from the KVS.
-     * Includes incompatible mods as well, marked.
-    */
-    ipcMain.handle('getModListFull', async (event, args) => {
-        return Modstore.modList();
-    });
+    // Relay to fire the startGame main event logic asynchronously.
+    ipcMain.handle('startGame', (event, args) => ipcMain.emit('startGame', event, args));
+    
+    // Main event logic that determines if it's Steam protocol or raw EXE, and executes the game.
+    ipcMain.on('startGame', () => {
+        const installPath = path.join(app.getPath('userData'), `deltamod_system-${System.getCurrentSystemIndex()}`, 'deltaruneInstall');
+        if (!fs.existsSync(installPath)) return dialog.showErrorBox('Cannot run', 'Please import a Deltarune install first.');
 
-    ipcMain.handle('howManyMods', async (event, args) => {
-        return Modstore.howmany();
-    });
-
-    // Used as a relay to allow async handling
-    ipcMain.handle('startGame', async (event, args) => {
-        ipcMain.emit('startGame', event, args);
-    });
-
-    ipcMain.on('startGame', async (event, args) => {
-        console.log('Starting game...');
-        var pathname = path.join(app.getPath('userData'), 'deltamod_system-' + System.getCurrentSystemIndex(), 'deltaruneInstall');
-        if (!fs.existsSync(pathname)) {
-            dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
-            return false;
-        }
-
-        // Hide UI and stop audio before launching
         win.hide();
         win.webContents.send('audio', false);
 
-        let gameConfig = GameDB.getGameById(KeyValue.readKVS('gamePid'));
+        if (KeyValue.readKVS('isSteam')) {
+            shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
+            app.quit();
+            return process.exit(0);
+        }
 
-        const exe = path.join(pathname, gameConfig.exeName);
-
-        console.log('running off ' + exe);
-
-        if (!exe) {
+        const gameConfig = GameDB.getGameById(KeyValue.readKVS('gamePid'));
+        const exePath = path.join(installPath, gameConfig.exeName);
+        if (!fs.existsSync(exePath)) {
             errorWin('Could not find executable to run.');
             win.show();
             win.webContents.send('audio', true);
-            win.webContents.send('page', 'main');
             return false;
         }
 
-        // Build args
-        let argsStr = '';
-
-        // If this install is steam-managed, launch via steam protocol and quit
-        if (KeyValue.readKVS('isSteam')) {
-            dialog.showMessageBoxSync({
-                type: 'info',
-                title: 'Launching via Steam',
-                message: 'The game will now be launched via Steam. Deltamod will close.',
-            });
-            shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
-            app.quit();
-            process.exit(0);
-            return true;
-        }
-
-        if (isControllerMode) {
-            CMode.stop();
-        }
-        // Launch executable
-
-        exec(`"${exe}" ${argsStr}`, { cwd: path.dirname(exe) }, (error, stdout, stderr) => {
-            // Always restore originals after the game closes
-            try {
-                GamePatching.restoreOriginalsIfAny(pathname);
-            } catch (e) {
-                console.error('Failed to restore originals after run:', e);
-            }
-
-            if (isControllerMode) { CMode.start(); }
-
+        if (isControllerMode) CMode.stop();
+        exec(`"${exePath}"`, { cwd: path.dirname(exePath) }, () => {
+            try { GamePatching.restoreOriginalsIfAny(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
+            if (isControllerMode) CMode.start();
             win.show();
             win.webContents.send('audio', true);
             win.webContents.send('page', 'main');
         });
-
         return true;
     });
 
-    /*
-     * patchAndRun
-     * Patches the Deltarune install and runs the game.
-     * args[0] is an Array containing the mod UIDs to apply.
-    */
+    // Validates system dependencies (Git, .NET), runs the patcher binary, and preps the files.
     ipcMain.handle('patchAndRun', async (event, args) => {
         try {
-            console.log('running preliminary checks before patching...');
-            // do a small check: see if git is installed
-            try {
-                await new Promise((resolve, reject) => {
-                    exec('git --version', (error, stdout, stderr) => {
-                        if (error) {
-                            reject(new Error('Git is not installed or not added to PATH. Please install Git to use Deltamod\'s patching features.'));
-                            return;
-                        }
-                        resolve();
-                    });
-                });
-            }
-            catch (e) {
-                dialog.showErrorBox('Git not found', 'Looks like you\'re missing an important piece of software to mod your game. But no worries, we\'ll install it for you! Just grant us the legendary administrator perms.');
+            // Check Git
+            await new Promise((resolve, reject) => exec('git --version', err => err ? reject() : resolve())).catch(() => {
+                dialog.showErrorBox('Git not found', 'Missing Git. We will install it for you.');
                 win.hide();
-                exec('"' + path.join(__dirname, '..', 'tools', 'gitinstaller.exe') + '" /SILENT /NORESTART /DIR="C:/Program Files/Git" /NOICONS /SP-');
+                exec(`"${path.join(__dirname, '..', 'tools', 'gitinstaller.exe')}" /SILENT /NORESTART /DIR="C:/Program Files/Git" /NOICONS /SP-`);
                 app.relaunch(properRelaunch());
                 app.exit(0);
-                return false;
-            }
+                throw new Error('Restarting to install Git');
+            });
 
-            // see if .net 8.0 is installed
-            try {
-                await new Promise((resolve, reject) => {
-                    exec('dotnet --list-runtimes', (error, stdout, stderr) => {
-                        if (error) {
-                            reject(new Error('.NET is not installed or not added to PATH. Please install .NET 8.0 to use Deltamod\'s patching features.'));
-                            return;
-                        }
-
-                        if (!stdout.includes('Microsoft.NETCore.App 8.0')) {
-                            reject(new Error('.NET 8.0 is not installed. Please install .NET 8.0 to use Deltamod\'s patching features.'));
-                            return;
-                        }
-
-                        resolve();
-                    });
-                });
-            }
-            catch (e) {
-                dialog.showErrorBox('.NET not found', 'Looks like you\'re missing an important piece of software to mod your game. But no worries, we\'ll install it for you! Just grant us the legendary administrator perms.');
+            // Check .NET 8.0
+            await new Promise((resolve, reject) => exec('dotnet --list-runtimes', (err, stdout) => {
+                if (err || !stdout.includes('Microsoft.NETCore.App 8.0')) reject();
+                else resolve();
+            })).catch(() => {
+                dialog.showErrorBox('.NET not found', 'Missing .NET 8.0. We will install it for you.');
                 win.hide();
-                execSync('"' + path.join(__dirname, '..', 'tools', 'dotnetinstaller.exe') + '" /passive /norestart');
+                execSync(`"${path.join(__dirname, '..', 'tools', 'dotnetinstaller.exe')}" /passive /norestart`);
                 app.relaunch(properRelaunch());
                 app.exit(0);
-                return false;
-            }
+                throw new Error('Restarting to install .NET');
+            });
 
+            const baking = args[1] === 'baker';
+            const pathname = KeyValue.readKVS('deltarunePath');
+            if (!pathname) return dialog.showErrorBox('Error', 'Please import a Deltarune install first.');
 
-            var baking = args[1] == 'baker';
-            var pathname = KeyValue.readKVS('deltarunePath');
-            if (!pathname) {
-                dialog.showErrorBox('This command cannot be run', 'Please import a Deltarune install first.');
-                return false;
-            }
-
-            // Fix for DEVICE_FUSION not creating output folder
-            // techy here: this code was redundant because GamePatching.js already creates the output folder if it doesn't exist. The reason why that error appeared was due to a misconfiguration on Ego's end (which has been fixed and we are now just waiting for a build with the fix)
-
-            // In case a previous run crashed mid-restore
             GamePatching.restoreOriginalsIfAny(pathname);
 
-            var mods = fs.readdirSync(getPacketDatabase());
-            mods = mods.filter(f => fs.existsSync(path.join(getPacketDatabase(), f, '__deltaID.json')));
-            mods = mods.map(f => {
-                var data = JSON.parse(fs.readFileSync(path.join(getPacketDatabase(), f, '__deltaID.json'), 'utf8'));
+            let mods = fs.readdirSync(getPacketDatabase()).filter(f => fs.existsSync(path.join(getPacketDatabase(), f, '__deltaID.json'))).map(f => {
+                const dataPath = path.join(getPacketDatabase(), f, '__deltaID.json');
+                const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
                 if (args[0].includes(data.uniqueId)) {
-                    console.log('No more new for you, ' + data.uniqueId);
                     data.new = false;
-                    fs.writeFileSync(path.join(getPacketDatabase(), f, '__deltaID.json'), JSON.stringify(data, null, 4), 'utf8');
+                    fs.writeFileSync(dataPath, JSON.stringify(data, null, 4), 'utf8');
                 }
                 return data;
             });
 
-            // Patch the REAL install in-place (GamePatching backs up to *.original)
-            var log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0], BrowserWindow.fromWebContents(event.sender));
+            const log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0], BrowserWindow.fromWebContents(event.sender));
 
             if (!log.patched) {
-                await dialog.showErrorBox('Patching failed', 'Please check the log and try again.\n\n' + log.log);
+                await dialog.showErrorBox('Patching failed', `Please check the log and try again.\n\n${log.log}`);
                 win.webContents.send('audio', true);
                 win.webContents.send('page', 'main');
-                //win.webContents.executeJavaScript('openAudio(); page(\'main\');');
                 return false;
             }
-            console.log('Patching log: ', log);
 
-            const notif = new Notification({
-                title: 'Patch complete!',
-                body: 'Deltarune has been patched successfully! Reopen Deltamod to launch the game.',
-                silent: false
+            const notif = new Notification({ title: 'Patch complete!', body: 'Deltarune has been patched successfully!' });
+            notif.on('click', () => {
+                if (!win) return;
+                if (win.isMinimized()) win.restore();
+                win.show();
+                win.focus();
+                win.setAlwaysOnTop(true);
+                setTimeout(() => win.setAlwaysOnTop(false), 100);
             });
             notif.show();
-            notif.on('click', () => {
-                try {
-                    if (!win) return;
-                    if (win.isMinimized()) win.restore();
-                    win.show();
-                    win.focus();
-                    // sometimes forcing briefly on top helps bring to front
-                    win.setAlwaysOnTop(true);
-                    setTimeout(() => win.setAlwaysOnTop(false), 100);
-                } catch (e) {
-                    console.error('Failed to focus window on notification click:', e);
-                }
-            });
 
-            callbackNPS = function(pathname) {
-                ipcMain.emit('startGame', null, []);
-            };
+            callbackNPS = () => ipcMain.emit('startGame', null, []);
+            
             if (!baking) {
                 callbackNPSPassWith = [pathname];
-                win.webContents.send('finishedPatch',mods);
-            }
-            else {
-                var allMods = Modstore.modList().modList.filter(m => (args[0].includes(m.uniqueId))).map(m => ({
-                    name: m.name,
-                    description: m.description,
-                    author: m.author,
-                    version: m.version,
-                }));
-                KeyValue.setKVS('bakeList', allMods);
+                win.webContents.send('finishedPatch', mods);
+            } else {
+                const bakeList = Modstore.modList().modList.filter(m => args[0].includes(m.uniqueId))
+                    .map(m => ({ name: m.name, description: m.description, author: m.author, version: m.version }));
+                KeyValue.setKVS('bakeList', bakeList);
                 GamePatching.deleteOriginals(pathname);
                 app.relaunch(properRelaunch());
                 app.exit();
             }
         } catch (err) {
-            errorWin('Couldn\'t patch and run game: ' + err.toString() + " --- " + (err.stack || ''));
+            if (err.message && err.message.includes('Restarting')) return false;
+            errorWin(`Couldn't patch and run game: ${err.message}`);
             return false;
         }
     });
 
-
-    /*
-     * loadedDeltarune
-     * Returns true if the file has been set.
-    */
-    ipcMain.handle('loadedDeltarune', async (event, name) => {
-        try {
-            var kvs = KeyValue.readKVS('gamePid');
-            var gameInfo = GameDB.getGameById(kvs);
-            return { loaded: fs.existsSync(path.join(System.getSystemFolder('deltaruneInstall'), gameInfo.exeName)), path: kvs };
-        }
-        catch (err) {
-            return { loaded: false, path: "" };
-        }
-    });
-
-    /*
-     * browseFile
-     * Opens a file dialog to select a file.
-     * args[0] is the name of the file type (e.g., "Deltarune data.win").
-     * args[1] is the extension (e.g., "win").
-     * Returns the selected file path or null if canceled.
-    */
-    ipcMain.handle('browseFile', async (event, args) => {
-        const pathdial = await dialog.showOpenDialog(win, {
-            properties: ['openFile'],
-            filters: [
-                { name: args[0], extensions: [args[1]] }
-            ]
-        });
-        if (pathdial.canceled) {
-            return null;
-        } else {
-            return pathdial.filePaths[0];
-        }
-    });
-
-    /*
-     * locateDelta
-     * Opens a file dialog to select a valid "Deltarune" install folder.
-     * Returns the selected folder path or null if canceled or install isn't detected.
-    */
-    ipcMain.handle('locateDelta', async (event) => {
-        const pathdial = await dialog.showOpenDialog(win, {
-            properties: ['openDirectory']
-        });
-        if (pathdial.canceled) {
-            return null;
-        } else {
-            return validateDeltarune(pathdial.filePaths[0]);
-        }
-    });
-
+    // Uses defined plugins to hit an external URL, stream download a game build zip, and extract it.
     ipcMain.handle('downloadGame', async (event, args) => {
-        return new Promise (async (resolve, reject) => {
-            var dataFeat = GameDB.getFeatInfo(args[0], 'autodownload').data;
+        const dataFeat = GameDB.getFeatInfo(args[0], 'autodownload').data;
+        const deltaruneUrl = await require(`./DownloadUtilities/${dataFeat.pluginName}`).run(args[0], dataFeat);
+        const modal = createProgressModal();
+        const destPath = path.join(System.getTemporary(), "deltaruneGAME.zip");
+        const writer = fs.createWriteStream(destPath);
 
-            var deltaruneUrl = await (require('./DownloadUtilities/' + dataFeat.pluginName).run(args[0], dataFeat));
-
-            var modal = createProgressModal();
-
-            const fileName = "deltaruneGAME.zip";
-            const destPath = path.join(System.getTemporary(), fileName);
-
-            const writer = fs.createWriteStream(destPath);
-
-            const response = await axios({
-                method: 'get',
-                url: deltaruneUrl,
-                responseType: 'stream'
-            });
-
-            const totalLength = response.headers['content-length'] ? parseInt(response.headers['content-length'], 10) : null;
+        try {
+            const response = await axios({ method: 'get', url: deltaruneUrl, responseType: 'stream' });
+            const totalLength = parseInt(response.headers['content-length'] || '0', 10);
             let downloaded = 0;
 
-            response.data.on('data', (chunk) => {
+            response.data.on('data', chunk => {
                 downloaded += chunk.length;
-                if (totalLength) {
-                    updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded')
-                } else {
-                    console.log(`Downloaded ${downloaded} bytes`);
-                }
+                if (totalLength) updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded');
             });
 
             response.data.pipe(writer);
+            await new Promise((resolve, reject) => { writer.on('finish', resolve); writer.on('error', reject); });
 
-            writer.on('finish', async () => {
-                console.log('Download completed successfully');
+            if (win) win.setProgressBar(0);
+            let extractPath = path.join(System.getTemporary(), `game_ext_${Date.now()}`);
+            fs.mkdirSync(extractPath, { recursive: true });
+            await _7z.unpack(destPath, extractPath);
 
-                win.setProgressBar(0);
-                
-                var extractPath = path.join(System.getTemporary(), 'game_ext_' + Date.now());
-                fs.mkdirSync(extractPath, { recursive: true });
-                await _7z.unpack(destPath, extractPath);
+            const files = fs.readdirSync(extractPath);
+            if (files.length === 1) extractPath = path.join(extractPath, files[0]);
 
-                if (fs.readdirSync(extractPath).length == 1) {
-                    const singleFolder = fs.readdirSync(extractPath)[0];
-                    const singleFolderPath = path.join(extractPath, singleFolder);
-                    extractPath = singleFolderPath;
-                }
-                console.log('Extraction completed successfully');
-                modal.close();
-                resolve(extractPath);
-            });
-
-            writer.on('error', (err) => {
-                console.error('Error downloading file:', err);
-                modal.close();
-                reject(err);
-            });
-        });
-
+            modal.close();
+            return extractPath;
+        } catch (err) {
+            modal.close();
+            throw err;
+        }
     });
 
-    /*
-     * fireUpdate
-     * Called by window when ready to get update info.
-    */
-    ipcMain.handle('fireUpdate', async (event) => {
+    // --- Install Management ---
+    // Reads the _sysindex text file to get the active session profile index.
+    ipcMain.handle('getSystemIndex', () => {
+        const overridePath = getSystemFile('_sysindex', true);
+        return fs.existsSync(overridePath) ? fs.readFileSync(overridePath, 'utf8') : 0;
+    });
+    
+    // Finds the largest numeric index folder in user data, skipping invalid ones.
+    ipcMain.handle('getMaxExistingIndex', () => {
+        try {
+            const systemFiles = fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-'));
+            let maxIndex = 0;
+            const invalidInstalls = [];
+            for (const file of systemFiles) {
+                const index = file.split('-')[1];
+                if (index === 'unique') continue;
+                if (!fs.existsSync(path.join(app.getPath('userData'), file, 'deltaruneInstall'))) {
+                    fs.rmSync(path.join(app.getPath('userData'), file), { recursive: true, force: true });
+                    invalidInstalls.push(index);
+                    continue;
+                }
+                maxIndex = Math.max(maxIndex, parseInt(index, 10));
+            }
+            return [maxIndex, invalidInstalls];
+        } catch (err) { return [0, []]; }
+    });
+    
+    // Wrapper for returning structured profiles parsed by `getInstallations()`.
+    ipcMain.handle('getInstallations', async () => await getInstallations());
+    
+    // Overwrites the custom display name text file for a given index profile.
+    ipcMain.handle('setInstallationCName', (event, args) => fs.writeFileSync(path.join(app.getPath('userData'), `deltamod_system-${args[0]}`, '_cname'), args[1]));
+    
+    // Reassigns the active system index pointer and reboots the application back to IM.
+    ipcMain.handle('changeSystemIndex', (event, args) => {
+        fs.writeFileSync(getSystemFile('_sysindex', true), args[0]);
+        app.relaunch(intoIM());
+        app.exit();
+    });
+    
+    // Returns the game target edition identifier (PID) configured for a given index.
+    ipcMain.handle('getEditionByIndex', (event, args) => KeyValue.readKVSOfIndex('gamePid', args[0]) || "Unknown");
+    
+    // Main wizard logic for importing physical files or Steam links into a new installation slot.
+    ipcMain.handle('createNewInstallation', async (event, args) => {
+        const steam = args[0] === 'steam';
+        const isFromLocate = args[1] === 'locate';
+        const specifiedLocatePath = isFromLocate ? args[2] : null;
+        const fromIM = args[3];
+        let selectedGame = args[4];
+
+        let i = 0;
+        fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
+            const idx = file.split('-')[1];
+            if (idx !== 'unique') i = Math.max(i, parseInt(idx, 10));
+        });
+        i = (isFromLocate && !fromIM) ? parseInt(System.getCurrentSystemIndex()) : i + 1;
+
+        let sourcePath = specifiedLocatePath;
+        let chosenEdition;
+
+        if (!steam && !isFromLocate) {
+            const result = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
+            if (result.canceled || !result.filePaths[0]) return false;
+            sourcePath = result.filePaths[0];
+        } else if (steam && !isFromLocate) {
+            STEAM_BASE = getSteamDirectory(dialog);
+            chosenEdition = GameDB.getFeatInfo(selectedGame, "steam").data;
+            selectedGame = chosenEdition.pid;
+
+            if ((await getInstallations(true)).some(x => x.appid === chosenEdition.appid)) {
+                dialog.showErrorBox('Already imported', 'Edition already imported.');
+                return false;
+            }
+            sourcePath = path.join(STEAM_BASE, chosenEdition.folder);
+        }
+
+        if (!validateDeltarune(sourcePath)) {
+            dialog.showErrorBox('Invalid folder', steam ? 'Edition missing from Steam library.' : 'Invalid game installation.');
+            if (steam && chosenEdition?.downloadable && process.platform === 'win32' && dialog.showMessageBoxSync({ type: 'question', title: 'Download Demo', message: 'Download demo from Steam?', buttons: ['Yes', 'No'] }) === 0) {
+                shell.openExternal(`steam://install/${chosenEdition.appid}`);
+            }
+            return false;
+        }
+
+        if (!selectedGame) {
+            const games = GameDB.getGames();
+            const response = dialog.showMessageBoxSync({ type: 'question', title: 'Choose game', message: 'Select imported game:', buttons: games.map(x => x.name) });
+            selectedGame = games[response].id;
+        }
+
+        const gameInfo = GameDB.getGameById(selectedGame);
+        if (!fs.existsSync(path.join(sourcePath, gameInfo.exeName))) {
+            dialog.showErrorBox('Invalid install', `Missing executable: ${gameInfo.exeName}`);
+            return false;
+        }
+
+        const destPath = getSystemFolderOfIndex('deltaruneInstall', i);
+        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+
+        try {
+            copyRecursiveSync(sourcePath, destPath);
+            KeyValue.setKVSOfIndex('loadedDeltarune', true, i);
+            KeyValue.setKVSOfIndex('deltarunePath', destPath, i);
+            KeyValue.setKVSOfIndex('gamePid', selectedGame, i);
+            KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i);
+            KeyValue.setKVSOfIndex('enabledMods', [], i);
+            KeyValue.setKVSOfIndex('isSteam', steam, i);
+            KeyValue.setKVSOfIndex('originalSteamPath', steam ? sourcePath : "", i);
+            KeyValue.setKVSOfIndex('steamAppId', steam ? chosenEdition.appid : "", i);
+
+            if (steam) {
+                fs.rmSync(sourcePath, { force: true, recursive: true });
+                Junction.createJunction(destPath, sourcePath);
+            }
+
+            page(fromIM ? "installmanager" : "main");
+            return true;
+        } catch (err) {
+            dialog.showErrorBox('Import failed', `Failed: ${err.message}`);
+            return false;
+        }
+    });
+
+    // Determines if the currently loaded session profile uses Steam Junctioning.
+    ipcMain.handle('isCurrentIndexSteam', () => KeyValue.readKVSOfIndex('isSteam', parseInt(System.getCurrentSystemIndex())));
+    
+    // Disconnects Steam integration for the active slot by removing junctions, then relaunches.
+    ipcMain.handle('removeSteamIntegration', () => {
+        const index = parseInt(System.getCurrentSystemIndex());
+        Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', index));
+        KeyValue.setKVSOfIndex('isSteam', false, index);
+        KeyValue.setKVSOfIndex('originalSteamPath', "", index);
+        KeyValue.setKVSOfIndex('steamAppId', "", index);
+        app.relaunch(properRelaunch());
+        app.exit();
+    });
+
+    // Deletes an entire profile folder by index, collapses remaining array numbers to be contiguous.
+    ipcMain.handle('deleteSystemIndex', (event, args) => {
+        const index = args[0];
+        if (KeyValue.readKVSOfIndex('isSteam', parseInt(index))) {
+            Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(index)));
+        }
+
+        const pathToDelete = path.join(app.getPath('userData'), `deltamod_system-${index}`);
+        if (fs.existsSync(pathToDelete)) fs.rmSync(pathToDelete, { recursive: true, force: true });
+
+        const systemFiles = fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-') && !f.endsWith('unique'));
+        let cNum = -1;
+        
+        systemFiles.sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1])).forEach(file => {
+            cNum++;
+            const oldPath = path.join(app.getPath('userData'), file);
+            const newPath = path.join(app.getPath('userData'), `deltamod_system-${cNum}`);
+            if (oldPath !== newPath) {
+                fs.renameSync(oldPath, newPath);
+                const cnamePath = path.join(newPath, '_cname');
+                if (fs.existsSync(cnamePath) && fs.readFileSync(cnamePath, 'utf8').startsWith('Install #')) {
+                    fs.writeFileSync(cnamePath, `Install #${cNum + 1}`);
+                }
+            }
+        });
+
+        fs.writeFileSync(getSystemFile('_sysindex', true), "0");
+        app.relaunch(intoIM());
+        app.exit();
+        return true;
+    });
+
+    // Creates a Windows desktop shortcut bound to launch explicitly into a specific profile index.
+    ipcMain.handle('createInstallLink', (event, args) => {
+        if (process.platform !== 'win32') return dialog.showErrorBox('Unsupported', 'Only supported on Windows.');
+        if (!args[0]) return dialog.showErrorBox('Error', 'Invalid system index.');
+
+        const iName = fs.readFileSync(System.getSystemFileOfIndex('_cname', args[0]), 'utf8');
+        const shortcutsCreated = createDesktopShortcut({
+            windows: { filePath: process.execPath.replace(/\\/g, '\\\\'), name: `Deltamod (${iName})`, arguments: `---system_index=${args[0]}` }
+        });
+        if (shortcutsCreated) dialog.showMessageBox(win, { type: 'info', title: 'Shortcut Created', message: 'Shortcut created on desktop.' });
+    });
+
+    // Opens OS file manager specifically at the internal `deltaruneInstall` subfolder.
+    ipcMain.handle('openInstallationFolder', (event, args) => shell.openExternal(getSystemFolderOfIndex('deltaruneInstall', args[0])));
+
+    // --- Folders & Misc ---
+    // Opens either the `mods` database path or the active `delta` game install path in the OS explorer.
+    ipcMain.handle('openSysFolder', (event, args) => shell.openPath(args[0] === 'mods' ? getPacketDatabase() : getSystemFolder('deltaruneInstall', false)));
+    
+    // Opens a specific mod's localized working directory inside the Modstore database.
+    ipcMain.handle('openModFolder', (event, args) => shell.openPath(path.join(getPacketDatabase(), args[0])));
+    
+    // Reads from the global `unique` namespace key-value system config.
+    ipcMain.handle('getUniqueFlag', (event, args) => KeyValue.readUniqueFlag(args[0].toUpperCase()));
+    
+    // Writes to the global `unique` namespace key-value system config.
+    ipcMain.handle('setUniqueFlag', (event, args) => KeyValue.writeUniqueFlag(args[0].toUpperCase(), args[1]));
+    
+    // Checks standard Shared Variable memory store.
+    ipcMain.handle('fetchSharedVariable', (event, args) => getSharedVar(args[0]));
+    
+    // Checks if the "baked" parameter holds truth for standalone repackaged states.
+    ipcMain.handle('isBaked', () => KeyValue.readKVS('baked'));
+    
+    // Fires an active Netlayer/NPS callback if one was loaded into memory.
+    ipcMain.handle('npsCallback', () => { if (callbackNPS) { callbackNPS(...callbackNPSPassWith); callbackNPS = null; } });
+    
+    // Empty stub for argument processing (originally planned for command injections).
+    ipcMain.handle('executeArgumentCmd', () => {}); 
+    
+    // Opens the plaintext flag DB file for manual editing via default OS app.
+    ipcMain.handle('openFlagDatabase', () => shell.openPath(path.join(app.getPath('userData'), 'deltamod_system-unique', 'flagDB.config')));
+    
+    // Navigates the external browser directly to the Discord guild invite via API lookup.
+    ipcMain.handle('deltamoddersDiscord', async () => shell.openExternal((await axios.get(require('../package.json').discordAPI)).data.instant_invite));
+    
+    // Pops a standard file dialog requiring a specific file extension (e.g. data.win).
+    ipcMain.handle('browseFile', async (event, args) => {
+        const pathdial = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: args[0], extensions: [args[1]] }] });
+        return pathdial.canceled ? null : pathdial.filePaths[0];
+    });
+    
+    // Pops a standard folder dialog and validates if the target is a Deltarune install path.
+    ipcMain.handle('locateDelta', async () => {
+        const pathdial = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
+        return pathdial.canceled ? null : validateDeltarune(pathdial.filePaths[0]);
+    });
+    
+    // Confirms whether user metrics/crash reports can be forwarded (disabled in Dev / pending updates).
+    ipcMain.handle('canReportError', () => !isDevToolsEnabled && !updateAvailable);
+    
+    // --- Updates ---
+    // Contacts checking server endpoints to see if a newer Deltamod version exists.
+    ipcMain.handle('fireUpdate', async () => {
         try {
             const updateInfo = await Updates.checkUpdates();
-            console.log('Update check result:', updateInfo.update);
             if (updateInfo.update && !ignoreUpdate) {
                 win.webContents.send('updateAvailable', updateInfo);
                 updateAvailable = true;
                 return true;
             }
             return false;
-        } catch (error) {
-            console.error('Error checking updates:', error);
-            return false;
-        }
+        } catch { return false; }
     });
-
-    /*
-     * importDelta
-     * DEPRECATED: use createNewInstallation
-    */
-
-    /*
-     * createNewInstallation
-     * Copy of importDelta that is called from installmanager.
-    */
-    ipcMain.handle('createNewInstallation', async (event, args) => {
-        var i = 0;
-        var steam = (args[0] == 'steam');
-        var isFromLocate = (args[1] == 'locate');
-        var specifiedLocatePath = (isFromLocate && args[2] ? args[2] : null);
-        var fromIM = (args[3]);
-        var selectedGame = args[4];
-        
-        console.log('Creating new installation, steam=' + steam + ', isFromLocate=' + isFromLocate + ', specifiedLocatePath=' + specifiedLocatePath + ', fromIM=' + fromIM);
-
-        // get max index
-        var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
-        systemFiles.forEach((file) => {
-            var index = file.split('-')[1];
-            if (index === 'unique') return;
-            if (index) {
-                i = Math.max(i, parseInt(index));
-            }
-        });
-
-        if (isFromLocate && !fromIM) {
-            i = parseInt(require('./System.js').getCurrentSystemIndex());
-        }
-        else {
-            i++;
-        }
-
-        var path1 = "";
-        if (!steam && !isFromLocate) {
-            const result = await dialog.showOpenDialog(win, {
-                properties: ['openDirectory'],
+    
+    // Automatically downloads and silently executes a new Deltamod `.exe` installer.
+    ipcMain.handle('start-update', async (event, args) => {
+        page("autoupdate");
+        try {
+            const installerPath = path.join(System.getTemporary(), `installer.${args[0].version.replace(/\./g, "")}.exe`);
+            const response = await axios.get(args[0].newVersionLink, {
+                responseType: 'arraybuffer',
+                onDownloadProgress: e => win.webContents.send('updateProgress', { perc: Math.round((e.loaded * 100) / e.total) })
             });
-            if (result.canceled || !result.filePaths || !result.filePaths[0]) {
-                dialog.showErrorBox('No folder selected', 'Please select a folder to proceed.');
-                return false;
-            }
-            path1 = result.filePaths[0];
-        }
-        else if (steam && !isFromLocate) {
-            STEAM_BASE = getSteamDirectory(dialog);
-
-            var chosenEdition = GameDB.getFeatInfo(selectedGame, "steam").data;
-
-            selectedGame = chosenEdition.pid;
-
-            if ((await getInstallations(true)).map(x => x.appid).includes(chosenEdition.appid)) {
-                dialog.showErrorBox('Edition already imported', 'The selected edition has already been imported. Please select another edition or remove the existing one from the Install Manager.');
-                return false;
-            }
-
-            path1 = path.join(STEAM_BASE, chosenEdition.folder);
-            console.log('Assumed steam path: ' + path1);
-        }
-        else {
-            path1 = specifiedLocatePath;
-        }
-
-        if (validateDeltarune(path1) === null) {
-            dialog.showErrorBox('Invalid folder', (steam ? 'The edition you prompted does not exist on your computer\'s hard drive or is corrupted. Download the game from Steam.' : 'The provided folder does not appear to be a valid game installation.'));
-            if (chosenEdition.downloadable && process.platform === 'win32') {
-                if (dialog.showMessageBoxSync({
-                    type: 'question',
-                    title: 'Download Deltarune demo',
-                    message: 'Would you like to download the Deltarune demo now from Steam?',
-                    buttons: ['Yes', 'No'],
-                }) === 0) {
-                    shell.openExternal('steam://install/' + chosenEdition.appid);
-                }
-            }
-            return false;
-        }
-
-        var path2 = getSystemFolderOfIndex('deltaruneInstall',i);
-
-        // officially initialize the folder
-        if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + i))) {
-            fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-' + i), { recursive: true });
-        }
-
-        // Check if the path is valid
-        console.log(`Importing game install from ${path1} to ${path2}`);
-        if (!fs.existsSync(path1)) {
-            dialog.showErrorBox('Invalid folder', 'The provided folder path is invalid.');
-            return false;
-        }
-
-        var gameEdition = selectedGame;
-        if (gameEdition == null || gameEdition == undefined || gameEdition.trim() == "") {
-            var games = GameDB.getGames();
-       
-            var response = dialog.showMessageBoxSync({
-                type: 'question',
-                title: 'Choose the game',
-                message: 'Please choose the game you are importing:',
-                buttons: games.map(x => x.name)
-            }); // to fix dialog focus issues on some platforms
-
-            gameEdition = games.map(x => x.id)[response];
-        }
-
-        var gameInfo = GameDB.getGameById(gameEdition);
-
-        if (!fs.existsSync(path.join(path1, gameInfo.exeName))) {
-            dialog.showErrorBox('Invalid install', 'The selected folder does not contain the required game files (' + gameInfo.exeName + ' not found).');
-            return false;
-        }
-
-        if (!fs.existsSync(path2)) {
-            fs.mkdirSync(path2, { recursive: true });
-        }
-
-
-        try {
-            copyRecursiveSync(path1, path2);
-
-            KeyValue.setKVSOfIndex('loadedDeltarune', true, i);
-            KeyValue.setKVSOfIndex('deltarunePath', path2, i);
-            KeyValue.setKVSOfIndex('gamePid', gameEdition, i);
-            KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i); // signal so that gamestore isnt upgraded and reset
-            KeyValue.setKVSOfIndex('enabledMods', [], i);
-            KeyValue.setKVSOfIndex('isSteam', steam, i);
-            KeyValue.setKVSOfIndex('originalSteamPath', (steam ? path1 : ""), i);
-            KeyValue.setKVSOfIndex('steamAppId', (steam ? chosenEdition.appid : ""), i);
-
-            if (steam) {
-                fs.rmSync(path1, { force: true, recursive: true });
-                Junction.createJunction(path2, path1);
-                console.log(`Created junction from ${path1} to ${path2}`);
-            }
-            
-            page((fromIM ? "installmanager" : "main"));
-            return true;
-        } catch (err) {
-            var stack = err.stack ? '\n\n' + err.stack : '';
-            dialog.showErrorBox('Import failed', `Failed to import game install: ${err.message} ${stack}`);
-            errorWin('Failed to import game install: ' + err.toString());
-            return false;
+            fs.writeFileSync(installerPath, Buffer.from(response.data));
+            exec(`cmd /c ""${installerPath}" --mode unattended --unattendedmodeui minimal"`);
+            app.exit(0);
+        } catch (e) {
+            dialog.showErrorBox("Update Failed", "Failed to download update. Please reinstall from GameBanana. Opening browser...");
+            shell.openExternal('https://gamebanana.com/tools/20575');
+            ignoreUpdate = true;
+            page("main");
         }
     });
-
-    ipcMain.handle('isCurrentIndexSteam', async (event, args) => {
-        return KeyValue.readKVSOfIndex('isSteam', parseInt(require('./System.js').getCurrentSystemIndex()));
-    });
-
-    ipcMain.handle('removeSteamIntegration', async (event, args) => {
-        var currentIndex = require('./System.js').getCurrentSystemIndex();
-const https = require('https');
-const robot = require('robotjs');
-        Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(currentIndex)));
-        KeyValue.setKVSOfIndex('isSteam', false, parseInt(currentIndex));
-        KeyValue.setKVSOfIndex('originalSteamPath', "", parseInt(currentIndex));
-        KeyValue.setKVSOfIndex('steamAppId', "", parseInt(currentIndex));
-        app.relaunch(properRelaunch());
-        app.exit();
-        process.exit(0);
-        return true;
-    });
-
-    ipcMain.handle('deleteSystemIndex', async (event, args) => {
-        var index = args[0];
-        if (KeyValue.readKVSOfIndex('isSteam', parseInt(index)) === true) {
-            Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(index)));
-        }
-        try {
-            var currentIndex = parseInt(fs.readFileSync(getSystemFile('_sysindex',true), 'utf8'));
-        }
-        catch {
-            var currentIndex = 0;
-        }
-        var pathToDelete = path.join(app.getPath('userData'), 'deltamod_system-' + index);
-
-        if (fs.existsSync(pathToDelete)) {
-            fs.rmdirSync(pathToDelete, { recursive: true });
-        }
-
-        // Now reorder the remaining sysindex
-        var systemFiles = fs.readdirSync(path.join(app.getPath('userData'))).filter(file => file.startsWith('deltamod_system-'));
-
-        var cNum = -1;
-        systemFiles.forEach((file) => {
-            var idx = file.split('-')[1];
-            if (idx === 'unique') return;
-            cNum++;
-
-            var oldPath = path.join(app.getPath('userData'), file);
-            var newPath = path.join(app.getPath('userData'), 'deltamod_system-' + cNum);
-
-            fs.renameSync(oldPath, newPath);
-            console.log(`Shifted index: ${file.split('-')[1]} -> ${cNum}`);
-
-            var cnamePath = path.join(newPath, '_cname');
-            if (fs.existsSync(cnamePath)) {
-                var cname = fs.readFileSync(cnamePath, 'utf8');
-                if (cname.startsWith('Install #')) {
-                    console.log('Shifting CName for index', cNum);
-                    fs.writeFileSync(cnamePath, 'Install #' + (cNum+1));
-                }
-            }
+    
+    // Marks the current update run as ignored until app restart.
+    ipcMain.handle('ignore-update', () => { ignoreUpdate = true; page("main"); });
+    
+    // Factory reset logic; purges all user data folder properties completely and exits.
+    ipcMain.handle('initialize', () => {
+        const appdata = path.join(app.getPath('appData'), 'deltamod');
+        fs.readdirSync(appdata).filter(f => f.startsWith('deltamod_system')).forEach(f => {
+            try { fs.rmSync(path.join(appdata, f), { recursive: true, force: true }); } catch {}
         });
-
-        fs.writeFileSync(getSystemFile('_sysindex',true), (0).toString());
-
-        app.relaunch(intoIM());
-        app.exit();
-
-        return true;
+        fs.rmSync(path.join(appdata, 'pkg.db'), { recursive: true, force: true });
+        app.quit();
     });
 
-    ipcMain.handle('openInstallationFolder', async (event, args) => {
-        shell.openExternal(getSystemFolderOfIndex('deltaruneInstall', args[0]));
+    // --- Chat ---
+    // Polls external cloud functions for the recent history payload of a given channel.
+    ipcMain.handle('deltahubMessageGet', async (event, args) => (await axios.get(`https://us-central1-dh-data-5a818.cloudfunctions.net/deltamodGetChatMessages?channel=${args[0]}`)).data);
+    
+    // Hashes/Signs a message via `dhubsign.exe` and posts it to the cloud chat service.
+    ipcMain.handle('deltahubMessagePost', async (event, args) => {
+        let signature = "";
+        const tool = path.join(__dirname, '..', 'tools', 'dhubsign.exe');
+        if (fs.existsSync(tool)) {
+            signature = await new Promise(resolve => exec(`"${tool}" "${btoa(args[1])}"`, (err, stdout) => resolve(err ? "" : stdout.replace(/[\r\n]|\[start\]|\[end\]/g, '').trim())));
+        }
+        
+        const post = await axios.post('https://us-central1-dh-data-5a818.cloudfunctions.net/deltamodSendChatMessage', { channel: args[0], message: args[1] }, { headers: { 'X-Signature': signature } }).catch(e => { throw e.response?.data?.message || e.message; });
+        if (!post.data.ok) throw post.data.message;
     });
 
-    ipcMain.handle('isDevMode', async (event, args) => {
-        return (process.argv.includes('--developer'));
+    // --- Debug Modals / Tracers ---
+    // Creates a dummy progress modal and artificially ticks its loading bar for testing.
+    ipcMain.handle('modalTest', async () => {
+        const modal = createProgressModal();
+        let x = 0.0;
+        const interval = setInterval(() => {
+            x += 0.1;
+            updateProgressModal(modal, win, x, null);
+            if (x >= 1.0) {
+                clearInterval(interval);
+                setTimeout(() => modal.close(), 250);
+            }
+        }, 250);
+    });
+    
+    // Instantiates a secondary persistent window to render debug API tracking logs natively.
+    ipcMain.handle('openElectronTracer', () => {
+        if (elecTracer) return;
+        elecTracer = new BrowserWindow({ width: 500, height: 300, webPreferences: { nodeIntegration: true, contextIsolation: true, partition: PARTITION, preload: path.join(__dirname, '..', 'web', 'views', 'electron-tracer', 'preload.js') } });
+        elecTracer.setAlwaysOnTop(true);
+        elecTracer.setMenuBarVisibility(false);
+        elecTracer.loadURL('deltapack://web/views/electron-tracer/index.html');
+    });
+    
+    // Forwards messages directly into the opened Electron Tracer window bounds.
+    ipcMain.handle('logElectronAPI', (event, args) => { try { if (elecTracer) elecTracer.webContents.send('log', args[0]); } catch { elecTracer = null; } });
+}
+
+// --- Window Creation ---
+
+/**
+ * Bootstraps the application layout, enforces hardware requirements, configures primary partitioning routes, and constructs the primary BrowserWindow interface instance.
+ */
+function createWindow() {
+    writeTopPart();
+    killConflictProcesses();
+    
+    KeyValue.upgradeStores();
+    KeyValue.loadUniqueDefaults();
+    config({ ...getConfig(), binaryPath: path7za });
+    try { System.clearTemporary(); } catch (e) { console.error(e); }
+
+    const sysArg = process.argv.find(a => a.startsWith('---system_index='));
+    if (sysArg) {
+        try {
+            const val = sysArg.split('=')[1];
+            if (/^-?\d+$/.test(val)) fs.writeFileSync(getSystemFile('_sysindex', true), val, 'utf8');
+        } catch {}
+    }
+
+    const partOverride = getSystemFile('_sysindex', true);
+    if (fs.existsSync(partOverride)) {
+        const overrideData = fs.readFileSync(partOverride, 'utf8');
+        if (parseInt(overrideData, 10) < 0) console.error('The specified installation is invalid.');
+        setSystemIndex(overrideData);
+    } else {
+        setSystemIndex('0');
+    }
+
+    registerProtocolHandlers(session.fromPartition(PARTITION));
+
+    const unmetConditions = require('./RunConditions.js').checkConditions();
+    if (unmetConditions.length > 0) {
+        const requiredUnmet = unmetConditions.filter(c => c.required);
+        if (requiredUnmet.length > 0) {
+            dialog.showMessageBoxSync({ type: 'error', title: 'PC Requirements Not Met', message: `Missing requirements:\n${requiredUnmet.map(n => n.name).join('\n')}\n\nDeltamod will not run.` });
+            return app.exit(1);
+        } else {
+            dialog.showMessageBoxSync({ type: 'warning', title: 'PC Requirements Not Met', message: `Missing suggested requirements:\n${unmetConditions.map(n => n.name).join('\n')}\n\nYou might experience issues.` });
+        }
+    }
+
+    const bounds = screen.getPrimaryDisplay().workAreaSize;
+    
+    KeyValue.retrieve();
+    win = new BrowserWindow({
+        width: bounds.width * 0.4,
+        height: bounds.height * 0.7,
+        resizable: true,
+        frame: false,
+        fullscreen: isControllerMode,
+        webPreferences: { nodeIntegration: true, partition: PARTITION, preload: Paths.file('web', 'preload.js') }
     });
 
-    ipcMain.handle('getGameInfo', async (event, args) => {
-        return GameDB.getGameById(args[0]);
+    setWindow(win);
+    registerIPCHandlers();
+
+    if (isControllerMode) {
+        CMode.start();
+        win.setMenu(Menu.buildFromTemplate([
+            { label: 'View', submenu: [
+                { label: 'Exit Controller Mode', accelerator: 'F11', click: () => win.webContents.executeJavaScript('promptLeaveCMode()') },
+                { label: 'Toggle Developer Tools', accelerator: 'F12', click: () => { if (isDevToolsEnabled) win.webContents.toggleDevTools(); } }
+            ]}
+        ]));
+        win.on('blur', () => CMode.stop());
+        win.on('focus', () => CMode.start());
+    }
+
+    win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
+        if (details.url.startsWith('https://')) {
+            const locked = !Netlayer.approve(between(details.url, 'https://', '/'));
+            if (locked) errorWin(`A request to an unapproved URL was blocked: ${details.url}`);
+            return callback({ cancel: locked });
+        }
+        callback({ cancel: false });
     });
 
-    ipcMain.handle('getAvailableGames', async (event, args) => {
-        return GameDB.getGames();
+    win.on('resized', () => {
+        let [w, h] = win.getSize();
+        if (w < 800) w = 800;
+        if (h < 600) h = 600;
+        win.setSize(w, h);
+        win.webContents.send('winResAlert', []);
     });
 
-    ipcMain.handle('canReportError', async (event, args) => {
-        return !(process.argv.includes('--developer')) && !(updateAvailable);
+    if (!isDevToolsEnabled) win.setMenu(null);
+    win.webContents.on('devtools-opened', () => { if (!isDevToolsEnabled) win.webContents.closeDevTools(); });
+    win.webContents.on('will-navigate', (event, url) => { if (/^https?:\/\//.test(url)) { event.preventDefault(); shell.openExternal(url); } });
+    win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:\/\//.test(url)) { shell.openExternal(url); return { action: 'deny' }; } return { action: 'allow' }; });
+
+    win.loadURL('deltapack://web/index.html');
+}
+
+// --- App Lifecycle ---
+if (!app.requestSingleInstanceLock()) {
+    app.quit();
+} else {
+    app.on('second-instance', (e, argv) => {
+        const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
+        if (maybeUrl) {
+            handleProtocolLaunch(maybeUrl);
+            page('goc-dl');
+            if (win) win.focus();
+        }
     });
 }
 
-if (!app.requestSingleInstanceLock()) app.quit();
-else app.on('second-instance', (e, argv) => {
-    console.log("Received second-instance check:", argv);
-    const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
-    if (maybeUrl)
-    {
-        handleProtocolLaunch(maybeUrl);
-        page('goc-dl');
-        win.focus();
-    }
-});
-
-
 app.whenReady().then(() => {
-    if (process.platform === 'win32' || process.platform === 'linux') {
+    if (['win32', 'linux'].includes(process.platform)) {
         const maybeUrl = process.argv.find(arg => arg.startsWith('deltamod://'));
-        if (maybeUrl)
-            handleProtocolLaunch(maybeUrl);
+        if (maybeUrl) handleProtocolLaunch(maybeUrl);
     }
 
-    // Run a safety restore before creating the window (handles crash-last-time cases)
     try {
         const p = KeyValue.readKVS('deltarunePath');
-        if (p) {
-            const restored = GamePatching.restoreOriginalsIfAny(p);
-            if (restored && restored.length) {
-                console.log('[boot-restore] restored:', restored);
-            }
-        }
-    } catch (e) {
-        console.warn('[boot-restore] failed:', e.message);
-    }
+        if (p) GamePatching.restoreOriginalsIfAny(p);
+    } catch {}
 
-    createWindow();       // the main window
+    createWindow();
 });
 
 app.on('window-all-closed', () => {
     try {
         CMode.stop();
         if (process.platform === 'win32') {
-            console.log('Killing GM3P.exe processes...');
             execSync('taskkill /IM GM3P.exe /F', { stdio: 'ignore' });
-            console.log('Killing DEVICE_FUSION.exe processes...');
             execSync('taskkill /IM GamemakerModMerger.exe /F', { stdio: 'ignore' });
         }
-    } catch (e) {
-        console.warn('Failed to terminate GM3P processes:', e && e.message ? e.message : e);
-    }
-    // This originally didn't quit the app was on macOS
-    // However, the app shows an error and instantly crashes on macOS when trying to click
-    // the app icon to open a new window.
-    // I think making the app close when all windows are closed on macOS is okay for now.
+    } catch {}
     app.quit();
 });
 
@@ -2243,6 +1450,4 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
-module.exports = {
-    loadUrl
-};
+module.exports = { loadUrl };
