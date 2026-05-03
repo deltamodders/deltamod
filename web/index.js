@@ -530,6 +530,9 @@ async function page(name) {
         document.querySelectorAll('.viewport > *').forEach(el => {
             i++;
             const recursiveApply = (element) => {
+                if (element.classList.contains('noanim')) {
+                    return;
+                }
                 element.style.opacity = '0';
                 setTimeout(() => {
                     element.style.animation = '0.5s elFadeIn cubic-bezier(0, 0.55, 0.45, 1)';

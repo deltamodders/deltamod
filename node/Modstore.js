@@ -408,6 +408,13 @@ function modList() {
                 }
             });
 
+            if (meta.game == 'toby.deltarune.demo' && meta.isForLTS == true) {
+                meta.game = 'toby.deltarune.demolts';
+                modInfo.metadata.game = 'toby.deltarune.demolts';
+                delete modInfo.metadata.isForLTS;
+                fs.writeFileSync(manifestPath, JSON.stringify(modInfo, null, 2), 'utf8');
+            }
+
             var modSize = 0;
             function calculateFolderSize(folderPath) {
                 const items = fs.readdirSync(folderPath);
