@@ -1,3 +1,37 @@
+@keyframes scale-easeOutElastic {
+	0% {
+		transform: scale(1);
+	}
+
+	16% {
+		transform: scale(1.384);
+	}
+
+	28% {
+		transform: scale(1.174);
+	}
+
+	44% {
+		transform: scale(1.226);
+	}
+
+	59% {
+		transform: scale(1.192);
+	}
+
+	73% {
+		transform: scale(1.208);
+	}
+
+	88% {
+		transform: scale(1.2);
+	}
+
+	100% {
+		transform: scale(1.2);
+	}
+}
+
 tr {
        transition: 0.1s all; 
     }
@@ -51,7 +85,7 @@ tr {
     .selected {
         scale: 1.4;
         padding-left: 19px !important;
-        transform: translateX(30px);
+        transform: rotate(2deg);
         box-shadow: 0 0 10px var(--theme-color);
     }
     .cat > button {
@@ -59,6 +93,8 @@ tr {
         
         padding-left: 12px;
         text-align: left;
+
+        transition: 0.6s all cubic-bezier(0.16, 1, 0.3, 1);
     }
     .cat > button:not(:last-child) {
         margin-bottom: 10px;

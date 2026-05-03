@@ -380,11 +380,11 @@ h1 {
 
 .dmodicon {
     position: fixed;
-    top: 10px;
-    left: 10px;
-    width: 60px;
+    top: 15px;
+    left: 15px;
+    width: 50px;
     height: auto;
-    z-index: 6;
+    z-index: 9999;
 }
 
 * {

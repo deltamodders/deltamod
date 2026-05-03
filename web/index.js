@@ -113,7 +113,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         var alertMsgR = alertMain.getElementsByClassName('alertMsg')[0];
 
         var animOptions = 'cubic-bezier(0.22, 1, 0.36, 1) forwards';
-        var animLength = 0.3;
+        var animLength = 0.5;
 
         alertMsgR.innerHTML = '';
 
@@ -198,8 +198,8 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         }, 300);
 
         var a = new Audio();
-        a.src = 'audio/ooow.mp3';
-        a.playbackRate = 1.2;
+        a.src = 'audio/htmlalert.mp3';
+        a.playbackRate = 0.9;
         if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === true) {
             a.play();
         }
