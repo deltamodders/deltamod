@@ -200,5 +200,12 @@
     "criterrors_gm3palert_message": "Non è installato alcun patcher. Il patcher è lo strumento necessario per modificare il tuo gioco. Per favore installa un patcher per continuare a usare Deltamod.",
     "shop_addedon": "Aggiornato il {0}",
     "options_gen3_title": "Chiedi di attivare la modalità controller",
-    "options_gen3_desc": "Quando attivato, Deltamod ti chiederà se attivare la modalità controller quando rileva un controller collegato. Compatibile solo con DualSense."
+    "options_gen3_desc": "Quando attivato, Deltamod ti chiederà se attivare la modalità controller quando rileva un controller collegato. Compatibile solo con DualSense.",
+    /* terzo batch */
+    "gm3psel_importown": "...o importa il tuo",
+    "gm3psel_importown_title": "Sto importando",
+    "gm3psel_importown_desc": "Attendi mentre Deltamod importa il tuo patcher. Non chiudere Deltamod.",
+    "import_notice": "A partire dalla versione 1.9 di Deltamod, esso non copierà più il tuo gioco nei suoi dati, di default. Non verrà quindi creata una seconda copia del tuo gioco.<br><br>Assicurati di salvare il gioco dove esso è sempre disponibile, oppure scegli l'opzione di copiarlo comunque.",
+    "locate_copyanyways": "Salva una copia del gioco nei dati di Deltamod",
+    "credits_thxdevs": "Grazie, sviluppatori!"
 }

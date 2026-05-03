@@ -7,30 +7,6 @@ tr {
     td, th:not(.center) {
         text-align: left;
     }
-    @keyframes ingranaggioRotate {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-    .ingranaggio {
-        position:inherit;
-        top: -40px;
-        left: -180px;
-        transform: translateX(-50%);
-        z-index: -2;
-        pointer-events: none;
-        user-select: none;
-        transition: 0.3s all;
-        color: rgba(255, 255, 255, 0.2);
-        cursor: pointer;
-        animation: 9s ingranaggioRotate linear infinite;
-    }
-    .ingranaggio > span {
-        font-size: 520px;
-    }
     .center {
         text-align: center;
     }
@@ -67,7 +43,7 @@ tr {
         padding: 15px;
         margin-top: 0px;
         border: 2px solid var(--theme-color);
-        border-radius: 20px;
+        border-radius: 10px;
         box-shadow: 0 0 10px var(--theme-color);
         backdrop-filter: blur(10px);
     }

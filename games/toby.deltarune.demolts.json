@@ -1,12 +1,19 @@
 {
-    "name": "DELTARUNE Demo",
+    "name": "DELTARUNE Demo (LTS)",
     "author": "Toby Fox",
-    "id": "toby.deltarune.demo",
+    "id": "toby.deltarune.demolts",
     "gamebanana": {
         "id": 6755
     },
     "exeName": "DELTARUNE.exe",
     "availableFeatures": [{
+        "feat": "autodownload",
+        "data": {
+            "pluginName": "Itch",
+            "homepage": "https://tobyfox.itch.io/deltarune",
+            "fileID": "12206581" 
+        }
+    }, {
         "feat": "steam",
         "data": {
             "folder": "DELTARUNEdemo",

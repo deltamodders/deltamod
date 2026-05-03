@@ -94,13 +94,6 @@ function error() {
     fetch('http://google.com');
 }
 
-document.addEventListener("mousemove", function (event) {
-  const x = event.clientX;
-  const y = event.clientY;
-
-  window.mouseCoords = { x, y };
-});
-
 var alertCache = [];
 var isAlertShowing = false;
 async function htmlAlert(title, message, buttons, specialIcon) {
@@ -319,20 +312,17 @@ window.preloadAPI.onThemeChange(refreshTheme);
 
 let lockRandoms = false;
 
-(async () => {
-    document.addEventListener('mousemove', (e) => {
-        const bg = document.querySelector('.bg');
-        if (bg) {
-            const x = (e.clientX / window.innerWidth) * 20 - 10;
-            const y = (e.clientY / window.innerHeight) * 20 - 10;
-            bg.style.transform = `translate(${x * 0.12}px, ${y * 0.12}px)`;
-            document.querySelector('.viewport').style.transform = `translate(${x * 0.17}px, ${y * 0.17}px)`;
-        }
-    });
-})();
+function elisten(element, event, handler) {
+    element.addEventListener(event, handler);
+    window._eventListeners = window._eventListeners || [];
+    window._eventListeners.push({ element, event, handler });
+}
+
 async function page(name) {
+    var refreshing = (pageN == name || name == "");
     rew();
 
+    // clear all intervals and event listeners to prevent memory leaks and unwanted behavior
     try {
         window._intervals.forEach(clearInterval);
     }
@@ -341,6 +331,11 @@ async function page(name) {
     }
     window._intervals = window._intervals || [];
     window._intervals = [];
+
+    window._eventListeners = window._eventListeners || [];
+    window._eventListeners.forEach(({ element, event, handler }) => {
+        element.removeEventListener(event, handler);
+    });
     
     if (name == "") {
         name = pageN;
@@ -420,10 +415,17 @@ async function page(name) {
     }
     var title = purifiedHTML.match(/TITLEKEY\[(.*?)\]/);
     purifiedHTML = purifiedHTML.replace(/TITLEKEY\[(.*?)\]/g, '');
+
+    var themeAudioExclude = purifiedHTML.match(/THEME-AUDIO-EXCLUDE\[(.*?)\]/);
+    purifiedHTML = purifiedHTML.replace(/THEME-AUDIO-EXCLUDE\[(.*?)\]/g, '');
+
     if (true) {
         var audioSrc = purifiedHTML.match(/AUDIO\[(.*?)\]/);
         console.log('Audio source found:' + audioSrc);
         if (!audioSrc || !audioSrc[1]) {
+            audioSrc = ['AUDIO[mainTheme.mp3]','mainTheme.mp3'];
+        }
+        if (theme.id == themeAudioExclude?.[1]) {
             audioSrc = ['AUDIO[mainTheme.mp3]','mainTheme.mp3'];
         }
         if (audioSrc && audioSrc[1] && audioSrc[1] !== currentAudio) {
@@ -515,9 +517,29 @@ async function page(name) {
     
     var styleTag = document.getElementById('dynamic-theme-styles');
     styleTag.innerHTML = generatedCSS;
-    if (runScripts)
-        eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
+    if (runScripts) {
+        try {
+            eval(await fetch('./views/' + name + '/index.js').then(response => response.text()));
+        } catch (error) {
+            console.error('Error occurred while evaluating script for page:', name, error);
+        }
+    }
 
+    if (!refreshing) {
+        var i = -1;
+        document.querySelectorAll('.viewport > *').forEach(el => {
+            i++;
+            const recursiveApply = (element) => {
+                element.style.opacity = '0';
+                setTimeout(() => {
+                    element.style.animation = '0.5s elFadeIn cubic-bezier(0, 0.55, 0.45, 1)';
+                    element.style.opacity = '1';
+                }, 100 + (i * 50));
+                element.children && Array.from(element.children).forEach(child => recursiveApply(child));
+            };
+            recursiveApply(el);
+        });
+    }
 }
 
 window.addEventListener('blur', () => {
@@ -719,19 +741,3 @@ Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => 
         }
     }
 })();
-
-// snowgrave 1225
-let keystrokeBuffer = '';
-
-document.addEventListener('keydown', (e) => {
-    keystrokeBuffer += e.key.toLowerCase();
-    
-    if (keystrokeBuffer.includes('snowgrave')) {
-        window.electronAPI.invoke('setUniqueFlag', ['WEIRD', true]);
-        keystrokeBuffer = '';
-    }
-    
-    if (keystrokeBuffer.length > 9) {
-        keystrokeBuffer = keystrokeBuffer.slice(-9);
-    }
-});

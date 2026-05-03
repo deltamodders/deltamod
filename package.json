@@ -71,6 +71,7 @@
     "nodejs": "^0.0.0",
     "nodejs-file-downloader": "^4.13.0",
     "robotjs": "^0.7.0",
+    "windows-elevate": "^1.0.1",
     "xml-js": "^1.6.11",
     "yoctocolors-cjs": "^2.1.3"
   }

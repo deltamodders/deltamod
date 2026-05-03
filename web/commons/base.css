@@ -135,7 +135,7 @@ h1 {
 table {
     width: 100%;
     border: 1px solid var(--theme-color);
-    border-radius: 15px;
+    border-radius: 10px;
     padding: 10px;
     background: linear-gradient(90deg,rgba(40, 40, 40, 0.127) 0%, rgba(43, 43, 43, 0.4) 100%);
     backdrop-filter: blur(10px);
@@ -152,7 +152,7 @@ table:hover {
 th,
 td {
     border: 1px solid var(--theme-color-rgbaless);
-    border-radius: 14px;
+    border-radius: 10px;
     padding: 10px 18px;
     text-align: left;
     animation: 0.2s spawn ease-in-out;
@@ -170,7 +170,8 @@ td {
 }
 th {
     color: rgba(255, 255, 255, 1);
-    border-radius: 15px;
-    background-color: var(--theme-color);
+    border-radius: 10px;
+    background-color: var(--theme-color-rgbaless);
+    border: 2px solid var(--theme-color);
     animation: 0.5s spawn ease-in-out;
 }

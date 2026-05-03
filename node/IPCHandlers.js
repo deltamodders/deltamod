@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { exec, execSync } = require('child_process');
 const axios = require('axios').default;
 const createDesktopShortcut = require('create-desktop-shortcuts');
+var elevate = require('windows-elevate');
 const _7z = require('7zip-min');
 const { createCanvas, loadImage } = require('canvas');
 
@@ -405,10 +406,15 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('getGamebananaPic', async () => (await getGBUIConf())._sAvatarUrl);
     ipcMain.handle('getGamebananaID', async () => (await getGBUIConf())._idMemberRow);
     ipcMain.handle('getGamebananaUserinfo', async () => {
-        const id = (await getGBUIConf())._idMemberRow;
-        if (id <= 0) return { loggedIn: false };
-        const profile = await axios.get(`https://gamebanana.com/apiv11/Member/${id}/ProfilePage`);
-        return { ...profile.data, loggedIn: true };
+        try {
+            const id = (await getGBUIConf())._idMemberRow;
+            if (id <= 0) return { loggedIn: false };
+            const profile = await axios.get(`https://gamebanana.com/apiv11/Member/${id}/ProfilePage`);
+            return { ...profile.data, loggedIn: true };
+        } catch (error) {
+            console.error('Error fetching GameBanana user info:', error);
+            return { loggedIn: false };
+        }
     });
 
     // Patcher
@@ -859,7 +865,7 @@ module.exports = function registerIPCHandlers(context) {
             KeyValue.setKVSOfIndex('originalSteamPath', steam ? sourcePath : "", i);
             KeyValue.setKVSOfIndex('steamAppId', steam ? chosenEdition.appid : "", i);
 
-            if (steam) {
+            if (steam && !copyToDMod) {
                 fs.rmSync(sourcePath, { force: true, recursive: true });
                 Junction.createJunction(destPath, sourcePath);
             }
@@ -875,7 +881,11 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('isCurrentIndexSteam', () => KeyValue.readKVSOfIndex('isSteam', parseInt(System.getCurrentSystemIndex())));
     ipcMain.handle('removeSteamIntegration', () => {
         const index = parseInt(System.getCurrentSystemIndex());
-        Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', index));
+        
+        if (KeyValue.readKVSOfIndex('gamePath', index).endsWith('deltaruneInstall')) {
+            Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', index));
+        }
+
         KeyValue.setKVSOfIndex('isSteam', false, index);
         KeyValue.setKVSOfIndex('originalSteamPath', "", index);
         KeyValue.setKVSOfIndex('steamAppId', "", index);
@@ -885,7 +895,7 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('deleteSystemIndex', (event, args) => {
         const index = args[0];
-        if (KeyValue.readKVSOfIndex('isSteam', parseInt(index))) {
+        if (KeyValue.readKVSOfIndex('isSteam', parseInt(index)) && KeyValue.readKVSOfIndex('gamePath', parseInt(index)).endsWith('deltaruneInstall')) {
             Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(index)));
         }
 
@@ -1035,4 +1045,55 @@ module.exports = function registerIPCHandlers(context) {
         state.elecTracer.loadURL('deltapack://web/views/electron-tracer/index.html');
     });
     ipcMain.handle('logElectronAPI', (event, args) => { try { if (state.elecTracer) state.elecTracer.webContents.send('log', args[0]); } catch { state.elecTracer = null; } });
+
+    // DeltamodCLI installation
+    ipcMain.handle('installDeltamodCLI', async () => {
+        var latestRelease;
+        try {
+            const response = await axios.get('https://api.github.com/repos/deltamodders/deltamodCLI/releases/latest');
+            latestRelease = response.data;
+        } catch (e) {
+            dialog.showErrorBox('Error', 'Failed to fetch latest release info.');
+            return;
+        }
+
+        const asset = latestRelease.assets[0].browser_download_url;
+
+        try {
+            const modal = createProgressModal();
+
+            // download zip
+            const downloadsDir = app.getPath('downloads');
+            const cliZipPath = path.join(downloadsDir, 'cli.zip');
+            const response = await axios.get(asset, { responseType: 'stream', maxRedirects: 10 });
+
+            let receivedBytes = 0;
+            await new Promise((resolve, reject) => {
+                const writer = fs.createWriteStream(cliZipPath);
+                response.data.pipe(writer);
+                response.data.on('data', chunk => {
+                    const totalLength = parseInt(response.headers['content-length'] || '0', 10);
+                    receivedBytes += chunk.length;
+                    if (totalLength) updateProgressModal(modal, getWindow(), receivedBytes / totalLength, 'Downloading CLI');
+                });
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+                response.data.on('error', reject);
+            });
+
+            modal.close();
+            modal.destroy();
+
+            const cliExtractPath = path.join(downloadsDir, 'cli_extracted');
+            fs.mkdirSync(cliExtractPath, { recursive: true });
+            await _7z.unpack(cliZipPath, cliExtractPath);
+
+            execSync(`"${path.join(cliExtractPath, 'Install.cmd')}"`, { cwd: cliExtractPath });
+
+            dialog.showMessageBox(getWindow(), { type: 'info', title: 'Installation complete', message: 'DeltamodCLI has been installed successfully!' });
+
+        } catch (e) {
+            dialog.showErrorBox('Error', `Failed to download CLI: ${e.message || e}`);
+        }
+    });
 };

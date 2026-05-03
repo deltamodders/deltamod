@@ -1,6 +1,9 @@
 const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
 
 (async() => {
+    document.querySelector('#credits').innerHTML = '';
+    document.querySelector('#credits').style.opacity = 0;
+
     try {
         console.log('Obtaining credits from ' + GB_URL);
         var gbpage = await fetch(GB_URL).then(r => r.json());
@@ -17,33 +20,40 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
         }
     }
 
-    var credits = document.querySelector('.gbcredits');
-    credits.innerHTML = '';
 
     var madeUsers = [];
 
     gbpage._aCredits.forEach(group => {
-        var groupTitle = document.createElement('span');
-        groupTitle.innerText = group._sGroupName;
-        groupTitle.style.fontSize = '1.2em';
-        credits.appendChild(groupTitle);
         group._aAuthors.forEach(credit => {
-            var personname = document.createElement('span');
-            personname.onclick = () => window.open(credit._sProfileUrl);
-            personname.innerHTML = `${navigator.onLine ? `<img src="${credit._sAvatarUrl}" alt="${credit._sName}" class="credits-avatar">` : ''} ${credit._sName}`;
-            personname.className = 'credits-author calibri';
+            var pcard = document.createElement('div');
+            pcard.className = 'credits-card';
+            pcard.style.display = 'inline-block';
+            pcard.style.margin = '10px';
+            pcard.style.textAlign = 'center';
+            document.querySelector('#credits').appendChild(pcard);
 
-            madeUsers.push(credit._sName);
+            var pfp = document.createElement('img');
+            pfp.className = 'credits-pfp';
+            pfp.src = credit._sAvatarUrl;
+            pcard.appendChild(pfp);
 
-            if (credit._sRole) {
-                tippy(personname, {
-                    content: credit._sRole,
-                });
-            }
+            var personname = document.createElement('div');
+            personname.className = 'credits-name';
+            personname.innerText = credit._sName;
+            pcard.appendChild(personname);
 
-            credits.appendChild(personname);
+            var desc = document.createElement('div');
+            desc.className = 'credits-desc';
+            desc.style.fontSize = '0.8em';
+            desc.style.opacity = 0.7;
+            desc.innerText = credit._sRole;
+            pcard.appendChild(desc);
+
+            document.querySelector('#credits').appendChild(pcard);
         });
     });
+
+    document.querySelector('#credits').style.opacity = 1;
 })();
 
 (async() => {

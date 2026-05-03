@@ -141,6 +141,20 @@ function upgradeStores() {
             if (gamePath == "none") {
                 setKVSOfIndex('gamePath', path.join(getSystemFolderOfIndex('deltaruneInstall', indx)), indx);
             }
+
+            // upgrade toby.deltarune.demo -> toby.deltarune.demolts if needed
+            var pid = readKVSOfIndex('gamePid', indx, "none");
+            var doneCheck = readKVSOfIndex('drDemoCheck', indx, "none");
+            if (pid == "toby.deltarune.demo" && doneCheck != "done") {
+                var gamePath = readKVSOfIndex('gamePath', indx, "none");
+                var checkpath = path.join(gamePath, "chapter1_windows");
+                if (fs.existsSync(checkpath) && fs.statSync(checkpath).isDirectory()) {
+                    setKVSOfIndex('gamePid', "toby.deltarune.demolts", indx);
+                    console.log('Upgraded gamePid for index ' + indx);
+                }
+
+                setKVSOfIndex('drDemoCheck', "done", indx);
+            }
         });
     }
     catch (e) {

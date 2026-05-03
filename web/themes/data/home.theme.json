@@ -1,0 +1,9 @@
+{
+    "name": "Hometown Theme",
+    "background": "home.png",
+    "mainSong": "hometown.mp3",
+    "description": "A theme based on Hometown from DELTARUNE.",
+    "musicTrack": "Another day in hometown - Toby Fox",
+    "id": "home",
+    "color": "rgb(197, 72, 40)"
+}

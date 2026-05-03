@@ -15,6 +15,8 @@
     for (let i = 0; i < themes.length; i++) {
         let theme = themes[i];
 
+        if (theme.hiddenByDefault && theme.id != currentTheme) continue;
+
         var tr = document.createElement('tr');
         document.querySelector('tbody').appendChild(tr);
 
@@ -114,3 +116,25 @@
 
     genbtnstyles();
 })();
+let spamtennaBuffer = '';
+    let spamtennaDetected = false;
+
+    const handleSpamtennaKeydown = (event) => {
+        if (spamtennaDetected) return;
+
+        if (event.key.length === 1) {
+            spamtennaBuffer = (spamtennaBuffer + event.key.toLowerCase()).slice(-9);
+            if (spamtennaBuffer === 'spamtenna') {
+                spamtennaDetected = true;
+                invoke('setTheme', ['spamtenna']);
+                currentAudio = "";
+                audio.pause();
+                page('main');
+
+            }
+        } else if (event.key === 'Backspace' || event.key === 'Delete' || event.key === 'Escape') {
+            spamtennaBuffer = '';
+        }
+    };
+
+elisten(document, 'keydown', handleSpamtennaKeydown);

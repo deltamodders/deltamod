@@ -213,6 +213,13 @@ window.currentPageStack.cat = async function(cat) {
                 await htmlAlert(await k('done'),await k('operation_successful'),[{text: await k('ok'), resolveWith:''}]);
             }, await k('open'));
 
+            await addButton(await k('options_adv3_title'), await k('options_adv3_desc'), async () => {
+                var res = await window.electronAPI.invoke('installDeltamodCLI', []);
+                if (res) {
+                    await htmlAlert(await k('done'),await k('operation_successful'),[{text: await k('ok'), resolveWith:''}]);
+                }
+            }, await k('open'));
+
             break;
         // dev isnt keyed and is always in english
         case "dev":
@@ -230,6 +237,7 @@ window.currentPageStack.cat = async function(cat) {
             break;
         case 'gb':
             await invoke('eraseGamebananaCache', []);
+
             var loadtr = document.createElement('tr');
             loadtr.innerHTML = '<td colspan="2" style="text-align:center;">' + await k('loading') + '</td>';
             tbody.appendChild(loadtr);
@@ -241,7 +249,11 @@ window.currentPageStack.cat = async function(cat) {
             td.colSpan = 2;
             td.innerHTML = await k('loading');
 
-            var gamebananaUserinfo = await window.electronAPI.invoke('getGamebananaUserinfo', []);
+            var gamebananaUserinfo = await Promise.race([
+                window.electronAPI.invoke('getGamebananaUserinfo', []),
+                new Promise(resolve => setTimeout(() => resolve({ loggedIn: false }), 5000))
+            ]);
+            
             tbody.removeChild(loadtr);
             td.innerHTML = '';
 
@@ -257,7 +269,7 @@ window.currentPageStack.cat = async function(cat) {
             img.style.height = '32px';
             flexdiv.appendChild(img);
 
-            img.style.borderRadius = '8px';
+            img.style.borderRadius = '5px';
             var span = document.createElement('span');
             flexdiv.appendChild(span);
             span.innerText = await k('options_gb_loggedas', gamebananaUserinfo._sName);

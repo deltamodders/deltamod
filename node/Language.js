@@ -4,8 +4,16 @@ const console = require('./Console');
 const { version } = require('os');
 
 var language = {};
+var englishLanguage = {};
 
 function loadLanguage(lang) {
+    let engpath = path.join(__dirname, "../", "langs", "en", "language.json");
+    let engData = fs.readFileSync(engpath, 'utf8');
+    // remove text between /* and */ (comments)
+    engData = engData.replace(/\/\*[\s\S]*?\*\//g, '');
+
+    englishLanguage = JSON.parse(engData); // have this as a fallback for missing keys
+
     try {
         let langpath = path.join(__dirname, "../", "langs", lang, "language.json");
         if (!fs.existsSync(langpath)) {
@@ -48,7 +56,7 @@ function loadString(key, ...args) {
     let str = language[key];
     if (!str) {
         console.error(`String not found: ${key}`);
-        return `$${key}`;
+        return englishLanguage[key] || `!${key}`; // fallback to English or return the key if not found
     }
     return str.replace(/{(\d+)}/g, (match, index) => {
         return args[index] || match;

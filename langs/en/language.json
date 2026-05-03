@@ -206,7 +206,10 @@
     "gm3psel_importown": "...or import your own",
     "gm3psel_importown_title": "Importing",
     "gm3psel_importown_desc": "Please wait while your patching core is being imported. Do not close Deltamod.",
-    "import_notice": "Beginning from Deltamod 1.9, Deltamod no longer copies your game to its app data by default.<br><br>Please make sure the game is in a directory which is always available, or tick the box to override this behavior.",
-    "locate_copyanyways": "Save a copy of this game on your main drive"
+    "import_notice": "Beginning from Deltamod 1.9, Deltamod no longer copies your game to its app data by default. As such, no second copy of your game is created when importing.<br><br>Please make sure the game is in a directory which is always available, or tick the box to override this behavior.",
+    "locate_copyanyways": "Save a copy of this game on your main drive",
+    "credits_thxdevs": "Thanks to our developers",
+    "options_adv3_title": "Install DeltamodCLI",
+    "options_adv3_desc": "Installs the 'deltamod' command in your system. Requires administrator privileges."
      /* end of third batch */
 }
