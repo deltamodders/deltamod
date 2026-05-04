@@ -207,5 +207,7 @@
     "gm3psel_importown_desc": "Attendi mentre Deltamod importa il tuo patcher. Non chiudere Deltamod.",
     "import_notice": "A partire dalla versione 1.9 di Deltamod, esso non copierà più il tuo gioco nei suoi dati, di default. Non verrà quindi creata una seconda copia del tuo gioco.<br><br>Assicurati di salvare il gioco dove esso è sempre disponibile, oppure scegli l'opzione di copiarlo comunque.",
     "locate_copyanyways": "Salva una copia del gioco nei dati di Deltamod",
-    "credits_thxdevs": "Grazie, sviluppatori!"
+    "credits_thxdevs": "Grazie, sviluppatori!",
+    "options_adv3_title": "Installa DeltamodCLI",
+    "options_adv3_desc": "Installa il comando 'deltamod' nella riga di comando. Questa operazione richiede privilegi amministrativi."
 }

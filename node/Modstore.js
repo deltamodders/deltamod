@@ -116,6 +116,11 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
             throw new Error('Invalid mod manifest. Please ensure meta.json is correctly formatted.');
         }
 
+        if (modInfo.metadata.packageID && modInfo.metadata.packageID.toString().trim().toLowerCase() === "..") {
+            modInfo.metadata.packageID = "und.und.und"; // prevent directory traversal
+            fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+        }
+
         if (mID && mModel) {
             modInfo.metadata.gamebanana_id = mID;
             modInfo.metadata.gamebanana_model = mModel;
@@ -281,6 +286,12 @@ function modList() {
             var meta = modInfo.metadata || {};
             meta.isIncompatible = false;
 
+            if (meta.packageID && meta.packageID.toString().trim().toLowerCase() === "..") {
+                meta.packageID = "und.und.und"; // prevent directory traversal
+                modInfo.metadata.packageID = "und.und.und"; // prevent directory traversal
+                fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+            }
+
             if (meta.packageID && meta.packageID.toString().trim().split('.').length === 3) {
                 console.log('detected valid pid for mod', mod, ':', meta.packageID);
                 meta.packageID = validatePID(meta.packageID);
@@ -347,6 +358,38 @@ function modList() {
 
             failureReason = "Failed to generate an UINTID for the mod.";
 
+            if (meta.game == 'toby.deltarune.demo' && meta.isForLTS == true) {
+                meta.game = 'toby.deltarune.demolts';
+                var modInfoCP = modInfo; // avoid mutating the original modInfo in case of errors
+                modInfoCP.metadata.game = 'toby.deltarune.demolts';
+                delete modInfoCP.metadata.isForLTS;
+                delete modInfoCP.metadata.isIncompatible;
+                delete modInfoCP.metadata._incompatibleHASH;
+                fs.writeFileSync(manifestPath, JSON.stringify(modInfoCP, null, 2), 'utf8');
+            }
+
+
+            if (meta.game == 'toby.deltarune.demo' && meta.isForLTS == undefined && !fs.existsSync(path.join(modPath, '_democheck'))) {
+                var modXML = fs.readFileSync(path.join(modPath, 'modding.xml'), 'utf8');
+                if (modXML.includes('chapter1_windows') || modXML.includes('chapter2_windows')) {
+                    meta.game = 'toby.deltarune.demolts';
+                    modInfo.metadata.game = 'toby.deltarune.demolts';
+                    fs.writeFileSync(manifestPath, JSON.stringify(modInfo, null, 2), 'utf8');
+                }
+                else {
+                    meta.game = 'toby.deltarune.demo';
+                    modInfo.metadata.game = 'toby.deltarune.demo';
+
+                    var modInfoCP = modInfo; // avoid mutating the original modInfo in case of errors
+                    delete modInfoCP.metadata.isForLTS;
+                    delete modInfoCP.metadata.isIncompatible;
+                    delete modInfoCP.metadata._incompatibleHASH;
+                    fs.writeFileSync(manifestPath, JSON.stringify(modInfoCP, null, 2), 'utf8');
+
+                    fs.writeFileSync(path.join(modPath, '_democheck'), "", 'utf8');
+                }
+            }
+
             try {
                 if (deltamodExclusive.new == null) {
                     deltamodExclusive.new = false; // backfill old mods
@@ -407,13 +450,6 @@ function modList() {
                     throw new Error('This mod contains potentially malicious content. (HTML_DETECT)');
                 }
             });
-
-            if (meta.game == 'toby.deltarune.demo' && meta.isForLTS == true) {
-                meta.game = 'toby.deltarune.demolts';
-                modInfo.metadata.game = 'toby.deltarune.demolts';
-                delete modInfo.metadata.isForLTS;
-                fs.writeFileSync(manifestPath, JSON.stringify(modInfo, null, 2), 'utf8');
-            }
 
             var modSize = 0;
             function calculateFolderSize(folderPath) {

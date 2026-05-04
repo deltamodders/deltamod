@@ -199,5 +199,13 @@
     "criterrors_gm3palert_message": "Nie masz zainstalowanego żadnego patchera. Patcher jest narzędziem niezbędnym dla Deltamod do modyfikowania gier. Zainstaluj dowolny, wspierany patcher, aby korzystać z Deltamod.",
     "shop_addedon": "Ostatnia aktualizacja: {0}",
     "options_gen3_title": "Tryb sterowania promptem, gdy dostępny",
-    "options_gen3_desc": "Po włączeniu zostaniesz poproszony o aktywowanie trybu kontrolera, gdy podłączony zostanie kompatybilny kontroler. Obecnie kompatybilny tylko z DualSense."
+    "options_gen3_desc": "Po włączeniu zostaniesz poproszony o aktywowanie trybu kontrolera, gdy podłączony zostanie kompatybilny kontroler. Obecnie kompatybilny tylko z DualSense.",
+    "gm3psel_importown": "...lub zaimportuj własne",
+    "gm3psel_importown_title": "Importowanie",
+    "gm3psel_importown_desc": "Proszę czekać, trwa importowanie silnika patchującego. Nie zamykaj Deltamod.",
+    "import_notice": "Począwszy od Deltamod 1.9, Deltamod domyślnie nie kopiuje gry do swojego katalogu danych aplikacji. W związku z tym podczas importu nie jest tworzona druga kopia gry.<br><br>Upewnij się, że gra znajduje się w katalogu, który jest zawsze dostępny, lub zaznacz opcję, aby wymusić inne zachowanie.",
+    "locate_copyanyways": "Zapisz kopię tej gry na dysku głównym",
+    "credits_thxdevs": "Podziękowania dla naszych deweloperów",
+    "options_adv3_title": "Zainstaluj DeltamodCLI",
+    "options_adv3_desc": "Instaluje polecenie 'deltamod' w systemie. Wymaga uprawnień administratora."
 }

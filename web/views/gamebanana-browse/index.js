@@ -204,6 +204,8 @@ async function renderMods(table, GB_API, filter, gameID) {
         for (const mod of data._aRecords) {
             if (mod._sModelName == 'Wip' && !mod._bHasFiles) continue;
             if (mod._sModelName != 'Wip' && mod._sModelName != 'Mod') continue;
+            if (mod._aSubmitter._idRow == 3377035) continue; // dont want them here
+            
             await (async () => {
 
                 var td0 = document.createElement('td');

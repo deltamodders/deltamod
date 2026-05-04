@@ -220,7 +220,7 @@ window.preloadAPI.onUpdateAvailable((info) => {
         { text: 'Yes', resolveWith: "a" },
         { text: 'No', rejectWith: "a" }
     ], 'update').then(async (result) => {
-        await window.electronAPI.invoke('start-update', [window.ustack.updateInfo]);
+        await window.electronAPI.invoke('start-update', []);
     }).catch(async (result) => {
         await window.electronAPI.invoke('ignore-update', []);
     });

@@ -26,6 +26,9 @@ const Junction = require('./Junction');
 const console = require('./Console');
 const { PARTITION } = require('./Config');
 
+// Using this fixes a vulnerability where attackers could freely download code
+let updateStackInfo = null;
+
 // --- IPC Helper Functions ---
 
 async function dominantColor(imagePath) {
@@ -976,17 +979,20 @@ module.exports = function registerIPCHandlers(context) {
             if (updateInfo.update && !state.ignoreUpdate) {
                 if (win) win.webContents.send('updateAvailable', updateInfo);
                 state.updateAvailable = true;
+
+                updateStackInfo = updateInfo;
                 return true;
             }
             return false;
         } catch { return false; }
     });
     ipcMain.handle('start-update', async (event, args) => {
+        if (!updateStackInfo) return;
         const win = getWindow();
         page("autoupdate");
         try {
-            const installerPath = path.join(System.getTemporary(), `installer.${args[0].version.replace(/\./g, "")}.exe`);
-            const response = await axios.get(args[0].newVersionLink, {
+            const installerPath = path.join(System.getTemporary(), `installer.${updateStackInfo.version.replace(/\./g, "")}.exe`);
+            const response = await axios.get(updateStackInfo.newVersionLink, {
                 responseType: 'arraybuffer',
                 onDownloadProgress: e => { if (win) win.webContents.send('updateProgress', { perc: Math.round((e.loaded * 100) / e.total) }); }
             });
@@ -1008,19 +1014,6 @@ module.exports = function registerIPCHandlers(context) {
         });
         fs.rmSync(path.join(appdata, 'pkg.db'), { recursive: true, force: true });
         app.quit();
-    });
-
-    // Chat
-    ipcMain.handle('deltahubMessageGet', async (event, args) => (await axios.get(`https://us-central1-dh-data-5a818.cloudfunctions.net/deltamodGetChatMessages?channel=${args[0]}`)).data);
-    ipcMain.handle('deltahubMessagePost', async (event, args) => {
-        let signature = "";
-        const tool = path.join(__dirname, '..', 'tools', 'dhubsign.exe');
-        if (fs.existsSync(tool)) {
-            signature = await new Promise(resolve => exec(`"${tool}" "${btoa(args[1])}"`, (err, stdout) => resolve(err ? "" : stdout.replace(/[\r\n]|\[start\]|\[end\]/g, '').trim())));
-        }
-        
-        const post = await axios.post('https://us-central1-dh-data-5a818.cloudfunctions.net/deltamodSendChatMessage', { channel: args[0], message: args[1] }, { headers: { 'X-Signature': signature } }).catch(e => { throw e.response?.data?.message || e.message; });
-        if (!post.data.ok) throw post.data.message;
     });
 
     // Debug Modals / Tracers
