@@ -60,6 +60,10 @@ function page(newPage) {
     win.webContents.send("page", [newPage]);
 }
 
+function shopClang() {
+    win.webContents.executeJavaScript(`addToModCounter(0);`);
+}
+
 let sharedVariables = {}; // shared vars with renderer
 function setSharedVar(name, value) {
     sharedVariables[name] = value;
@@ -149,5 +153,6 @@ module.exports = {
 
     getWindow,
     setWindow,
+    shopClang
     // errorWin,
 };

@@ -210,6 +210,22 @@ function credits(funny) {
     page('credits');
 }
 
+async function addToModCounter(diff) {
+    if (diff > -1) {
+        var a = new Audio('./audio/cash.mp3');
+        a.play();
+    }
+
+    var manyMods = await window.electronAPI.invoke('howManyMods', []) || 0;
+    const coin = document.querySelector('.coin');
+    coin.style.opacity = '1';
+    coin.innerText = `${manyMods + diff}`;
+
+    setTimeout(() => {
+        coin.style.opacity = '0';
+    }, 2000);
+}
+
 window.preloadAPI.onUpdateAvailable((info) => {
     console.log('Update available:', info.version);
     update = true;

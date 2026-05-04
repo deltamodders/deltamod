@@ -4,7 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const console = require('./Console');
 const _7z = require('7zip-min');
-const { randomString, page } = require('./Utils');
+const { randomString, page, shopClang } = require('./Utils');
 const { findModRoot } = require('./GamePatching');
 const crypto = require('crypto');
 const { dialog } = require('electron');
@@ -34,6 +34,8 @@ function downloadModFromURL(url, onProgress, mID, mModel) {
 }
 
 async function importMod(filePath, nextPage = "main", mID = null, mModel = null) {
+    var clangit = true;
+
     console.log("Importing mod (gb info)", mID, mModel, "from file:", filePath);
     // create unique mod folder
     const modPath = path.join(system.getPacketDatabase(), "Mod_" + randomString(32));
@@ -138,8 +140,9 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
         }
 
 
-        if (modInfo.metadata.packageID?.toString().trim()) {
-            if (fs.existsSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID))) {
+        if (modInfo.metadata.packageID?.toString().trim() && modInfo.metadata.packageID.toString().trim() != "und.und.und") {
+            if (fs.existsSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID)) && modInfo.metadata.packageID != "und.und.und") {
+                clangit = false;
                 var existingModInfo = safeReadJSON(path.join(system.getPacketDatabase(), modInfo.metadata.packageID, 'meta.json'));
                 var oldVersion = existingModInfo?.metadata?.version || "Unknown";
                 var newVersion = modInfo.metadata.version || "Unknown";
@@ -176,6 +179,10 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
 
         // simpler way to refresh the list
         if (nextPage && nextPage !== "donothing") page(nextPage);
+
+        if (clangit) {
+            shopClang();
+        }
 
         // Simple way to refresh the list
         // app.relaunch(properRelaunch());
@@ -296,7 +303,7 @@ function modList() {
                 console.log('detected valid pid for mod', mod, ':', meta.packageID);
                 meta.packageID = validatePID(meta.packageID);
 
-                if (modPath !== path.join(system.getPacketDatabase(), meta.packageID)) {
+                if (modPath !== path.join(system.getPacketDatabase(), meta.packageID) && meta.packageID != "und.und.und") {
                     console.log('upgrading modstore to have folder named by packageID for mod', mod);
                     fs.renameSync(modPath, path.join(system.getPacketDatabase(), meta.packageID));
                     modPath = path.join(system.getPacketDatabase(), meta.packageID);

@@ -6,23 +6,6 @@ window._onClosePage.push(() => {
     delete window.PAGE;
 });
 
-var dledmods = 0;
-
-function shopClang() {
-    var a = new Audio('./audio/cash.mp3');
-    a.play();
-
-    dledmods++;
-
-    const coin = document.querySelector('.coin');
-    coin.style.opacity = '1';
-    coin.innerText = `${dledmods}`;
-
-    setTimeout(() => {
-        coin.style.opacity = '0';
-    }, 2000);
-}
-
 function getThumbURL(mod) {
     try {
         if (mod._sImageUrl && mod._sImageUrl.length > 0) {
@@ -377,13 +360,11 @@ async function renderMods(table, GB_API, filter, gameID) {
                                 return;
                             }
                             else {
-                                shopClang();
                                 dlmod(res, dlBtn);
                             }
                             return;
                         }
 
-                        shopClang();
                         dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName);
                     };
 

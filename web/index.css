@@ -447,3 +447,31 @@ h1 {
 .topbar img {
     margin-right: 5px;
 }
+
+@keyframes spinY {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
+.coin {
+    position: fixed;
+    bottom: 45px;
+    left: calc(var(--sidebar-size) + 45px);
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    background-color: gold;
+    color: rgb(123, 105, 0);
+    font-size: 50px;
+    font-family: "Calibri", sans-serif;
+    border-radius: 50%;
+    animation: spinY 1s linear infinite;
+    transition: 1.2s all;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 999;
+
+    pointer-events: none;
+}
