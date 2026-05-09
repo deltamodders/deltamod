@@ -161,7 +161,6 @@ async function createMod(mod, compatible) {
 
         const deleteModButton = document.createElement('button');
         deleteModButton.onclick = () => {
-            addToModCounter(-1);
             window.electronAPI.invoke('removeMod', [mod.folder]);
         };
         deleteModButton.innerHTML = icon('delete_forever', '20px');

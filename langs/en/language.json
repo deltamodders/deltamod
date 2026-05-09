@@ -42,7 +42,6 @@
     "allmods_noID": "No ID was specified.",
     "allmods_compatible": "Compatible with current version",
     "allmods_incompatible": "Incompatible: {0}",
-    "allmods_throughShop": "Installed through the Mod Shop",
     "allmods_nomods": "No mods are installed.",
     "allmods_nomodsforfilter": "No mods match the selected filter.",
     "modFail_bannerClick": "Click on this banner to view more details.",
@@ -213,6 +212,7 @@
     "options_adv3_desc": "Installs the 'deltamod' command in your system. Requires administrator privileges.",
     "toggleShopPopup_msg": "Do you wish to enable the Mod Shop page? The service uses GameBanana. This can be toggled later in the options.",
     "installmanager_invalidname_title": "Invalid installation name",
-    "installmanager_invalidname_desc": "This installation name is invalid. Please choose another one."
+    "installmanager_invalidname_desc": "This installation name is invalid. Please choose another one.",
+    "allmods_throughShop": "Installed through GameBanana"
      /* end of third batch */
 }

@@ -221,7 +221,7 @@ async function handleProtocolLaunch(url) {
 
             log("Archive valid -- found meta.json and modding.xml");
             //await _7z.unpack(filepath, join(dirname(filepath), itemid));
-            await importMod(filepath);
+            await importMod(filepath, "main", modId, modType);
 
             setSharedVar('gb1click', false);
 

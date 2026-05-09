@@ -160,9 +160,11 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
                     fs.rmSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID), { recursive: true, force: true });
                 } else if (response == 1) {
                     fs.rmSync(modPath, { recursive: true, force: true });
+                     if (nextPage && nextPage !== "donothing") page(nextPage);
                     return;
                 } else {
                     fs.rmSync(modPath, { recursive: true, force: true });
+                    if (nextPage && nextPage !== "donothing") page(nextPage);
                     return;
                 }
             }
@@ -177,7 +179,6 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
             buttons: ['OK']
         });*/
 
-        // simpler way to refresh the list
         if (nextPage && nextPage !== "donothing") page(nextPage);
 
         if (clangit) {

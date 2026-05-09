@@ -4,18 +4,16 @@ const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
 const { exec, execSync } = require('child_process');
-const axios = require('axios').default;
+const https = require('https');
 const createDesktopShortcut = require('create-desktop-shortcuts');
 var elevate = require('windows-elevate');
 const _7z = require('7zip-min');
-const { createCanvas, loadImage } = require('canvas');
-
 // Local modules
 const KeyValue = require('./KeyValue');
 const Language = require('./Language');
 const System = require('./System');
 const { getSystemFile, getSystemFolder, getPacketDatabase, getSystemFolderOfIndex } = require('./System');
-const { page, getSharedVar, properRelaunch, getSteamDirectory, getFileVersion } = require('./Utils');
+const { page, getSharedVar, properRelaunch, getSteamDirectory, getFileVersion, downloadFile, timeoutPromise } = require('./Utils');
 const Modstore = require('./Modstore');
 const CMode = require('./ControllerMode');
 const Updates = require('./Updates');
@@ -469,23 +467,11 @@ module.exports = function registerIPCHandlers(context) {
         const win = getWindow();
         const url = args[0];
         const modal = createProgressModal();
-        const destPath = path.join(app.getPath('downloads'), "gm3p_pkg.zip");
-        const writer = fs.createWriteStream(destPath);
+        const destPath = path.join(app.getPath('downloads'), `patcher_pkg_${Date.now()}.zip`);
 
         try {
-            const response = await axios({ method: 'get', url, responseType: 'stream' });
-            const totalLength = parseInt(response.headers['content-length'] || '0', 10);
-            let downloaded = 0;
-
-            response.data.on('data', chunk => {
-                downloaded += chunk.length;
-                if (totalLength) updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded');
-            });
-
-            response.data.pipe(writer);
-            await new Promise((resolve, reject) => {
-                writer.on('finish', resolve);
-                writer.on('error', reject);
+            await downloadFile(url, destPath, (downloaded, total) => {
+                updateProgressModal(modal, downloaded / total, `Downloading patcher package...`);
             });
 
             if (win) win.setProgressBar(0);
@@ -988,16 +974,19 @@ module.exports = function registerIPCHandlers(context) {
     });
     ipcMain.handle('start-update', async (event, args) => {
         if (!updateStackInfo) return;
-        const win = getWindow();
-        page("autoupdate");
+        
+        var pwin = createProgressModal();
         try {
-            const installerPath = path.join(System.getTemporary(), `installer.${updateStackInfo.version.replace(/\./g, "")}.exe`);
-            const response = await axios.get(updateStackInfo.newVersionLink, {
-                responseType: 'arraybuffer',
-                onDownloadProgress: e => { if (win) win.webContents.send('updateProgress', { perc: Math.round((e.loaded * 100) / e.total) }); }
+            const installerPath = path.join(System.getTemporary(), `deltamodUpdate.${updateStackInfo.version.replace(/\./g, "")}.exe`);
+
+            await downloadFile(updateStackInfo.newVersionLink, installerPath, (progress) => {
+                if (pwin) updateProgressModal(pwin, null, progress, 'Downloading update');
             });
-            fs.writeFileSync(installerPath, Buffer.from(response.data));
-            exec(`cmd /c ""${installerPath}" --mode unattended --unattendedmodeui minimal"`);
+
+            await timeoutPromise(1500);
+
+            exec(`"${installerPath}" --mode unattended --unattendedmodeui minimal`);
+
             app.exit(0);
         } catch (e) {
             dialog.showErrorBox("Update Failed", "Failed to download update. Please reinstall from GameBanana. Opening browser...");

@@ -209,5 +209,9 @@
     "locate_copyanyways": "Salva una copia del gioco nei dati di Deltamod",
     "credits_thxdevs": "Grazie, sviluppatori!",
     "options_adv3_title": "Installa DeltamodCLI",
-    "options_adv3_desc": "Installa il comando 'deltamod' nella riga di comando. Questa operazione richiede privilegi amministrativi."
+    "options_adv3_desc": "Installa il comando 'deltamod' nella riga di comando. Questa operazione richiede privilegi amministrativi.",
+    "toggleShopPopup_msg": "Desideri attivare il Mod Shop? Il servizio è fornito da GameBanana. Puoi sempre attivarlo/disattivarlo in seguito dalle opzioni.",
+    "installmanager_invalidname_title": "Nome di installazione non valido",
+    "installmanager_invalidname_desc": "Il nome di installazione non è valido. Per favore, scegli un altro nome.",
+    "allmods_throughShop": "Installato tramite GameBanana"
 }

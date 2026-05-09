@@ -14,6 +14,44 @@ function timeoutPromise(ms) {
     });
 }
 
+function downloadFile(url, dest, onProgress) {
+    const https = require('https');
+    return new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(dest);
+        const req = https.get(url, (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                console.log('got redir to ' + res.headers.location);
+                return resolve(downloadFile(res.headers.location, dest, onProgress));
+            }
+
+            const total = parseInt(res.headers['content-length'] || '0', 10);
+            let downloaded = 0;
+
+            res.on('data', (chunk) => {
+                downloaded += chunk.length;
+                if (onProgress && typeof onProgress === 'function') {
+                    try { onProgress(downloaded / total); } catch (e) { /* ignore */ }
+                }
+            });
+
+            res.pipe(file);
+
+            file.on('finish', async () => {
+                await timeoutPromise(100);
+                file.close(() => resolve(dest));
+            });
+        });
+
+        req.on('error', (err) => {
+            fs.unlink(dest, () => reject(err));
+        });
+
+        file.on('error', (err) => {
+            fs.unlink(dest, () => reject(err));
+        });
+    });
+}
+
 function getFileVersion(filePath) {
     var basecmd = `powershell -command "(Get-Item '${filePath}').VersionInfo.FileVersion"`;
     var execSync = require('child_process').execSync;
@@ -61,7 +99,7 @@ function page(newPage) {
 }
 
 function shopClang() {
-    win.webContents.executeJavaScript(`addToModCounter(0);`);
+    // deprecated
 }
 
 let sharedVariables = {}; // shared vars with renderer
@@ -150,6 +188,7 @@ module.exports = {
     getSharedVar,
     properRelaunch,
     getSteamDirectory,
+    downloadFile,
 
     getWindow,
     setWindow,
