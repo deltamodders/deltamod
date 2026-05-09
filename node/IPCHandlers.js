@@ -599,29 +599,6 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('patchAndRun', async (event, args) => {
         const win = getWindow();
         try {
-            // Check Git
-            await new Promise((resolve, reject) => exec('git --version', err => err ? reject() : resolve())).catch(() => {
-                dialog.showErrorBox('Git not found', 'Missing Git. We will install it for you.');
-                if (win) win.hide();
-                exec(`"${path.join(__dirname, '..', 'tools', 'gitinstaller.exe')}" /SILENT /NORESTART /DIR="C:/Program Files/Git" /NOICONS /SP-`);
-                app.relaunch(properRelaunch());
-                app.exit(0);
-                throw new Error('Restarting to install Git');
-            });
-
-            // Check .NET 8.0
-            await new Promise((resolve, reject) => exec('dotnet --list-runtimes', (err, stdout) => {
-                if (err || !stdout.includes('Microsoft.NETCore.App 8.0')) reject();
-                else resolve();
-            })).catch(() => {
-                dialog.showErrorBox('.NET not found', 'Missing .NET 8.0. We will install it for you.');
-                if (win) win.hide();
-                execSync(`"${path.join(__dirname, '..', 'tools', 'dotnetinstaller.exe')}" /passive /norestart`);
-                app.relaunch(properRelaunch());
-                app.exit(0);
-                throw new Error('Restarting to install .NET');
-            });
-
             const baking = args[1] === 'baker';
             const pathname = KeyValue.readKVS('gamePath');
             if (!pathname) return dialog.showErrorBox('Error', 'Please import a Deltarune install first.');
