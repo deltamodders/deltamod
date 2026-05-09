@@ -72,9 +72,8 @@
         }
         selectbtn.addEventListener('click', async () => {
             await window.electronAPI.invoke('setTheme', [theme.id]);
-            currentAudio = "";
-            audio.pause();
-            page('');
+
+            themeRefresh(true);
         });
 
         td2.style.textAlign = 'center';
@@ -88,11 +87,10 @@
             deletebtn.addEventListener('click', async () => {
                 if (theme.id == currentTheme) { 
                     await window.electronAPI.invoke('setTheme', ['base']);
-                    currentAudio = "";
-                    audio.pause();
+
+                    themeRefresh(true);
                 }
                 await window.electronAPI.invoke('deleteCustomTheme', [theme.id]);
-                page('themesel');
             });
             td2.appendChild(deletebtn);
 
@@ -127,8 +125,7 @@ let spamtennaBuffer = '';
             if (spamtennaBuffer === 'spamtenna') {
                 spamtennaDetected = true;
                 invoke('setTheme', ['spamtenna']);
-                currentAudio = "";
-                audio.pause();
+                themeRefresh(true);
                 page('main');
 
             }

@@ -1,42 +1,17 @@
 const axios = require('axios');
 const fs = require('fs');
-const { BrowserWindow } = require('electron');
 const path = require('path');
 async function run(id, data) {
     return new Promise (async (resolve, reject) => {
-        // TODO: reverse engineer their download system to get direct download link
-        var waitingModal = new BrowserWindow({
-            width: 350,
-            height: 170,
-            frame: false,
-            alwaysOnTop: true,
-            webPreferences: {
-                nodeIntegration: false
+        var api = `https://gamejolt.com/site-api/web/discover/games/builds/get-download-url/${data.buildId}`;
+        const response = await axios.post(api, {
+            forceDownload: true
+        }, {
+            headers: {
+                'Cookie': 'gjtz=7200;'
             }
         });
-        waitingModal.loadFile(path.join(__dirname, '..', '..', 'web', 'views', 'gjwait', 'index.html'));
-        var testerWindow = new BrowserWindow({
-            width: 500,
-            height: 500,
-            show: false,
-            webPreferences: {
-                nodeIntegration: false,
-                contextIsolation: true
-            }
-        });
-
-        await testerWindow.loadURL(`https://gamejolt.com/get/build?game=${data.gameId}&build=${data.buildId}`);
-
-        testerWindow.webContents.setAudioMuted(true);
-        
-        testerWindow.webContents.on('will-navigate', (event, url) => {
-            console.log('Found GJ redir: ', url);
-            waitingModal.close();
-            waitingModal.destroy();
-            resolve(url);
-            testerWindow.close();
-            testerWindow.destroy();
-        });
+        resolve(response.data.payload.url);
     });
 }
 

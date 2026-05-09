@@ -9,12 +9,25 @@
     <img src="./logo.png" alt="" width="70" class="deltamodLogo">
 </body>
 <script>
+    var loadAudio;
+    var doneAudio;
     function updateProgress(percent) {
+        if (percent >= 100 && loadAudio) {
+            loadAudio.pause();
+            loadAudio = null;
+            if (!doneAudio) {
+                doneAudio = new Audio("./done.wav");
+                doneAudio.volume = 0.5;
+                doneAudio.play();
+            }
+        }
         const value = Math.max(0, Math.min(100, Number(percent) || 0));
         const logo = document.querySelector(".deltamodLogo");
         if (!logo) return;
 
         let canvas = document.getElementById("progressCircle");
+        
+        // 1. Initial setup (only runs once)
         if (!canvas) {
             canvas = document.createElement("canvas");
             canvas.id = "progressCircle";
@@ -34,39 +47,96 @@
             placeCircle();
             window.addEventListener("resize", placeCircle);
             window.addEventListener("scroll", placeCircle, true);
+
+            // Initialize state for 50 lines instead of 100
+            canvas.lines = Array.from({ length: 50 }, () => ({
+                currentOpacity: 0.5,
+                targetOpacity: 0.5,
+                currentHeight: 6, 
+                targetHeight: 6
+            }));
+            
+            canvas.progressValue = 0;
+
+            const ctx = canvas.getContext("2d");
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const innerRadius = 50; 
+
+            // 2. Animation Loop for smooth transitions
+            const animate = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const isComplete = canvas.progressValue >= 100;
+
+                canvas.lines.forEach((line, i) => {
+                    // Smoothly interpolate current values towards target values
+                    line.currentOpacity += (line.targetOpacity - line.currentOpacity) * 0.1;
+                    line.currentHeight += (line.targetHeight - line.currentHeight) * 0.1;
+
+                    // Calculate angle for 50 lines starting from the top (-Math.PI / 2)
+                    const angle = (i / 50) * Math.PI * 2 - Math.PI / 2;
+                    const outerRadius = innerRadius + line.currentHeight;
+
+                    // Calculate X and Y for the start and end of each small line
+                    const x1 = cx + Math.cos(angle) * innerRadius;
+                    const y1 = cy + Math.sin(angle) * innerRadius;
+                    const x2 = cx + Math.cos(angle) * outerRadius;
+                    const y2 = cy + Math.sin(angle) * outerRadius;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.lineWidth = 4; // Thicker lines (was 2)
+
+                    // Change color to green if 100%, otherwise white
+                    const r = isComplete ? 0 : 255;
+                    const g = isComplete ? 180 : 255;
+                    const b = isComplete ? 0 : 255;
+
+                    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${line.currentOpacity})`;
+                    ctx.stroke();
+                });
+
+                // Keep looping to handle continuous animations
+                requestAnimationFrame(animate);
+            };
+            
+            // Start the loop
+            animate();
         }
 
-        const ctx = canvas.getContext("2d");
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-        const radius = 54;
-        const start = -Math.PI / 2;
-        const end = start + (Math.PI * 2 * value) / 100;
+        // 3. Update the target states based on new percentage
+        canvas.progressValue = value;
+        
+        // Map the 0-100 percentage to our 50 lines (divide by 2)
+        const activeCount = Math.round((value / 100) * 50); 
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Track
-        ctx.lineWidth = 8;
-        ctx.strokeStyle = "rgba(255,255,255,0.25)";
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Progress (0 -> 360)
-        ctx.strokeStyle = "#ffffff";
-        if (value >= 100) {
-            ctx.strokeStyle = "#006600";
-        }
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, start, end, false);
-        ctx.stroke();
+        canvas.lines.forEach((line, i) => {
+            if (i < activeCount) {
+                line.targetOpacity = 1;
+                line.targetHeight = 14; 
+            } else {
+                line.targetOpacity = 0.5;
+                line.targetHeight = 6;  
+            }
+        });
     }
 
     document.addEventListener("DOMContentLoaded", () => {
         updateProgress(0);
+
+        loadAudio = new Audio("./load.wav");
+        loadAudio.volume = 0.5;
+        loadAudio.loop = true;
+        loadAudio.play();
     });
 </script>
 <style>
+    @keyframes bodyAppear {
+        from { opacity: 0; scale: 0.95; }
+        to { opacity: 1; scale: 1; }
+    }
     body {
         position: fixed;
         top: 0;
@@ -77,15 +147,28 @@
         height: 100%;
         width: 100%;
         overflow: hidden;
-        background: url(./anotherhim.webp);
-        background-repeat: no-repeat;
-        background-size: cover;
+        background-color: transparent;
         color: white;
         display: flex;
         justify-content: center;
         align-items: center;
         font-family: Arial, sans-serif;
+
+        background-image: url('./bg.svg');
+        background-size: cover;
+        background-repeat: no-repeat;
+
+        perspective: 500px;
+
+        animation: bodyAppear 0.5s ease-out;
     }
+    @keyframes rotate {
+        0% { transform: rotateY(0deg); }
+        100% { transform: rotateY(360deg); }
+    }
+    .deltamodLogo {
+        animation: rotate 2s infinite linear;
+    }   
     .progbar {
         height: 9px;
         position: fixed;

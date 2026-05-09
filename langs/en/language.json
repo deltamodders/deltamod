@@ -210,6 +210,9 @@
     "locate_copyanyways": "Save a copy of this game on your main drive",
     "credits_thxdevs": "Thanks to our developers",
     "options_adv3_title": "Install DeltamodCLI",
-    "options_adv3_desc": "Installs the 'deltamod' command in your system. Requires administrator privileges."
+    "options_adv3_desc": "Installs the 'deltamod' command in your system. Requires administrator privileges.",
+    "toggleShopPopup_msg": "Do you wish to enable the Mod Shop page? The service uses GameBanana. This can be toggled later in the options.",
+    "installmanager_invalidname_title": "Invalid installation name",
+    "installmanager_invalidname_desc": "This installation name is invalid. Please choose another one."
      /* end of third batch */
 }

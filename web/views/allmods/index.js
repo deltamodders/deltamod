@@ -160,11 +160,13 @@ async function createMod(mod, compatible) {
         bdiv.appendChild(exploreModButton);
 
         const deleteModButton = document.createElement('button');
-        deleteModButton.onclick = () => window.electronAPI.invoke('removeMod', [mod.folder]);
+        deleteModButton.onclick = () => {
+            addToModCounter(-1);
+            window.electronAPI.invoke('removeMod', [mod.folder]);
+        };
         deleteModButton.innerHTML = icon('delete_forever', '20px');
         bdiv.appendChild(deleteModButton);
 
-        if (mod.gamebanana.supports) {
             const gbModButton = document.createElement('button');
             gbModButton.onclick = () => {
                 window._pageArguments = {
@@ -200,7 +202,9 @@ async function createMod(mod, compatible) {
             tippy(gbModButton, {
                 content: await k('leave_comment_tooltip'),
             });
-        }
+
+            likeBtn.disabled = !mod.gamebanana.supports;
+            gbModButton.disabled = !mod.gamebanana.supports;
     }
 
     modRow.appendChild(modNameContainer);
