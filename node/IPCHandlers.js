@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { exec, execSync } = require('child_process');
 const https = require('https');
 const createDesktopShortcut = require('create-desktop-shortcuts');
+const axios = require('axios');
 var elevate = require('windows-elevate');
 const _7z = require('7zip-min');
 // Local modules

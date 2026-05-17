@@ -7,6 +7,13 @@
     --sidebar-size: 50px;
 }
 
+.loadingBar {
+    width: 70px;
+    height: 70px;
+    background: url("./img/load.svg") no-repeat center;
+    background-size: contain;
+}
+
 @keyframes elFadeIn {
     from {
         opacity: 0;

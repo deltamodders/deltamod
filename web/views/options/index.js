@@ -239,7 +239,7 @@ window.currentPageStack.cat = async function(cat) {
             await invoke('eraseGamebananaCache', []);
 
             var loadtr = document.createElement('tr');
-            loadtr.innerHTML = '<td colspan="2" style="text-align:center;">' + await k('loading') + '</td>';
+            loadtr.innerHTML = '<td colspan="2" style="text-align:center; display: flex; justify-content: center; align-items: center;"><div class="loadingBar"></div></td>';
             tbody.appendChild(loadtr);
 
             var tr = document.createElement('tr');

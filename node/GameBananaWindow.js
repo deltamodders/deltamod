@@ -32,7 +32,9 @@ function obtainLogin() {
         const cookies = loginWindow.webContents.session.cookies;
         const allCookies = await cookies.get({});
         for (const cookie of allCookies) {
-            await cookies.remove(`http${cookie.secure ? 's' : ''}://${cookie.domain.replace(/^\./, '')}${cookie.path}`, cookie.name);
+            if (cookie.domain?.includes('gamebanana.com')) {
+                await cookies.remove(`http${cookie.secure ? 's' : ''}://${cookie.domain.replace(/^\./, '')}${cookie.path}`, cookie.name);
+            }
         }
 
         loginWindow.loadURL('https://gamebanana.com/members/account/login');
@@ -65,9 +67,9 @@ function obtainLogin() {
 
             if (!url.includes('gamebanana.com/members/account')) {
                 const allCookies = (await loginWindow.webContents.session.cookies.get({})).filter(c => {
-                    return ['sess', 'rmc', 'muid'].includes(c.name.toLowerCase()) || c.domain.includes('gamebanana.com');
+                    return c.domain?.includes('gamebanana.com')
                 });
-                console.log('Found ' + allCookies.length + ' GameBanana account cookies after login.');
+                console.log('Found ' + allCookies.length + ' GameBanana account cookies after login: ' + allCookies.map(c => c.name).join(', '));
                 const cookieHeader = allCookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
                 resolve(cookieHeader);
                 loginWindow.close();
@@ -92,10 +94,11 @@ async function getGBUIConf() {
         var file = "";
         var token = "";
     }
-        var uiconf = await axios.get('https://gamebanana.com/apiv11/Member/UiConfig?_sUrl=/', {
+        var uiconf = await axios.get('https://gamebanana.com/apiv12/Member/UiConfig?_sUrl=/', {
             headers: {
                 'Cookie': token,
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0',
+                // get electron user agent
+                'User-Agent': require('electron').app.userAgentFallback,
                 'TE': 'Trailers'
             }
         });
@@ -120,7 +123,7 @@ async function leaveComment(id, comment, model) {
         return false;
     }
 
-    var response = await axios.post(`https://gamebanana.com/apiv11/${model}/${id}/Post/Add`, {
+    var response = await axios.post(`https://gamebanana.com/apiv12/${model}/${id}/Post/Add`, {
         _aImageFiles: [],
         _aImages: [],
         _aMentionedMemberRowIds: [],
@@ -128,7 +131,7 @@ async function leaveComment(id, comment, model) {
     }, {
         headers: {
             'Cookie': token,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0',
+            'User-Agent': require('electron').app.userAgentFallback,
             'TE': 'Trailers',
             'Content-Type': 'application/json'
         },
@@ -146,10 +149,10 @@ async function likeMod(model, id) {
         return false;
     }
 
-    var response = await axios.post(`https://gamebanana.com/apiv11/${model}/${id}/Like`, {}, {
+    var response = await axios.post(`https://gamebanana.com/apiv12/${model}/${id}/Like`, {}, {
         headers: {
             'Cookie': token,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0',
+            'User-Agent': require('electron').app.userAgentFallback,
             'TE': 'Trailers',
             'Content-Type': 'application/json'
         },
