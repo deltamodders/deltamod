@@ -446,8 +446,6 @@ module.exports = function registerIPCHandlers(context) {
         app.exit(0);
     });
     ipcMain.handle('hasPatchingCore', () => {
-        const selectedPatcher = KeyValue.readKVS('selectedPatcher');
-        if (selectedPatcher !== 'GM3P' && selectedPatcher !== 'DEVICE_FUSION') return true;
         return fs.existsSync(path.join(__dirname, '..', 'gm3p'));
     });
     ipcMain.handle('myCommitInfo', () => {
@@ -463,39 +461,6 @@ module.exports = function registerIPCHandlers(context) {
             }
         }
         return '<br>No external patching core detected';
-    });
-    ipcMain.handle('downloadGM3P', async (event, args) => {
-        const win = getWindow();
-        const url = args[0];
-        const modal = createProgressModal();
-        const destPath = path.join(app.getPath('downloads'), `patcher_pkg_${Date.now()}.zip`);
-
-        try {
-            await downloadFile(url, destPath, (downloaded, total) => {
-                updateProgressModal(modal, downloaded / total, `Downloading patcher package...`);
-            });
-
-            if (win) win.setProgressBar(0);
-            fs.rmSync(path.join(__dirname, '..', 'gm3p'), { recursive: true, force: true });
-            fs.mkdirSync(path.join(__dirname, '..', 'gm3p'), { recursive: true });
-            await _7z.unpack(destPath, path.join(__dirname, '..', 'gm3p'));
-            
-            modal.destroy();
-            dialog.showMessageBoxSync(win, { type: 'info', title: 'Download Complete', message: 'Patcher package downloaded and extracted successfully.' });
-            
-            app.relaunch(properRelaunch());
-            app.quit();
-            process.exit(0);
-
-        } catch (err) {
-            modal.destroy();
-            console.error('Error downloading patcher:', err);
-            dialog.showErrorBox('Download Error', 'An error occurred while downloading the Patcher package.');
-            app.relaunch(properRelaunch());
-            app.quit();
-            process.exit(1);
-        }
-        return destPath;
     });
 
     // Mod Management
@@ -759,14 +724,14 @@ module.exports = function registerIPCHandlers(context) {
             selectedGame = chosenEdition.pid;
 
             if ((await getInstallations(true)).some(x => x.appid === chosenEdition.appid)) {
-                dialog.showErrorBox('Already imported', 'Edition already imported.');
+                dialog.showErrorBox('Already imported', 'Game already imported.');
                 return false;
             }
             sourcePath = path.join(state.STEAM_BASE, chosenEdition.folder);
         }
 
         if (!validateDeltarune(sourcePath)) {
-            dialog.showErrorBox('Invalid folder', steam ? 'Edition missing from Steam library.' : 'Invalid game installation.');
+            dialog.showErrorBox('Invalid folder', steam ? 'Game missing from Steam library.' : 'Invalid game installation.');
             if (steam && chosenEdition?.downloadable && process.platform === 'win32' && dialog.showMessageBoxSync({ type: 'question', title: 'Download Demo', message: 'Download demo from Steam?', buttons: ['Yes', 'No'] }) === 0) {
                 shell.openExternal(`steam://install/${chosenEdition.appid}`);
             }
@@ -831,11 +796,6 @@ module.exports = function registerIPCHandlers(context) {
             KeyValue.setKVSOfIndex('isSteam', steam, i);
             KeyValue.setKVSOfIndex('originalSteamPath', steam ? sourcePath : "", i);
             KeyValue.setKVSOfIndex('steamAppId', steam ? chosenEdition.appid : "", i);
-
-            if (steam && !copyToDMod) {
-                fs.rmSync(sourcePath, { force: true, recursive: true });
-                Junction.createJunction(destPath, sourcePath);
-            }
 
             page(fromIM ? "installmanager" : "main");
             return true;

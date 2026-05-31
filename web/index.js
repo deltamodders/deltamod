@@ -688,16 +688,15 @@ if (!window.electronAPI) {
     // Check prerequisites
     var hasCore = await window.electronAPI.invoke('hasPatchingCore',[]);
     if (!hasCore) {
-        page('busy');
-        htmlAlert(
+        await htmlAlert(
             await k('criterrors_gm3palert_title'), 
             await k('criterrors_gm3palert_message'), 
             [{ text: await k('ok'), resolveWith: 'ok' }], 
             'error_med'
         );
 
-        await page('gm3p-selector');
-        document.querySelectorAll('.sidebar-button').forEach(button => button.disabled = true);
+        window.close();
+        
         return;
     }
 

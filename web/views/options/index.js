@@ -196,8 +196,8 @@ window.currentPageStack.cat = async function(cat) {
             await addRowHeader(icon('warning', '20px') + ' ' + await k('options_adv0_warn'));
 
             await addButton(await k('options_adv0_title'), await k('options_adv0_desc'), async () => {
-                page('gm3p-selector');
-            }, await k('open'));
+                await window.electronAPI.invoke('importPatcher', []);
+            }, await k('choose'));
 
             await addButton(await k('options_adv1_title'), await k('options_adv1_desc'), async () => {
                 var goOn = await htmlAlert(

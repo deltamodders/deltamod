@@ -1,5 +1,9 @@
 let PAGE = (window._pageArguments && window._pageArguments.lp) ? parseInt(window._pageArguments.lp) : 1;
 
+const BLACKLIST_MODS = [
+    493817 // Gendered Kris mod
+];
+
 window.PAGE = PAGE;
 
 window._onClosePage.push(() => {
@@ -187,7 +191,7 @@ async function renderMods(table, GB_API, filter, gameID) {
         for (const mod of data._aRecords) {
             if (mod._sModelName == 'Wip' && !mod._bHasFiles) continue;
             if (mod._sModelName != 'Wip' && mod._sModelName != 'Mod') continue;
-            if (mod._aSubmitter._idRow == 3377035) continue; // dont want them here
+            if (BLACKLIST_MODS.includes(mod._idRow)) continue;
             
             await (async () => {
 
