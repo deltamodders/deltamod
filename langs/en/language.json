@@ -214,6 +214,8 @@
     "toggleShopPopup_msg": "Do you wish to enable the Mod Shop page? The service uses GameBanana. This can be toggled later in the options.",
     "installmanager_invalidname_title": "Invalid installation name",
     "installmanager_invalidname_desc": "This installation name is invalid. Please choose another one.",
-    "allmods_throughShop": "Installed through GameBanana"
+    "allmods_throughShop": "Installed through GameBanana",
      /* end of third batch */
+     "options_ui_icon_title": "Custom icon",
+     "options_ui_icon_desc": "Select a custom icon for Deltamod. This will change the Deltamod UI's icon."
 }

@@ -402,7 +402,7 @@ function findG3MTool() {
     } catch { /* KeyValue unavailable */ }
 
     // 2. Bundled in deltamod's tools/ directory
-    const toolsDir = path.join(__dirname, '../tools');
+    const toolsDir = path.join(__dirname, '../gm3p');
     const toolExe = process.platform === 'win32' ? 'G3MTool.exe' : 'G3MTool';
     const localPath = path.join(toolsDir, toolExe);
     if (fs.existsSync(localPath)) return localPath;

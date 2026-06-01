@@ -179,6 +179,19 @@ window.currentPageStack.cat = async function(cat) {
                 page('themesel');
             }, await k('open'));
 
+            await addButton(await k('options_ui_icon_title'), await k('options_ui_icon_desc'), async () => {
+                var res = await htmlAlert(
+                    await k('options_ui_icon_title'),
+                    await k('options_ui_icon_desc'),
+                    CUSTOM_ICONS.map(icon => ({ text: icon.name, resolveWith: icon.id })),
+                    'info'
+                );
+                if (res) {
+                    localStorage.setItem('customIcon', res);
+                    var iconData = CUSTOM_ICONS.find(icon => icon.id === res);
+                    document.querySelector('.dmodicon').src = `deltapack://web/img/${iconData.file}`;
+                }
+            }, await k('open'));
             break;
         case 'inst':
             var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);

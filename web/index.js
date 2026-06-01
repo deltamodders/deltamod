@@ -4,6 +4,33 @@
  * ==========================================
  */
 
+const CUSTOM_ICONS = [
+    {
+        name: 'Base Icon',
+        file: 'packIcon.png',
+        id: 'base'
+    },
+    {
+        name: 'Pride 1 (Pride Flag)',
+        file: 'prideicon.png',
+        id: 'pride1'
+    },
+    {
+        name: 'Pride 2 (Trans Flag)',
+        file: 'transicon.png',
+        id: 'pride2'
+    },
+    {
+        name: 'Pride 3 (Bi Flag)',
+        file: 'bisexicon.png',
+        id: 'pride3'
+    },
+    {
+        name: 'Pride 4 (Pansexual Flag)',
+        file: 'pansexicon.png',
+        id: 'pride4'
+    }
+];
 // Global Variables & State
 var audio = new Audio();
 var currentAudio = "";
@@ -731,6 +758,17 @@ if (!window.electronAPI) {
         document.querySelectorAll('.sidebar-button').forEach(button => button.disabled = true);
         window.electronAPI.invoke('executeArgumentCmd',[]);
     }
+})();
+
+(async () => {
+    if (!localStorage.getItem('customIcon')) {
+        localStorage.setItem('customIcon', 'base');
+    }
+
+    var currentIcon = localStorage.getItem('customIcon');
+    var iconData = CUSTOM_ICONS.find(icon => icon.id === currentIcon);
+
+    document.querySelector('.dmodicon').src = `deltapack://web/img/${iconData.file}`;
 })();
 
 function closeAudio() {
