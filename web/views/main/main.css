@@ -19,15 +19,21 @@ a {
   margin-bottom: 10px;
 }
 .p2 {
-  padding: 15px;
+  padding: 7px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   border: 1px solid var(--theme-color);
-  border-radius: 50px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
 }
 .p2 > button {
   margin: 5px;
   margin-top: 0;
   margin-bottom: 0;
-  border-radius: 100%;
+  border-radius: 10px;
   width: 50px;
   height: 50px;
   border: 2px solid var(--theme-color) !important;
@@ -40,7 +46,7 @@ a {
   scale: 1.1;
   color: white;
   cursor: pointer;
-  transition: 0.3s all;
+  transition: 0.1s all;
 }
 select {
   font-family: "Pixel", sans-serif;

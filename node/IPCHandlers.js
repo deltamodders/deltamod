@@ -206,7 +206,7 @@ function intoIM() {
  */
 module.exports = function registerIPCHandlers(context) {
     const { getWindow, isControllerMode, isDevToolsEnabled, errorWin, state } = context;
-    const { getGBUIConf } = require('./GameBananaWindow');
+    const { getGBUIConf, collections } = require('./GameBananaWindow');
 
     ipcMain.handle('isCMode', () => isControllerMode);
     ipcMain.handle('shouldGoIM', () => process.argv.includes('---im'));
@@ -560,6 +560,107 @@ module.exports = function registerIPCHandlers(context) {
             }
         });
         return true;
+    });
+
+    ipcMain.handle('backupMods', async (event, args) => {
+        var name = args[0];
+        var pkgDB = getPacketDatabase();
+        const mods = fs.readdirSync(pkgDB).filter(f => fs.existsSync(path.join(pkgDB, f, 'meta.json'))).map(f => {
+            const dataPath = path.join(pkgDB, f, 'meta.json');
+            const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+            return { ...data, folder: f };
+        });
+
+        var backup = await collections.create(name || "Backup " + new Date().toLocaleString());
+
+        console.log('made backup ' + backup.id + ' with name ' + name);
+
+        if (!backup.success) {
+            dialog.showMessageBoxSync({ type: 'error', title: 'Backup Failed', message: `Failed to create backup: ${JSON.stringify(backup.error)}` });
+            return { done: false, skippedMods: [] };
+        }
+
+        const skippedMods = [];
+        
+        for (const mod of mods) {
+            if (mod.metadata.gamebanana_id != undefined && mod.metadata.gamebanana_model != undefined) {
+                const added = await collections.add(backup.id, mod.metadata.gamebanana_id, mod.metadata.gamebanana_model);
+                if (!added.success) {
+                    skippedMods.push({
+                        name: mod.metadata.name,
+                        pid: mod.metadata.packageID,
+                        reason: 'Failed to add to backup (API error)',
+                        api: added.error
+                    });
+                }
+            }
+            else {
+                skippedMods.push({
+                    name: mod.metadata.name,
+                    pid: mod.metadata.packageID,
+                    reason: 'Mod is missing GameBanana information'
+                });
+            }
+        }
+
+        return { done: true, skippedMods };
+    });
+
+    ipcMain.handle('restoreBackup', async (event, args) => {
+        var allCollections = await collections.getAll();
+        var names = allCollections.map(c => c._sName);
+        var result = await dialog.showMessageBoxSync({
+            type: 'question',
+            title: 'Select a collection to restore',
+            message: 'Select a GameBanana collection to restore from the list below:',
+            buttons: [...names, 'Cancel'],
+            cancelId: names.length
+        });
+
+        var toRestore = allCollections[result];
+
+        if (!toRestore || result === names.length) return { done: false, missingMods: [] };
+
+        var mods = await collections.getMods(toRestore._idRow);
+
+        var pwin = createProgressModal();
+
+        for (const mod of mods) {
+            getWindow().hide();
+
+            var todownload = mod.files[0];
+            if (mod.files.length > 1) {
+                var result = dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Multiple versions found',
+                    message: `Multiple versions of the mod "${mod.mod}" were found in the collection. Choose which file to download`,
+                    buttons: [...mod.files.map(f => f.filename), 'Cancel'],
+                });
+
+                if (result !== mod.files.length) {
+                    todownload = mod.files[result];
+                }
+            }
+
+            var dlpath = path.join(app.getPath('downloads'), Math.random().toString(36).substring(2, 15) + '.' + todownload.filename.split('.')[todownload.filename.split('.').length - 1]);
+
+            await downloadFile(todownload.url, dlpath, (progress) => {
+                if (pwin) updateProgressModal(pwin, null, progress, 'Downloading mod');
+            });
+
+            await Modstore.importMod(dlpath);
+
+            fs.unlinkSync(dlpath);
+        }
+
+        dialog.showMessageBoxSync({
+            type: 'info',
+            title: 'Restore complete',
+            message: `Backup "${toRestore._sName}" has been restored. ${mods.length} mods were downloaded and imported.`
+        });
+
+        getWindow().show();
+        return { done: true, missingMods: [] };
     });
 
     ipcMain.handle('patchAndRun', async (event, args) => {

@@ -163,10 +163,144 @@ async function likeMod(model, id) {
     return { status: response.status, data: response.data };
 }
 
+async function createDeltamodBackup(name) {
+    try {
+        var file = getSystemFile('bananapwd', true);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
+    }
+    catch {
+        return { success: false, message: "User not logged in" };
+    }
+
+    var response = await axios.post(`https://gamebanana.com/apiv12/Collection/Add`, {
+        _bIsPrivate: true,
+        _sName: name,
+        _sPassword: "deltamod"
+    }, {
+        headers: {
+            'Cookie': token,
+            'User-Agent': require('electron').app.userAgentFallback,
+            'TE': 'Trailers',
+            'Content-Type': 'application/json'
+        }
+    }).catch((error) => {
+        return error.response;
+    });
+
+    return { id: response.data._idRow, success: response.data._sStatus == 'SUCCESS', error: response.data._sStatus == 'SUCCESS' ? null : response.data };
+}
+
+async function addModToBackup(collectionId, itemId, itemType) {
+    try {
+        var file = getSystemFile('bananapwd', true);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
+    }
+    catch {
+        return { success: false, message: "User not logged in" };
+    }
+
+    var response = await axios.post(`https://gamebanana.com/apiv12/${itemType}/${itemId}/AddToCollection`, {
+        _idCollectionRow: collectionId
+    }, {
+        headers: {
+            'Cookie': token,
+            'User-Agent': require('electron').app.userAgentFallback,
+            'TE': 'Trailers',
+            'Content-Type': 'application/json'
+        }
+    }).catch((error) => {
+        return error.response;
+    });
+
+    return { success: response.data._sStatus == 'SUCCESS', error: response.data._sStatus == 'SUCCESS' ? null : response.data };
+}
+
+async function getCollections() {
+    try {
+        var file = getSystemFile('bananapwd', true);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
+    }
+    catch {
+        return { success: false, message: "User not logged in" };
+    }
+
+    var response = await axios.get(`https://gamebanana.com/apiv12/Tool/20575/AccessorCollections`, {
+        headers: {
+            'Cookie': token,
+            'User-Agent': require('electron').app.userAgentFallback,
+            'TE': 'Trailers',
+            'Content-Type': 'application/json'
+        }
+    }).catch((error) => {
+        return error.response;
+    });
+
+    return response.data._aAllCollections || [];
+}
+
+async function getCollectionMods(collectionId) {
+    try {
+        var file = getSystemFile('bananapwd', true);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
+    }
+    catch {
+        return { success: false, message: "User not logged in" };
+    }
+
+    var allMods = [];
+    var page = 0;
+    while (true) {
+        page++;
+        var response = await axios.get(`https://gamebanana.com/apiv12/Collection/${collectionId}/Items?_nPage=${page}&_sDirection=DESC&_sNameOperator=contains`, {
+            headers: {
+                'Cookie': token,
+                'User-Agent': require('electron').app.userAgentFallback,
+                'TE': 'Trailers',
+                'Content-Type': 'application/json'
+            }
+        }).catch((error) => {
+            return error.response;
+        });
+
+        allMods = allMods.concat(response.data._aRecords || []);
+
+        if (response.data._aMetadata._bIsComplete == true) {
+            break;
+        }
+    }
+
+    console.log(`Found ${allMods.length} mods in collection ${collectionId}`);
+    
+    var allDownloads = [];
+    for (const mod of allMods) {
+        var profilepage = await axios.get(`https://gamebanana.com/apiv12/${mod._sModelName}/${mod._idRow}/ProfilePage`);
+        var files = profilepage.data._aFiles
+        .filter(x => x._aModManagerIntegrations.map(y => y._idToolRow).includes(20575))
+        .map((x) => {
+            return {
+                url: x._sDownloadUrl.replace('https://gamebanana.com/dl/', 'https://gamebanana.com/mmdl/'),
+                filename: x._sFile
+            };
+        });
+
+        allDownloads.push({
+            mod: profilepage.data._sName,
+            files: files
+        });
+    }
+    return allDownloads;
+}
+
 module.exports = {
     obtainLogin,
     getGBUIConf,
     leaveComment,
     likeMod,
+    collections: {
+        create: createDeltamodBackup,
+        add: addModToBackup,
+        getAll: getCollections,
+        getMods: getCollectionMods
+    },
     clearCache
 };

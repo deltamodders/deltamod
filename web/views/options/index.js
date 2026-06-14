@@ -179,19 +179,6 @@ window.currentPageStack.cat = async function(cat) {
                 page('themesel');
             }, await k('open'));
 
-            await addButton(await k('options_ui_icon_title'), await k('options_ui_icon_desc'), async () => {
-                var res = await htmlAlert(
-                    await k('options_ui_icon_title'),
-                    await k('options_ui_icon_desc'),
-                    CUSTOM_ICONS.map(icon => ({ text: icon.name, resolveWith: icon.id })),
-                    'info'
-                );
-                if (res) {
-                    localStorage.setItem('customIcon', res);
-                    var iconData = CUSTOM_ICONS.find(icon => icon.id === res);
-                    document.querySelector('.dmodicon').src = `deltapack://web/img/${iconData.file}`;
-                }
-            }, await k('open'));
             break;
         case 'inst':
             var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
@@ -280,6 +267,7 @@ window.currentPageStack.cat = async function(cat) {
             img.src = gamebananaUserinfo._sAvatarUrl || './img/mod-placeholder.png';
             img.style.width = '32px';
             img.style.height = '32px';
+            img.style.border = '1px solid var(--theme-color)';
             flexdiv.appendChild(img);
 
             img.style.borderRadius = '5px';
@@ -303,6 +291,16 @@ window.currentPageStack.cat = async function(cat) {
                     window._pageArguments = {cat: 'gb'};
                     page('options');
                 }, await k('logout'), gamebananaUserinfo.loggedIn, await k('options_gb_notlogged'), '');
+
+                await addButton('Create a Deltamod backup', 'Backs up your mods to your GameBanana account using a private collection. Your mods must be uploaded to GameBanana for this to work.', async () => {
+                    await window.electronAPI.invoke('backupMods', ['Test Backup']);
+                    htmlAlert(await k('done'), 'Your backup has been created on GameBanana as "Test Backup". You can view it in your profile under collections, or import it back later.', [{text: await k('ok'), resolveWith:''}]), 'backup';
+                }, 'Backup');
+
+                await addButton('Import a Deltamod backup', 'Imports a Deltamod backup from your GameBanana account.', async () => {
+                    await window.electronAPI.invoke('restoreBackup', []);
+                    htmlAlert(await k('done'), 'Your backup has been imported.', [{text: await k('ok'), resolveWith:''}], 'cloud_download');
+                }, 'Import');
             }
             else {
                 await addButton(await k('login'), await k('options_gb_login_desc'), async () => {

@@ -1,6 +1,7 @@
 // collecton of utility functions
 
 const crypto = require("crypto");
+const https = require("https");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
@@ -14,40 +15,62 @@ function timeoutPromise(ms) {
     });
 }
 
-function downloadFile(url, dest, onProgress) {
-    const https = require('https');
+const { pipeline } = require('stream');
+const { promisify } = require('util');
+const pipelineAsync = promisify(pipeline);
+
+async function downloadFile(url, dest, onProgress) {
     return new Promise((resolve, reject) => {
-        const file = fs.createWriteStream(dest);
-        const req = https.get(url, (res) => {
-            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                console.log('got redir to ' + res.headers.location);
-                return resolve(downloadFile(res.headers.location, dest, onProgress));
-            }
-
-            const total = parseInt(res.headers['content-length'] || '0', 10);
-            let downloaded = 0;
-
-            res.on('data', (chunk) => {
-                downloaded += chunk.length;
-                if (onProgress && typeof onProgress === 'function') {
-                    try { onProgress(downloaded / total); } catch (e) { /* ignore */ }
+        const req = https.get(url, async (res) => {
+            try {
+                // Handle redirects
+                if (
+                    res.statusCode >= 300 &&
+                    res.statusCode < 400 &&
+                    res.headers.location
+                ) {
+                    res.resume(); // discard response
+                    resolve(downloadFile(res.headers.location, dest, onProgress));
+                    return;
                 }
-            });
 
-            res.pipe(file);
+                if (res.statusCode !== 200) {
+                    reject(new Error(`HTTP ${res.statusCode}`));
+                    return;
+                }
 
-            file.on('finish', async () => {
-                await timeoutPromise(100);
-                file.close(() => resolve(dest));
-            });
+                const total = Number(res.headers['content-length']) || 0;
+                let downloaded = 0;
+
+                if (onProgress) {
+                    res.on('data', (chunk) => {
+                        downloaded += chunk.length;
+
+                        if (total > 0) {
+                            try {
+                                onProgress(downloaded / total);
+                            } catch {
+                                // ignore callback errors
+                            }
+                        }
+                    });
+                }
+
+                const file = fs.createWriteStream(dest);
+
+                await pipelineAsync(res, file);
+
+                // At this point the stream has finished and closed.
+                resolve();
+            } catch (err) {
+                fs.unlink(dest, () => {});
+                reject(err);
+            }
         });
 
         req.on('error', (err) => {
-            fs.unlink(dest, () => reject(err));
-        });
-
-        file.on('error', (err) => {
-            fs.unlink(dest, () => reject(err));
+            fs.unlink(dest, () => {});
+            reject(err);
         });
     });
 }
