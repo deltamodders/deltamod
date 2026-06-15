@@ -217,5 +217,6 @@
     "allmods_throughShop": "Installed through GameBanana",
      /* end of third batch */
      "options_ui_icon_title": "Custom icon",
-     "options_ui_icon_desc": "Select a custom icon for Deltamod. This will change the Deltamod UI's icon."
+     "options_ui_icon_desc": "Select a custom icon for Deltamod. This will change the Deltamod UI's icon.",
+     "patching_complete": "Patching complete!"
 }

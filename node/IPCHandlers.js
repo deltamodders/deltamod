@@ -550,6 +550,7 @@ module.exports = function registerIPCHandlers(context) {
         }
 
         if (isControllerMode) CMode.stop();
+
         exec(`"${exePath}"`, { cwd: path.dirname(exePath) }, () => {
             try { GamePatching.restoreOriginalsIfAny(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
             if (isControllerMode) CMode.start();
@@ -559,46 +560,41 @@ module.exports = function registerIPCHandlers(context) {
                 win.webContents.send('page', 'main');
             }
         });
+
         return true;
     });
 
-    ipcMain.handle('backupMods', async (event, args) => {
-        var name = args[0];
+    ipcMain.handle('gamebanana_getCollections', async () => {
+        var res = await collections.list();
+        return (typeof res === 'object' && Array.isArray(res)) ? res.map(c => ({
+            id: c._idRow,
+            name: c._sName,
+        })) : res;
+    });
+
+    ipcMain.handle('gamebanana_createCollection', async (event, args) => {
+        return await collections.create(args[0]);
+    });
+
+    ipcMain.handle('gamebanana_deleteCollection', async (event, args) => {
+        return await collections.delete(args[0]);
+    });
+
+    ipcMain.handle('gamebanana_importToCollection', async (event, args) => {
         var pkgDB = getPacketDatabase();
-        const mods = fs.readdirSync(pkgDB).filter(f => fs.existsSync(path.join(pkgDB, f, 'meta.json'))).map(f => {
-            const dataPath = path.join(pkgDB, f, 'meta.json');
-            const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-            return { ...data, folder: f };
-        });
 
-        var backup = await collections.create(name || "Backup " + new Date().toLocaleString());
-
-        console.log('made backup ' + backup.id + ' with name ' + name);
-
-        if (!backup.success) {
-            dialog.showMessageBoxSync({ type: 'error', title: 'Backup Failed', message: `Failed to create backup: ${JSON.stringify(backup.error)}` });
-            return { done: false, skippedMods: [] };
-        }
+        var gbMods = args[1];
 
         const skippedMods = [];
         
-        for (const mod of mods) {
-            if (mod.metadata.gamebanana_id != undefined && mod.metadata.gamebanana_model != undefined) {
-                const added = await collections.add(backup.id, mod.metadata.gamebanana_id, mod.metadata.gamebanana_model);
-                if (!added.success) {
-                    skippedMods.push({
-                        name: mod.metadata.name,
-                        pid: mod.metadata.packageID,
-                        reason: 'Failed to add to backup (API error)',
-                        api: added.error
-                    });
-                }
-            }
-            else {
+        for (const mod of gbMods) {
+            const added = await collections.add(args[0], mod.id, mod.model);
+            if (!added.success) {
                 skippedMods.push({
-                    name: mod.metadata.name,
-                    pid: mod.metadata.packageID,
-                    reason: 'Mod is missing GameBanana information'
+                    name: mod.name,
+                    pid: mod.pid,
+                    reason: 'Failed to add to backup (API error)',
+                    api: added.error
                 });
             }
         }
@@ -606,34 +602,19 @@ module.exports = function registerIPCHandlers(context) {
         return { done: true, skippedMods };
     });
 
-    ipcMain.handle('restoreBackup', async (event, args) => {
-        var allCollections = await collections.getAll();
-        var names = allCollections.map(c => c._sName);
-        var result = await dialog.showMessageBoxSync({
-            type: 'question',
-            title: 'Select a collection to restore',
-            message: 'Select a GameBanana collection to restore from the list below:',
-            buttons: [...names, 'Cancel'],
-            cancelId: names.length
-        });
-
-        var toRestore = allCollections[result];
-
-        if (!toRestore || result === names.length) return { done: false, missingMods: [] };
-
-        var mods = await collections.getMods(toRestore._idRow);
+    ipcMain.handle('gamebanana_downloadAllInCollection', async (event, args) => {
+        var mods = await collections.inspect(args[0]);
 
         var pwin = createProgressModal();
 
         for (const mod of mods) {
-            getWindow().hide();
 
             var todownload = mod.files[0];
             if (mod.files.length > 1) {
                 var result = dialog.showMessageBoxSync({
                     type: 'warning',
                     title: 'Multiple versions found',
-                    message: `Multiple versions of the mod "${mod.mod}" were found in the collection. Choose which file to download`,
+                    message: `Multiple files for "${mod.mod}" were found. Choose which file to download`,
                     buttons: [...mod.files.map(f => f.filename), 'Cancel'],
                 });
 
@@ -648,19 +629,19 @@ module.exports = function registerIPCHandlers(context) {
                 if (pwin) updateProgressModal(pwin, null, progress, 'Downloading mod');
             });
 
-            await Modstore.importMod(dlpath);
+            await Promise.race([
+                Modstore.importMod(dlpath, 'donothing', mod.mod, mod.model),
+                new Promise(resolve => setTimeout(resolve, 10000))
+            ]);
 
             fs.unlinkSync(dlpath);
         }
 
-        dialog.showMessageBoxSync({
-            type: 'info',
-            title: 'Restore complete',
-            message: `Backup "${toRestore._sName}" has been restored. ${mods.length} mods were downloaded and imported.`
-        });
+        pwin.close();
 
-        getWindow().show();
-        return { done: true, missingMods: [] };
+        app.relaunch({ args: process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')).concat(isControllerMode ? ['-controller'] : []) });
+        app.exit(0);
+
     });
 
     ipcMain.handle('patchAndRun', async (event, args) => {

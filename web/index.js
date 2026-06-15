@@ -673,12 +673,6 @@ if (!window.electronAPI) {
         });
     }
 
-    // Windows 11 styling specific adjustments
-    var os = await window.electronAPI.invoke('getOS',[]);
-    if (os.platform == 'win32' && os.version.startsWith('Windows 11') && !cmode) {
-        document.getElementsByClassName('winb')[0].style.borderRadius = "8px";
-    }
-
     var loaded = await window.electronAPI.invoke('loadedDeltarune',[]);
 
     if (await window.electronAPI.invoke('fetchSharedVariable',["gb1click"]) === true) {
@@ -759,6 +753,7 @@ function openAudio() {
     // Toggle Shop Ribbon
     if (gbflag && navigator.onLine) {
         document.getElementById('shopRibbon').style.display = 'block';
+        document.getElementById('collectionsRibbon').style.display = 'block';
     }
 
     // Prompt Opt-in for GameBanana Shop functionality

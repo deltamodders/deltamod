@@ -195,7 +195,27 @@ async function handleProtocolLaunch(url) {
             mkdirSync(dirname(filepath), { recursive: true });
 
             try {
-                var archiveData = await fetch(modArchive).then(x => x.bytes());
+                const response = await fetch(modArchive);
+                if (!response.ok || !response.body) throw new Error(`Download failed: ${response.status}`);
+
+                const total = Number(response.headers.get("content-length")) || 0;
+                const reader = response.body.getReader();
+                const chunks = [];
+                let received = 0;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                    received += value.length;
+
+                    if (total > 0) {
+                        const percentage = Math.floor((received / total) * 100);
+                        require('./Utils').getWindow().webContents.executeJavaScript(`window.currentPageStack.onDLP(${percentage})`);
+                    }
+                }
+
+                var archiveData = Buffer.concat(chunks);
             }
             catch (e) {
                 page("main");

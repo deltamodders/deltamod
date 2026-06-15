@@ -1,0 +1,11 @@
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.collection-name-input {
+    width: calc(100% - 2rem);
+    border: 1px solid var(--theme-color);
+}

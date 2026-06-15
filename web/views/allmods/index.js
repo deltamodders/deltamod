@@ -141,7 +141,7 @@ async function createMod(mod, compatible) {
         gbSpan.className = 'calibri';
         gbSpan.style.fontSize = 'smaller';
         gbSpan.style.color = '#888';
-        gbSpan.innerHTML = `${icon('shop', 'small')} ${await k('allmods_throughShop')}`;
+        gbSpan.innerHTML = `<img src="./img/banana-outline.png" width="15" height="15"> ${await k('allmods_throughShop')}`;
         gbSpan.id = `modgb-${mod.uid}`;
         modNameContainer.appendChild(gbSpan);
     }

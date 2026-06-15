@@ -34,6 +34,7 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
 
             var pfp = document.createElement('img');
             pfp.className = 'credits-pfp';
+            pfp.style.borderRadius = '10px';
             pfp.src = credit._sAvatarUrl;
             pcard.appendChild(pfp);
 

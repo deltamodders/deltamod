@@ -1,0 +1,20 @@
+input[type=checkbox] {
+    margin: 0;
+    width: 40px;
+    height: 25px;
+    cursor: pointer;
+    accent-color: var(--theme-color);
+    border: 6px solid white;
+    scale: 1.1;
+}
+
+button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed;
+}
+
+.alignRight {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

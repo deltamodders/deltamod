@@ -4,6 +4,7 @@ const fs = require('fs');
 const axios = require('axios');
 const { getSystemFile } = require('./System');
 const console = require('./Console');
+
 function obtainLogin() {
     return new Promise(async (resolve, reject) => {
         let loginWindow = new BrowserWindow({
@@ -221,7 +222,7 @@ async function getCollections() {
         var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
     }
     catch {
-        return { success: false, message: "User not logged in" };
+        return { success: false, message: "You must be logged in to perform this action" };
     }
 
     var response = await axios.get(`https://gamebanana.com/apiv12/Tool/20575/AccessorCollections`, {
@@ -291,6 +292,33 @@ async function getCollectionMods(collectionId) {
     return allDownloads;
 }
 
+async function deleteCollection(collectionId) {
+    try {
+        var file = getSystemFile('bananapwd', true);
+        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
+    }
+    catch {
+        return { success: false, message: "User not logged in" };
+    }
+
+    var response = await axios.delete(`https://gamebanana.com/apiv12/Collection/${collectionId}`, {
+        headers: {
+            'Cookie': token,
+            'User-Agent': require('electron').app.userAgentFallback,
+            'TE': 'Trailers',
+            'Content-Type': 'application/json'
+        },
+        data: {
+            _idReasonRow: 1,
+            _sNotes: "<p>Deleted by Deltamod on request of user</p>"
+        }
+    }).catch((error) => {
+        return error.response;
+    });
+
+    return { success: response.status == 200, error: response.status == 200 ? null : response.data };
+}
+
 module.exports = {
     obtainLogin,
     getGBUIConf,
@@ -298,9 +326,10 @@ module.exports = {
     likeMod,
     collections: {
         create: createDeltamodBackup,
+        delete: deleteCollection,
         add: addModToBackup,
-        getAll: getCollections,
-        getMods: getCollectionMods
+        list: getCollections,
+        inspect: getCollectionMods
     },
     clearCache
 };

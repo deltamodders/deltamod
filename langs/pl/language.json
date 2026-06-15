@@ -210,6 +210,7 @@
     "options_adv3_title": "Zainstaluj DeltamodCLI",
     "options_adv3_desc": "Instaluje polecenie 'deltamod' w systemie. Wymaga uprawnień administratora.",
     "options_ui_icon_title": "Niestandardowa ikona",
-    "options_ui_icon_desc": "Wybierz niestandardową ikonę dla Deltamod. Zmieni to ikonę interfejsu użytkownika Deltamod."
+    "options_ui_icon_desc": "Wybierz niestandardową ikonę dla Deltamod. Zmieni to ikonę interfejsu użytkownika Deltamod.",
+    "patching_complete": "Patchowanie zakończone!"
     
 }

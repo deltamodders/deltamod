@@ -47,8 +47,7 @@
 
 /* Spinner */
 .rotate {
-    display: inline-block;
-    animation: rotate 2s linear infinite;
+    animation: rotate 1s linear infinite !important;
     user-select: none;
     transform-origin: center;
 }

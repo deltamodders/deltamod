@@ -216,5 +216,6 @@
     "installmanager_invalidname_desc": "Il nome di installazione non è valido. Per favore, scegli un altro nome.",
     "allmods_throughShop": "Installato tramite GameBanana",
     "options_ui_icon_title": "Icona personalizzata del programma",
-    "options_ui_icon_desc": "Scegli un'immagine da usare come icona del programma nell'UI della finestra."
+    "options_ui_icon_desc": "Scegli un'immagine da usare come icona del programma nell'UI della finestra.",
+    "patching_complete": "Patching completato!"
 }

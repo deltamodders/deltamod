@@ -13,8 +13,8 @@ window.currentPageStack.next = function () {
     window.electronAPI.invoke('npsCallback', []);
 }
 
-window.currentPageStack.fp = function () {
-    document.getElementById("patchingTXT").innerHTML = icon('check') + " Patching complete!";
+window.currentPageStack.fp = async function () {
+    document.getElementById("patchingTXT").innerHTML = icon('check') + " " + await k('patching_complete');
     document.getElementById("patchingTXT").classList.add("success");
     document.getElementById("next").style.display = "block";
 }

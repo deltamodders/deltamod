@@ -121,6 +121,7 @@ function killConflictProcesses() {
         const found = [];
         if (procs.includes('gm3p.exe')) found.push('GM3P.exe');
         if (procs.includes('gamemakermodmerger.exe')) found.push('GamemakerModMerger.exe');
+        if (procs.includes('g3mtool.exe')) found.push('G3MTool.exe');
 
         if (found.length > 0) {
             const res = dialog.showMessageBoxSync({
@@ -133,6 +134,7 @@ function killConflictProcesses() {
             if (res === 0) {
                 if (found.includes('GM3P.exe')) execSync('taskkill /IM GM3P.exe /F', { stdio: 'ignore' });
                 if (found.includes('GamemakerModMerger.exe')) execSync('taskkill /IM GamemakerModMerger.exe /F', { stdio: 'ignore' });
+                if (found.includes('G3MTool.exe')) execSync('taskkill /IM G3MTool.exe /F', { stdio: 'ignore' });
                 console.log('Conflict processes terminated.');
             } else if (res === 1) {
                 app.quit();
