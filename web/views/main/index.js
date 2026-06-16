@@ -191,6 +191,8 @@ async function createMod(mod) {
     flexContnainer.style.paddingRight = '10px';
     infoContainer.appendChild(flexContnainer);
 
+    var reducedAuthorStr = mod.author.slice(0,2).join(', ');
+    if (mod.author.length > 2) reducedAuthorStr += ` ${await k('main_andmore', mod.author.length - 2)}`;
     var fontSize = 13;
     let authorSpan = document.createElement('p');
     authorSpan = adaptForIconsA(authorSpan);
@@ -198,7 +200,7 @@ async function createMod(mod) {
     authorSpan.className = 'calibri';
     authorSpan.style.fontSize = fontSize + 'px';
     authorSpan.style.color = '#ffffff';
-    authorSpan.innerHTML = `${icon('attribution', fontSize + 'px')} ${purify(mod.author.join(', '))}`;
+    authorSpan.innerHTML = `${icon('attribution', fontSize + 'px')} ${purify(reducedAuthorStr)}`;
     authorSpan.id = `modauthor-${mod.uid}`;
     flexContnainer.appendChild(authorSpan);
 

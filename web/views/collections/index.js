@@ -1,7 +1,7 @@
 (async() => {
     var table = document.getElementById("collections");
     var collections = await invoke('gamebanana_getCollections');
-    if (collections.success === false && collections.message == 'User not logged in') {
+    if (collections.success === false && collections.message == 'You must be logged in to perform this action') {
         var tr = document.createElement("tr");
         var errortd = document.createElement("td");
         errortd.colSpan = 2;
@@ -9,7 +9,7 @@
         errordiv.style.display = "flex";
         errordiv.style.alignItems = "center";
         errordiv.style.gap = "0.5em";
-        errordiv.innerHTML = icon('account_circle', '1.5em') + "<span>You must be logged in to your GameBanana account to view collections.</span>";
+        errordiv.innerHTML = icon('account_circle', '1.5em') + "<span>" + await k('collections_not_logged_in') + "</span>";
         errortd.appendChild(errordiv);
         tr.appendChild(errortd);
         table.appendChild(tr);
@@ -35,7 +35,7 @@
         var trash = document.createElement("button");
         trash.innerHTML = icon('delete', '1em');
         trash.addEventListener('click', async () => {
-            var htmlresp = await htmlAlert('Delete collection', 'Are you sure you want to delete this collection? This action cannot be undone.', [{
+            var htmlresp = await htmlAlert((await k('delete_collection')), (await k('delete_collection_confirm')), [{
                 text: await k('yes'),
                 resolveWith: 'y'
             }, {
@@ -47,7 +47,10 @@
             }
             var resp = await invoke('gamebanana_deleteCollection', [collection.id]);
             if (!resp.success) {
-                alert(`Failed to delete collection: ${JSON.stringify(resp.error)}`);
+                await htmlAlert(await k('error'), await k('delete_collection_failed', JSON.stringify(resp.error)), [{
+                    text: await k('ok'),
+                    resolveWith: 'ok'
+                }]);
             } else {
                 page('collections');
             }
@@ -71,7 +74,7 @@
         download.addEventListener('click', async () => {
             download.disabled = true;
             var resp = await invoke('gamebanana_downloadAllInCollection', [collection.id]);
-            await htmlAlert('Done', 'Operation completed. Skipped ' + resp.skippedMods.length + ' mods in download process.', [{
+            await htmlAlert(await k('done'), await k('collection_restore_complete'), [{
                 text: await k('ok'),
                 resolveWith: 'ok'
             }]);
@@ -89,7 +92,7 @@
     var nameInputTd = document.createElement("td");
     var nameInput = document.createElement("input");
     nameInput.type = "text";
-    nameInput.placeholder = "New collection name";
+    nameInput.placeholder = await k('collection_new_placeholder');
     nameInputTd.appendChild(nameInput);
     nameInput.classList.add("collection-name-input");
     addTr.appendChild(nameInputTd);

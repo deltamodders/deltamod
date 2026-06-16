@@ -540,7 +540,7 @@ async function page(name) {
         --theme-color-point2: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.2);
     }
     button:not(.sidebar-button), input, select {
-        border: 2px solid rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.2);
+        border: 1px solid rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.5);
     }
     input, progress {
         accent-color: ${theme.color};
@@ -753,6 +753,9 @@ function openAudio() {
     // Toggle Shop Ribbon
     if (gbflag && navigator.onLine) {
         document.getElementById('shopRibbon').style.display = 'block';
+    }
+
+    if ((await window.electronAPI.invoke('validateGamebananaToken'))) {
         document.getElementById('collectionsRibbon').style.display = 'block';
     }
 

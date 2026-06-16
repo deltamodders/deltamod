@@ -10,6 +10,10 @@ window._onClosePage.push(() => {
     delete window.PAGE;
 });
 
+function timeoutPromise(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function getThumbURL(mod) {
     try {
         if (mod._sImageUrl && mod._sImageUrl.length > 0) {
@@ -31,7 +35,7 @@ const observer = new IntersectionObserver((entries) => {
     }
   });
 }, {
-  threshold: 0.1 // triggers when 10% of element is visible
+  threshold: 0.1
 });
 
 observer.observe(element);
@@ -41,8 +45,12 @@ window._onClosePage.push(() => {
 });
 
 function getAllThumbs(mod) {
-    let ar = mod._aPreviewMedia._aImages.map(x => x._sBaseUrl + "/" + x._sFile);
-    console.log(ar);
+    let ar = mod._aPreviewMedia._aImages.map(x => {
+        return {
+            urlA: x._sBaseUrl + "/" + x._sFile,
+            urlB: x._sBaseUrl + "/" + x._sFile100
+        }
+    });
     return ar;
 }
     
@@ -203,21 +211,73 @@ async function renderMods(table, GB_API, filter, gameID) {
                 // Rendering of td0
                 {
                 var div0 = document.createElement('div');
+                div0.style.display = 'flex';
+                div0.style.alignItems = 'center';
+                div0.style.gap = '8px';
                 div0.className = 'modThumbDiv';
                 
                 let thumbs = getAllThumbs(mod);
                 var img = document.createElement('img');
                 img.className = 'modThumbImg';
-                img.src = (thumbs[0]);
+                img.src = (thumbs[0].urlA);
                 let i = 0;
-                img.style.width = '115px';
+                img.style.width = '130px';
                 img.style.margin = '4px';
                 img.style.aspectRatio = '16 / 9';
                 img.style.borderRadius = '4px';
                 img.style.border = '2px solid var(--theme-color)';
                 img.style.height = 'auto';
+                img.style.cursor = 'zoom-in';
+                img.onclick = async () => {
+                    img.style.cursor = 'wait';
+                    await invoke('openImageViewer', [img.src]);
+                    img.style.cursor = 'zoom-in';
+                };
                 img.style.objectFit = 'cover';
+                img.style.transition = 'opacity 0.3s ease-in-out';
                 img.style.objectPosition = 'center';
+
+                var gridSmallImages = document.createElement('div');
+                gridSmallImages.style.display = 'grid';
+                gridSmallImages.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                gridSmallImages.style.gridTemplateRows = 'repeat(3, auto)';
+                gridSmallImages.style.gap = '4px';
+                gridSmallImages.style.marginTop = '4px';
+                gridSmallImages.style.width = '100%';
+
+                thumbs.slice(0, 9).forEach((thumb, index) => {
+                    var smallImg = document.createElement('img');
+                    smallImg.src = thumb.urlB;
+                    smallImg.style.width = '30px';
+                    smallImg.style.aspectRatio = '16 / 9';
+                    smallImg.style.objectFit = 'cover';
+                    smallImg.style.objectPosition = 'center';
+                    smallImg.style.borderRadius = '4px';
+                    smallImg.style.border = '1px solid var(--theme-color)';
+                    smallImg.onclick = async () => {
+                        img.style.opacity = '0';
+                        await timeoutPromise(300);
+                        img.src = thumb.urlA;
+                        img.onload = () => {
+                            img.style.opacity = '1';
+                            img.onload = null; // Remove the onload handler after it has been called
+                        }
+                    }
+                    smallImg.style.cursor = 'pointer';
+                    gridSmallImages.appendChild(smallImg);
+                });
+
+                var emptySpaces = 9 - thumbs.slice(0, 9).length;
+                for (let j = 0; j < emptySpaces; j++) {
+                    var emptyDiv = document.createElement('div');
+                    emptyDiv.style.width = '30px';
+                    emptyDiv.style.aspectRatio = '16 / 9';
+                    emptyDiv.style.borderRadius = '4px';
+                    emptyDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                    gridSmallImages.appendChild(emptyDiv);
+                }
+
+                div0.appendChild(gridSmallImages);
                 div0.appendChild(img);
 
                 var div1 = document.createElement('div');
@@ -233,6 +293,10 @@ async function renderMods(table, GB_API, filter, gameID) {
                 biggerSpan.style.fontSize = '1.2em';
                 biggerSpan.style.marginBottom = '0px';
                 biggerSpan.innerText = mod._sName;
+                biggerSpan.style.cursor = 'pointer';
+                biggerSpan.onclick = () => {
+                    window.open(mod._sProfileUrl, '_blank');
+                };
                 div1.appendChild(biggerSpan);
 
                 var otherInfoSpan = document.createElement('div');
@@ -252,7 +316,7 @@ async function renderMods(table, GB_API, filter, gameID) {
                 var authorSpan = document.createElement('span');
                 authorSpan.className = 'modAuthorSpan iptspan';
                 authorSpan.style.marginRight = '12px';
-                authorSpan.innerHTML = `${icon('attribution','0.9em')} ${nameauthor}`;
+                authorSpan.innerHTML = `<img src="${mod._aSubmitter._sAvatarUrl}" alt="${nameauthor}" class="modAvatarImg"> ${nameauthor}`;
                 authorSpan.onclick = () => {
                     window.open(mod._aSubmitter._sProfileUrl, '_blank');
                 };
@@ -277,7 +341,7 @@ async function renderMods(table, GB_API, filter, gameID) {
                     featSpan.style.display = 'inline-block';
                     for (let pd of periodsDesc) {
                     if (featuredIDs.find(x => x.id === mod._idRow && x.period === pd[0])) {
-                        featSpan.innerHTML = `${icon((pd[0] == 'alltime' ? "award_star" : "editor_choice"),'0.9em')} ${pd[1]}`;
+                        featSpan.innerHTML = `${icon((pd[0] == 'alltime' ? "award_star" : "editor_choice"),'1.1em')} ${pd[1]}`;
                         break;
                     }
                     }
@@ -315,7 +379,7 @@ async function renderMods(table, GB_API, filter, gameID) {
                     }
                 })();
 
-                desc.innerHTML = icon('acute', '0.9em') + ' ' + relativeDate;
+                desc.innerHTML = icon('acute', '1.1em') + ' ' + relativeDate;
                 otherInfoSpan.appendChild(desc);
                 }
 
@@ -372,14 +436,6 @@ async function renderMods(table, GB_API, filter, gameID) {
                         dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName);
                     };
 
-                    var vwBtn = document.createElement('button');
-                    vwBtn.innerHTML = icon('open_in_new', '0.9em') + '';
-                    vwBtn.style.marginRight = '8px';
-                    vwBtn.className = 'serietast';
-                    vwBtn.onclick = () => {
-                        window.open(mod._sProfileUrl, '_blank');
-                    }
-                    td1.appendChild(vwBtn);
                     td1.appendChild(dlBtn);
 
                     var commentBtn = document.createElement('button');

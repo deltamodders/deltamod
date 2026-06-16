@@ -41,7 +41,7 @@
     "allmods_noID": "Nie określono ID.",
     "allmods_compatible": "Kompatybilne z bieżącą wersją",
     "allmods_incompatible": "Niekompatybilne: {0}",
-    "allmods_throughShop": "Zainstalowane przez Sklep Modów",
+    "allmods_throughShop": "Zainstalowane przez GameBanana",
     "allmods_nomods": "Brak zainstalowanych modów.",
     "allmods_nomodsforfilter": "Brak modów, które pasują do wybranego filtra.",
     "modFail_bannerClick": "Kliknij baner, aby uzyskać więcej informacji",
@@ -211,6 +211,18 @@
     "options_adv3_desc": "Instaluje polecenie 'deltamod' w systemie. Wymaga uprawnień administratora.",
     "options_ui_icon_title": "Niestandardowa ikona",
     "options_ui_icon_desc": "Wybierz niestandardową ikonę dla Deltamod. Zmieni to ikonę interfejsu użytkownika Deltamod.",
-    "patching_complete": "Patchowanie zakończone!"
-    
+    "patching_complete": "Patchowanie zakończone!",
+    "collection": "Kolekcja",
+    "collections": "Kolekcje",
+    "collections_not_logged_in": "Musisz być zalogowany na swoje konto GameBanana, aby wyświetlać kolekcje.",
+    "delete_collection": "Usuń kolekcję",
+    "delete_collection_confirm": "Czy na pewno chcesz usunąć tę kolekcję? Tej operacji nie można cofnąć.",
+    "delete_collection_failed": "Nie udało się usunąć kolekcji: {0}",
+    "collection_restore_complete": "Przywracanie kolekcji zakończone! Pominięto {0} modów podczas procesu pobierania.",
+    "collection_new_placeholder": "Nazwa nowej kolekcji",
+    "export": "Eksportuj",
+    "export_question": "Co wyeksportować?",
+    "selected_mods_imported": "Wybrane mody zostały zaimportowane do kolekcji.",
+    "collection_export_choose_title": "Wybierz mody do wyeksportowania",
+    "main_andmore": "i {0} innych"
 }

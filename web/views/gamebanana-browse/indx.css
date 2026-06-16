@@ -39,10 +39,23 @@
     gap: 6px;
 }
 
+.scrollBottomDetector {
+    text-align: center;
+    margin: 20px 0;
+}
+
 #gbPic {
     cursor: pointer;
     border-radius: 10px;
     border: 1px solid var(--theme-color);
+}
+
+.modAvatarImg {
+    width: 1.1em;
+    height: 1.1em;
+    border-radius: 50%;
+    border: 1px solid var(--theme-color);
+    background-color: var(--theme-color);
 }
 
 .tspandiv > button {

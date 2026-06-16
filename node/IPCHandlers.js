@@ -390,6 +390,35 @@ module.exports = function registerIPCHandlers(context) {
         const uiconf = await getGBUIConf();
         if (uiconf._idMemberRow > 0) return await require('./GameBananaWindow.js').leaveComment(args[0], args[1], args[2]);
     });
+    ipcMain.handle('openImageViewer', async (event, args) => {
+        return new Promise(resolve => {
+            const temp = path.join(app.getPath('temp'), `gb_image_${Date.now()}${path.extname(args[0])}`);
+            const file = fs.createWriteStream(temp);
+            axios.get(args[0], { responseType: 'stream' }).then(response => {
+                response.data.pipe(file);
+            }).catch(() => {
+                dialog.showMessageBoxSync({
+                    type: 'error',
+                    title: 'Failed to load image',
+                    message: 'The image could not be loaded. It may have been removed from GameBanana or there may be a network issue.'
+                });
+                resolve(false);
+            });
+            file.on('finish', () => {
+                file.close();
+                if (!temp.endsWith('.png') && !temp.endsWith('.jpg') && !temp.endsWith('.jpeg') && !temp.endsWith('.webp') && !temp.endsWith('.gif')) {
+                    dialog.showMessageBoxSync({
+                        type: 'error',
+                        title: 'Blocked file type',
+                        message: 'The file type of this image is not supported for viewing and has been blocked for your safety.'
+                    });
+                    resolve(false);
+                }
+                shell.openExternal(temp);
+                resolve(true);
+            });
+        });
+    });
     ipcMain.handle('gbLikeMod', async (event, args) => {
         const uiconf = await getGBUIConf();
         if (uiconf._idMemberRow > 0) return await require('./GameBananaWindow.js').likeMod(args[0], args[1]);

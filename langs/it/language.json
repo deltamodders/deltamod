@@ -43,7 +43,7 @@
     "allmods_noID": "Nessun ID specificato.",
     "allmods_compatible": "Compatibile con la versione corrente",
     "allmods_incompatible": "Incompatibile: {0}",
-    "allmods_throughShop": "Installata tramite il Mod Shop",
+    "allmods_throughShop": "Installata tramite GameBanana",
     "allmods_nomods": "Nessuna mod installata.",
     "allmods_nomodsforfilter": "Nessuna mod corrisponde al filtro selezionato.",
     "modFail_bannerClick": "Clicca su questo banner per vedere più dettagli.",
@@ -217,5 +217,18 @@
     "allmods_throughShop": "Installato tramite GameBanana",
     "options_ui_icon_title": "Icona personalizzata del programma",
     "options_ui_icon_desc": "Scegli un'immagine da usare come icona del programma nell'UI della finestra.",
-    "patching_complete": "Patching completato!"
+    "patching_complete": "Patching completato!",
+    "collection": "Collezione",
+     "collections": "Collezioni",
+     "collections_not_logged_in": "Devi essere connesso al tuo account GameBanana per visualizzare le collezioni.",
+     "delete_collection": "Elimina collezione",
+     "delete_collection_confirm": "Sei sicuro di voler eliminare questa collezione? Questa azione è irreversibile.",
+     "delete_collection_failed": "Impossibile eliminare la collezione: {0}",
+     "collection_restore_complete": "Ripristino della collezione completato! Saltati {0} mod nel processo di download.",
+    "collection_new_placeholder": "Nome della nuova collezione",
+    "export": "Esporta",
+    "export_question": "Da esportare?",
+    "selected_mods_imported": "Le mod selezionate sono state importate nella collezione.",
+    "collection_export_choose_title": "Scegli quali mod esportare",
+    "main_andmore": "e altri {0}"
 }

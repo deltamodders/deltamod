@@ -218,5 +218,20 @@
      /* end of third batch */
      "options_ui_icon_title": "Custom icon",
      "options_ui_icon_desc": "Select a custom icon for Deltamod. This will change the Deltamod UI's icon.",
-     "patching_complete": "Patching complete!"
+     "patching_complete": "Patching complete!",
+     /* fourth batch */
+     "collection": "Collection",
+     "collections": "Collections",
+     "collections_not_logged_in": "You must be logged in to your GameBanana account to view collections.",
+     "delete_collection": "Delete collection",
+     "delete_collection_confirm": "Are you sure you want to delete this collection? This action is irreversible.",
+     "delete_collection_failed": "Failed to delete collection: {0}",
+     "collection_restore_complete": "Collection restore complete! Skipped {0} mods in download process.",
+    "collection_new_placeholder": "New collection name",
+    "export": "Export",
+    "export_question": "Export?",
+    "selected_mods_imported": "The selected mods have been imported to the collection.",
+    "collection_export_choose_title": "Choose which mods to export",
+    "main_andmore": "and {0} more"
+     /* end of fourth batch */
 }
