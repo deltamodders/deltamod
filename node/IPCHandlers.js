@@ -11,10 +11,8 @@ var elevate = require('windows-elevate');
 const _7z = require('7zip-min');
 // Local modules
 const KeyValue = require('./KeyValue');
-const Language = require('./Language');
 const System = require('./System');
 const { getSystemFile, getSystemFolder, getPacketDatabase, getSystemFolderOfIndex } = require('./System');
-const { page, getSharedVar, properRelaunch, getSteamDirectory, getFileVersion, downloadFile, timeoutPromise } = require('./Utils');
 const Modstore = require('./Modstore');
 const CMode = require('./ControllerMode');
 const Updates = require('./Updates');
@@ -241,17 +239,6 @@ module.exports = function registerIPCHandlers(context) {
         app.relaunch({ args: [...existingArgs, '--developer'] });
         app.exit(0);
     });
-
-    // Language Handlers
-    ipcMain.handle('obtainLangs', () => Language.getAvailableLanguages());
-    ipcMain.handle('setLang', (event, args) => {
-        fs.writeFileSync(getSystemFile('language', true), args[0], 'utf8');
-        Language.loadLanguage(args[0]);
-        return true;
-    });
-    ipcMain.handle('getLang', () => fs.existsSync(getSystemFile('language', true)) ? fs.readFileSync(getSystemFile('language', true), 'utf8') : 'en');
-    ipcMain.handle('obtainLangKey', (event, args) => Language.loadString(args[0]) || `$${args[0]}`);
-    ipcMain.handle('obtainLangKeyAdv', (event, args) => Language.loadString(args[0], ...args.slice(1)) || `$${args[0]} ${args.slice(1).join(' + ')}`);
 
     // Themes
     ipcMain.handle('chooseTheme', async () => {
@@ -814,13 +801,6 @@ module.exports = function registerIPCHandlers(context) {
         const fromIM = args[3];
         let selectedGame = args[4];
         let copyToDMod = args[5] == 'copy';
-
-        let i = 0;
-        fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
-            const idx = file.split('-')[1];
-            if (idx !== 'unique') i = Math.max(i, parseInt(idx, 10));
-        });
-        i = (isFromLocate && !fromIM) ? parseInt(System.getCurrentSystemIndex()) : i + 1;
 
         let sourcePath = specifiedLocatePath;
         let chosenEdition;

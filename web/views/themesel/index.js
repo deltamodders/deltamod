@@ -54,7 +54,7 @@
         var ogTag = document.createElement('span');
         ogTag.style.display = 'block';
         ogTag.style.marginTop = '0.5em';
-        ogTag.innerHTML = icon('where_to_vote', '0.8em') + ` ${theme.builtIn ? await k('themesel_builtin') : await k('themesel_custom')}`;
+        ogTag.innerHTML = icon('where_to_vote', '0.8em') + ` ${theme.builtIn ? "Built-in theme" : "Custom theme"}`;
         ogTag.classList.add('calibri');
         ogTag.style.fontSize = '0.8em';
         td1.appendChild(ogTag);

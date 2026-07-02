@@ -1,5 +1,5 @@
 <div style="overflow: hidden;">
-    <h1 style="margin-bottom: 0;">$$allModsTitle$$</h1>
+    <h1 style="margin-bottom: 0;">All installed mods</h1>
     <select name="gamesShow" id="gamesShow" style="margin-top: 5px; margin-bottom: 10px;">
         <option value="all">All</option>
     </select>
@@ -11,13 +11,13 @@
             </colgroup>
             <thead style="position: sticky; top: -2px;">
                 <tr>
-                    <th>$$mod$$</th>
-                    <th>$$actions$$</th>
+                    <th>Mod</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <div style="display: none;" class="modlist-error" id="error-banner">
-                <h2>$$modFail_bannerTitle$$</h2>
-                <span class="calibri">$$modFail_bannerClick$$</span>
+                <h2>{0} mod(s) failed to load</h2>
+                <span class="calibri">Click on this banner to view more details.</span>
             </div>
             <tbody id="modlist">
             </tbody>
@@ -25,8 +25,8 @@
     </div>
 
     <dialog class="error-list-dialog" id="error-list-dialog">
-            <h2>$$modFail_dialogTitle$$</h2>
-            <span class="calibri">$$modFail_dialogSubtitle$$</span>
+            <h2>Some mods failed to load</h2>
+            <span class="calibri">Some mods didn't load correctly. Here are the details:</span>
             <div class="error-list-div" id="error-list-div">
 
             </div>
@@ -39,4 +39,4 @@
 JSL
 AUDIO[mainTheme.mp3]
 STYLESHEET[../main/main]
-TITLEKEY[allModsTitle]
+TITLE[All installed mods]

@@ -112,7 +112,7 @@ async function createMod(mod) {
     imageContainer.style.marginLeft = '2px';
 
     tippy(imageContainer, {
-        content: await k('main_rightclick'),
+        content: "Right click to view in library",
         placement: 'right',
         delay: [100, 0],
         onMount(instance) {
@@ -137,7 +137,7 @@ async function createMod(mod) {
     imageContainer.appendChild(img);
 
     imageContainer.oncontextmenu = async e => {
-        htmlAlert(mod.name,await k("main_rightclick_confirm"),[{text:await k("yes"),resolveWith:'accept'},{text:await k("no"),rejectWith:'close'}]).then(result => {
+        htmlAlert(mod.name,"Do you wish to view this mod in the Library?",[{text:"Yes",resolveWith:'accept'},{text:"No",rejectWith:'close'}]).then(result => {
             if (result === 'accept') {
                 window._pageArguments = { highlightMod: mod.uid };
                 page('allmods');
@@ -192,7 +192,7 @@ async function createMod(mod) {
     infoContainer.appendChild(flexContnainer);
 
     var reducedAuthorStr = mod.author.slice(0,2).join(', ');
-    if (mod.author.length > 2) reducedAuthorStr += ` ${await k('main_andmore', mod.author.length - 2)}`;
+    if (mod.author.length > 2) reducedAuthorStr += ` and ${mod.author.length - 2} more`;
     var fontSize = 13;
     let authorSpan = document.createElement('p');
     authorSpan = adaptForIconsA(authorSpan);
@@ -210,7 +210,7 @@ async function createMod(mod) {
     versionSpan.className = 'calibri';
     versionSpan.style.fontSize = fontSize + 'px';
     versionSpan.style.color = '#ffffff';
-    versionSpan.innerHTML = `${icon('change_history', fontSize + 'px')} ${(mod.version ? mod.version : await k('unknown'))}`;
+    versionSpan.innerHTML = `${icon('change_history', fontSize + 'px')} ${(mod.version ? mod.version : "Unknown")}`;
     versionSpan.id = `modsize-${mod.uid}`;
     flexContnainer.appendChild(versionSpan);
 
@@ -224,7 +224,7 @@ async function createMod(mod) {
         mergeSpan.className = 'calibri';
         mergeSpan.style.fontSize = fontSize + 'px';
         mergeSpan.style.color = '#ffffff';
-        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} ${await k('main_incompatiblemerge')}`;
+        mergeSpan.innerHTML = `${icon('warning', fontSize + 'px')} ${"This mod is incompatible with multiple mod support"}`;
         mergeSpan.id = `modmerge-${mod.uid}`;
         infoContainer.appendChild(mergeSpan);
     }
@@ -318,7 +318,7 @@ async function createErroringMods(errors) {
         selectSpan.className = 'calibri';
         selectSpan.style.marginTop = '18px';
         selectSpan.style.display = 'block';
-        selectSpan.innerText = await k('modFail_howtoproceed');
+        selectSpan.innerText = "How do you want to proceed?";
         
 
         const actionRow = document.createElement("div");
@@ -326,12 +326,12 @@ async function createErroringMods(errors) {
         {
             // Action Row
             const exploreBtn = document.createElement("button");
-            exploreBtn.innerText = await k("open_mod_folder");
+            exploreBtn.innerText = "Open mod folder";
             exploreBtn.onclick = () => window.electronAPI.invoke("openModFolder", [err.mod]);
             actionRow.appendChild(exploreBtn);
 
             const deleteBtn = document.createElement("button");
-            deleteBtn.innerText = await k("delete_mod");
+            deleteBtn.innerText = "Delete mod";
             deleteBtn.onclick = () => window.electronAPI.invoke("removeMod", [err.mod]);
             actionRow.appendChild(deleteBtn);
         }
@@ -375,9 +375,9 @@ function loadInst(index) {
             td.style.fontWeight = 'bold';
             td.style.backgroundColor = '#222';
             td.style.color = '#fff';
-            td.innerText = await k('main_authorsortsub', ((x.author[0] || await k('unknown'))));
+            td.innerText = `Mods by ${x.author[0] || "Unknown"}`;
             tr.appendChild(td);
-            addedAuthors.push(x.author[0] || await k('unknown'));
+            addedAuthors.push(x.author[0] || "Unknown");
             document.getElementById('modlist').appendChild(tr);
         }
         await createMod(x);
@@ -418,7 +418,7 @@ function loadInst(index) {
             rew();
             createErroringMods(errors);
         };
-        errorBanner.children[0].innerText = await k('modFail_bannerTitle', errors.length);
+        errorBanner.children[0].innerText = `${errors.length} mod(s) failed to load`;
         errorBanner.style.display = "inherit";
     } else errorBanner.style.display = "none";
 
@@ -426,13 +426,13 @@ function loadInst(index) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 3;
-        td.innerHTML = await k('main_nocompatiblemods') + (modList.filter(x => x.isIncompatible).length != 0 ? '<br><small class="calibri" style="color: #888;">' + await k('main_incompatiblemodsfound', modList.filter(x => x.isIncompatible).length) + '</small>' : '');
+        td.innerHTML = "No compatible mods were found." + (modList.filter(x => x.isIncompatible).length != 0 ? `<br><small class="calibri" style="color: #888;">${modList.filter(x => x.isIncompatible).length} incompatible mod(s) were found.</small>` : '');
         td.style.paddingLeft = '10px';
         tr.appendChild(td);
         if ((await window.electronAPI.invoke('howManyMods', [])) == 0) {
             let small = document.createElement('small');
             var hasShop = await window.electronAPI.invoke('getUniqueFlag', ['SHOP']);
-            small.innerHTML = hasShop ? await k('main_wheremods_shop') : await k('main_wheremods_noshop');
+            small.innerHTML = hasShop ? "Mods can be downloaded from the GameBanana website, the <a href=\"javascript:page('gamebanana-browse')\">Mod Shop</a>, or manually via the Import button." : "Mods can be downloaded from the GameBanana website or manually via the Import button.";
             small.style.color = '#888';
             td.appendChild(document.createElement('br'));
             td.appendChild(small);
@@ -458,9 +458,9 @@ async function patchAndRun() {
         if (!goOn) break;
         if (noMergeMods.map(x => x.uid).includes(modId) && selectedMods.length > 1) {
             await htmlAlert(
-                await k('main_incompatiblesetting'),
-                await k('main_incompatiblemodTxt', noMergeMods.find(x => x.uid === modId).name),
-                [{ text: await k('ok'), resolveWith: 'ok' }],
+                "Incompatible setting detected",
+                `${noMergeMods.find(x => x.uid === modId).name} is not compatible with multiple mod support, but you have multiple mods selected. Please deselect other mods or this mod to continue.`,
+                [{ text: "Ok", resolveWith: 'ok' }],
                 'join'
             );
             goOn = false;

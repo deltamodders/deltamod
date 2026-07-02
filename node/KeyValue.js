@@ -110,58 +110,6 @@ function setKVS(name, value) {
     kvsFlush();
 }
 
-function upgradeStores() {
-    try {
-        var oldStorePath = app.getPath('userData');
-
-        console.log('Checking for old stores to upgrade in ' + oldStorePath);
-
-        fs.readdirSync(oldStorePath).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
-            if (file.endsWith('unique')) return;
-
-            var indx = file.split('-')[1];
-            console.log('Checking install index ' + indx);
-
-            // upgrade edition flag to gamePid
-            var fff = readKVSOfIndex('deltaruneEdition', indx, "none");
-            console.log('Found edition ' + fff + ' in index ' + indx);
-            if (fff != "rem") {
-                console.log('Upgrading index ' + indx);
-                var pid = "toby.deltarune.demo";
-                if (readKVSOfIndex('deltaruneEdition', indx, "n") == "full") {
-                    pid = "toby.deltarune";
-                }
-                setKVSOfIndex('gamePid', pid, indx);
-                setKVSOfIndex('deltaruneEdition', "rem", indx);
-                console.log('Upgraded index ' + indx);
-            }
-
-            // upgrade deltaruneInstall path to store
-            var gamePath = readKVSOfIndex('gamePath', indx, "none");
-            if (gamePath == "none") {
-                setKVSOfIndex('gamePath', path.join(getSystemFolderOfIndex('deltaruneInstall', indx)), indx);
-            }
-
-            // upgrade toby.deltarune.demo -> toby.deltarune.demolts if needed
-            var pid = readKVSOfIndex('gamePid', indx, "none");
-            var doneCheck = readKVSOfIndex('drDemoCheck', indx, "none");
-            if (pid == "toby.deltarune.demo" && doneCheck != "done") {
-                var gamePath = readKVSOfIndex('gamePath', indx, "none");
-                var checkpath = path.join(gamePath, "chapter1_windows");
-                if (fs.existsSync(checkpath) && fs.statSync(checkpath).isDirectory()) {
-                    setKVSOfIndex('gamePid', "toby.deltarune.demolts", indx);
-                    console.log('Upgraded gamePid for index ' + indx);
-                }
-
-                setKVSOfIndex('drDemoCheck', "done", indx);
-            }
-        });
-    }
-    catch (e) {
-        console.log('No old stores found to upgrade: ' + e);
-    }
-}
-
 function loadUniqueDefaults() {
     var defaults = {
         'setup': true,
@@ -207,7 +155,6 @@ module.exports = {
     readUniqueFlag,
     kvsWipe,
     setKVS,
-    upgradeStores,
     setKVSOfIndex,
     readKVSOfIndex,
     readKVS,

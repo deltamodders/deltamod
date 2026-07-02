@@ -5,7 +5,6 @@ const os = require('os');
 const console = require('./Console');
 const _7z = require('7zip-min');
 const { randomString, page, shopClang } = require('./Utils');
-const { findModRoot } = require('./GamePatching');
 const crypto = require('crypto');
 const { dialog } = require('electron');
 const {Downloader} = require("nodejs-file-downloader");
@@ -47,8 +46,6 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
         // I (techy) agree with mc
         // fs.unlinkSync (filePath); // delete the zip file after extraction, I (Zork) commented this out temporarily to keep the zip file for debugging.
 
-        // Normalize: pull contents out of wrapper folder so mod is flat
-
         // Legacy support: rename _deltamodInfo.json to meta.json if needed
         if (fs.existsSync(path.join(modPath, '_deltamodInfo.json'))) {
             fs.copyFileSync(path.join(modPath, '_deltamodInfo.json'), path.join(modPath, 'meta.json'));
@@ -57,52 +54,6 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
         if (fs.existsSync(path.join(modPath, '_icon.png'))) {
             fs.copyFileSync(path.join(modPath, '_icon.png'), path.join(modPath, 'icon.png'));
             fs.unlinkSync(path.join(modPath, '_icon.png'));
-        }
-        const realRoot = findModRoot(modPath);
-        if (realRoot && path.resolve(realRoot) !== path.resolve(modPath)) {
-            // flatten the mod by moving all files up to the root and deleting the wrapper folder
-            console.log("Flattening mod structure by moving files from", realRoot, "to", modPath);
-            const items = fs.readdirSync(realRoot);
-            for (const item of items) {
-                const src = path.join(realRoot, item);
-                const dest = path.join(modPath, item);
-                fs.renameSync(src, dest);
-            }
-            // delete the wrapper folder if it's not the same as the modPath
-            if (path.resolve(realRoot) !== path.resolve(modPath)) {
-                fs.rmSync(realRoot, { recursive: true, force: true });
-            }
-        }
-
-        // [Zork's PATCH]: G3M mod format bridge — generate meta.json + __deltaID.json from mod_config.json
-        const g3mConfigPath = path.join(modPath, 'mod_config.json');
-        if (fs.existsSync(g3mConfigPath)) {
-            try {
-                const g3m = JSON.parse(fs.readFileSync(g3mConfigPath, 'utf8'));
-                if (!fs.existsSync(path.join(modPath, 'meta.json'))) {
-                    const meta = {
-                        metadata: {
-                            name:        g3m.name        || g3m.id  || 'Unknown G3M Mod',
-                            description: g3m.description || '',
-                            version:     g3m.version     || '1.0',
-                            author:      g3m.author       || 'Unknown',
-                            game:        g3m.game         || 'toby.deltarune',
-                            packageID:   '',
-                        },
-                        source: 'g3m'
-                    };
-                    fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(meta, null, 2), 'utf8');
-                    console.log('G3M bridge: wrote meta.json for', meta.metadata.name);
-                }
-                if (!fs.existsSync(path.join(modPath, '__deltaID.json'))) {
-                    const uniqueId = 'g3m-' + (g3m.id || require('crypto').randomBytes(8).toString('hex'));
-                    fs.writeFileSync(path.join(modPath, '__deltaID.json'), JSON.stringify({ uniqueId }, null, 2), 'utf8');
-                    console.log('G3M bridge: wrote __deltaID.json, uniqueId:', uniqueId);
-                }
-            } catch (e) {
-                console.error('G3M bridge: failed to generate metadata:', e.message);
-                // Non-fatal — manifest check below will catch it if truly broken
-            }
         }
 
         // Check manifest anywhere in the tree (now usually at root after flatten)
@@ -331,7 +282,8 @@ function modList() {
             }
             const pid = meta.packageID;
 
-            if (require('./KeyValue').readUniqueFlag('HASHCHECKS')) {
+            // enforced wherever
+            if (true) {
                 modInfo.neededFiles?.forEach(file => {
                     try {
                         var fileContents = (path.join(system.getSystemFolder('deltaruneInstall'), file.file));

@@ -21,7 +21,7 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
         restartNote.style.display = 'block';
         restartNote.style.color = '#888';
         restartNote.style.fontSize = 'x-small';
-        restartNote.innerText = await k('options_requiresrestart');
+        restartNote.innerText = "Requires a Deltamod restart to take effect.";
         tdLabel.appendChild(restartNote);
     }
 
@@ -124,7 +124,7 @@ window.currentPageStack.cat = async function(cat) {
     document.getElementById('b_inst').classList.remove('selected');
     document.getElementById('b_adv').classList.remove('selected');
     document.getElementById('b_gb').classList.remove('selected');
-    document.getElementById('b_lang').classList.remove('selected');
+    
     try {
         document.getElementById('b_dev').classList.remove('selected');
     }
@@ -132,6 +132,9 @@ window.currentPageStack.cat = async function(cat) {
         console.log('Dev button not found, skipping.');
     }
 
+    if (!document.getElementById('b_' + cat)) {
+        cat = 'gen';
+    }
     document.getElementById('b_' + cat).classList.add('selected');
     document.querySelectorAll('[id^="b_"]').forEach(btn => {
         if (btn.id != 'b_' + cat) {
@@ -143,18 +146,17 @@ window.currentPageStack.cat = async function(cat) {
     });
     switch (cat) {
         case 'gen':            
-            await addButton(await k('options_gen0_title'), await k('options_gen0_desc'), async () => {
+            await addButton("Open mod folder", "Open the folder where your mods are stored.", async () => {
                 await window.electronAPI.invoke('openSysFolder', ['mods']);
-            }, await k('open'));
-            await addButton(await k('options_gen1_title'), await k('options_gen1_desc'), async () => {
+            }, "Open");
+            await addButton("Delete all data", "Deletes all Deltamod data, including installations, mods, and options.", async () => {
                 page('deleteall');
-            }, await k('delete'), true, '', 'red');
-            await addCheckboxOption(await k('options_gen2_title'), await k('options_gen2_desc'), 'HASHCHECKS');
-            await addCheckboxOption(await k('options_gen3_title'), await k('options_gen3_desc'), 'CONTROLLER');
+            }, "Delete", true, '', 'red');
+            await addCheckboxOption("Prompt controller mode when available", "When enabled, you will be asked to activate Controller Mode when a compatible controller is attached. Currently only compatible with DualSense.", 'CONTROLLER');
             break;
         case 'ui':
-            await addCheckboxOption(await k('options_ui0_title'), "", 'SHOP', true);
-            await addCheckboxOption(await k('options_ui1_title'), "", 'audio', false, (enabled) => {
+            await addCheckboxOption("Enable Mod Shop", "", 'SHOP', true);
+            await addCheckboxOption("Enable music in menus", "", 'audio', false, (enabled) => {
                 if (enabled) {
                     var a = new Audio();
                     a.src = 'audio/orch1.mp3';
@@ -166,7 +168,7 @@ window.currentPageStack.cat = async function(cat) {
                     audio.pause();
                 }
             });
-            await addCheckboxOption(await k('options_ui2_title'), "", 'sfx', false, (enabled) => {
+            await addCheckboxOption("Enable SFX in menus", "", 'sfx', false, (enabled) => {
                 if (enabled) {
                     var a = new Audio();
                     a.src = 'audio/orch1.mp3';
@@ -175,65 +177,65 @@ window.currentPageStack.cat = async function(cat) {
                 }
             });
 
-            await addButton(await k('options_ui_theme_title'), await k('options_ui_theme_desc'), async () => {
+            await addButton("Select a theme", "Opens the theme selection menu.", async () => {
                 page('themesel');
-            }, await k('open'));
+            }, "Open");
 
             break;
         case 'inst':
             var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
 
-            await addButton(await k('options_inst0_title'), await k('options_inst0_desc'), async () => {
+            await addButton("Disconnect Steam from Deltamod", "Disconnects Steam from the current install and will delete the files for Steam. You'll have to redownload the game from Steam, but the current install will remain on Deltamod.", async () => {
                 await window.electronAPI.invoke('removeSteamIntegration', []);
-            }, await k('disconnect'), isSteam, await k('options_inst0_onlysteam'));
+            }, "Disconnect", isSteam, "Only available for games imported from Steam.");
 
-            await addButton(await k('options_inst1_title'), await k('options_inst1_desc'), async () => {
+            await addButton("Open the Install Manager", "Opens the install manager menu, which allows you to delete/create installations and create shortcuts for them.", async () => {
                 page('installmanager');
-            }, await k('open'));
+            }, "Open");
 
             break;
         case 'adv':
-            await addRowHeader(icon('warning', '20px') + ' ' + await k('options_adv0_warn'));
+            await addRowHeader(icon('warning', '20px') + ' ' + "Please only change these settings if you know what they do.");
 
-            await addButton(await k('options_adv0_title'), await k('options_adv0_desc'), async () => {
+            await addButton("Change patcher", "Allows you to change your patching tool of choice.", async () => {
                 await window.electronAPI.invoke('importPatcher', []);
-            }, await k('choose'));
+            }, "Choose");
 
-            await addButton(await k('options_adv1_title'), await k('options_adv1_desc'), async () => {
+            await addButton("Reboot in Developer Mode", "Reboots in developer mode, a mode which allows you to use the DevTools.", async () => {
                 var goOn = await htmlAlert(
                         'Warning', 
-                        await k('options_adv1_warning'), 
-                        [{text:await k('yes'),resolveWith:'ok'}, {text:await k('no'),rejectWith:'cancel'}]
+                        "Warning: this is only for users who know what they're doing. Are you sure you want to reboot in developer mode?", 
+                        [{text:"Yes",resolveWith:'ok'}, {text:"No",rejectWith:'cancel'}]
                     );
                 await window.electronAPI.invoke('rebootDev', [])
-            }, await k('open'), !await window.electronAPI.invoke('isDevMode', []), await k('options_adv1_alreadydev'));
+            }, "Open", !await window.electronAPI.invoke('isDevMode', []), "You are already in developer mode.");
 
-            await addButton(await k('options_adv2_title'), await k('options_adv2_desc'), async () => {
+            await addButton("Precalculate game hashes", "If you are using advanced mod checks, doing this operation may save you time when opening Deltamod, but it can be pretty lengthy.", async () => {
                 await window.electronAPI.invoke('precalcGameHashes', []);
-                await htmlAlert(await k('done'),await k('operation_successful'),[{text: await k('ok'), resolveWith:''}]);
-            }, await k('open'));
+                await htmlAlert("Done","Operation successful!",[{text: "Ok", resolveWith:''}]);
+            }, "Open");
 
-            await addButton(await k('options_adv3_title'), await k('options_adv3_desc'), async () => {
+            await addButton("Install DeltamodCLI", "Installs the 'deltamod' command in your system. Requires administrator privileges.", async () => {
                 var res = await window.electronAPI.invoke('installDeltamodCLI', []);
                 if (res) {
-                    await htmlAlert(await k('done'),await k('operation_successful'),[{text: await k('ok'), resolveWith:''}]);
+                    await htmlAlert("Done","Operation successful!",[{text: "Ok", resolveWith:''}]);
                 }
-            }, await k('open'));
+            }, "Open");
 
             break;
         // dev isnt keyed and is always in english
         case "dev":
-            await addRowHeader(icon('warning', '20px') + ' ' + await k('options_dev0_warn'));
+            await addRowHeader(icon('warning', '20px') + ' ' + "These options are for developers only.");
             await addButton('Open flag database (DEV-ONLY)', 'Opens the database holding flags.', async () => {
                 await window.electronAPI.invoke('openFlagDatabase', []);
-            }, await k('open'));
+            }, "Open");
             await addButton('Decrypt GameBanana account token (DEV-ONLY)', 'Decrypts your GameBanana account token from the default encryption and saves it to your desktop.', async () => {
                 await window.electronAPI.invoke('dev_getGBToken', []);
-                await htmlAlert(await k('done'),await k('operation_successful'),[{text: await k('ok'), resolveWith:''}]);
-            }, await k('open'));
+                await htmlAlert("Done","Operation successful!",[{text: "Ok", resolveWith:''}]);
+            }, "Open");
             await addButton('Force controller mode (DEV-ONLY)', 'Forces Controller Mode on, regardless of controller detection status', async () => {
                 await window.electronAPI.invoke('cmode-on', []);
-            }, await k('open'));
+            }, "Open");
             break;
         case 'gb':
             await invoke('eraseGamebananaCache', []);
@@ -247,7 +249,7 @@ window.currentPageStack.cat = async function(cat) {
 
             var td = document.createElement('td');
             td.colSpan = 2;
-            td.innerHTML = await k('loading');
+            td.innerHTML = "Loading...";
 
             var gamebananaUserinfo = await Promise.race([
                 window.electronAPI.invoke('getGamebananaUserinfo', []),
@@ -273,10 +275,10 @@ window.currentPageStack.cat = async function(cat) {
             img.style.borderRadius = '5px';
             var span = document.createElement('span');
             flexdiv.appendChild(span);
-            span.innerText = await k('options_gb_loggedas', gamebananaUserinfo._sName);
+            span.innerText = `Currently logged in as ${gamebananaUserinfo._sName}`;
 
             if (gamebananaUserinfo._sName == undefined) {
-                span.innerText = await k('options_gb_notlogged');
+                span.innerText = "You aren't logged in to GameBanana.";
                 gamebananaUserinfo = { loggedIn: false };
             }
             else {
@@ -286,68 +288,20 @@ window.currentPageStack.cat = async function(cat) {
             tr.appendChild(td);
 
             if (gamebananaUserinfo.loggedIn && gamebananaUserinfo._sName != undefined) {
-                await addButton(await k('logout'), await k('options_gb_logout_desc'), async () => {
+                await addButton("Logout", "Removes your GameBanana account from Deltamod.", async () => {
                     await window.electronAPI.invoke('logoutGamebanana', []);
                     window._pageArguments = {cat: 'gb'};
                     page('options');
-                }, await k('logout'), gamebananaUserinfo.loggedIn, await k('options_gb_notlogged'), '');
+                }, "Logout", gamebananaUserinfo.loggedIn, "You aren't logged in to GameBanana.", '');
             }
             else {
-                await addButton(await k('login'), await k('options_gb_login_desc'), async () => {
+                await addButton("Login", "Adds a GameBanana account to Deltamod.", async () => {
                     await window.electronAPI.invoke('loginGamebanana', []);
                     window._pageArguments = {cat: 'gb'};
                     page('options');
-                }, await k('login'), !gamebananaUserinfo.loggedIn, await k('options_gb_alreadylogged'), '');
+                }, "Login", !gamebananaUserinfo.loggedIn, "You are already logged in to GameBanana.", '');
             }
             break;
-        case 'lang':
-            var langs = await window.electronAPI.invoke('obtainLangs', []);
-            var currentLang = await window.electronAPI.invoke('getLang', []);
-
-            for (let i = 0; i < langs.length; i++) {
-                const lang = langs[i];
-                const tr = document.createElement('tr');
-                
-                const tdContent = document.createElement('td');
-                const img = document.createElement('img');
-                img.src = 'deltapack://langs/' + lang.code + '/flag.png';
-                img.style.width = '30px';
-                img.style.height = '30px';
-                img.style.marginRight = '10px';
-                img.style.verticalAlign = 'middle';
-                tdContent.appendChild(img);
-                
-                const span = document.createElement('span');
-                span.innerText = lang.name;
-                tdContent.appendChild(span);
-                tdContent.appendChild(document.createElement('br'));
-
-                const small = document.createElement('small');
-                small.className = 'calibri';
-                small.style.marginTop = '10px';
-                small.innerHTML = `${icon('attribution', '15px')} ${lang.author}`;
-                tdContent.appendChild(small);
-                tr.appendChild(tdContent);
-                
-                const tdButton = document.createElement('td');
-                tdButton.className = 'center';
-                const button = document.createElement('button');
-                button.innerText = await k('select');
-                button.disabled = lang.code == currentLang;
-                button.addEventListener('click', async () => {
-                    var res = await window.electronAPI.invoke('setLang', [lang.code]);
-                    if (!res) {
-                        // hardcode ts since we can't fetch language strings without a language
-                        await htmlAlert("Error", "This language could not be loaded correctly.", [{text: await k('ok'), resolveWith:''}]);
-                        return;
-                    }
-                    page("");
-                });
-                tdButton.appendChild(button);
-                tr.appendChild(tdButton);
-                
-                tbody.appendChild(tr);
-            }
     }
     // theme adjustments
     // as far as i know this page is the only page that needs ts

@@ -50,11 +50,11 @@ async function makeGlyphs(jsonArr) {
  */
 async function promptLeaveCMode() {
     htmlAlert(
-        await k('leave_cmode_title'), 
-        await k('leave_cmode_message'), 
+        "Exit controller mode", 
+        "Are you sure you want to exit controller mode? If you exit controller mode, Deltamod will close.", 
         [
-            { text: await k('yes'), resolveWith: true },
-            { text: await k('no'), resolveWith: false }
+            { text: "Yes", resolveWith: true },
+            { text: "No", resolveWith: false }
         ], 
         'stadia_controller'
     ).then((result) => {
@@ -84,32 +84,6 @@ function brightenColor(r, g, b, amount) {
     g = Math.min(255, g + amount);
     b = Math.min(255, b + amount);
     return `rgb(${r}, ${g}, ${b})`;
-}
-
-/**
- * Fetches an advanced localization key.
- */
-function k(key, ...args) {
-    return window.electronAPI.invoke('obtainLangKeyAdv', [key, args]);
-}
-
-/**
- * Replaces localization template keys ($$key$$) with localized strings in HTML.
- * @param {string} html - HTML string to process.
- */
-async function replaceLangKeys(html) {
-    const regex = /\$\$(.*?)\$\$/g;
-    const matches = [...html.matchAll(regex)];
-
-    const values = await Promise.all(
-        matches.map(m =>
-            window.electronAPI.invoke('obtainLangKey', [m[1]])
-                .catch(() => m[0])
-        )
-    );
-
-    let i = 0;
-    return html.replace(regex, () => values[i++]);
 }
 
 // Window Management
@@ -408,7 +382,6 @@ async function page(name) {
 
     // Process Page HTML
     var purifiedHTML = await fetch(`./views/${name}/index.html`).then(response => response.text());
-    purifiedHTML = await replaceLangKeys(purifiedHTML);
     
     var runScripts = false;
     var changeAudio = false;
@@ -446,8 +419,8 @@ async function page(name) {
     }
 
     // Extract Title Tag
-    var title = purifiedHTML.match(/TITLEKEY\[(.*?)\]/);
-    purifiedHTML = purifiedHTML.replace(/TITLEKEY\[(.*?)\]/g, '');
+    var title = purifiedHTML.match(/TITLE\[(.*?)\]/);
+    purifiedHTML = purifiedHTML.replace(/TITLE\[(.*?)\]/g, '');
 
     // Extract Exclude Audio Tag
     var themeAudioExclude = purifiedHTML.match(/THEME-AUDIO-EXCLUDE\[(.*?)\]/);
@@ -523,7 +496,7 @@ async function page(name) {
     }
 
     pageN = name;
-    document.querySelector('.titleTxt').innerText = await k(title[1]);
+    document.querySelector('.titleTxt').innerText = title?.[1] || '';
 
     // Generate Dynamic CSS Colors based on Theme
     var rgbNumbers = {
@@ -634,18 +607,18 @@ if (!window.electronAPI) {
         document.querySelector('.maximize-button').style.display = 'none';
 
         makeGlyphs([
-            { icon: 'game_stick_left', description: await k('cmode_leftstick_glydesc') },
-            { icon: 'game_stick_right', description: await k('cmode_rightstick_glydesc') },
-            { icon: 'cancel', description: await k('cmode_abutton_glydesc') },
-            { icon: 'square_circle', description: await k('cmode_bbutton_glydesc') },
+            { icon: 'game_stick_left', description: "Move cursor" },
+            { icon: 'game_stick_right', description: "Scroll" },
+            { icon: 'cancel', description: "Click" },
+            { icon: 'square_circle', description: "Right click" },
         ]);
 
         if (!localStorage.getItem('seenCModeAlert')) {
             localStorage.setItem('seenCModeAlert', 'true');
             htmlAlert(
-                await k('controllermode_alert_title'), 
-                await k('controllermode_alert_message'), 
-                [{ text: await k('ok') }], 
+                "Controller mode enabled", 
+                "Controller mode is now enabled! Use Deltamod with your controller. Your left stick can help you move your mouse.", 
+                [{ text: "Ok" }], 
                 'stadia_controller'
             );
         }
@@ -659,11 +632,11 @@ if (!window.electronAPI) {
                 return;
             }
             var res = await htmlAlert(
-                await k('prompt_cmode_title'),
-                await k('prompt_cmode_message'),
+                "Controller mode",
+                "It looks like you have a controller connected. Do you want to enable controller mode? Controller mode allows you to use Deltamod with your controller. Your left stick can help you move your mouse.",
                 [
-                    { text: await k('yes'), resolveWith: true },
-                    { text: await k('no'), resolveWith: false }
+                    { text: "Yes", resolveWith: true },
+                    { text: "No", resolveWith: false }
                 ]
             );
 
@@ -684,9 +657,9 @@ if (!window.electronAPI) {
     var hasCore = await window.electronAPI.invoke('hasPatchingCore',[]);
     if (!hasCore) {
         await htmlAlert(
-            await k('criterrors_gm3palert_title'), 
-            await k('criterrors_gm3palert_message'), 
-            [{ text: await k('ok'), resolveWith: 'ok' }], 
+            "Patcher error", 
+            "There is no patcher core installed. A patcher core is the tool needed to modify your game. Please install a patcher to continue using Deltamod.", 
+            [{ text: "Ok", resolveWith: 'ok' }], 
             'error_med'
         );
 
@@ -715,7 +688,7 @@ if (!window.electronAPI) {
             anyMSG.availableMsg.forEach(async (msg) => {
                 if (localStorage.getItem('seenMSG_' + msg.id) != 'true' || msg.showEveryBoot) {
                     localStorage.setItem('seenMSG_' + msg.id, 'true');
-                    await htmlAlert(msg.title, msg.message + "\n" + msg.sender, [{ text: await k('ok') }]);
+                    await htmlAlert(msg.title, msg.message + "\n" + msg.sender, [{ text: "Ok" }]);
                 }
             });
         } catch (e) {
@@ -763,11 +736,11 @@ function openAudio() {
     if (!localStorage.getItem('seenShopAlert') && !gbflag && navigator.onLine) {
         localStorage.setItem('seenShopAlert', 'true');
         var res = await htmlAlert(
-            await k('gamebananaBrowseTitle'), 
-            await k('toggleShopPopup_msg'), 
+            "Mod Shop", 
+            "Do you wish to enable the Mod Shop page? The service uses GameBanana. This can be toggled later in the options.", 
             [
-                { text: await k('yes'), resolveWith: true },
-                { text: await k('no'), resolveWith: false }
+                { text: "Yes", resolveWith: true },
+                { text: "No", resolveWith: false }
             ]
         );
         

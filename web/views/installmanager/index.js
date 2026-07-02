@@ -1,4 +1,6 @@
-(async() => {
+
+    (async() => {
+        try {
     var installs = await window.electronAPI.invoke('getInstallations', []);
     var index = await window.electronAPI.invoke('getSystemIndex', []);
     const tbody = document.querySelector('#installations-list');
@@ -32,12 +34,12 @@
             editablespan.style.margin = '0';
             editablespan.style.height = '22px';
             editablespan.style.fontSize = '16px';
-            editablespan.value = sanitizeHTML(install.name || await k('install_default', install.index + 1));
+            editablespan.value = sanitizeHTML(install.name || `Install #${install.index + 1}`);
             editablespan.style.cursor = 'text';
             editablespan.onblur = async () => {
                 if (editablespan.value.trim() === "") {
-                    htmlAlert(await k('installmanager_invalidname_title'), await k('installmanager_invalidname_desc'), [{text: await k('ok'), resolveWith: 'ok'}]);
-                    editablespan.value = await k('install_default', install.index + 1);
+                    htmlAlert("Invalid installation name", "This installation name is invalid. Please choose another one.", [{text: "Ok", resolveWith: 'ok'}]);
+                    editablespan.value = `Install #${install.index + 1}`;
                 }
                 install.name = editablespan.value.trim();
                 window.electronAPI.invoke('setInstallationCName', [install.index.toString(), install.name]);
@@ -53,7 +55,7 @@
             const details = document.createElement('small');
             {
                 var gname = await (window.electronAPI.invoke('getGameInfo', [install.pid])).then(g => g.name);
-                details.innerHTML = `${icon('stadia_controller', '14px')} ${gname} <br> ${icon('gite', '14px')} ${(install.steam ? await k('steam') : await k('manual'))}`;
+                details.innerHTML = `${icon('stadia_controller', '14px')} ${gname} <br> ${icon('gite', '14px')} ${(install.steam ? "Steam" : "Manual")}`;
             }
             details.classList.add('calibri');
             details.style.color = '#888';
@@ -80,7 +82,7 @@
             buttonsDiv.appendChild(goBtn);
 
             tippy(goBtn, {
-                content: index == install.index ? await k('installmanager_current_installation') : await k('installmanager_switch_to_installation'),
+                content: index == install.index ? "Current installation" : "Switch to this installation",
                 placement: 'top',
                 delay: [500, 0],
             });
@@ -91,9 +93,9 @@
             deleteBtn = adaptForIcons(deleteBtn);
             deleteBtn.innerHTML = icon('delete', '18px');
             deleteBtn.onclick = async () => {
-                var resp = await htmlAlert(await k('warning'), `Are you sure you want to delete the installation "${install.name || await k('install_default', install.index + 1)}"? This action cannot be undone.`, [
-                    {text: await k('yes'), resolveWith: 'Y'},
-                    {text: await k('no'), resolveWith: 'N'}
+                var resp = await htmlAlert("Warning", `Are you sure you want to delete the installation "${install.name || ('Install #' + (install.index + 1))}"? This action cannot be undone.`, [
+                    {text: "Yes", resolveWith: 'Y'},
+                    {text: "No", resolveWith: 'N'}
                 ]);
 
                 if (resp === 'Y') {
@@ -103,7 +105,7 @@
             buttonsDiv.appendChild(deleteBtn);
 
             tippy(deleteBtn, {
-                content: await k('installmanager_delete_installation'),
+                content: "Delete installation",
                 placement: 'top',
                 delay: [500, 0],
             });
@@ -117,7 +119,7 @@
                 window.electronAPI.invoke('openInstallationFolder', [install.index.toString()]);
             }
             tippy(openBtn, {
-                content: await k('installmanager_open_installation_folder'),
+                content: "Open installation folder",
                 placement: 'top',
                 delay: [500, 0],
             });
@@ -127,16 +129,16 @@
             shortcutBtn.style.textAlign = 'center';
             shortcutBtn = adaptForIcons(shortcutBtn);
             shortcutBtn.innerHTML = icon('forward', '18px');
-            shortcutBtn.title = await k('installmanager_create_shortcut');
+            shortcutBtn.title = "Create shortcut on desktop";
             shortcutBtn.onclick = async () => {
                 if (!await window.electronAPI.invoke('isPackaged', [])) {
-                    await htmlAlert(await k('error'), await k('installmanager_shortcut_notpackaged'),[{text:await k('ok'),resolveWith:'ok'}]);
+                    await htmlAlert("Error", "This feature is only available when Deltamod is packaged.",[{text:"Ok",resolveWith:'ok'}]);
                     return;
                 }
                 window.electronAPI.invoke('createInstallLink', [install.index.toString(), install.name || `Install #${install.index + 1}`]);
             };
             tippy(shortcutBtn, {
-                content: await k('installmanager_create_shortcut'),
+                content: "Create shortcut on desktop",
                 placement: 'top',
                 delay: [500, 0],
             });
@@ -165,7 +167,7 @@
     newButton.style.alignItems = 'center';
     newButton.style.gap = '10px';
     newButton.style.justifyContent = 'center';
-    newButton.innerHTML = icon("create_new_folder") + ' ' + await k('installmanager_create_new_installation');
+    newButton.innerHTML = icon("create_new_folder") + ' ' + "Create new installation";
     newButton.style.textAlign = 'center';
     newButton.onclick = () => {
         window.fromIM = true;
@@ -180,4 +182,8 @@
 
     genbtnstyles();
     
+}
+catch (e) {
+    document.querySelector('tbody').innerHTML += `<tr><td colspan="2" style="text-align:center;color:red;">${e}</td></tr>`;
+}
 })();

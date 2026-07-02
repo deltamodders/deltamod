@@ -9,7 +9,7 @@
         errordiv.style.display = "flex";
         errordiv.style.alignItems = "center";
         errordiv.style.gap = "0.5em";
-        errordiv.innerHTML = icon('account_circle', '1.5em') + "<span>" + await k('collections_not_logged_in') + "</span>";
+        errordiv.innerHTML = icon('account_circle', '1.5em') + "<span>" + "You must be logged in to your GameBanana account to view collections." + "</span>";
         errortd.appendChild(errordiv);
         tr.appendChild(errortd);
         table.appendChild(tr);
@@ -35,11 +35,11 @@
         var trash = document.createElement("button");
         trash.innerHTML = icon('delete', '1em');
         trash.addEventListener('click', async () => {
-            var htmlresp = await htmlAlert((await k('delete_collection')), (await k('delete_collection_confirm')), [{
-                text: await k('yes'),
+            var htmlresp = await htmlAlert(("Delete collection"), ("Are you sure you want to delete this collection? This action is irreversible."), [{
+                text: "Yes",
                 resolveWith: 'y'
             }, {
-                text: await k('no'),
+                text: "No",
                 resolveWith: 'n'
             }]);
             if (htmlresp !== 'y') {
@@ -47,8 +47,8 @@
             }
             var resp = await invoke('gamebanana_deleteCollection', [collection.id]);
             if (!resp.success) {
-                await htmlAlert(await k('error'), await k('delete_collection_failed', JSON.stringify(resp.error)), [{
-                    text: await k('ok'),
+                await htmlAlert("Error", `Failed to delete collection: ${JSON.stringify(resp.error)}`, [{
+                    text: "Ok",
                     resolveWith: 'ok'
                 }]);
             } else {
@@ -74,8 +74,8 @@
         download.addEventListener('click', async () => {
             download.disabled = true;
             var resp = await invoke('gamebanana_downloadAllInCollection', [collection.id]);
-            await htmlAlert(await k('done'), await k('collection_restore_complete'), [{
-                text: await k('ok'),
+            await htmlAlert("Done", `Collection restore complete! Skipped ${(resp && (resp.skipped ?? resp.skippedMods ?? 0))} mods in download process.`, [{
+                text: "Ok",
                 resolveWith: 'ok'
             }]);
             download.disabled = false;
@@ -92,7 +92,7 @@
     var nameInputTd = document.createElement("td");
     var nameInput = document.createElement("input");
     nameInput.type = "text";
-    nameInput.placeholder = await k('collection_new_placeholder');
+    nameInput.placeholder = "New collection name";
     nameInputTd.appendChild(nameInput);
     nameInput.classList.add("collection-name-input");
     addTr.appendChild(nameInputTd);

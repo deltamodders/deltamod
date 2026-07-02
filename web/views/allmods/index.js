@@ -60,7 +60,7 @@ async function createMod(mod, compatible) {
     descSpan.onclick = async () => {
         const fullDesc = purify(mod.description);
         if (fullDesc.length === 0) return;
-        htmlAlert(mod.name, fullDesc, [{ text: await k('close'), resolveWith: 'Ok' }]);
+        htmlAlert(mod.name, fullDesc, [{ text: "Close", resolveWith: 'Ok' }]);
     }
     descSpan.id = `moddesc-${mod.uid}`;
     modNameContainer.appendChild(descSpan);
@@ -95,7 +95,7 @@ async function createMod(mod, compatible) {
     idSpan.className = 'calibri';
     idSpan.style.fontSize = 'smaller';
     idSpan.style.color = '#888';
-    idSpan.innerHTML = `${icon('sell', 'small')} ${mod.packageID == 'und.und.und' ? '<i>' + await k('allmods_noID') + '</i>' : mod.packageID}`;
+    idSpan.innerHTML = `${icon('sell', 'small')} ${mod.packageID == 'und.und.und' ? '<i>' + "No ID was specified." + '</i>' : mod.packageID}`;
     idSpan.id = `modid-${mod.uid}`;
     modNameContainer.appendChild(idSpan);
 
@@ -129,7 +129,7 @@ async function createMod(mod, compatible) {
     compatSpan.className = 'calibri';
     compatSpan.style.fontSize = 'smaller';
     compatSpan.style.color = comp ? '#4caf50' : '#f44336';
-    compatSpan.innerHTML = comp ? `${icon('check', 'small')} ${await k('allmods_compatible')}` : `${icon('error', 'small')} ${await k('allmods_incompatible', mod.incompatibilityReason)}`;
+    compatSpan.innerHTML = comp ? `${icon('check', 'small')} ${"Compatible with current version"}` : `${icon('error', 'small')} ${`Incompatible: ${mod.incompatibilityReason}`}`;
     compatSpan.id = `modcompat-${mod.uid}`;
     modNameContainer.appendChild(compatSpan);
     
@@ -141,7 +141,7 @@ async function createMod(mod, compatible) {
         gbSpan.className = 'calibri';
         gbSpan.style.fontSize = 'smaller';
         gbSpan.style.color = '#888';
-        gbSpan.innerHTML = `<img src="./img/banana-outline.png" width="15" height="15"> ${await k('allmods_throughShop')}`;
+        gbSpan.innerHTML = `<img src="./img/banana-outline.png" width="15" height="15"> ${"Installed through GameBanana"}`;
         gbSpan.id = `modgb-${mod.uid}`;
         modNameContainer.appendChild(gbSpan);
     }
@@ -185,21 +185,21 @@ async function createMod(mod, compatible) {
                         likeBtn.disabled = true;
                     }
                     else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
-                        await htmlAlert(await k('cant_like_mod'),await k('already_liked'),[{text:await k('ok'),resolveWith:'ok'}], 'sentiment_very_satisfied');
+                        await htmlAlert("Can't like mod","You've already liked this mod. Can't get any more likes than that!",[{text:"Ok",resolveWith:'ok'}], 'sentiment_very_satisfied');
                         likeBtn.innerHTML = icon('sentiment_very_satisfied', '20px') + '';
                         likeBtn.disabled = true;
                     } else {
-                        await htmlAlert(await k('cant_like_mod'),res.data._sErrorCode,[{text:await k('ok'),resolveWith:'ok'}], 'error');
+                        await htmlAlert("Can't like mod",res.data._sErrorCode,[{text:"Ok",resolveWith:'ok'}], 'error');
                     }
             };
             likeBtn.innerHTML = icon('mood_heart', '20px');
             bdiv.appendChild(likeBtn);
 
             tippy(likeBtn, {
-                content: await k('like_mod_tooltip'),
+                content: "Like this mod on GameBanana",
             });
             tippy(gbModButton, {
-                content: await k('leave_comment_tooltip'),
+                content: "Leave a comment on GameBanana",
             });
 
             likeBtn.disabled = !mod.gamebanana.supports;
@@ -241,7 +241,7 @@ async function createErroringMods(errors) {
         selectSpan.className = 'calibri';
         selectSpan.style.marginTop = '18px';
         selectSpan.style.display = 'block';
-        selectSpan.innerText = await k('modFail_howtoproceed');
+        selectSpan.innerText = "How do you want to proceed?";
         
 
         const actionRow = document.createElement("div");
@@ -249,12 +249,12 @@ async function createErroringMods(errors) {
         {
             // Action Row
             const exploreBtn = document.createElement("button");
-            exploreBtn.innerText = await k('open_mod_folder');
+            exploreBtn.innerText = "Open mod folder";
             exploreBtn.onclick = () => window.electronAPI.invoke("openModFolder", [err.mod]);
             actionRow.appendChild(exploreBtn);
 
             const deleteBtn = document.createElement("button");
-            deleteBtn.innerText = await k('delete_mod');
+            deleteBtn.innerText = "Delete mod";
             deleteBtn.onclick = () => window.electronAPI.invoke("removeMod", [err.mod]);
             actionRow.appendChild(deleteBtn);
         }
@@ -318,7 +318,7 @@ async function createErroringMods(errors) {
             rew();
             createErroringMods(errors);
         };
-        errorBanner.children[0].innerText = await k('modFail_bannerTitle', errors.length);
+        errorBanner.children[0].innerText = `${errors.length} mod(s) failed to load`;
         errorBanner.style.display = "inherit";
     } else errorBanner.style.display = "none";
 
@@ -326,7 +326,7 @@ async function createErroringMods(errors) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 2;
-        td.innerText = (modList.length === 0) ? await k('allmods_nomods') : await k('allmods_nomodsforfilter');
+        td.innerText = (modList.length === 0) ? "No mods are installed." : "No mods match the selected filter.";
         tr.appendChild(td);
         document.getElementById('modlist').appendChild(tr);
     }

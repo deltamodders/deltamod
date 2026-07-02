@@ -92,8 +92,8 @@ window.currentPageStack.exportMods = async function() {
 
     await invoke('gamebanana_importToCollection', [window._pageArguments.collectionId, selectedMods]);
 
-    await htmlAlert(await k('done'), await k('selected_mods_imported'), [{
-        text: await k('ok'),
+    await htmlAlert("Done", "The selected mods have been imported to the collection.", [{
+        text: "Ok",
         resolveWith: 'ok'
     }]);
 

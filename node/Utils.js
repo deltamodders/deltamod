@@ -15,6 +15,10 @@ function timeoutPromise(ms) {
     });
 }
 
+function generateUUID() {
+    return crypto.randomUUID();
+}
+
 const { pipeline } = require('stream');
 const { promisify } = require('util');
 const pipelineAsync = promisify(pipeline);

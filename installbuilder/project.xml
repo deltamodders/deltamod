@@ -1,7 +1,7 @@
 <project>
     <shortName>deltamod</shortName>
     <fullName>Deltamod</fullName>
-    <version>1.9.2</version>
+    <version>1.10.0</version>
     <leftImage>${build_project_directory}/../build/installer/leftImage.png</leftImage>
     <logoImage>${build_project_directory}/../build/icon-small.png</logoImage>
     <splashImage>${build_project_directory}/../build/installer/installersplash.png</splashImage>
@@ -99,6 +99,7 @@
             </startMenuShortcutList>
         </component>
     </componentList>
+    <addQtMode>1</addQtMode>
     <compressionAlgorithm>lzma</compressionAlgorithm>
     <disableSplashScreen>1</disableSplashScreen>
     <enableRollback>1</enableRollback>

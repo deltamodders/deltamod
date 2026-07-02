@@ -1,13 +1,13 @@
-<button onclick="page('gamebanana-browse')">$$back$$</button>
+<button onclick="page('gamebanana-browse')">Back</button>
 <br>
-<h1>$$commentsmenu_title$$</h1>
+<h1>Comments</h1>
 <div class="comments">
     <div class="commentBox">
         <img src="" alt="" width="50" height="50" id="gbPic">
         <div class="commentArea">
-            <textarea name="comment" id="comment" style="width: calc(100% - 10px); height: 150px; background-color: rgba(0,0,0,0.5); color: white;" placeholder="$$commentsmenu_type$$"></textarea>
+            <textarea name="comment" id="comment" style="width: calc(100% - 10px); height: 150px; background-color: rgba(0,0,0,0.5); color: white;" placeholder="Type your comment here..."></textarea>
             <br><br>
-            <button onclick="window.currentPageStack.send()" id="sendBtn">$$send$$</button>
+            <button onclick="window.currentPageStack.send()" id="sendBtn">Send</button>
         </div>
     </div>
 </div>
@@ -37,4 +37,4 @@
 }
 </style>
 JSL
-TITLEKEY[commentsmenu_title]
+TITLE[Comments]

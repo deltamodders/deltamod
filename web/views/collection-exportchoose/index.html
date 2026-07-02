@@ -1,5 +1,5 @@
 <div>
-    <h1>$$collection_export_choose_title$$</h1>
+    <h1>Choose which mods to export</h1>
     <table>
         <colgroup>
             <col style="width: calc(100% - 100px);">
@@ -7,8 +7,8 @@
         </colgroup>
         <thead>
             <tr>
-                <th>$$mod$$</th>
-                <th>$$export_question$$</th>
+                <th>Mod</th>
+                <th>Export?</th>
             </tr>
         </thead>
         <tbody id="mod-list">
@@ -16,10 +16,10 @@
     </table>
     <br>
     <div class="alignRight">
-        <button onclick="page('collections')">$$back$$</button>
-        <button onclick="window.currentPageStack.exportMods()" id="export-btn" disabled>$$export$$</button>
+        <button onclick="page('collections')">Back</button>
+        <button onclick="window.currentPageStack.exportMods()" id="export-btn" disabled>Export</button>
     </div>
 </div>
 JSL
-TITLEKEY[collection_export_choose_title]
+TITLE[Choose which mods to export]
 STYLESHEET[index]

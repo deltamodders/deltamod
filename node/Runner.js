@@ -9,7 +9,6 @@ const { path7za } = require('7zip-bin');
 // Local modules
 const Paths = require('./Paths');
 const KeyValue = require('./KeyValue');
-const Language = require('./Language');
 const { getSystemFile, setSystemIndex } = require('./System');
 const System = require('./System');
 const { setWindow, page, between } = require('./Utils');
@@ -52,15 +51,6 @@ if (process.defaultApp) {
     }
 } else {
     app.setAsDefaultProtocolClient('deltamod');
-}
-
-// --- Setup Language ---
-const langFile = System.getSystemFile('language', true);
-if (fs.existsSync(langFile)) {
-    Language.loadLanguage(fs.readFileSync(langFile, 'utf8'));
-} else {
-    Language.loadLanguage('en');
-    fs.writeFileSync(langFile, 'en', 'utf8');
 }
 
 // --- Utilities ---
@@ -199,8 +189,7 @@ function flattenInto(dest, wrapper) {
 function createWindow() {
     writeTopPart();
     killConflictProcesses();
-    
-    KeyValue.upgradeStores();
+
     KeyValue.loadUniqueDefaults();
     config({ ...getConfig(), binaryPath: path7za });
     try { System.clearTemporary(); } catch (e) { console.error(e); }

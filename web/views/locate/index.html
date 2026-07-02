@@ -1,35 +1,35 @@
 <div>
-    <h1>$$locate_title$$</h1>
-    <p class="calibri">$$locate_desc$$</p>
+    <h1>Locate your game</h1>
+    <p class="calibri">To use Deltamod, you need to locate your game installation. But don't worry! It's very easy.</p>
     <p class="noticebox">
-        $$import_notice$$
+        Beginning from Deltamod 1.9, Deltamod no longer copies your game to its app data by default. As such, no second copy of your game is created when importing.<br><br>Please make sure the game is in a directory which is always available, or tick the box to override this behavior.
     </p>
     <hr>
     <div>
         <p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
         <span class="material-symbols-outlined">gamepad_up</span>
-        $$locate_selectgame$$
+        Select the game you are trying to add.
         </p>
         <div class="gOptions">
 
         </div>
         <p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
         <span class="material-symbols-outlined">folder</span>
-        $$locate_selectfolder$$
+        Select the folder where your game is installed.
         </p>
         <div class="fileInput" style="display: flex; justify-content: left; align-items: center; gap: 5px;">
-            <input type="text" name="" id="dpath" placeholder="$$locate_path_placeholder$$" style="width: 100%;">
+            <input type="text" name="" id="dpath" placeholder="Path to your game installation" style="width: 100%;">
             <button onclick="window.currentPageStack.locateDelta()">
                 <span class="material-symbols-outlined" style="font-size: 17px;">folder_open</span>
             </button>
         </div>
-        <p class="smaller">$$locate_other_methods$$</p>
+        <p class="smaller">These other methods are also available for importing the game:</p>
         <div class="otherImports">
             <button onclick="window.currentPageStack.steam()" id="feat_steam">
-                <brand-icon style="font-size: 14px;">S</brand-icon> $$locate_steam_import$$
+                <brand-icon style="font-size: 14px;">S</brand-icon> Import from Steam
             </button>
             <button onclick="window.currentPageStack.downloadDelta()" id="feat_autodownload">
-                <span class="material-symbols-outlined" style="font-size: 14px;">cloud_download</span> $$locate_autodownload$$
+                <span class="material-symbols-outlined" style="font-size: 14px;">cloud_download</span> Automatic download
             </button>
         </div>
     </div>
@@ -37,10 +37,10 @@
     <hr>
     <div class="copyAnyways">
         <input type="checkbox" name="" id="copyAnyways">
-        <label for="copyAnyways">$$locate_copyanyways$$</label>
+        <label for="copyAnyways">Save a copy of this game on your main drive</label>
     </div>
     <br>
-    <button onclick="window.currentPageStack.id()">$$save_and_close$$</button>
+    <button onclick="window.currentPageStack.id()">Save and close</button>
     <br><br>
 </div>
 <style>
@@ -106,4 +106,4 @@
 </style>
 JSL
 AUDIO[mainTheme.mp3]
-TITLEKEY[locate_title]
+TITLE[Locate your game]

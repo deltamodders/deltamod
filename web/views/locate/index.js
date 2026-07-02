@@ -8,7 +8,7 @@ async function locateDelta() {
 async function id() {
     console.log(document.getElementById('dpath').value.replaceAll('\\', '/'));
     if (window.gid == 'noid') {
-        htmlAlert(await k('warning'),await k('locate_pls_selectgame'),[{text:await k('ok'),resolveWith:'ok'}]);
+        htmlAlert("Warning","Please select a game.",[{text:"Ok",resolveWith:'ok'}]);
         return;
     }
     await window.electronAPI.invoke("createNewInstallation", ["", "locate", (window.currentPageStack.pathOV ? window.currentPageStack.pathOV : document.getElementById('dpath').value).replaceAll('\\', '/'), (window.fromIM == undefined ? false : window.fromIM), window.gid, document.getElementById('copyAnyways').checked ? 'copy' : 'ncopy']);
@@ -16,7 +16,7 @@ async function id() {
 
 async function steam() {
     if (window.gid == 'noid') {
-        htmlAlert(await k('warning'),await k('locate_pls_selectgame'),[{text:await k('ok'),resolveWith:'ok'}]);
+        htmlAlert("Warning","Please select a game.",[{text:"Ok",resolveWith:'ok'}]);
         return;
     }
     await window.electronAPI.invoke("createNewInstallation", ["steam", "", "", window.fromIM, window.gid, document.getElementById('copyAnyways').checked ? 'copy' : 'ncopy']);
@@ -34,7 +34,7 @@ window.currentPageStack.steam = steam;
 
 window.currentPageStack.downloadDelta = async function() {
     if (window.gid == 'noid') {
-        htmlAlert(await k('warning'),await k('locate_pls_selectgame'),[{text:await k('ok'),resolveWith:'ok'}]);
+        htmlAlert("Warning","Please select a game.",[{text:"Ok",resolveWith:'ok'}]);
         return;
     }
     var path = await window.electronAPI.invoke("downloadGame", [window.gid]);

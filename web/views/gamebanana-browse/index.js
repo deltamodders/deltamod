@@ -93,7 +93,7 @@ async function search() {
     let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
     let query = document.getElementById('searchInput').value;
     if (query.length < 3) {
-        await htmlAlert(await k('shop_tooshortquery'),await k('shop_tooshortquery_desc'),[{text:await k('ok'),resolveWith:'ok'}], 'error');
+        await htmlAlert("Search query too short","Please enter at least 3 characters to search.",[{text:"Ok",resolveWith:'ok'}], 'error');
         return;
     }
     window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Util/Search/Results?_sModelName=Mod&_sOrder=best_match&_sSearchString=' + encodeURIComponent(query) + '&_csvFields=name%2Cdescription%2Carticle%2Cattribs%2Cstudio%2Cowner%2Ccredits&_idGameRow=' + gameID + '&_nPage=$PAGE';
@@ -189,7 +189,7 @@ async function renderMods(table, GB_API, filter, gameID) {
             var tr = document.createElement('tr');
             var td = document.createElement('td');
             td.colSpan = 2;
-            td.innerText = (firstgeneration ? await k('shop_noresults') : await k('shop_endlist'));
+            td.innerText = (firstgeneration ? "No mods were found matching your query." : "You've reached the end of the list.");
             tr.appendChild(td);
             table.appendChild(tr);
             observer.disconnect(); // stop observing since there's no more content to load
@@ -328,13 +328,13 @@ async function renderMods(table, GB_API, filter, gameID) {
                     img.style.borderColor = 'gold';
 
                     var periodsDesc = [
-                        ["today",await k('shop_featuredtoday')],
-                        ["week",await k('shop_featuredweek')],
-                        ["month",await k('shop_featuredmonth')],
-                        ["3month",await k('shop_featured3month')],
-                        ["6month",await k('shop_featured6month')],
-                        ["year",await k('shop_featuredyear')],
-                        ["alltime",await k('shop_featuredalltime')]
+                        ["today","Best of today"],
+                        ["week","Best of this week"],
+                        ["month","Best of this month"],
+                        ["3month","Best of last 3 months"],
+                        ["6month","Best of last 6 months"],
+                        ["year","Best of this year"],
+                        ["alltime","All-time featured"]
                     ]
                     var featSpan = document.createElement('span');
                     featSpan.className = 'modFeaturedSpan iptspan';
@@ -414,7 +414,7 @@ async function renderMods(table, GB_API, filter, gameID) {
 
                         if (eligibleDownloads.length === 0) {
                             dlBtn.innerHTML = icon('cancel', '0.9em');
-                            var open = await htmlAlert(await k('shop_nooneclick'), await k('shop_nooneclick_desc'),[{text:await k('ok'),resolveWith:'no',},{text:await k('shop_open_mod_page'),resolveWith:'yes'}], 'web_traffic');
+                            var open = await htmlAlert("One-click download not available", "This mod cannot be downloaded via Deltamod because the owner did not package it for usage with the tool.",[{text:"Ok",resolveWith:'no',},{text:"Open mod page on GameBanana",resolveWith:'yes'}], 'web_traffic');
                             if (open === 'yes') {
                                 window.open(mod._sProfileUrl, '_blank');
                             }
@@ -423,7 +423,7 @@ async function renderMods(table, GB_API, filter, gameID) {
 
                         if (eligibleDownloads.length > 1) {
                             dlBtn.innerHTML = icon('indeterminate_question_box', '0.9em');
-                            var res = await htmlAlert(await k('shop_multiple_files'), await k('shop_multiple_files_desc'),eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
+                            var res = await htmlAlert("Multiple compatible files", "This mod has multiple files compatible with Deltamod. Please choose the one to download.",eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
                             if (!res) {
                                 return;
                             }
@@ -464,11 +464,11 @@ async function renderMods(table, GB_API, filter, gameID) {
                             likeBtn.disabled = true;
                         }
                         else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
-                            await htmlAlert(await k('shop_cant_like'),await k('shop_already_liked'),[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
+                            await htmlAlert("Can't like the mod","You've already liked this mod. Can't get any more likes than that!",[{text:'Ok',resolveWith:'ok'}], 'sentiment_very_satisfied');
                             likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + '';
                             likeBtn.disabled = true;
                         } else {
-                            await htmlAlert(await k('shop_cant_like'),res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
+                            await htmlAlert("Can't like the mod",res.data._sErrorCode,[{text:'Ok',resolveWith:'ok'}], 'error');
                         }
                     };
                     td1.appendChild(likeBtn);
@@ -486,7 +486,7 @@ async function renderMods(table, GB_API, filter, gameID) {
     catch (e) {
         console.error(e);
         
-        await htmlAlert(await k('shop_error'),await k('shop_error_desc'),[{text:'Ok',resolveWith:'ok'}], 'error');
+        await htmlAlert("Error","An error occurred while loading mods from GameBanana. Please try again later.",[{text:'Ok',resolveWith:'ok'}], 'error');
 
         page('main');
         firstgeneration = true;
@@ -503,7 +503,7 @@ async function plusPage(amt) {
 
 (async () => {
     if (navigator.onLine === false) {
-        await htmlAlert(await k('shop_offline'),await k('shop_offline_desc'),[{text:await k('ok'),resolveWith:'ok'}], 'cloud_alert');
+        await htmlAlert("You're offline","To access this page, you must have an active Internet connection.",[{text:"Ok",resolveWith:'ok'}], 'cloud_alert');
         page('main');
         return;
     }
@@ -525,7 +525,7 @@ async function plusPage(amt) {
 
         let searchInd = document.getElementById('searchInd');
         searchInd.style.display = 'block';
-        searchInd.innerText = await k('shop_showingresults', csearch);
+        searchInd.innerText = `Currently showing results for "${csearch}"`;
     }
 
     capi = GB_API;

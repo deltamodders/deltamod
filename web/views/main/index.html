@@ -1,16 +1,16 @@
 <div style="overflow: hidden;">
     <div class="spacebet">
         <div class="p1">
-            <h1 id="ptitle" style="margin-bottom: 5px;">$$main_title$$</h1>
+            <h1 id="ptitle" style="margin-bottom: 5px;">Patch menu</h1>
             <span style="display: flex; justify-content: left; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span>
-                    $$sortBy$$
+                    Sort by
                 </span> <select name="sortWay" id="sortWay" style="width: 100px !important; margin: 0;">
-                    <option value="asc">$$sort_asc$$</option>
-                    <option value="desc">$$sort_desc$$</option>
-                    <option value="size-asc">$$sort_sizeAsc$$</option>
-                    <option value="size-desc">$$sort_sizeDesc$$</option>
-                    <option value="author">$$sort_author$$</option>
+                    <option value="asc">Name (A-Z)</option>
+                    <option value="desc">Name (Z-A)</option>
+                    <option value="size-asc">Size (Smallest)</option>
+                    <option value="size-desc">Size (Largest)</option>
+                    <option value="author">By author</option>
                 </select>
             </span>
         </div>
@@ -35,13 +35,13 @@
             </colgroup>
             <thead style="position: sticky; top: -2px;">
                 <tr>
-                    <th>$$mod$$</th>
-                    <th>$$enabled$$</th>
+                    <th>Mod</th>
+                    <th>Enabled</th>
                 </tr>
             </thead>
             <div style="display: none;" class="modlist-error" id="error-banner">
-                <h2>$$modFail_bannerTitle$$</h2>
-                <span class="calibri">$$modFail_bannerClick$$</span>
+                <h2>{0} mod(s) failed to load</h2>
+                <span class="calibri">Click on this banner to view more details.</span>
             </div>
             <tbody id="modlist">
             </tbody>
@@ -49,8 +49,8 @@
     </div>
 
         <dialog class="error-list-dialog" id="error-list-dialog">
-            <h2>$$modFail_dialogTitle$$</h2>
-            <span class="calibri">$$modFail_dialogSubtitle$$</span>
+            <h2>Some mods failed to load</h2>
+            <span class="calibri">Some mods didn't load correctly. Here are the details:</span>
             <div class="error-list-div" id="error-list-div">
 
             </div>
@@ -63,4 +63,4 @@
 JSL
 AUDIO[mainTheme.mp3]
 STYLESHEET[main]
-TITLEKEY[main_title]
+TITLE[Patch menu]
