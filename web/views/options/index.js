@@ -153,10 +153,11 @@ window.currentPageStack.cat = async function(cat) {
                 page('deleteall');
             }, "Delete", true, '', 'red');
             await addCheckboxOption("Prompt controller mode when available", "When enabled, you will be asked to activate Controller Mode when a compatible controller is attached. Currently only compatible with DualSense.", 'CONTROLLER');
+            await addCheckboxOption("Enable hash checks", "If enabled, Deltamod will check the hashes of mods to ensure compatibility. This may slow down Deltamod and render some mods incompatible.", 'hashchecks', true);
             break;
         case 'ui':
-            await addCheckboxOption("Enable Mod Shop", "", 'SHOP', true);
-            await addCheckboxOption("Enable music in menus", "", 'audio', false, (enabled) => {
+            await addCheckboxOption("Enable Mod Shop", "Enables the Mod Shop feature, allowing you to browse and install mods from the GameBanana community.", 'SHOP', true);
+            await addCheckboxOption("Enable music in menus", "Plays background music in the main menus.", 'audio', false, (enabled) => {
                 if (enabled) {
                     var a = new Audio();
                     a.src = 'audio/orch1.mp3';
@@ -168,7 +169,7 @@ window.currentPageStack.cat = async function(cat) {
                     audio.pause();
                 }
             });
-            await addCheckboxOption("Enable SFX in menus", "", 'sfx', false, (enabled) => {
+            await addCheckboxOption("Enable SFX in menus", "Plays sound effects in the main menus.", 'sfx', false, (enabled) => {
                 if (enabled) {
                     var a = new Audio();
                     a.src = 'audio/orch1.mp3';
@@ -176,6 +177,7 @@ window.currentPageStack.cat = async function(cat) {
                     a.play();
                 }
             });
+            await addCheckboxOption("Enable dynamic music", "Enables dynamic background music that changes based on the page. If unchecked, always plays the default music for your theme.", 'dynamusic', true);
 
             await addButton("Select a theme", "Opens the theme selection menu.", async () => {
                 page('themesel');
@@ -196,10 +198,6 @@ window.currentPageStack.cat = async function(cat) {
             break;
         case 'adv':
             await addRowHeader(icon('warning', '20px') + ' ' + "Please only change these settings if you know what they do.");
-
-            await addButton("Change patcher", "Allows you to change your patching tool of choice.", async () => {
-                await window.electronAPI.invoke('importPatcher', []);
-            }, "Choose");
 
             await addButton("Reboot in Developer Mode", "Reboots in developer mode, a mode which allows you to use the DevTools.", async () => {
                 var goOn = await htmlAlert(

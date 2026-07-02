@@ -145,14 +145,8 @@ async function createMod(mod) {
         }).catch(() => {});
     };
 
-    var prevalColor = mod.customRGB || getPredominantColor(img);
-    if (prevalColor.r < 30 && prevalColor.g < 30 && prevalColor.b < 30) {
-        prevalColor.r = Math.min(prevalColor.r + 60, 255);
-        prevalColor.g = Math.min(prevalColor.g + 60, 255);
-        prevalColor.b = Math.min(prevalColor.b + 60, 255);
-    }
 
-    img.style.border = '3px solid ' + `rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5)`;
+    img.style.border = '3px solid ' + `var(--theme-color-point2)`;
     
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
@@ -181,9 +175,8 @@ async function createMod(mod) {
     flexContnainer.style.justifyContent = 'left';
     flexContnainer.style.gap = '6px';
     flexContnainer.style.marginTop = '8px';
-    flexContnainer.style.backgroundColor = 'rgba(' + prevalColor.r + ', ' + prevalColor.g + ', ' + prevalColor.b + ', 0.2)';
+    flexContnainer.style.backgroundColor = 'var(--theme-color-point3)';
     flexContnainer.style.backdropFilter = 'blur(5px)';
-    flexContnainer.style.boxShadow = '0 0 5px ' + `rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.5)`;
     flexContnainer.style.borderRadius = '50px';
     flexContnainer.style.width = 'fit-content';
     flexContnainer.style.padding = '4px';
@@ -233,8 +226,8 @@ async function createMod(mod) {
         let variantSelect = document.createElement('select');
         variantSelect.style.marginTop = '10px';
         variantSelect.className = 'calibri';
-        variantSelect.style.backgroundColor = 'rgba(' + (prevalColor.r - 80) + ', ' + (prevalColor.g - 80) + ', ' + (prevalColor.b - 80) + ', 1)';
-        variantSelect.style.border = '1px solid rgba(' + prevalColor.r + ', ' + prevalColor.g + ', ' + prevalColor.b + ', 0.5)';
+        variantSelect.style.backgroundColor = 'var(--theme-color-point3)';
+        variantSelect.style.border = '1px solid var(--theme-color-point2)';
         variantSelect.style.fontSize = fontSize + 'px';
         variantSelect.style.color = '#ffffff';
         for (const variant of mod.variants) {
@@ -268,7 +261,6 @@ async function createMod(mod) {
         enabled.type = 'checkbox';
         enabled.id = `modcheck-${mod.uid}`;
         enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
-        enabled.style.accentColor = `rgb(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b})`;
         enabled.onchange = e => {
             const c = e.target;
             const isEnabled = c.checked;
@@ -279,10 +271,6 @@ async function createMod(mod) {
         enabledContainer.appendChild(enabled);
     }
 
-    var cssStyle1 = `rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.2)`;
-    var cssStyle2 = `rgba(${prevalColor.r}, ${prevalColor.g}, ${prevalColor.b}, 0.1)`;
-    modNameContainer.style.background = `${cssStyle1}`;
-    enabledContainer.style.background = `${cssStyle2}`;
     modRow.appendChild(modNameContainer);
     modRow.appendChild(enabledContainer);
 

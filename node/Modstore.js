@@ -46,7 +46,23 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
         // I (techy) agree with mc
         // fs.unlinkSync (filePath); // delete the zip file after extraction, I (Zork) commented this out temporarily to keep the zip file for debugging.
 
+        // Flatten if extracted into a single subfolder
+        const contents = fs.readdirSync(modPath);
+        if (contents.length === 1) {
+            const singleItem = path.join(modPath, contents[0]);
+            const stats = fs.statSync(singleItem);
+            if (stats.isDirectory()) {
+                const tempDir = path.join(system.getPacketDatabase(), "Mod_" + randomString(32));
+                fs.renameSync(singleItem, tempDir);
+                fs.rmdirSync(modPath);
+                fs.renameSync(tempDir, modPath);
+            }
+        }
+
         // Legacy support: rename _deltamodInfo.json to meta.json if needed
+
+        
+
         if (fs.existsSync(path.join(modPath, '_deltamodInfo.json'))) {
             fs.copyFileSync(path.join(modPath, '_deltamodInfo.json'), path.join(modPath, 'meta.json'));
             fs.unlinkSync(path.join(modPath, '_deltamodInfo.json'));
@@ -282,8 +298,7 @@ function modList() {
             }
             const pid = meta.packageID;
 
-            // enforced wherever
-            if (true) {
+            if (require('./KeyValue').readUniqueFlag('HASHCHECKS')) {
                 modInfo.neededFiles?.forEach(file => {
                     try {
                         var fileContents = (path.join(system.getSystemFolder('deltaruneInstall'), file.file));

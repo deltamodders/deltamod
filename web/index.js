@@ -11,6 +11,8 @@ var currentAudio = "";
 var theme = null;
 var pageN = null;
 var addedStyle = null;
+var onAudioPlays = null;
+var tempThemeOverride = null;
 var update = false;
 var TARGET_MUSIC_VOLUME = 0.5;
 var cmode = false; // Controller Mode
@@ -96,6 +98,17 @@ window.preloadAPI.onWRA(() => rew());
 
 function error() {
     fetch('http://google.com'); // Force an error trigger if used in a specific context
+}
+
+function disableElem(elem) {
+    if (!elem) return;
+    elem.style.pointerEvents = 'none';
+    elem.style.opacity = '0';
+}
+function enableElem(elem) {
+    if (!elem) return;
+    elem.style.pointerEvents = 'auto';
+    elem.style.opacity = '1';
 }
 
 /**
@@ -311,7 +324,7 @@ function icon(name, fontSize) {
  * @param {boolean} refreshAudio - Whether to also reload and play the main theme song.
  */
 async function themeRefresh(refreshAudio = true) {
-    theme = await fetch('themeprot://data/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    theme = await fetch('themeprot://data/' + (tempThemeOverride || await window.electronAPI.invoke('getTheme', [])) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
     
     if (refreshAudio) {
@@ -413,9 +426,9 @@ async function page(name) {
     // Handle NO-SIDEBAR tag
     if (purifiedHTML.includes('NO-SIDEBAR')) {
         purifiedHTML = purifiedHTML.replace('NO-SIDEBAR', '');
-        Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => button.disabled = true);
+        ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
     } else {
-        Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => button.disabled = false);
+        ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
     }
 
     // Extract Title Tag
@@ -435,6 +448,9 @@ async function page(name) {
             audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
         }
         if (theme.id == themeAudioExclude?.[1]) {
+            audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
+        }
+        if (await window.electronAPI.invoke('getUniqueFlag', ["DYNAMUSIC"]) == false) {
             audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
         }
 
@@ -463,7 +479,8 @@ async function page(name) {
         }
 
         let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
-        if (shouldPlayAudio) {
+        if (shouldPlayAudio || onAudioPlays != null) {
+            onAudioPlays && onAudioPlays();
             audio.play();
         } else {
             audio.pause();
@@ -475,7 +492,7 @@ async function page(name) {
     document.getElementsByClassName('viewport')[0].innerHTML = purifiedHTML;
 
     // Set Active Sidebar Button
-    Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
+    ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => {
         if (button.getAttribute('data-page') === name) {
             button.classList.add('active');
         } else {
@@ -496,7 +513,6 @@ async function page(name) {
     }
 
     pageN = name;
-    document.querySelector('.titleTxt').innerText = title?.[1] || '';
 
     // Generate Dynamic CSS Colors based on Theme
     var rgbNumbers = {
@@ -511,6 +527,7 @@ async function page(name) {
         --theme-color: ${theme.color};
         --theme-color-rgbaless: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.8);
         --theme-color-point2: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.2);
+        --theme-color-point3: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.3);
     }
     button:not(.sidebar-button), input, select {
         border: 1px solid rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.5);
@@ -588,6 +605,37 @@ if (!window.electronAPI) {
     window.location.href = 'about:blank';
 }
 
+(async() => {
+    document.getElementById('versionTitle').innerText = '(v.' + await invoke('version',[]) + ')';
+})();
+
+var renderedUser = false;
+async function renderuser() {
+    if (!(await window.electronAPI.invoke('validateGamebananaToken')) || !navigator.onLine) {
+        renderedUser = true;
+        return;
+    }
+    var gbuser = await window.electronAPI.invoke('getGamebananaUserinfo', []);
+
+    var gbaccount = document.querySelector('.gamebanana-account');
+    gbaccount.innerHTML = `
+        <img src="${gbuser._sAvatarUrl}" alt="Avatar" width="25" height="25" style="border-radius: 15px;">
+        <span>${gbuser._sName}</span>
+    `;
+    gbaccount.style.opacity = '1';
+    gbaccount.addEventListener('click', async () => {
+        if (gbaccount.getAttribute('data-disabled') === 'true') {
+            return;
+        }
+        window._pageArguments = {
+            cat: 'gb'
+        };
+        page('options');
+    });
+
+    renderedUser = true;
+}
+
 /**
  * ==========================================
  * Initialization Boot Sequence
@@ -595,7 +643,62 @@ if (!window.electronAPI) {
  */
 (async function() {
     cmode = await window.electronAPI.invoke('isCMode', []);
+
+    var ribbon = document.querySelectorAll('.sidebar-ribbon');
+    ribbon.forEach(r => {
+        r.addEventListener('click', async () => {
+            if (r.getAttribute('data-disabled') === 'true') {
+                return;
+            }
+            page(r.getAttribute('data-page'));
+        });
+    });
     
+    if (localStorage.getItem('seenDeltamodV2') !== 'true') {
+        localStorage.setItem('seenDeltamodV2', 'true');
+        tempThemeOverride = 'base';
+        onAudioPlays = async () => {
+            function beat(n) {
+                return n * (60/125)
+            }
+            disableElem(document.querySelector('.sidebar'));
+            disableElem(document.querySelector('.viewport'));
+            disableElem(document.querySelector('.gamebanana-account'));
+
+            var logoDiv = document.createElement('div');
+            logoDiv.style.position = 'absolute';
+            logoDiv.style.top = '50%';
+            logoDiv.style.left = '50%';
+            logoDiv.style.opacity = '0';
+            logoDiv.style.transform = 'translate(-50%, -50%)';
+            logoDiv.style.transition = 'opacity ' + beat(8) + 's ease-in-out';
+            document.body.appendChild(logoDiv);
+
+            logoDiv.innerHTML = `
+                <img src="deltapack://web/img/gblogo.png" alt="Logo" style="width: 300px; height: auto;">
+                <p style="text-align: center; font-size: 18px; color: white; font-style: italic !important;">Version 2.0</p>
+            `;
+
+            await new Promise(resolve => setTimeout(resolve, beat(16) * 1000));
+
+            logoDiv.style.opacity = '1';
+
+            await new Promise(resolve => setTimeout(resolve, beat(8) * 1000));
+
+            logoDiv.style.opacity = '0';
+
+            await new Promise(resolve => setTimeout(resolve, beat(8) * 1000));
+
+            enableElem(document.querySelector('.sidebar'));
+            enableElem(document.querySelector('.viewport'));
+            enableElem(document.querySelector('.gamebanana-account'));
+
+            tempThemeOverride = null;
+            onAudioPlays = null;
+            document.body.removeChild(logoDiv);
+        };
+    }
+
     // Initialize Theme prior to initial page loads
     await themeRefresh(false); 
 
@@ -653,20 +756,14 @@ if (!window.electronAPI) {
         return;
     }
 
-    // Check prerequisites
-    var hasCore = await window.electronAPI.invoke('hasPatchingCore',[]);
-    if (!hasCore) {
-        await htmlAlert(
-            "Patcher error", 
-            "There is no patcher core installed. A patcher core is the tool needed to modify your game. Please install a patcher to continue using Deltamod.", 
-            [{ text: "Ok", resolveWith: 'ok' }], 
-            'error_med'
-        );
-
-        window.close();
-        
-        return;
-    }
+    await new Promise(resolve => {
+        var int = setInterval(async () => {
+            if (renderedUser) {
+                clearInterval(int);
+                resolve();
+            }
+        }, 50);
+    });
 
     // Main App Branching Route
     if (loaded.loaded) {
@@ -696,7 +793,7 @@ if (!window.electronAPI) {
         }
     } else {
         await page('locate');
-        document.querySelectorAll('.sidebar-button').forEach(button => button.disabled = true);
+        document.querySelectorAll('.sidebar-ribbon').forEach(button => button.setAttribute('data-disabled', 'true'));
         window.electronAPI.invoke('executeArgumentCmd',[]);
     }
 })();
@@ -725,11 +822,14 @@ function openAudio() {
     
     // Toggle Shop Ribbon
     if (gbflag && navigator.onLine) {
-        document.getElementById('shopRibbon').style.display = 'block';
+        document.getElementById('shopRibbon').style.display = 'inline-flex';
+
     }
 
+    renderuser();
+
     if ((await window.electronAPI.invoke('validateGamebananaToken'))) {
-        document.getElementById('collectionsRibbon').style.display = 'block';
+        document.getElementById('collectionsRibbon').style.display = 'inline-flex';
     }
 
     // Prompt Opt-in for GameBanana Shop functionality

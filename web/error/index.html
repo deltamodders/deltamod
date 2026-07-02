@@ -8,7 +8,7 @@
 </head>
 <body>
     <div style="display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center;">
-        <img src="./dog.gif" alt="" width="128">
+        <img src="./aqua.gif" alt="" width="128">
         <br>
         <p>Deltamod was halted due to an error. Here is the error log:</p>
         <br>
@@ -21,9 +21,12 @@
     <div class="border">
 
     </div>
-    <p class="credit" onclick="showDiagnostic(this)">This Dogcheck remix is by SilvaGunner!</p>
+    <p class="credit" onload="showDiagnostic(this)"></p>
 </body>
 <style>
+    * {
+        image-rendering: pixelated;
+    }
     :root {
         --theme-color: #2a2a2a;
     }

@@ -204,8 +204,12 @@ function createWindow() {
 
     const partOverride = getSystemFile('_sysindex', true);
     if (fs.existsSync(partOverride)) {
-        const overrideData = fs.readFileSync(partOverride, 'utf8');
-        if (parseInt(overrideData, 10) < 0) console.error('The specified installation is invalid.');
+        let overrideData = fs.readFileSync(partOverride, 'utf8');
+        if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + overrideData))) {
+            console.error('The specified installation (' + overrideData + ') is invalid.');
+            overrideData = '0';
+            fs.writeFileSync(partOverride, overrideData, 'utf8');
+        }
         setSystemIndex(overrideData);
     } else {
         setSystemIndex('0');
@@ -228,8 +232,8 @@ function createWindow() {
     
     KeyValue.retrieve();
     win = new BrowserWindow({
-        width: bounds.width * 0.4,
-        height: bounds.height * 0.7,
+        width: 900,
+        height: 600,
         resizable: true,
         frame: false,
         fullscreen: isControllerMode,
@@ -270,7 +274,7 @@ function createWindow() {
 
     win.on('resized', () => {
         let [w, h] = win.getSize();
-        if (w < 800) w = 800;
+        if (w < 900) w = 900;
         if (h < 600) h = 600;
         win.setSize(w, h);
         win.webContents.send('winResAlert', []);
