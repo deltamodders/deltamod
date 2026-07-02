@@ -2,6 +2,10 @@
     user-select: none;
 }
 
+@view-transition {
+  navigation: auto;
+}
+
 :root {
     --topbar-height: 40px;
     --sidebar-size: 150px;
@@ -147,6 +151,7 @@ button:disabled {
     display: flex;
     justify-content: center;
     align-items: center;
+    -webkit-app-region: no-drag;
 }
 
 @keyframes alertFadeIn {

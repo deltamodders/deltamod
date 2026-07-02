@@ -12,7 +12,9 @@ var theme = null;
 var pageN = null;
 var addedStyle = null;
 var onAudioPlays = null;
+var isWatchingV2Cutscene = false;
 var tempThemeOverride = null;
+var tempSongOverride = null;
 var update = false;
 var TARGET_MUSIC_VOLUME = 0.5;
 var cmode = false; // Controller Mode
@@ -453,6 +455,9 @@ async function page(name) {
         if (await window.electronAPI.invoke('getUniqueFlag', ["DYNAMUSIC"]) == false) {
             audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
         }
+        if (tempSongOverride) {
+            audioSrc = ['AUDIO[' + tempSongOverride + ']', tempSongOverride];
+        }
 
         if (audioSrc && audioSrc[1] && audioSrc[1] !== currentAudio) {
             currentAudio = audioSrc[1];
@@ -479,7 +484,7 @@ async function page(name) {
         }
 
         let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
-        if (shouldPlayAudio || onAudioPlays != null) {
+        if (shouldPlayAudio || onAudioPlays != null || tempSongOverride != null) {
             onAudioPlays && onAudioPlays();
             audio.play();
         } else {
@@ -657,13 +662,20 @@ async function renderuser() {
     if (localStorage.getItem('seenDeltamodV2') !== 'true') {
         localStorage.setItem('seenDeltamodV2', 'true');
         tempThemeOverride = 'base';
+        await window.electronAPI.invoke('setTheme', ['base']);
+        tempSongOverride = 'audio/ch5_intro.mp3';
         onAudioPlays = async () => {
+            isWatchingV2Cutscene = true;
             function beat(n) {
                 return n * (60/125)
             }
             disableElem(document.querySelector('.sidebar'));
             disableElem(document.querySelector('.viewport'));
             disableElem(document.querySelector('.gamebanana-account'));
+
+            document.querySelector('.bg').style.filter = 'brightness(0.1)';
+            await new Promise(resolve => setTimeout(resolve, 100));
+            document.querySelector('.bg').style.transition = beat(8) + 's ease-in-out';
 
             var logoDiv = document.createElement('div');
             logoDiv.style.position = 'absolute';
@@ -681,21 +693,17 @@ async function renderuser() {
 
             await new Promise(resolve => setTimeout(resolve, beat(16) * 1000));
 
+            document.querySelector('.bg').style.filter = 'brightness(1)';
             logoDiv.style.opacity = '1';
 
-            await new Promise(resolve => setTimeout(resolve, beat(8) * 1000));
+            await new Promise(resolve => setTimeout(resolve, beat(12) * 1000));
 
             logoDiv.style.opacity = '0';
 
-            await new Promise(resolve => setTimeout(resolve, beat(8) * 1000));
+            await new Promise(resolve => setTimeout(resolve, beat(12) * 1000));
 
-            enableElem(document.querySelector('.sidebar'));
-            enableElem(document.querySelector('.viewport'));
-            enableElem(document.querySelector('.gamebanana-account'));
-
-            tempThemeOverride = null;
-            onAudioPlays = null;
-            document.body.removeChild(logoDiv);
+            isWatchingV2Cutscene = false;
+            window.location.reload();
         };
     }
 
@@ -818,35 +826,9 @@ function openAudio() {
  * ==========================================
  */
 (async () => {
-    var gbflag = await window.electronAPI.invoke('getUniqueFlag', ['SHOP']);
-    
-    // Toggle Shop Ribbon
-    if (gbflag && navigator.onLine) {
-        document.getElementById('shopRibbon').style.display = 'inline-flex';
-
-    }
-
     renderuser();
 
     if ((await window.electronAPI.invoke('validateGamebananaToken'))) {
         document.getElementById('collectionsRibbon').style.display = 'inline-flex';
-    }
-
-    // Prompt Opt-in for GameBanana Shop functionality
-    if (!localStorage.getItem('seenShopAlert') && !gbflag && navigator.onLine) {
-        localStorage.setItem('seenShopAlert', 'true');
-        var res = await htmlAlert(
-            "Mod Shop", 
-            "Do you wish to enable the Mod Shop page? The service uses GameBanana. This can be toggled later in the options.", 
-            [
-                { text: "Yes", resolveWith: true },
-                { text: "No", resolveWith: false }
-            ]
-        );
-        
-        await window.electronAPI.invoke('setUniqueFlag', ['SHOP', res]);
-        if (res) {
-            window.location.reload();
-        }
     }
 })();

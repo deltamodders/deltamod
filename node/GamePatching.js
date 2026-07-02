@@ -4,7 +4,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 const { dialog } = require('electron');
 
-const PATCHER_PATH = path.join(__dirname, '..', 'tools', 'G3MTool.exe');
+const PATCHER_PATH = path.join(__dirname, '..', 'tools', 'g3mtool', 'G3MTool.exe');
 
 async function g3mtool(callback, ...args) {
     console.log('Running G3MTool with args: G3MTool', args.join(' '));
@@ -23,7 +23,7 @@ async function g3mtool(callback, ...args) {
             if (code === 0) {
                 resolve();
             } else {
-                dialog.showErrorBox('G3MTool Error', `G3MTool exited with code ${code}.\n\nOutput:\n${output}`);
+                dialog.showErrorBox('G3MTool Error', `G3MTool exited with code ${code}.\nCommand: ${PATCHER_PATH} ${args.join(' ')}\nOutput:\n${output}`);
                 reject(new Error(`G3MTool exited with code ${code}`));
             }
         });
@@ -100,21 +100,22 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     await Promise.all(Object.entries(xdeltaMap).map(async ([targetFile, patches]) => {
         log(`Applying xdelta patches for file: ${targetFile} (${patches.length} patches)`);
 
-        var newPath = path.join(gamePath, targetFile.replace('.win','') + '-og.win');
-        fs.renameSync(path.join(gamePath, targetFile), newPath);
+        var newp = path.join(gamePath, targetFile + '.bak');
+        fs.copyFileSync(path.join(gamePath, targetFile), newp);
+        fs.rmSync(path.join(gamePath, targetFile), { force: true });
+
+        log('backed up original file: ' + targetFile + ' to ' + targetFile + '.bak');
 
         if (patches.length > 1) {
             log('Merging ' + patches.length + ' xdelta patches for file: ' + targetFile);
-            var output = await g3mtool(log, 'patch', 'merge', newPath, ...patches.map(p => p.patch), '--apply', path.join(gamePath, targetFile));
+            var output = await g3mtool(log, 'patch', 'merge', newp, ...patches.map(p => p.patch), '--apply', path.join(gamePath, targetFile));
         }
         else {
             log('Applying single xdelta patch for file: ' + targetFile);
-            var output = await g3mtool(log, 'xpatch', 'apply', '"' + path.join(gamePath, targetFile) + '"', '"' + patches[0].patch + '"', '--apply', '"' + path.join(gamePath, targetFile) + '"');
+            var output = await g3mtool(log, 'patch', 'apply', '"' + newp + '"', '"' + patches[0].patch + '"', '--apply', '"' + path.join(gamePath, targetFile) + '"');
         }
 
         log(`xdelta patches applied for file: ${targetFile}`);
-
-        fs.renameSync(newPath, path.join(gamePath, targetFile + '.bak'));
     }));
 
     log('xdelta patches prepared.');
@@ -123,11 +124,13 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
 async function restore(gamePath) {
     const files = fs.readdirSync(gamePath);
+    console.log('Restoring original game files...');
     for (const file of files) {
         if (fs.statSync(path.join(gamePath, file)).isDirectory()) {
             restore(path.join(gamePath, file));
         }
         if (file.endsWith('.bak')) {
+            console.log('Restoring file: ' + file);
             const originalFile = file.slice(0, -4);
             fs.rmSync(path.join(gamePath, originalFile), { force: true });
             fs.renameSync(path.join(gamePath, file), path.join(gamePath, originalFile));

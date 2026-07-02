@@ -181,21 +181,12 @@ async function getInstallations(suppressWarnings = false) {
                     type: 'warning',
                     title: 'Invalid Installation Found',
                     message: `An invalid or not fully imported installation of a game was found: ${cname}.\n\n${error}\n\nThis installation will be removed from Deltamod.`,
-                    buttons: ['OK','Don\'t delete']
+                    buttons: ['OK']
                 });
             }
 
-            if (response === 1) {
-                fs.renameSync(installPath, path.join(app.getPath('desktop'), `Deltamod install backup`));
-                dialog.showMessageBoxSync({
-                    type: 'info',
-                    title: 'Installation Not Removed',
-                    message: `The installation "${cname}" has been moved to your desktop as a backup. You can manually restore it later if needed.`
-                });
-            }
-            else {
-                fs.rmSync(installPath, { recursive: true, force: true });
-            }
+            fs.rmSync(installPath, { recursive: true, force: true });
+
             reorderInstalls();
 
             console.log(`Removed invalid installation: ${file}`);
@@ -1101,4 +1092,6 @@ module.exports = function registerIPCHandlers(context) {
             dialog.showErrorBox('Error', `Failed to download CLI: ${e.message || e}`);
         }
     });
+
+    GamePatching.restore(KeyValue.readKVS('gamePath'));
 };

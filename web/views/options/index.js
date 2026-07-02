@@ -156,7 +156,6 @@ window.currentPageStack.cat = async function(cat) {
             await addCheckboxOption("Enable hash checks", "If enabled, Deltamod will check the hashes of mods to ensure compatibility. This may slow down Deltamod and render some mods incompatible.", 'hashchecks', true);
             break;
         case 'ui':
-            await addCheckboxOption("Enable Mod Shop", "Enables the Mod Shop feature, allowing you to browse and install mods from the GameBanana community.", 'SHOP', true);
             await addCheckboxOption("Enable music in menus", "Plays background music in the main menus.", 'audio', false, (enabled) => {
                 if (enabled) {
                     var a = new Audio();

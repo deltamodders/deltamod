@@ -362,7 +362,8 @@ async function renderMods(table, GB_API, filter, gameID) {
                 desc.className = 'modDescSpan iptspan';
                 const relativeDate = (() => {
                     const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
-                    const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+                    const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+                    /** @type {Array<{limit:number,value:number,unit:Intl.RelativeTimeFormatUnit}>} */
                     const units = [
                         { limit: 60, value: 1, unit: 'second' },
                         { limit: 3600, value: 60, unit: 'minute' },
@@ -374,7 +375,7 @@ async function renderMods(table, GB_API, filter, gameID) {
 
                     for (const { limit, value, unit } of units) {
                         if (Math.abs(diffSeconds) < limit) {
-                            return rtf.format(Math.round(diffSeconds / value), unit);
+                            return rtf.format(Math.round(diffSeconds / value), /** @type {Intl.RelativeTimeFormatUnit} */ (unit));
                         }
                     }
                 })();
