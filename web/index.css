@@ -85,11 +85,11 @@ button:disabled {
 @keyframes stuffFadeIn {
     0% {
         opacity: 0;
-        transform: translateX(-30px) rotateY(-10deg);
+        transform: translateX(-50px) rotateY(-30deg) translateY(-20px);
     }
     100% {
         opacity: 1;
-        transform: translateX(0px) rotateY(0deg);
+        transform: translateX(0px) rotateY(0deg) translateY(0px);
     }
 }
 
