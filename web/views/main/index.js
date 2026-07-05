@@ -226,7 +226,7 @@ async function createMod(mod) {
         let variantSelect = document.createElement('select');
         variantSelect.style.marginTop = '10px';
         variantSelect.className = 'calibri';
-        variantSelect.style.backgroundColor = 'var(--theme-color-point3)';
+        variantSelect.style.backgroundColor = 'var(--theme-color)';
         variantSelect.style.border = '1px solid var(--theme-color-point2)';
         variantSelect.style.fontSize = fontSize + 'px';
         variantSelect.style.color = '#ffffff';
@@ -234,17 +234,22 @@ async function createMod(mod) {
             let option = document.createElement('option');
             option.value = variant.filename;
             option.innerText = variant.name;
+            if (variant.filename == null || variant.filename == undefined || variant.name == null || variant.name == undefined) {
+                continue;
+            }
             variantSelect.appendChild(option);
         }
-        variantSelect.onchange = e => {
-            const selectedVariant = e.target.value;
-            window.electronAPI.invoke('setModVariant', [selectedVariant, mod.folder]);
-        };
-        variantSelect.value = mod._selectedVariant || mod.variants[0].filename;
-        if (mod._selectedVariant == null || !mod.variants.some(v => v.filename === mod._selectedVariant)) {
-            window.electronAPI.invoke('setModVariant', [mod.variants[0].filename, mod.folder]);
+        if (variantSelect.children.length != 0) {
+            variantSelect.onchange = e => {
+                const selectedVariant = variantSelect.value;
+                window.electronAPI.invoke('setModVariant', [selectedVariant, mod.folder]);
+            };
+            variantSelect.value = mod._selectedVariant || mod.variants[0].filename;
+            if (mod._selectedVariant == null || !mod.variants.some(v => v.filename === mod._selectedVariant)) {
+                window.electronAPI.invoke('setModVariant', [mod.variants[0].filename, mod.folder]);
+            }
+            infoContainer.appendChild(variantSelect);
         }
-        infoContainer.appendChild(variantSelect);
     }
 
     bigAhhContainer.appendChild(imageContainer);
@@ -361,7 +366,7 @@ function loadInst(index) {
             td.style.paddingLeft = '10px';
             td.style.fontSize = '18px';
             td.style.fontWeight = 'bold';
-            td.style.backgroundColor = '#222';
+            td.style.backgroundColor = 'rgba(40, 40, 40, 0.05)';
             td.style.color = '#fff';
             td.innerText = `Mods by ${x.author[0] || "Unknown"}`;
             tr.appendChild(td);

@@ -11,10 +11,6 @@ var currentAudio = "";
 var theme = null;
 var pageN = null;
 var addedStyle = null;
-var onAudioPlays = null;
-var isWatchingV2Cutscene = false;
-var tempThemeOverride = null;
-var tempSongOverride = null;
 var update = false;
 var TARGET_MUSIC_VOLUME = 0.5;
 var cmode = false; // Controller Mode
@@ -143,8 +139,8 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         var alertMain = document.getElementsByClassName('alertMain')[0];
         var alertMsgR = alertMain.getElementsByClassName('alertMsg')[0];
 
-        var animOptions = 'cubic-bezier(0.22, 1, 0.36, 1) forwards';
-        var animLength = 0.5;
+        var animOptions = 'cubic-bezier(0.16, 1, 0.3, 1) forwards';
+        var animLength = 0.6;
 
         alertMsgR.innerHTML = '';
 
@@ -170,10 +166,15 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         buttonsHTML.style.textAlign = 'right';
         buttonsHTML.classList.add('alertButtons');
         buttonsHTML.style.opacity = '0';
+        buttonsHTML.style.display = 'flex';
+        buttonsHTML.style.gap = '8px';
+        buttonsHTML.style.justifyContent = 'flex-end';
+        
 
         buttons.forEach((button) => {
             var btn = document.createElement('button');
             btn.textContent = button.text;
+            btn.style.flex = '1 1 0';
             btn.onclick = function() {
                 // Outro animation
                 alertMsgR.style.animation = `${animLength}s alertFadeOut ${animOptions}`;
@@ -224,7 +225,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         var bigIcon = document.createElement('span');
         bigIcon.classList.add('material-symbols-outlined', 'alertBigIcon');
         bigIcon.innerText = specialIcon;
-        bigIcon.style.fontSize = '400px';
+        bigIcon.style.fontSize = '490px';
         bigIcon.style.position = 'absolute';
         bigIcon.style.top = '-100px';
         bigIcon.style.right = '-50px';
@@ -234,9 +235,9 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         alertMsgR.appendChild(bigIcon);
 
         // Cascade Intro Animations
-        setTimeout(() => { titleElement.style.animation = `${animLength}s stuffFadeIn ${animOptions}`; }, 100);
-        setTimeout(() => { messageElement.style.animation = `${animLength}s stuffFadeIn ${animOptions}`; }, 200);
-        setTimeout(() => { buttonsHTML.style.animation = `${animLength}s stuffFadeIn ${animOptions}`; }, 300);
+        setTimeout(() => { titleElement.style.animation = `${animLength*1.2}s stuffFadeIn ${animOptions}`; }, 200);
+        setTimeout(() => { messageElement.style.animation = `${animLength*1.2}s stuffFadeIn ${animOptions}`; }, 300);
+        setTimeout(() => { buttonsHTML.style.animation = `${animLength*1.2}s stuffFadeIn ${animOptions}`; }, 400);
 
         // Play alert SFX
         var a = new Audio();
@@ -326,7 +327,7 @@ function icon(name, fontSize) {
  * @param {boolean} refreshAudio - Whether to also reload and play the main theme song.
  */
 async function themeRefresh(refreshAudio = true) {
-    theme = await fetch('themeprot://data/' + (tempThemeOverride || await window.electronAPI.invoke('getTheme', [])) + '.theme.json').then(response => response.json());
+    theme = await fetch('themeprot://data/' + (await window.electronAPI.invoke('getTheme', [])) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
     
     if (refreshAudio) {
@@ -455,9 +456,6 @@ async function page(name) {
         if (await window.electronAPI.invoke('getUniqueFlag', ["DYNAMUSIC"]) == false) {
             audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
         }
-        if (tempSongOverride) {
-            audioSrc = ['AUDIO[' + tempSongOverride + ']', tempSongOverride];
-        }
 
         if (audioSrc && audioSrc[1] && audioSrc[1] !== currentAudio) {
             currentAudio = audioSrc[1];
@@ -484,8 +482,7 @@ async function page(name) {
         }
 
         let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
-        if (shouldPlayAudio || onAudioPlays != null || tempSongOverride != null) {
-            onAudioPlays && onAudioPlays();
+        if (shouldPlayAudio) {
             audio.play();
         } else {
             audio.pause();
@@ -659,54 +656,6 @@ async function renderuser() {
         });
     });
     
-    if (localStorage.getItem('seenDeltamodV2') !== 'true') {
-        localStorage.setItem('seenDeltamodV2', 'true');
-        tempThemeOverride = 'base';
-        await window.electronAPI.invoke('setTheme', ['base']);
-        tempSongOverride = 'audio/ch5_intro.mp3';
-        onAudioPlays = async () => {
-            isWatchingV2Cutscene = true;
-            function beat(n) {
-                return n * (60/125)
-            }
-            disableElem(document.querySelector('.sidebar'));
-            disableElem(document.querySelector('.viewport'));
-            disableElem(document.querySelector('.gamebanana-account'));
-
-            document.querySelector('.bg').style.filter = 'brightness(0.1)';
-            await new Promise(resolve => setTimeout(resolve, 100));
-            document.querySelector('.bg').style.transition = beat(8) + 's ease-in-out';
-
-            var logoDiv = document.createElement('div');
-            logoDiv.style.position = 'absolute';
-            logoDiv.style.top = '50%';
-            logoDiv.style.left = '50%';
-            logoDiv.style.opacity = '0';
-            logoDiv.style.transform = 'translate(-50%, -50%)';
-            logoDiv.style.transition = 'opacity ' + beat(8) + 's ease-in-out';
-            document.body.appendChild(logoDiv);
-
-            logoDiv.innerHTML = `
-                <img src="deltapack://web/img/gblogo.png" alt="Logo" style="width: 300px; height: auto;">
-                <p style="text-align: center; font-size: 18px; color: white; font-style: italic !important;">Version 2.0</p>
-            `;
-
-            await new Promise(resolve => setTimeout(resolve, beat(16) * 1000));
-
-            document.querySelector('.bg').style.filter = 'brightness(1)';
-            logoDiv.style.opacity = '1';
-
-            await new Promise(resolve => setTimeout(resolve, beat(12) * 1000));
-
-            logoDiv.style.opacity = '0';
-
-            await new Promise(resolve => setTimeout(resolve, beat(12) * 1000));
-
-            isWatchingV2Cutscene = false;
-            window.location.reload();
-        };
-    }
-
     // Initialize Theme prior to initial page loads
     await themeRefresh(false); 
 

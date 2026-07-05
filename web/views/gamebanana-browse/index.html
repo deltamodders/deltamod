@@ -4,7 +4,12 @@
         <button onclick="page('')">
             <span class="material-symbols-outlined smicon">home</span>
         </button>
-        <input type="text" id="searchInput" placeholder="Search for mods...">
+        <div class="autocomplete">
+            <input type="text" id="searchInput" placeholder="Search for mods...">
+            <div class="results" style="opacity: 0; pointer-events: none;">
+
+            </div>
+        </div>
         <button onclick="window.currentPageStack.search()">
             <span class="material-symbols-outlined smicon">search</span>
         </button>

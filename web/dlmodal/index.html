@@ -9,17 +9,16 @@
     <img src="./logo.png" alt="" width="70" class="deltamodLogo">
 </body>
 <script>
-    var loadAudio;
     var doneAudio;
     function updateProgress(percent) {
-        if (percent >= 100 && loadAudio) {
-            loadAudio.pause();
-            loadAudio = null;
-            if (!doneAudio) {
-                doneAudio = new Audio("./done.wav");
-                doneAudio.volume = 0.5;
-                doneAudio.play();
-            }
+        if (percent >= 100 && !doneAudio) {
+            doneAudio = new Audio("./done.mp3");
+            doneAudio.volume = 0.5;
+            doneAudio.playbackRate = 1.9;
+            doneAudio.play();
+
+            const logoEl = document.querySelector(".deltamodLogo");
+            if (logoEl) logoEl.style.animation = "rotater 0.6s infinite linear";
         }
         const value = Math.max(0, Math.min(100, Number(percent) || 0));
         const logo = document.querySelector(".deltamodLogo");
@@ -125,11 +124,6 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         updateProgress(0);
-
-        loadAudio = new Audio("./load.wav");
-        loadAudio.volume = 0.5;
-        loadAudio.loop = true;
-        loadAudio.play();
     });
 </script>
 <style>
@@ -154,7 +148,7 @@
         align-items: center;
         font-family: Arial, sans-serif;
 
-        background-image: url('./bg.svg');
+        background-image: url('./anotherhim.webp');
         background-size: cover;
         background-repeat: no-repeat;
 
@@ -165,6 +159,10 @@
     @keyframes rotate {
         0% { transform: rotateY(0deg); }
         100% { transform: rotateY(360deg); }
+    }
+     @keyframes rotater {
+        0% { transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg); }
+        100% { transform: rotateY(360deg) rotateX(360deg) rotateZ(360deg); }
     }
     .deltamodLogo {
         animation: rotate 1.3s infinite linear;

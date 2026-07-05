@@ -257,8 +257,8 @@ function intoIM() {
  */
 module.exports = function registerIPCHandlers(context) {
     const { getWindow, isControllerMode, isDevToolsEnabled, errorWin, state } = context;
-    const { getGBUIConf, collections } = require('./GameBananaWindow');
-
+    const GameBanana = require('./GameBanana');
+    // { getGBUIConf, collections }
 
     ipcMain.handle('isCMode', () => isControllerMode);
     ipcMain.handle('shouldGoIM', () => process.argv.includes('---im'));
@@ -416,20 +416,20 @@ module.exports = function registerIPCHandlers(context) {
                 message: 'Your system does not support secure storage. GameBanana login information will be stored without encryption.',
             });
         }
-        const token = await require('./GameBananaWindow.js').obtainLogin();
+        const token = await GameBanana.obtainLogin();
         const file = getSystemFile('bananapwd', true);
         fs.writeFileSync(file, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(token) : token, 'utf8');
         return true;
     });
     ipcMain.handle('logoutGamebanana', async () => {
         try { fs.unlinkSync(getSystemFile('bananapwd', true)); } catch {}
-        require('./GameBananaWindow.js').clearCache();
+        GameBanana.clearCache();
         return true;
     });
-    ipcMain.handle('eraseGamebananaCache', () => require('./GameBananaWindow.js').clearCache());
+    ipcMain.handle('eraseGamebananaCache', () => GameBanana.clearCache());
     ipcMain.handle('leaveCommentGamebanana', async (event, args) => {
-        const uiconf = await getGBUIConf();
-        if (uiconf._idMemberRow > 0) return await require('./GameBananaWindow.js').leaveComment(args[0], args[1], args[2]);
+        const uiconf = await GameBanana.getGBUIConf();
+        if (uiconf._idMemberRow > 0) return await GameBanana.leaveComment(args[0], args[1], args[2]);
     });
     ipcMain.handle('openImageViewer', async (event, args) => {
         return new Promise(resolve => {
@@ -461,10 +461,10 @@ module.exports = function registerIPCHandlers(context) {
         });
     });
     ipcMain.handle('gbLikeMod', async (event, args) => {
-        const uiconf = await getGBUIConf();
-        if (uiconf._idMemberRow > 0) return await require('./GameBananaWindow.js').likeMod(args[0], args[1]);
+        const uiconf = await GameBanana.getGBUIConf();
+        if (uiconf._idMemberRow > 0) return await GameBanana.likeMod(args[0], args[1]);
     });
-    ipcMain.handle('validateGamebananaToken', async () => (await getGBUIConf())._idMemberRow > 0);
+    ipcMain.handle('validateGamebananaToken', async () => (await GameBanana.getGBUIConf())._idMemberRow > 0);
     ipcMain.handle('dev_getGBToken', async () => {
         const win = getWindow();
         const file = getSystemFile('bananapwd', true);
@@ -475,11 +475,11 @@ module.exports = function registerIPCHandlers(context) {
         const result = await dialog.showSaveDialog(win, { title: 'Save GameBanana Token', defaultPath: path.join(os.homedir(), 'gamebanana_token.txt') });
         if (!result.canceled && result.filePath) fs.writeFileSync(result.filePath, token, 'utf8');
     });
-    ipcMain.handle('getGamebananaPic', async () => (await getGBUIConf())._sAvatarUrl);
-    ipcMain.handle('getGamebananaID', async () => (await getGBUIConf())._idMemberRow);
+    ipcMain.handle('getGamebananaPic', async () => (await GameBanana.getGBUIConf())._sAvatarUrl);
+    ipcMain.handle('getGamebananaID', async () => (await GameBanana.getGBUIConf())._idMemberRow);
     ipcMain.handle('getGamebananaUserinfo', async () => {
         try {
-            const id = (await getGBUIConf())._idMemberRow;
+            const id = (await GameBanana.getGBUIConf())._idMemberRow;
             if (id <= 0) return { loggedIn: false };
             const profile = await axios.get(`https://gamebanana.com/apiv11/Member/${id}/ProfilePage`);
             return { ...profile.data, loggedIn: true };
@@ -516,7 +516,7 @@ module.exports = function registerIPCHandlers(context) {
             }
             if (mod.game !== edition) {
                 mod.isIncompatible = true;
-                mod.incompatibilityReason = 'Mod is for ' + mod.game + ' but your current game is ' + edition;
+                mod.incompatibilityReason = 'Mod is for ' + GameDB.getGameById(mod.game)?.name + ' but your current game is ' + GameDB.getGameById(edition)?.name;
             }
             return mod;
         });
@@ -591,7 +591,7 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('gamebanana_getCollections', async () => {
-        var res = await collections.list();
+        var res = await GameBanana.collections.list();
         return (typeof res === 'object' && Array.isArray(res)) ? res.map(c => ({
             id: c._idRow,
             name: c._sName,
@@ -599,11 +599,11 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('gamebanana_createCollection', async (event, args) => {
-        return await collections.create(args[0]);
+        return await GameBanana.collections.create(args[0]);
     });
 
     ipcMain.handle('gamebanana_deleteCollection', async (event, args) => {
-        return await collections.delete(args[0]);
+        return await GameBanana.collections.delete(args[0]);
     });
 
     ipcMain.handle('gamebanana_importToCollection', async (event, args) => {
@@ -614,7 +614,7 @@ module.exports = function registerIPCHandlers(context) {
         const skippedMods = [];
         
         for (const mod of gbMods) {
-            const added = await collections.add(args[0], mod.id, mod.model);
+            const added = await GameBanana.collections.add(args[0], mod.id, mod.model);
             if (!added.success) {
                 skippedMods.push({
                     name: mod.name,
@@ -629,7 +629,7 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('gamebanana_downloadAllInCollection', async (event, args) => {
-        var mods = await collections.inspect(args[0]);
+        var mods = await GameBanana.collections.inspect(args[0]);
 
         var pwin = createProgressModal();
 
@@ -967,7 +967,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('locateDelta', async () => {
         const win = getWindow();
         const pathdial = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
-        return pathdial.canceled ? null : validateDeltarune(pathdial.filePaths[0]);
+        return pathdial.canceled ? null : (validateDeltarune(pathdial.filePaths[0]) ? pathdial.filePaths[0] : "Invalid");
     });
     ipcMain.handle('canReportError', () => !isDevToolsEnabled && !state.updateAvailable);
     

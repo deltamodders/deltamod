@@ -76,15 +76,16 @@ button, input, select {
     font-size: 16px;
     color: white;
     background-color: rgb(15,15,15);
+    padding: 8px 11px;
     border-radius: 5px;
-    padding: 9px;
     cursor: pointer;
-    transition: 0.3s all;
+    transition: 0.2s all;
 }
 
 input:focus {
     outline: none;
-    scale: 1.1;
+    scale: 1.12;
+    box-shadow: 0 0 10px var(--theme-color-point2);
 }
 
 button:hover {
@@ -142,8 +143,8 @@ table {
     border: 1px solid var(--theme-color);
     border-radius: 10px;
     padding: 10px;
-    background: linear-gradient(90deg,rgba(40, 40, 40, 0.127) 0%, rgba(43, 43, 43, 0.4) 100%);
-    backdrop-filter: blur(10px);
+    background: rgba(40, 40, 40, 0.05);
+    backdrop-filter: brightness(0.8);
     color: white;
     font-family: "Pixel", sans-serif;
     font-size: 16px;

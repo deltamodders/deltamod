@@ -10,7 +10,6 @@
     --topbar-height: 40px;
     --sidebar-size: 150px;
 }
-
 .loadingBar {
     width: 70px;
     height: 70px;
@@ -21,7 +20,7 @@
 @keyframes elFadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(-20px);
     }
     to {
         opacity: 1;
@@ -84,13 +83,13 @@ button:disabled {
 }
 
 @keyframes stuffFadeIn {
-    from {
+    0% {
         opacity: 0;
-        transform: translateX(-20px);
+        transform: translateX(-30px) rotateY(-10deg);
     }
-    to {
+    100% {
         opacity: 1;
-        transform: translateX(0px);
+        transform: translateX(0px) rotateY(0deg);
     }
 }
 
@@ -133,10 +132,11 @@ button:disabled {
     align-items: center;
     gap: 10px;
     margin-top: 10px;
+    width: 50%;
 }
 .alertButtons > button {
     min-width: 50px;
-    padding: 5px 10px;
+    padding: 10px;
     margin-bottom: 5px;
 }
 
@@ -150,18 +150,18 @@ button:disabled {
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: end;
     -webkit-app-region: no-drag;
 }
 
 @keyframes alertFadeIn {
     from {
         opacity: 0;
-        height: 5px;
+        transform: translateY(200px);
     }
     to {
         opacity: 1;
-        height: 190px;
+        transform: translateY(0px);
     }
 }
 
@@ -169,11 +169,11 @@ button:disabled {
 @keyframes alertFadeOut {
     from {
         opacity: 1;
-        height: 190px;
+        transform: translateY(0px);
     }
     to {
         opacity: 0;
-        height: 0px;
+        transform: translateY(200px);
     }
 }
 
@@ -182,21 +182,22 @@ button:disabled {
 .alertMsg {
     min-width: 100%;
     max-width: 650px;
-    backdrop-filter: blur(7px);
-    background-color: rgba(72, 72, 72, 0.02);
+    backdrop-filter: brightness(0.8) blur(2px);
+    background-color: rgba(0, 0, 0, 0.2);
     border-top: 2px solid var(--theme-color);
-    border-bottom: 2px solid var(--theme-color);
-    padding: 20px;
+    border-bottom: none;
+    padding-top: 25px;
     padding-left: 50px;
     padding-right: 50px;
+    padding-bottom: 40px;
     box-sizing: border-box;
     overflow-y: hidden;
     overflow-x: hidden;
     font-family: 'Calibri', sans-serif;
     color: white;
-    height: 190px;
+    height: fit-content;
     font-size: 16px;
-    animation: 0.6s alertFadeIn cubic-bezier(0.22, 1, 0.36, 1);
+    animation: 0.6s alertFadeIn cubic-bezier(0.22, 1, 0.36, 1)
 }
 
 .sidebar-buttons {
@@ -302,15 +303,14 @@ body {
 
 .sidebar {
     position: absolute;
-    top: 0;
+    top: calc(var(--topbar-height) * 1);
     left: 0;
     width: calc(var(--sidebar-size) * 1 + 20px);
-    height: 100%;
+    height: calc(100% - calc(var(--topbar-height) * 1));
     box-shadow: unset;
     padding-bottom: 15px;
-    padding-top: calc(var(--topbar-height) * 1);
-    backdrop-filter: blur(15px);
-    background-color: rgba(40, 40, 40, 0.286);
+    backdrop-filter: brightness(0.8);
+    background-color: rgba(40, 40, 40, 0.05);
     overflow-x: hidden;
     transition: 0.9s all cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 2;
@@ -403,8 +403,8 @@ h1 {
     padding-left: 20px;
     height: calc(var(--topbar-height) * 1);
     font-size: 10px;
-    backdrop-filter: blur(15px);
-    background-color: rgba(40, 40, 40, 0);
+    backdrop-filter: brightness(0.8);
+    background-color: rgba(40, 40, 40, 0.05);
     -webkit-app-region: drag;
     z-index: 99;
     user-select: none;
