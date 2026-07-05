@@ -128,16 +128,22 @@
                 deleteBtn.innerHTML = icon('delete', '18px');
 
                 deleteBtn.onclick = async () => {
-                    const resp = await htmlAlert(
-                        'Warning',
-                        `Are you sure you want to delete the installation "${
-                            install.name || `Install #${install.index + 1}`
-                        }"? This action cannot be undone.`,
-                        [
-                            { text: 'Yes', resolveWith: 'Y' },
-                            { text: 'No', resolveWith: 'N' },
-                        ]
-                    );
+                    let resp = 'N';
+                    if (!window.ctrlDown) {
+                        resp = await htmlAlert(
+                            'Warning',
+                            `Are you sure you want to delete the installation "${
+                                install.name || `Install #${install.index + 1}`
+                            }"? This action cannot be undone.`,
+                            [
+                                { text: 'Yes', resolveWith: 'Y' },
+                                { text: 'No', resolveWith: 'N' },
+                            ]
+                        );
+                    }
+                    else {
+                        resp = 'Y';
+                    }
 
                     if (resp === 'Y') {
                         window.electronAPI.invoke('deleteSystemIndex', [
@@ -267,4 +273,14 @@
     }
 })().catch(e => {
     window.alert('Unexpected error: ' + e.message + '\n' + e.stack);
+});
+
+elisten(document, 'keydown', e => {
+    var ctrlDown = e.ctrlKey || e.metaKey;
+    window.ctrlDown = ctrlDown;
+});
+
+elisten(document, 'keyup', e => {
+    var ctrlDown = e.ctrlKey || e.metaKey;
+    window.ctrlDown = ctrlDown;
 });

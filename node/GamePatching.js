@@ -70,7 +70,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
     var performedOverridePatches = 0;
 
     for (const mod of moddingInfo) {
-        for (const patch of mod.patches.filter(p => p.type === 'override')) {
+        for (const patch of mod.patches.filter(p => p.type === 'override' || p.type === 'copy')) {
             const patchPath = path.join(modFolder, mod.folder, patch.patch);
             const targetPath = path.join(gamePath, patch.to);
 
@@ -81,12 +81,23 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
 
             patchedFiles.push(targetPath);
 
-            fs.renameSync(targetPath, targetPath + '.bak');
+            if (!fs.existsSync(patchPath)) {
+                dialog.showErrorBox('Patch Error', `Patch file ${patchPath} not found. Please check the mod files.`);
+                return { patched: false, log: `Patch file ${patchPath} not found. Please check the mod files.`};
+            }
+
+            if (fs.existsSync(targetPath)) {
+                fs.renameSync(targetPath, targetPath + '.bak');
+            }
+            else {
+                fs.writeFileSync(targetPath + '.bak', 'Placeholder File.\nIt placeholds.');
+            }
+            
             fs.copyFileSync(patchPath, targetPath);
 
             performedOverridePatches++;
             performedPatches++;
-            log(performedOverridePatches + '/' + mod.patches.filter(p => p.type === 'override').length + ' override patches applied.');
+            log(performedOverridePatches + '/' + mod.patches.filter(p => p.type === 'override' || p.type === 'copy').length + ' override patches applied.');
 
             progressCallback(performedPatches / totalPatches * 100);
         }
@@ -146,11 +157,6 @@ async function restore(gamePath) {
         if (file.endsWith('.bak')) {
             console.log('Restoring file: ' + file);
             const originalFile = file.slice(0, -4);
-            fs.rmSync(path.join(gamePath, originalFile), { force: true });
-            fs.renameSync(path.join(gamePath, file), path.join(gamePath, originalFile));
-        }
-        if (file.endsWith('-og.win')) {
-            const originalFile = file.slice(0, -7) + '.win';
             fs.rmSync(path.join(gamePath, originalFile), { force: true });
             fs.renameSync(path.join(gamePath, file), path.join(gamePath, originalFile));
         }
