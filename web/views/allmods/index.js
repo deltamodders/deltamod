@@ -55,12 +55,6 @@ async function createMod(mod, compatible) {
     descSpan.className = 'calibri';
     descSpan.style = 'font-size: 10px; color: #ffffffdd;';
     descSpan.innerText = purifyDescription(mod.description);
-    descSpan.style.cursor = 'pointer';
-    descSpan.onclick = async () => {
-        const fullDesc = purify(mod.description);
-        if (fullDesc.length === 0) return;
-        htmlAlert(mod.name, fullDesc, [{ text: "Close", resolveWith: 'Ok' }]);
-    }
     descSpan.id = `moddesc-${mod.uid}`;
     modNameContainer.appendChild(descSpan);
 

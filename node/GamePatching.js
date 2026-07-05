@@ -6,18 +6,20 @@ const { dialog } = require('electron');
 
 const PATCHER_PATH = path.join(__dirname, '..', 'tools', 'g3mtool', 'G3MTool.exe');
 
-async function g3mtool(callback, ...args) {
+async function g3mtool(callback, args, gamePath) {
     console.log('Running G3MTool with args: G3MTool', args.join(' '));
     return new Promise((resolve, reject) => {
-        const g3mtoolProcess = spawn(PATCHER_PATH, args, { stdio: 'pipe' });
+        const g3mtoolProcess = spawn(PATCHER_PATH, args, { stdio: 'pipe', cwd: gamePath });
         var output = '';
         g3mtoolProcess.stdout.on('data', (data) => {
             output += data.toString();
             process.stdout.write(data.toString());
+            callback("[G3MTOOL] " + data.toString());
         });
         g3mtoolProcess.stderr.on('data', (data) => {
             output += data.toString();
             process.stderr.write(data.toString());
+            callback("[G3MTOOL/STDERR] " + data.toString());
         });
         g3mtoolProcess.on('close', (code) => {
             if (code === 0) {
@@ -30,7 +32,7 @@ async function g3mtool(callback, ...args) {
     });
 }
 
-async function startGamePatch(gamePath, modFolder, mods, logCallback) {
+async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCallback) {
     function log(...args) {
         console.log(...args);
         if (logCallback) logCallback(args.join(' '));
@@ -39,8 +41,6 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     if (!fs.existsSync(PATCHER_PATH)) {
         throw new Error('G3MTool not found in tools folder.');
     }
-
-    var overridePatches = [];
     
     var moddingInfo = fs.readdirSync(modFolder).map(folder => {
         const xml = fs.readFileSync(path.join(modFolder, folder, 'modding.xml'), 'utf-8');
@@ -58,13 +58,18 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
         }
     }).filter(mod => mods.includes(mod.uuid));
 
+    var totalPatches = moddingInfo.length;
+    var performedPatches = 0;
+
+    var overridePatches = [];
+
     // Step 1: override patches
-    log('Performing override patches...');
+    log('Step 1: Applying override patches...');
 
     let patchedFiles = [];
+    var performedOverridePatches = 0;
 
     for (const mod of moddingInfo) {
-        log('Applying override patches for mod: ' + mod.meta.metadata.name);
         for (const patch of mod.patches.filter(p => p.type === 'override')) {
             const patchPath = path.join(modFolder, mod.folder, patch.patch);
             const targetPath = path.join(gamePath, patch.to);
@@ -78,11 +83,16 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
             fs.renameSync(targetPath, targetPath + '.bak');
             fs.copyFileSync(patchPath, targetPath);
+
+            performedOverridePatches++;
+            performedPatches++;
+            log(performedOverridePatches + '/' + mod.patches.filter(p => p.type === 'override').length + ' override patches applied.');
+
+            progressCallback(performedPatches / totalPatches * 100);
         }
     }
 
-    log('Override patches completed.');
-    log('Preparing xdelta patches...');
+    log('Step 1 completed.');
 
     let xdeltaMap = {};
 
@@ -97,28 +107,32 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
         }
     }
 
-    await Promise.all(Object.entries(xdeltaMap).map(async ([targetFile, patches]) => {
-        log(`Applying xdelta patches for file: ${targetFile} (${patches.length} patches)`);
+    log('Step 2: Applying xdelta patches...');
 
+    var xdeltasMapArr = Object.entries(xdeltaMap);
+    var i = -1;
+    await Promise.all(xdeltasMapArr.map(async ([targetFile, patches]) => {
         var newp = path.join(gamePath, targetFile + '.bak');
-        fs.copyFileSync(path.join(gamePath, targetFile), newp);
-        fs.rmSync(path.join(gamePath, targetFile), { force: true });
+        fs.renameSync(path.join(gamePath, targetFile), newp);
 
-        log('backed up original file: ' + targetFile + ' to ' + targetFile + '.bak');
+        var relativeTargetFile = path.relative(gamePath, path.join(gamePath, targetFile));
+        var relativeBackupFile = path.relative(gamePath, newp);
 
         if (patches.length > 1) {
-            log('Merging ' + patches.length + ' xdelta patches for file: ' + targetFile);
-            var output = await g3mtool(log, 'patch', 'merge', newp, ...patches.map(p => p.patch), '--apply', path.join(gamePath, targetFile));
+            var output = await g3mtool(log, ['patch', 'merge', newp, ...patches.map(p => p.patch), path.join(gamePath, targetFile)], gamePath);
         }
         else {
-            log('Applying single xdelta patch for file: ' + targetFile);
-            var output = await g3mtool(log, 'patch', 'apply', '"' + newp + '"', '"' + patches[0].patch + '"', '--apply', '"' + path.join(gamePath, targetFile) + '"');
+            var output = await g3mtool(log, ['patch', 'apply', relativeBackupFile, patches[0].patch, relativeTargetFile], gamePath);
         }
 
-        log(`xdelta patches applied for file: ${targetFile}`);
+        i++;
+        performedPatches++;
+        log((i + 1) + '/' + xdeltasMapArr.length + ' xdelta patches applied.');
+
+        progressCallback(performedPatches / totalPatches * 100);
     }));
 
-    log('xdelta patches prepared.');
+    log('Step 2 completed.');
     return { patched: true, log: ''};
 }
 

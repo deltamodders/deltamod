@@ -319,6 +319,8 @@ function modList() {
                         console.log('CHECK FILES! ' + file.checksum + ' VS ' + fileContentsHash);
                         if (file.checksum !== fileContentsHash) {
                             meta._incompatibleHASH = true;
+                            meta._hashDifferentFiles = meta._hashDifferentFiles || [];
+                            meta._hashDifferentFiles.push(file.file);
                         }
                     }
                     catch {
@@ -476,6 +478,7 @@ function modList() {
                     model:    meta.gamebanana_model || null,
                 },
                 _incompatibleHASH: meta._incompatibleHASH || false,
+                _hashDifferentFiles: meta._hashDifferentFiles || [],
                 _selectedVariant: variant || null,
                 // NEW: give the renderer stable identifiers
                 new: deltamodExclusive.new || false, // Used in UI

@@ -511,7 +511,7 @@ module.exports = function registerIPCHandlers(context) {
             mod.isIncompatible = false;
             if (mod._incompatibleHASH) {
                 mod.isIncompatible = true;
-                mod.incompatibilityReason = 'Mismatching hashes (disable advanced mod compatibility checks to ignore)';
+                mod.incompatibilityReason = 'Mismatching hashes for files: ' + mod._hashDifferentFiles.map(file => '"' + file + '"').join(', ');
                 delete mod._incompatibleHASH;
             }
             if (mod.game !== edition) {
@@ -690,7 +690,9 @@ module.exports = function registerIPCHandlers(context) {
             });
 
             const log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0], (log) => {
-                win?.webContents.send('gplog', log);
+                win?.webContents.send('gplog', {log, percent: -1});
+            }, (percent) => {
+                win?.webContents.send('gplog', {log: '', percent});
             });
 
             if (!log.patched) {
