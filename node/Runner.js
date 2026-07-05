@@ -191,6 +191,7 @@ function createWindow() {
     killConflictProcesses();
 
     KeyValue.loadUniqueDefaults();
+    KeyValue.upgradeStores();
     config({ ...getConfig(), binaryPath: path7za });
     try { System.clearTemporary(); } catch (e) { console.error(e); }
 

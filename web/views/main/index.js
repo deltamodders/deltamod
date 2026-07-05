@@ -425,7 +425,7 @@ function loadInst(index) {
         if ((await window.electronAPI.invoke('howManyMods', [])) == 0) {
             let small = document.createElement('small');
             var hasShop = await window.electronAPI.invoke('getUniqueFlag', ['SHOP']);
-            small.innerHTML = hasShop ? "Mods can be downloaded from the GameBanana website, the <a href=\"javascript:page('gamebanana-browse')\">Mod Shop</a>, or manually via the Import button." : "Mods can be downloaded from the GameBanana website or manually via the Import button.";
+            small.innerHTML = "Mods can be downloaded from the GameBanana website, the <a href=\"javascript:page('gamebanana-browse')\">Mod Shop</a>, or manually via the Import button.";
             small.style.color = '#888';
             td.appendChild(document.createElement('br'));
             td.appendChild(small);
