@@ -4,7 +4,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 const { dialog } = require('electron');
 
-const PATCHER_PATH = path.join(__dirname, '..', 'tools', 'g3mtool', 'G3MTool.exe');
+const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'G3MTool-win32.exe') : path.join(__dirname, '../', 'tools', 'G3MTool-linux');
 
 async function g3mtool(callback, args, gamePath) {
     console.log('Running G3MTool with args: G3MTool', args.join(' '));
@@ -45,6 +45,11 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
 
     if (!fs.existsSync(PATCHER_PATH)) {
         throw new Error('G3MTool not found in tools folder.');
+    }
+
+    if (process.platform === 'linux') {
+        // ensure the G3MTool-linux file is executable
+        fs.chmodSync(PATCHER_PATH, 0o755);
     }
     
     var moddingInfo = fs.readdirSync(modFolder).map(folder => {

@@ -719,26 +719,28 @@ async function renderuser() {
         }
     } else {
         document.querySelector('.glyph').style.display = 'none';
-        window.addEventListener("gamepadconnected", async (event) => {
-            if (await window.electronAPI.invoke('getUniqueFlag', ["CONTROLLER"]) === false) {
-                return;
-            }
-            if (!event.gamepad.id.toLowerCase().includes('dualshock') && !event.gamepad.id.toLowerCase().includes('dualsense')) {
-                return;
-            }
-            var res = await htmlAlert(
-                "Controller mode",
-                "It looks like you have a controller connected. Do you want to enable controller mode? Controller mode allows you to use Deltamod with your controller. Your left stick can help you move your mouse.",
-                [
-                    { text: "Yes", resolveWith: true },
-                    { text: "No", resolveWith: false }
-                ]
-            );
+        if ((await window.electronAPI.invoke('getOS', [])).platform != 'linux') {
+            window.addEventListener("gamepadconnected", async (event) => {
+                if (await window.electronAPI.invoke('getUniqueFlag', ["CONTROLLER"]) === false) {
+                    return;
+                }
+                if (!event.gamepad.id.toLowerCase().includes('dualshock') && !event.gamepad.id.toLowerCase().includes('dualsense')) {
+                    return;
+                }
+                var res = await htmlAlert(
+                    "Controller mode",
+                    "It looks like you have a controller connected. Do you want to enable controller mode? Controller mode allows you to use Deltamod with your controller. Your left stick can help you move your mouse.",
+                    [
+                        { text: "Yes", resolveWith: true },
+                        { text: "No", resolveWith: false }
+                    ]
+                );
 
-            if (res) {
-                invoke('cmode-on', []);
-            }
-        });
+                if (res) {
+                    invoke('cmode-on', []);
+                }
+            });
+        }
     }
 
     var loaded = await window.electronAPI.invoke('loadedDeltarune',[]);
