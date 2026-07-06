@@ -198,7 +198,7 @@ async function renderMods(table, GB_API, filter, gameID) {
             document.querySelector('.scrollBottomDetector').style.display = 'none'; // hide the loading indicator
         }
 
-        if (data._aRecords.length === 0 && firstgeneration) {
+        if (data._aRecords.length == 0 && firstgeneration) {
             var tr = document.createElement('tr');
             var td = document.createElement('td');
             td.colSpan = 2;

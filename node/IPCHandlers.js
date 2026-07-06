@@ -172,24 +172,29 @@ async function getInstallations(suppressWarnings = false) {
             const defaultCName = `Install #${index + 1}`;
             const cname = fs.existsSync(cnamePath) ? fs.readFileSync(cnamePath, 'utf8') : defaultCName;
 
-            var error = (!fs.existsSync(deltaruneInstall) ? 'Game data.win not found' : '')
+            // try restoring first
+            GamePatching.restore(installPath);
+
+            if (!fs.existsSync(deltaruneInstall) && !fs.existsSync(storeJSON)) {
+                var error = (!fs.existsSync(deltaruneInstall) ? 'Game data.win not found' : '')
                 + (!fs.existsSync(storeJSON) ? (error ? ' and ' : '') + 'data store not found' : '');
 
-            let response = 0;
-            if (!suppressWarnings) {
-                response = dialog.showMessageBoxSync({
-                    type: 'warning',
-                    title: 'Invalid Installation Found',
-                    message: `An invalid or not fully imported installation of a game was found: ${cname}.\n\n${error}\n\nThis installation will be removed from Deltamod.`,
-                    buttons: ['OK']
-                });
+                let response = 0;
+                if (!suppressWarnings) {
+                    response = dialog.showMessageBoxSync({
+                        type: 'warning',
+                        title: 'Invalid Installation Found',
+                        message: `An invalid or not fully imported installation of a game was found: ${cname}.\n\n${error}\n\nThis installation will be removed from Deltamod.`,
+                        buttons: ['OK']
+                    });
+                }
+
+                fs.rmSync(installPath, { recursive: true, force: true });
+
+                reorderInstalls();
+
+                console.log(`Removed invalid installation: ${file}`);
             }
-
-            fs.rmSync(installPath, { recursive: true, force: true });
-
-            reorderInstalls();
-
-            console.log(`Removed invalid installation: ${file}`);
         }
 
         let commonName = `Install #${index + 1}`;
