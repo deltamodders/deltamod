@@ -595,7 +595,12 @@ module.exports = function registerIPCHandlers(context) {
 
         if (isControllerMode) CMode.stop();
 
-        exec(`"${exePath}"`, { cwd: path.dirname(exePath) }, () => {
+        var preGame = '';
+        if (process.platform == 'linux') {
+            preGame = 'wine ';
+        }
+
+        exec(`${preGame}"${exePath}"`, { cwd: path.dirname(exePath) }, () => {
             try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
             if (isControllerMode) CMode.start();
             if (win) {

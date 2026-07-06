@@ -28,6 +28,22 @@ const conditions = [
             free = bfree * bsize;
             return free >= 2 * 1024 * 1024 * 1024;
         }
+    },
+    {
+        name: 'Wine (if running on Linux)',
+        required: true,
+        checker: () => {
+            if (process.platform === 'linux') {
+                const { execSync } = require('child_process');
+                try {
+                    execSync('wine --version', { stdio: 'ignore' });
+                    return true;
+                }
+                catch (error) {
+                    return false;
+                }
+            }
+        }
     }
 ];
 
