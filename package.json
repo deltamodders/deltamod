@@ -39,7 +39,10 @@
     "linux": {
       "target": "AppImage",
       "category": "Utility",
-      "icon": "build/icon-big.png"
+      "icon": "build/icon-big.png",
+      "executableArgs": [
+        "--no-sandbox"
+      ]
     },
     "protocols": [
       {
