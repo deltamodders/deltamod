@@ -1,9 +1,9 @@
 {
-    "name": "Base Theme",
-    "background": "lofi.png",
-    "description": "The default theme.",
-    "mainSong": "lofi.mp3",
+    "name": "Base Theme (Chapter 5)",
+    "background": "ch5.png",
+    "description": "A theme based on Chapter 5.",
+    "mainSong": "ch5.mp3",
     "id": "base",
-    "musicTrack": "Music by Monume on Pixabay",
-    "color": "rgb(87, 87, 87)"
+    "musicTrack": "Garden of Hopes and Dreams - Toby Fox & insaneintherainmusic",
+    "color": "rgb(205, 68, 81)"
 }

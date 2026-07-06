@@ -71,7 +71,7 @@ tr {
     }
 
     .cat {
-        background: rgba(0, 0, 0, 0.299);
+        background: rgba(40, 40, 40, 0.05);
         width: 30%;
         height: 100%;
         padding: 15px;
@@ -79,7 +79,7 @@ tr {
         border: 2px solid var(--theme-color);
         border-radius: 10px;
         box-shadow: 0 0 10px var(--theme-color);
-        backdrop-filter: blur(10px);
+        backdrop-filter: brightness(0.8);
     }
 
     .selected {

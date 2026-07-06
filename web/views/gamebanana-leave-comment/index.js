@@ -93,7 +93,11 @@ async function crawlComment(comment, div, depth = 0) {
 }
 
 (async () => {
-    document.getElementById('gbPic').src = await window.electronAPI.invoke('getGamebananaPic',[]);
+    var gbPic = await window.electronAPI.invoke('getGamebananaPic',[]);
+    document.getElementById('gbPic').src = gbPic || 'deltapack://web/img/mod-placeholder.png';
+    if (gbPic) {
+        document.getElementById('myCommentBox').style.display = 'flex';
+    }
     var comments = await fetch('https://gamebanana.com/apiv11/' + gbModel + '/' + gbModID + '/Posts?_nPage=1&_nPerpage=30&_sSort=popular&' + new Date().getTime());
     var commentsJson = await comments.json();
     var div = document.querySelector('.comments');

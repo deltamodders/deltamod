@@ -45,6 +45,20 @@ async function makeGlyphs(jsonArr) {
     });
 }
 
+async function reapplyHAStyles() {
+    var alignment = localStorage.getItem('alertAlignment') || 'Bottom';
+    if (!localStorage.getItem('alertAlignment')) {
+        localStorage.setItem('alertAlignment', alignment);
+    }
+    var haDynamicStyle = document.getElementById('haDynamicStyle');
+    if (!haDynamicStyle) {
+        haDynamicStyle = document.createElement('style');
+        haDynamicStyle.id = 'haDynamicStyle';
+        document.head.appendChild(haDynamicStyle);
+    }
+    haDynamicStyle.innerHTML = await fetch('./haAlignments/' + alignment + '.css').then(res => res.text());
+}
+
 /**
  * Prompts the user to leave Controller Mode.
  */
@@ -98,6 +112,17 @@ function error() {
     fetch('http://google.com'); // Force an error trigger if used in a specific context
 }
 
+function disableElem(elem) {
+    if (!elem) return;
+    elem.style.pointerEvents = 'none';
+    elem.style.opacity = '0';
+}
+function enableElem(elem) {
+    if (!elem) return;
+    elem.style.pointerEvents = 'auto';
+    elem.style.opacity = '1';
+}
+
 /**
  * ==========================================
  * Custom HTML Alert System
@@ -125,11 +150,30 @@ async function htmlAlert(title, message, buttons, specialIcon) {
 async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
     return new Promise(async (resolve, reject) => {
         isAlertShowing = true;
+
+        if (localStorage.getItem('alertAlignment') == "Separate") {
+            var index = await window.electronAPI.invoke('htmlAlert_outwin', [title, message, buttons]);
+            isAlertShowing = false;
+            var button = buttons[index];
+
+            if (button.resolveWith) {
+                resolve(button.resolveWith);
+                return;
+            }
+
+            if (button.rejectWith) {
+                reject(button.rejectWith);
+                return;
+            }
+
+            return;
+        }
+
         var alertMain = document.getElementsByClassName('alertMain')[0];
         var alertMsgR = alertMain.getElementsByClassName('alertMsg')[0];
 
-        var animOptions = 'cubic-bezier(0.22, 1, 0.36, 1) forwards';
-        var animLength = 0.5;
+        var animOptions = 'cubic-bezier(0.16, 1, 0.3, 1) forwards';
+        var animLength = 0.6;
 
         alertMsgR.innerHTML = '';
 
@@ -155,10 +199,15 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         buttonsHTML.style.textAlign = 'right';
         buttonsHTML.classList.add('alertButtons');
         buttonsHTML.style.opacity = '0';
+        buttonsHTML.style.display = 'flex';
+        buttonsHTML.style.gap = '8px';
+        buttonsHTML.style.justifyContent = 'flex-end';
+        
 
         buttons.forEach((button) => {
             var btn = document.createElement('button');
             btn.textContent = button.text;
+            btn.style.flex = '1 1 0';
             btn.onclick = function() {
                 // Outro animation
                 alertMsgR.style.animation = `${animLength}s alertFadeOut ${animOptions}`;
@@ -209,9 +258,9 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         var bigIcon = document.createElement('span');
         bigIcon.classList.add('material-symbols-outlined', 'alertBigIcon');
         bigIcon.innerText = specialIcon;
-        bigIcon.style.fontSize = '400px';
+        bigIcon.style.fontSize = '490px';
         bigIcon.style.position = 'absolute';
-        bigIcon.style.top = '-100px';
+        bigIcon.style.top = '-140px';
         bigIcon.style.right = '-50px';
         bigIcon.style.opacity = '0.1';
         bigIcon.style.userSelect = 'none';
@@ -219,9 +268,9 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         alertMsgR.appendChild(bigIcon);
 
         // Cascade Intro Animations
-        setTimeout(() => { titleElement.style.animation = `${animLength}s stuffFadeIn ${animOptions}`; }, 100);
-        setTimeout(() => { messageElement.style.animation = `${animLength}s stuffFadeIn ${animOptions}`; }, 200);
-        setTimeout(() => { buttonsHTML.style.animation = `${animLength}s stuffFadeIn ${animOptions}`; }, 300);
+        setTimeout(() => { titleElement.style.animation = `${animLength*1.2}s stuffFadeIn ${animOptions}`; }, 200);
+        setTimeout(() => { messageElement.style.animation = `${animLength*1.2}s stuffFadeIn ${animOptions}`; }, 300);
+        setTimeout(() => { buttonsHTML.style.animation = `${animLength*1.2}s stuffFadeIn ${animOptions}`; }, 400);
 
         // Play alert SFX
         var a = new Audio();
@@ -311,7 +360,7 @@ function icon(name, fontSize) {
  * @param {boolean} refreshAudio - Whether to also reload and play the main theme song.
  */
 async function themeRefresh(refreshAudio = true) {
-    theme = await fetch('themeprot://data/' + await window.electronAPI.invoke('getTheme', []) + '.theme.json').then(response => response.json());
+    theme = await fetch('themeprot://data/' + (await window.electronAPI.invoke('getTheme', [])) + '.theme.json').then(response => response.json());
     document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
     
     if (refreshAudio) {
@@ -413,9 +462,9 @@ async function page(name) {
     // Handle NO-SIDEBAR tag
     if (purifiedHTML.includes('NO-SIDEBAR')) {
         purifiedHTML = purifiedHTML.replace('NO-SIDEBAR', '');
-        Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => button.disabled = true);
+        ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
     } else {
-        Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => button.disabled = false);
+        ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
     }
 
     // Extract Title Tag
@@ -435,6 +484,9 @@ async function page(name) {
             audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
         }
         if (theme.id == themeAudioExclude?.[1]) {
+            audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
+        }
+        if (await window.electronAPI.invoke('getUniqueFlag', ["DYNAMUSIC"]) == false) {
             audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
         }
 
@@ -475,7 +527,7 @@ async function page(name) {
     document.getElementsByClassName('viewport')[0].innerHTML = purifiedHTML;
 
     // Set Active Sidebar Button
-    Array.from(document.getElementsByClassName('sidebar-button')).forEach(button => {
+    ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => {
         if (button.getAttribute('data-page') === name) {
             button.classList.add('active');
         } else {
@@ -496,7 +548,6 @@ async function page(name) {
     }
 
     pageN = name;
-    document.querySelector('.titleTxt').innerText = title?.[1] || '';
 
     // Generate Dynamic CSS Colors based on Theme
     var rgbNumbers = {
@@ -511,6 +562,7 @@ async function page(name) {
         --theme-color: ${theme.color};
         --theme-color-rgbaless: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.8);
         --theme-color-point2: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.2);
+        --theme-color-point3: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.3);
     }
     button:not(.sidebar-button), input, select {
         border: 1px solid rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.5);
@@ -588,13 +640,56 @@ if (!window.electronAPI) {
     window.location.href = 'about:blank';
 }
 
+(async() => {
+    document.getElementById('versionTitle').innerText = '(v.' + await invoke('version',[]) + ')';
+})();
+
+var renderedUser = false;
+async function renderuser() {
+    if (!(await window.electronAPI.invoke('validateGamebananaToken')) || !navigator.onLine) {
+        renderedUser = true;
+        return;
+    }
+    var gbuser = await window.electronAPI.invoke('getGamebananaUserinfo', []);
+
+    var gbaccount = document.querySelector('.gamebanana-account');
+    gbaccount.innerHTML = `
+        <img src="${gbuser._sAvatarUrl}" alt="Avatar" width="25" height="25" style="border-radius: 15px;">
+        <span>${gbuser._sName}</span>
+    `;
+    gbaccount.style.opacity = '1';
+    gbaccount.addEventListener('click', async () => {
+        if (gbaccount.getAttribute('data-disabled') === 'true') {
+            return;
+        }
+        window._pageArguments = {
+            cat: 'gb'
+        };
+        page('options');
+    });
+
+    renderedUser = true;
+}
+
 /**
  * ==========================================
  * Initialization Boot Sequence
  * ==========================================
  */
 (async function() {
+    await reapplyHAStyles();
+
     cmode = await window.electronAPI.invoke('isCMode', []);
+
+    var ribbon = document.querySelectorAll('.sidebar-ribbon');
+    ribbon.forEach(r => {
+        r.addEventListener('click', async () => {
+            if (r.getAttribute('data-disabled') === 'true') {
+                return;
+            }
+            page(r.getAttribute('data-page'));
+        });
+    });
     
     // Initialize Theme prior to initial page loads
     await themeRefresh(false); 
@@ -624,26 +719,28 @@ if (!window.electronAPI) {
         }
     } else {
         document.querySelector('.glyph').style.display = 'none';
-        window.addEventListener("gamepadconnected", async (event) => {
-            if (await window.electronAPI.invoke('getUniqueFlag', ["CONTROLLER"]) === false) {
-                return;
-            }
-            if (!event.gamepad.id.toLowerCase().includes('dualshock') && !event.gamepad.id.toLowerCase().includes('dualsense')) {
-                return;
-            }
-            var res = await htmlAlert(
-                "Controller mode",
-                "It looks like you have a controller connected. Do you want to enable controller mode? Controller mode allows you to use Deltamod with your controller. Your left stick can help you move your mouse.",
-                [
-                    { text: "Yes", resolveWith: true },
-                    { text: "No", resolveWith: false }
-                ]
-            );
+        if ((await window.electronAPI.invoke('getOS', [])).platform != 'linux') {
+            window.addEventListener("gamepadconnected", async (event) => {
+                if (await window.electronAPI.invoke('getUniqueFlag', ["CONTROLLER"]) === false) {
+                    return;
+                }
+                if (!event.gamepad.id.toLowerCase().includes('dualshock') && !event.gamepad.id.toLowerCase().includes('dualsense')) {
+                    return;
+                }
+                var res = await htmlAlert(
+                    "Controller mode",
+                    "It looks like you have a controller connected. Do you want to enable controller mode? Controller mode allows you to use Deltamod with your controller. Your left stick can help you move your mouse.",
+                    [
+                        { text: "Yes", resolveWith: true },
+                        { text: "No", resolveWith: false }
+                    ]
+                );
 
-            if (res) {
-                invoke('cmode-on', []);
-            }
-        });
+                if (res) {
+                    invoke('cmode-on', []);
+                }
+            });
+        }
     }
 
     var loaded = await window.electronAPI.invoke('loadedDeltarune',[]);
@@ -653,20 +750,14 @@ if (!window.electronAPI) {
         return;
     }
 
-    // Check prerequisites
-    var hasCore = await window.electronAPI.invoke('hasPatchingCore',[]);
-    if (!hasCore) {
-        await htmlAlert(
-            "Patcher error", 
-            "There is no patcher core installed. A patcher core is the tool needed to modify your game. Please install a patcher to continue using Deltamod.", 
-            [{ text: "Ok", resolveWith: 'ok' }], 
-            'error_med'
-        );
-
-        window.close();
-        
-        return;
-    }
+    await new Promise(resolve => {
+        var int = setInterval(async () => {
+            if (renderedUser) {
+                clearInterval(int);
+                resolve();
+            }
+        }, 50);
+    });
 
     // Main App Branching Route
     if (loaded.loaded) {
@@ -696,7 +787,7 @@ if (!window.electronAPI) {
         }
     } else {
         await page('locate');
-        document.querySelectorAll('.sidebar-button').forEach(button => button.disabled = true);
+        document.querySelectorAll('.sidebar-ribbon').forEach(button => button.setAttribute('data-disabled', 'true'));
         window.electronAPI.invoke('executeArgumentCmd',[]);
     }
 })();
@@ -721,32 +812,9 @@ function openAudio() {
  * ==========================================
  */
 (async () => {
-    var gbflag = await window.electronAPI.invoke('getUniqueFlag', ['SHOP']);
-    
-    // Toggle Shop Ribbon
-    if (gbflag && navigator.onLine) {
-        document.getElementById('shopRibbon').style.display = 'block';
-    }
+    renderuser();
 
     if ((await window.electronAPI.invoke('validateGamebananaToken'))) {
-        document.getElementById('collectionsRibbon').style.display = 'block';
-    }
-
-    // Prompt Opt-in for GameBanana Shop functionality
-    if (!localStorage.getItem('seenShopAlert') && !gbflag && navigator.onLine) {
-        localStorage.setItem('seenShopAlert', 'true');
-        var res = await htmlAlert(
-            "Mod Shop", 
-            "Do you wish to enable the Mod Shop page? The service uses GameBanana. This can be toggled later in the options.", 
-            [
-                { text: "Yes", resolveWith: true },
-                { text: "No", resolveWith: false }
-            ]
-        );
-        
-        await window.electronAPI.invoke('setUniqueFlag', ['SHOP', res]);
-        if (res) {
-            window.location.reload();
-        }
+        document.getElementById('collectionsRibbon').style.display = 'inline-flex';
     }
 })();

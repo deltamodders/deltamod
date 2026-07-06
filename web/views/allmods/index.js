@@ -19,7 +19,7 @@ function purify(text) {
     return text.replace(/<[^>]*>/g, '');
 }
 
-async function createMod(mod, compatible) {
+async function createMod(mod, compatible, loggedIn) {
     const modRow = document.createElement('tr');
 
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
@@ -31,7 +31,7 @@ async function createMod(mod, compatible) {
     const modNameContainer = document.createElement('td');
     const titleSpan = document.createElement('div');
     titleSpan.innerHTML = `
-    <img src="${imeta.path}" width="25" height="25" onerror="this.onerror=null; this.src='deltapack://web/img/mod-placeholder.png'" style="border-radius: 4px; object-fit: cover;"> 
+    <img src="${imeta.path}" width="32" height="32" onerror="this.onerror=null; this.src='deltapack://web/img/mod-placeholder.png'" style="border-radius: 4px; object-fit: cover;"> 
     <span>${purify(mod.name)}</span>`;
     titleSpan.style.display = 'flex';
     titleSpan.style.alignItems = 'center';
@@ -49,19 +49,12 @@ async function createMod(mod, compatible) {
                 modNameContainer.scrollIntoView();
             }
         }, 50);
-        window._pageArguments = null; // Clear it so it doesn't affect other mods
     }
 
     const descSpan = document.createElement('span');
     descSpan.className = 'calibri';
     descSpan.style = 'font-size: 10px; color: #ffffffdd;';
     descSpan.innerText = purifyDescription(mod.description);
-    descSpan.style.cursor = 'pointer';
-    descSpan.onclick = async () => {
-        const fullDesc = purify(mod.description);
-        if (fullDesc.length === 0) return;
-        htmlAlert(mod.name, fullDesc, [{ text: "Close", resolveWith: 'Ok' }]);
-    }
     descSpan.id = `moddesc-${mod.uid}`;
     modNameContainer.appendChild(descSpan);
 
@@ -120,6 +113,19 @@ async function createMod(mod, compatible) {
     versionSpan.innerHTML = `${icon('change_history', 'small')} ${purify(mod.version)}`;
     versionSpan.id = `modversion-${mod.uid}`;
     modNameContainer.appendChild(versionSpan);
+
+    if ((mod.variants || []).length > 0) {
+        let variantSpan = document.createElement('p');
+        variantSpan = adaptForIcons(variantSpan);
+        variantSpan.style.margin = '0px';
+        variantSpan.style.marginTop = '4px';
+        variantSpan.className = 'calibri';
+        variantSpan.style.fontSize = 'smaller';
+        variantSpan.style.color = '#888';
+        variantSpan.innerHTML = `${icon('stack', 'small')} Mod has ${mod.variants.length} variants`;
+        variantSpan.id = `modvariant-${mod.uid}`;
+        modNameContainer.appendChild(variantSpan);
+    }
 
     var comp = !mod.isIncompatible;
     let compatSpan = document.createElement('p');
@@ -199,10 +205,10 @@ async function createMod(mod, compatible) {
                 content: "Like this mod on GameBanana",
             });
             tippy(gbModButton, {
-                content: "Leave a comment on GameBanana",
+                content: loggedIn ? "Leave a comment on GameBanana" : "View the GameBanana comments for this mod",
             });
 
-            likeBtn.disabled = !mod.gamebanana.supports;
+            likeBtn.disabled = !mod.gamebanana.supports || !loggedIn;
             gbModButton.disabled = !mod.gamebanana.supports;
     }
 
@@ -271,6 +277,7 @@ async function createErroringMods(errors) {
 }
 
 (async () => {
+    var loggedIn = await window.electronAPI.invoke('validateGamebananaToken', []);
     const errorBanner = document.getElementById("error-banner");
 
     let filterFunc = (x) => true;
@@ -310,7 +317,9 @@ async function createErroringMods(errors) {
     var { modList, errors } = await window.electronAPI.invoke('getModList', []);
 
     var list = modList.filter(filterFunc);
-    list.forEach(x => createMod(x, x.isCompatible));
+    for (const mod of list) {
+        await createMod(mod, mod.isCompatible, loggedIn);
+    }
     window._pageArguments = {}; // Clear it so it doesn't affect other mods
 
     if (errors.length > 0) {

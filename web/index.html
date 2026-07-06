@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="commons/base.css">
     <link rel="stylesheet" href="index.css">
+
     <script src="./modules/tippy/popper.min.js"></script>
     <script src="./modules/tippy/tippy-bundle.umd.js"></script>
 </head>
@@ -14,10 +15,11 @@
     <div class="bg">
         
     </div>
-    <img width="30" alt="" class="dmodicon" src="deltapack://web/img/packIcon.png">
     <div class="topbar" style="display: flex; justify-content: space-between; align-items: center;">
         <div class="title" style="justify-content: left; -webkit-app-region: drag !important;">
-
+            <img src="./img/packIcon.png" class="dmodicon" alt="" width="23">
+            <p>Deltamod</p>
+            <span id="versionTitle" style="color: #ccc; font-size: 14px;"></span>
         </div>
         <div class="barbtns" style="margin-right: 30px;">
             <button onclick="toggleMinimize()" class="bar-button minimize-button" title="Minimize">
@@ -38,49 +40,45 @@
     </div>
     <div class="sidebar">
         <div class="sidebar-buttons">
-            <div class="sidebar-ribbon">
-                <button onclick="page('main')" class="sidebar-button" data-page="main" data-label="Home">
-                    <img src="sbar/main.png" alt="" width="26">
-                </button>
+            <div class="sidebar-ribbon" data-page="main">
+                <img src="sbar/main.png" alt="" width="20">
+                <p>Home</p>
             </div>
 
-            <div class="sidebar-ribbon">
-                <button onclick="page('allmods')" class="sidebar-button" data-page="allmods" data-label="Mod library">
-                    <img src="sbar/allmods.png" alt="" width="26">
-                </button>
+            <div class="sidebar-ribbon" data-page="allmods">
+                <img src="sbar/allmods.png" alt="" width="20">
+                <p>Library</p>
             </div>
 
-            <div class="sidebar-ribbon">
-                <button onclick="page('options')" class="sidebar-button" data-page="options" data-label="Options">
-                    <img src="sbar/options.png" alt="" width="26">
-                </button>
+            <div class="sidebar-ribbon" data-page="options">
+                <img src="sbar/options.png" alt="" width="20">
+                <p>Options</p>
             </div>
             
-            <div class="sidebar-ribbon">
-                <button onclick="page('installmanager')" class="sidebar-button" data-page="installmanager" data-label="Installation manager">
-                    <img src="sbar/installmanager.png" alt="" width="26">
-                </button>
+            <div class="sidebar-ribbon" data-page="installmanager">
+                <img src="sbar/installmanager.png" alt="" width="20">
+                <p>Installs</p>
             </div>
 
             <!-- JS should display this if user toggled GameBanana specific features -->
-            <div class="sidebar-ribbon" style="display: none;" id="shopRibbon">
-                <button onclick="page('gamebanana-browse')" class="sidebar-button" data-page="gamebanana-browse" data-label="Browse GameBanana for new mods">
-                    <img src="sbar/shop.png" alt="" width="26">
-                </button>
+            <div class="sidebar-ribbon" id="shopRibbon" data-page="gamebanana-browse">
+                <img src="sbar/shop.png" alt="" width="20">
+                <p>Shop</p>
             </div>
 
-            <div class="sidebar-ribbon" style="display: none;" id="collectionsRibbon">
-                <button onclick="page('collections')" class="sidebar-button" data-page="collections" data-label="Collections">
-                    <img src="sbar/collections.png" alt="" width="26">
-                </button>
+            <div class="sidebar-ribbon" style="display: none;" id="collectionsRibbon" data-page="collections">
+                <img src="sbar/collections.png" alt="" width="20">
+                <p>Collections</p>
             </div>
 
-            <div class="sidebar-ribbon">
-                <button onclick="credits()" class="sidebar-button" data-page="credits" data-label="Info and credits">
-                    <img src="sbar/credits.png" alt="" width="26">
-                </button>
+            <div class="sidebar-ribbon" data-page="credits">
+                <img src="sbar/credits.png" alt="" width="20">
+                <p>Info</p>
             </div>
         </div>
+    </div>
+    <div class="gamebanana-account" style="opacity: 0;">
+
     </div>
     <div class="alertMain" style="display: none;">
         <div class="alertMsg">
@@ -90,9 +88,6 @@
                 <button>OK</button>
             </div>
         </div>
-    </div>
-    <div class="titleTxt">
-        Deltamod
     </div>
 </body>
 <div class="winb">

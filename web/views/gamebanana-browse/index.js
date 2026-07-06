@@ -89,17 +89,25 @@ function roundViews(views) {
 let capi = '';
 let csearch = '';
 
-async function search() {
+async function search(searchQuery = null) {
     let gameID = (await window.electronAPI.invoke('getCurrentGameInfo',[])).gamebanana.id;
-    let query = document.getElementById('searchInput').value;
+    let query = searchQuery || document.getElementById('searchInput').value;
+    if (searchQuery) {
+        document.getElementById('searchInput').value = searchQuery;
+    }
     if (query.length < 3) {
         await htmlAlert("Search query too short","Please enter at least 3 characters to search.",[{text:"Ok",resolveWith:'ok'}], 'error');
         return;
     }
-    window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Util/Search/Results?_sModelName=Mod&_sOrder=best_match&_sSearchString=' + encodeURIComponent(query) + '&_csvFields=name%2Cdescription%2Carticle%2Cattribs%2Cstudio%2Cowner%2Ccredits&_idGameRow=' + gameID + '&_nPage=$PAGE';
-    window._pageArguments.gbAPIFilter = async function(data) {
-        return data;
-    };
+
+    // TODO: Implement author lookup and other search features if needed
+    {
+        // general lookup
+        window._pageArguments.gbAPI = 'https://gamebanana.com/apiv11/Util/Search/Results?_sModelName=Mod&_sOrder=best_match&_sSearchString=' + encodeURIComponent(query) + '&_csvFields=name%2Cdescription%2Carticle%2Cattribs%2Cstudio%2Cowner%2Ccredits&_idGameRow=' + gameID + '&_nPage=$PAGE';
+        window._pageArguments.gbAPIFilter = async function(data) {
+            return data;
+        };
+    }
     window._pageArguments.leSearchQuery = query;
     page('gamebanana-browse');
 }
@@ -185,7 +193,12 @@ async function renderMods(table, GB_API, filter, gameID) {
     var featuredIDs = featuredData.map(x => {return {id: x._idRow, period: x._sPeriod};});
 
     try {
-        if (data._aRecords.length === 0) {
+        if (data._aMetadata._bIsComplete) {
+            observer.disconnect(); // stop observing since there's no more content to load
+            document.querySelector('.scrollBottomDetector').style.display = 'none'; // hide the loading indicator
+        }
+
+        if (data._aRecords.length == 0 && firstgeneration) {
             var tr = document.createElement('tr');
             var td = document.createElement('td');
             td.colSpan = 2;
@@ -202,6 +215,7 @@ async function renderMods(table, GB_API, filter, gameID) {
             if (BLACKLIST_MODS.includes(mod._idRow)) continue;
             
             await (async () => {
+                var tr = document.createElement('tr');
 
                 var td0 = document.createElement('td');
                 td0.style.display = 'flex';
@@ -362,7 +376,8 @@ async function renderMods(table, GB_API, filter, gameID) {
                 desc.className = 'modDescSpan iptspan';
                 const relativeDate = (() => {
                     const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
-                    const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+                    const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+                    /** @type {Array<{limit:number,value:number,unit:Intl.RelativeTimeFormatUnit}>} */
                     const units = [
                         { limit: 60, value: 1, unit: 'second' },
                         { limit: 3600, value: 60, unit: 'minute' },
@@ -374,7 +389,7 @@ async function renderMods(table, GB_API, filter, gameID) {
 
                     for (const { limit, value, unit } of units) {
                         if (Math.abs(diffSeconds) < limit) {
-                            return rtf.format(Math.round(diffSeconds / value), unit);
+                            return rtf.format(Math.round(diffSeconds / value), /** @type {Intl.RelativeTimeFormatUnit} */ (unit));
                         }
                     }
                 })();
@@ -423,13 +438,81 @@ async function renderMods(table, GB_API, filter, gameID) {
 
                         if (eligibleDownloads.length > 1) {
                             dlBtn.innerHTML = icon('indeterminate_question_box', '0.9em');
-                            var res = await htmlAlert("Multiple compatible files", "This mod has multiple files compatible with Deltamod. Please choose the one to download.",eligibleDownloads.map(x => {return {text:x._sFile,resolveWith:x._sDownloadUrl.replace('dl','mmdl')}}), 'deployed_code_update');
-                            if (!res) {
-                                return;
-                            }
-                            else {
-                                dlmod(res, dlBtn);
-                            }
+                            var dtr = document.createElement('tr');
+                            var td = document.createElement('td');
+                            td.colSpan = 2;
+                            dtr.appendChild(td);
+                            
+                            var btnsDiv = document.createElement('div');
+                            td.appendChild(btnsDiv);
+
+                            eligibleDownloads.forEach((file) => {
+                                console.log(JSON.stringify(file));
+                                var thisBtn = document.createElement('button');
+                                thisBtn.style.display = 'inline-flex';
+                                thisBtn.style.alignItems = 'center';
+                                thisBtn.style.gap = '4px';
+                                thisBtn.style.margin = '4px';
+                                thisBtn.style.width = '100%';
+                                thisBtn.onclick = async () => {
+                                    dlmod(file._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName);
+                                    dtr.remove();
+                                };
+                                btnsDiv.appendChild(thisBtn);
+
+                                var dlIcon = document.createElement('span');
+                                dlIcon.innerHTML = icon('download', '1.1em');
+                                thisBtn.appendChild(dlIcon);
+
+                                var details = document.createElement('div');
+                                details.style.textAlign = 'left';
+                                thisBtn.appendChild(details);
+
+                                var filename = document.createElement('span');
+                                filename.innerText = file._sFile;
+                                filename.style.display = 'block';
+                                filename.style.fontWeight = 'bold';
+                                filename.style.fontSize = '1.1em';
+                                details.appendChild(filename);
+
+                                var filesize = document.createElement('span');
+                                filesize.style.display = 'block';
+                                filesize.innerText = ` (${(file._nFilesize / 1024 / 1024).toFixed(2)} MB)`;
+                                filesize.style.fontSize = '0.9em';
+                                details.appendChild(filesize);
+
+                                var filedesc = document.createElement('span');
+                                filedesc.style.display = 'block';
+                                filedesc.innerText = file._sDescription || "No description provided.";
+                                filedesc.style.fontSize = '0.9em';
+                                filedesc.style.color = '#ffffff60';
+                                details.appendChild(filedesc);
+
+                                var filedate = document.createElement('span');
+                                var fdate = new Date(file._tsDateAdded * 1000);
+                                filedate.style.display = 'block';
+                                filedate.innerText = `Added on ${fdate.toLocaleDateString()} at ${fdate.toLocaleTimeString()}`;
+                                filedate.style.fontSize = '0.9em';
+                                filedate.style.color = '#ffffff60';
+                                details.appendChild(filedate);
+
+                                if (file._sAvState == 'done' && file._sAvResult != 'clean') {
+                                    var avspan = document.createElement('span');
+                                    avspan.style.display = 'block';
+                                    avspan.style.fontSize = '0.9em';
+                                    avspan.style.color = '#ffffff';
+                                    avspan.style.backgroundColor = '#980000';
+                                    avspan.style.padding = '2px 4px';
+                                    avspan.innerText = `File flagged: ${file._sAnalysisResultVerbose}`;
+                                    details.appendChild(avspan);
+                                }
+                            });
+
+                            tr.insertAdjacentElement("afterend", dtr);
+
+                            await timeoutPromise(100);
+                            rew();
+
                             return;
                         }
 
@@ -449,7 +532,6 @@ async function renderMods(table, GB_API, filter, gameID) {
                         };
                         page('gamebanana-leave-comment');
                     };
-                    commentBtn.disabled = !isGBLoggedIn;
                     td1.appendChild(commentBtn);
 
                     var likeBtn = document.createElement('button');
@@ -475,7 +557,6 @@ async function renderMods(table, GB_API, filter, gameID) {
                 }
 
                 // tr-ify and add
-                var tr = document.createElement('tr');
                 tr.appendChild(td0);
                 tr.appendChild(td1);
 
@@ -548,8 +629,69 @@ async function plusPage(amt) {
     genbtnstyles();
 })();
 
-document.getElementById('searchInput').addEventListener('keypress', function (e) {
+var searchel = document.getElementById('searchInput');
+var autocomplete = document.querySelector('.autocomplete .results');
+searchel.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         search();
     }
 });
+
+searchel.addEventListener('focus', function (e) {
+    autocomplete.style.opacity = '1';
+    autocomplete.style.pointerEvents = 'auto';
+});
+
+searchel.addEventListener('blur', function (e) {
+    setTimeout(() => {
+        autocomplete.style.opacity = '0';
+        autocomplete.style.pointerEvents = 'none';
+    }, 300);
+});
+
+let sval = 0;
+
+window._intervals = window._intervals || [];
+window._intervals.push(setInterval(async () => {
+    var isFocused = document.activeElement === searchel;
+    if (!isFocused) {
+        autocomplete.style.opacity = '0';
+        autocomplete.style.pointerEvents = 'none';
+        return;
+    }
+    if (sval != searchel.value) {
+        sval = searchel.value;
+    } else return;
+
+    if (searchel.value.length < 3) {
+        autocomplete.innerHTML = '';
+        autocomplete.style.opacity = '0';
+        autocomplete.style.pointerEvents = 'none';
+        return;
+    }
+
+    var res = await fetch('https://gamebanana.com/apiv12/Util/Search/Suggestions?_idGameRow=6755&_sSearchString=' + (searchel.value));
+    var elems = JSON.parse(await res.text());
+
+    autocomplete.style.opacity = '1';
+    autocomplete.style.pointerEvents = 'auto';
+    autocomplete.innerHTML = '';
+    elems.forEach((item) => {
+        var resultDiv = document.createElement('div');
+        resultDiv.className = 'result';
+        resultDiv.innerText = item;
+        resultDiv.addEventListener('click', function () {
+            searchel.value = item;
+            search(searchel.value);
+        });
+        autocomplete.appendChild(resultDiv);
+    });
+    if (elems.length === 0) {
+        var noResultDiv = document.createElement('div');
+        noResultDiv.className = 'result';
+        noResultDiv.innerText = 'No results found';
+        noResultDiv.style.color = '#888';
+        autocomplete.appendChild(noResultDiv);
+        noResultDiv.style.pointerEvents = 'none';
+    }
+}, 1000));
