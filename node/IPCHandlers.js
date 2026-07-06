@@ -260,6 +260,19 @@ module.exports = function registerIPCHandlers(context) {
     const GameBanana = require('./GameBanana');
     // { getGBUIConf, collections }
 
+    ipcMain.handle('htmlAlert_outwin', (event, args) => {
+        var title = args[0];
+        var message = args[1];
+        var buttons = args[2];
+
+        var result = dialog.showMessageBoxSync(getWindow(), {
+            title: title,
+            message: message,
+            buttons: buttons.map(b => b.text),
+        });
+
+        return result;
+    });
     ipcMain.handle('isCMode', () => isControllerMode);
     ipcMain.handle('shouldGoIM', () => process.argv.includes('---im'));
     ipcMain.handle('diagnosticInfo', () => `Deltamod ${app.getVersion()} - Running on ${os.platform()} ${os.release()} - cmode ${isControllerMode ? 'on' : 'off'} - devtools ${isDevToolsEnabled ? 'enabled' : 'disabled'} - ${state.updateAvailable ? 'update available' : 'no update'}`);
@@ -693,18 +706,36 @@ module.exports = function registerIPCHandlers(context) {
                 win?.webContents.send('gplog', {log, percent: -1});
             }, (percent) => {
                 win?.webContents.send('gplog', {log: '', percent});
+            }).catch(err => {
+                return { patched: false, log: `Error during patching: ${err.message}` };
             });
 
+            console.log('got ' + JSON.stringify(log));
+
             if (!log.patched) {
-                await dialog.showErrorBox('Patching failed', `Please check the log and try again.\n\n${log.log}`);
-                if (win) {
-                    win.webContents.send('audio', true);
-                    win.webContents.send('page', 'main');
+                var res = dialog.showMessageBoxSync(win, {
+                    type: 'error',
+                    title: 'Patching failed',
+                    message: `Patching failed with the following error:\n\n${log.log}`,
+                    buttons: ['Save full log to Desktop', 'OK']
+                });
+                if (res === 0) {
+                    const desktopPath = app.getPath('desktop');
+                    const logFilePath = path.join(desktopPath, `deltamod_patch_log_${Date.now()}.txt`);
+                    fs.writeFileSync(logFilePath, "SHORTENED LOG: " + log.log + "\n\nFULL LOG: \n\n" + log.fullLog, 'utf8');
+                    dialog.showMessageBoxSync(win, {
+                        type: 'info',
+                        title: 'Logs saved',
+                        message: `Logs have been saved to your Desktop:\n${logFilePath}`,
+                        buttons: ['OK']
+                    });
                 }
+                win?.webContents.send('audio', true);
+                page('main');
                 return false;
             }
 
-            const notif = new Notification({ title: 'Patch complete!', body: 'Deltarune has been patched successfully!' });
+            const notif = new Notification({ title: 'Patch complete!', body: 'The game has been patched successfully!' });
             notif.on('click', () => {
                 const currentWin = getWindow();
                 if (!currentWin) return;

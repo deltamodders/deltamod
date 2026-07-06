@@ -532,7 +532,6 @@ async function renderMods(table, GB_API, filter, gameID) {
                         };
                         page('gamebanana-leave-comment');
                     };
-                    commentBtn.disabled = !isGBLoggedIn;
                     td1.appendChild(commentBtn);
 
                     var likeBtn = document.createElement('button');

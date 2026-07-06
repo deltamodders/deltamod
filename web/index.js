@@ -45,6 +45,20 @@ async function makeGlyphs(jsonArr) {
     });
 }
 
+async function reapplyHAStyles() {
+    var alignment = localStorage.getItem('alertAlignment') || 'Bottom';
+    if (!localStorage.getItem('alertAlignment')) {
+        localStorage.setItem('alertAlignment', alignment);
+    }
+    var haDynamicStyle = document.getElementById('haDynamicStyle');
+    if (!haDynamicStyle) {
+        haDynamicStyle = document.createElement('style');
+        haDynamicStyle.id = 'haDynamicStyle';
+        document.head.appendChild(haDynamicStyle);
+    }
+    haDynamicStyle.innerHTML = await fetch('./haAlignments/' + alignment + '.css').then(res => res.text());
+}
+
 /**
  * Prompts the user to leave Controller Mode.
  */
@@ -136,6 +150,25 @@ async function htmlAlert(title, message, buttons, specialIcon) {
 async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
     return new Promise(async (resolve, reject) => {
         isAlertShowing = true;
+
+        if (localStorage.getItem('alertAlignment') == "Separate") {
+            var index = await window.electronAPI.invoke('htmlAlert_outwin', [title, message, buttons]);
+            isAlertShowing = false;
+            var button = buttons[index];
+
+            if (button.resolveWith) {
+                resolve(button.resolveWith);
+                return;
+            }
+
+            if (button.rejectWith) {
+                reject(button.rejectWith);
+                return;
+            }
+
+            return;
+        }
+
         var alertMain = document.getElementsByClassName('alertMain')[0];
         var alertMsgR = alertMain.getElementsByClassName('alertMsg')[0];
 
@@ -644,6 +677,8 @@ async function renderuser() {
  * ==========================================
  */
 (async function() {
+    await reapplyHAStyles();
+
     cmode = await window.electronAPI.invoke('isCMode', []);
 
     var ribbon = document.querySelectorAll('.sidebar-ribbon');

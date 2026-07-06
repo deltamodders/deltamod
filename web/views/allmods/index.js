@@ -19,7 +19,7 @@ function purify(text) {
     return text.replace(/<[^>]*>/g, '');
 }
 
-async function createMod(mod, compatible) {
+async function createMod(mod, compatible, loggedIn) {
     const modRow = document.createElement('tr');
 
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
@@ -205,10 +205,10 @@ async function createMod(mod, compatible) {
                 content: "Like this mod on GameBanana",
             });
             tippy(gbModButton, {
-                content: "Leave a comment on GameBanana",
+                content: loggedIn ? "Leave a comment on GameBanana" : "View the GameBanana comments for this mod",
             });
 
-            likeBtn.disabled = !mod.gamebanana.supports;
+            likeBtn.disabled = !mod.gamebanana.supports || !loggedIn;
             gbModButton.disabled = !mod.gamebanana.supports;
     }
 
@@ -277,6 +277,7 @@ async function createErroringMods(errors) {
 }
 
 (async () => {
+    var loggedIn = await window.electronAPI.invoke('validateGamebananaToken', []);
     const errorBanner = document.getElementById("error-banner");
 
     let filterFunc = (x) => true;
@@ -317,7 +318,7 @@ async function createErroringMods(errors) {
 
     var list = modList.filter(filterFunc);
     for (const mod of list) {
-        await createMod(mod, mod.isCompatible);
+        await createMod(mod, mod.isCompatible, loggedIn);
     }
     window._pageArguments = {}; // Clear it so it doesn't affect other mods
 

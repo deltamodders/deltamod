@@ -55,6 +55,67 @@ window.electronAPI.invoke('isDevMode', []).then((devmode) => {
     }
 });
 
+async function addSelectOption(name, description, options, requiresRestart = false, changeHandler = (val) => {}, defaultValue = '') {
+    const table = document.querySelector('tbody');
+    const tr = document.createElement('tr');
+
+    const tdLabel = document.createElement('td');
+    const span = document.createElement('span');
+    span.innerText = name;
+    tdLabel.appendChild(span);
+
+    tdLabel.appendChild(document.createElement('br'));
+
+    const small = document.createElement('small');
+    small.className = 'calibri';
+    small.innerHTML = description;
+    tdLabel.appendChild(small);
+
+    if (requiresRestart) {
+        const restartNote = document.createElement('small');
+        restartNote.className = 'calibri';
+        restartNote.style.marginTop = '7px';
+        restartNote.style.display = 'block';
+        restartNote.style.color = '#888';
+        restartNote.style.fontSize = 'x-small';
+        restartNote.innerText = 'Requires a Deltamod restart to take effect.';
+        tdLabel.appendChild(restartNote);
+    }
+
+    const tdInput = document.createElement('td');
+    tdInput.className = 'input';
+    tdInput.classList.add('center');
+
+    const select = document.createElement('select');
+    select.id = 'SELECT-' + name.toUpperCase().replace(/[^A-Z0-9]+/g, '-');
+
+    let firstValue = '';
+    for (const option of options) {
+        const opt = document.createElement('option');
+        if (typeof option === 'object' && option !== null) {
+            opt.value = option.value ?? option.id ?? option.key ?? '';
+            opt.innerText = option.label ?? option.name ?? String(opt.value);
+            if (option.selected) select.value = opt.value;
+        } else {
+            opt.value = String(option);
+            opt.innerText = String(option);
+        }
+        if (firstValue === '') firstValue = opt.value;
+        select.appendChild(opt);
+    }
+
+    select.value = defaultValue || firstValue;
+
+    select.addEventListener('change', (e) => {
+        changeHandler(e.target.value);
+    });
+
+    tdInput.appendChild(select);
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdInput);
+    table.appendChild(tr);
+}
+
 async function addButton(name, description, click, buttonText, enabled = true, disabledReason = '', colour = '') {
     const table = document.querySelector('tbody');
     const tr = document.createElement('tr');
@@ -178,6 +239,31 @@ window.currentPageStack.cat = async function(cat) {
             });
             await addCheckboxOption("Enable dynamic music", "Enables dynamic background music that changes based on the page. If unchecked, always plays the default music for your theme.", 'dynamusic', true);
 
+            await addSelectOption(
+                "Alert alignment",
+                "Choose how alerts are positioned on the screen.",
+                [
+                    { value: "Top", label: "Top" },
+                    { value: "Center", label: "Center" },
+                    { value: "Bottom", label: "Bottom" },
+                    { value: "Separate", label: "Separate" }
+                ],
+                true,
+                async (val) => {
+                    var oldVal = localStorage.getItem('alertAlignment');
+                    localStorage.setItem('alertAlignment', val);
+                    await reapplyHAStyles();
+                    var response = await htmlAlert("Modified", "This is how your alerts look when aligned as " + val + '. Keep it this way?', [{ text: "Yes", resolveWith: 'Y' }, { text: "No, revert to " + oldVal, resolveWith: 'N' }]);
+                    if (response == 'N') {
+                        localStorage.setItem('alertAlignment', oldVal);
+                        await reapplyHAStyles();
+                        window._pageArguments = { cat: 'ui' };
+                        page('options');
+                    }
+                },
+                localStorage.getItem('alertAlignment') || 'Top'
+            );
+
             await addButton("Select a theme", "Opens the theme selection menu.", async () => {
                 page('themesel');
             }, "Open");
@@ -186,7 +272,7 @@ window.currentPageStack.cat = async function(cat) {
         case 'inst':
             var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
 
-            await addButton("Disconnect Steam from Deltamod", "Disconnects Steam from the current install and will delete the files for Steam. You'll have to redownload the game from Steam, but the current install will remain on Deltamod.", async () => {
+            await addButton("Disconnect Steam from Deltamod", "Disconnects Steam from the current install. This install will no longer be launched via Steam. In some cases, this may require deleting and reinstalling the game from Steam.", async () => {
                 await window.electronAPI.invoke('removeSteamIntegration', []);
             }, "Disconnect", isSteam, "Only available for games imported from Steam.");
 
