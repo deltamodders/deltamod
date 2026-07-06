@@ -15,7 +15,6 @@ function createProgressModal() {
         resizable: false,
         maximizable: false,
         frame: false,
-        transparent: true,
         minimizable: false,
         closable: true,
         fullscreenable: false,

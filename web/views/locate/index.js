@@ -1,7 +1,10 @@
 async function locateDelta() {
     var path = await window.electronAPI.invoke('locateDelta',[]);
-    if (path) {
+    if (path != null && path != "Invalid") {
         document.querySelector('input[type="text"]').value = path;
+    }
+    else {
+        htmlAlert("Warning","The selected folder is not a valid installation for " + window.gidName + ".", [{text:"Ok",resolveWith:'ok'}]);
     }
 }
 
@@ -69,6 +72,7 @@ window.currentPageStack.downloadDelta = async function() {
             img.classList.add('gameIco');
             img.addEventListener('click', function() {
                 window.gid = game.id;
+                window.gidName = game.name;
                 document.querySelectorAll('.gameIco').forEach(x =>{
                     x.classList.remove('selectedGameIco');
                 });

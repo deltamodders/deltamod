@@ -91,6 +91,8 @@
                     themeRefresh(true);
                 }
                 await window.electronAPI.invoke('deleteCustomTheme', [theme.id]);
+
+                page('themesel');
             });
             td2.appendChild(deletebtn);
 

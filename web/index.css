@@ -2,11 +2,14 @@
     user-select: none;
 }
 
-:root {
-    --topbar-height: 40px;
-    --sidebar-size: 50px;
+@view-transition {
+  navigation: auto;
 }
 
+:root {
+    --topbar-height: 40px;
+    --sidebar-size: 150px;
+}
 .loadingBar {
     width: 70px;
     height: 70px;
@@ -17,7 +20,7 @@
 @keyframes elFadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(-20px);
     }
     to {
         opacity: 1;
@@ -55,18 +58,8 @@
     user-select: none;
 
 }
-.titleTxt {
-    position: fixed;
-    top: 12px;
-    left: calc(var(--sidebar-size) * 1 + 30px);
-    font-size: 20px;
-    color: white;
-    opacity: 0.5;
-    text-shadow: 3px 3px 0px var(--theme-color);
-    z-index: 10000;
-    pointer-events: none;
-    user-select: none;
-}
+
+
 .bar-button > span {
     margin-top: 4px;
     font-size: 15px !important;
@@ -90,13 +83,13 @@ button:disabled {
 }
 
 @keyframes stuffFadeIn {
-    from {
+    0% {
         opacity: 0;
-        transform: translateX(-20px);
+        transform: translateX(-50px) rotateY(-30deg) translateY(-20px);
     }
-    to {
+    100% {
         opacity: 1;
-        transform: translateX(0px);
+        transform: translateX(0px) rotateY(0deg) translateY(0px);
     }
 }
 
@@ -139,10 +132,11 @@ button:disabled {
     align-items: center;
     gap: 10px;
     margin-top: 10px;
+    width: 50%;
 }
 .alertButtons > button {
     min-width: 50px;
-    padding: 5px 10px;
+    padding: 10px;
     margin-bottom: 5px;
 }
 
@@ -156,30 +150,7 @@ button:disabled {
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    align-items: center;
-}
-
-@keyframes alertFadeIn {
-    from {
-        opacity: 0;
-        height: 5px;
-    }
-    to {
-        opacity: 1;
-        height: 190px;
-    }
-}
-
-
-@keyframes alertFadeOut {
-    from {
-        opacity: 1;
-        height: 190px;
-    }
-    to {
-        opacity: 0;
-        height: 0px;
-    }
+    -webkit-app-region: no-drag;
 }
 
 
@@ -187,29 +158,70 @@ button:disabled {
 .alertMsg {
     min-width: 100%;
     max-width: 650px;
-    backdrop-filter: blur(7px);
-    background-color: rgba(72, 72, 72, 0.02);
-    border-top: 2px solid var(--theme-color);
-    border-bottom: 2px solid var(--theme-color);
-    padding: 20px;
+    backdrop-filter: brightness(0.8) blur(2px);
+    background-color: rgba(0, 0, 0, 0.2);
+    padding-top: 25px;
     padding-left: 50px;
     padding-right: 50px;
+    padding-bottom: 40px;
     box-sizing: border-box;
     overflow-y: hidden;
     overflow-x: hidden;
     font-family: 'Calibri', sans-serif;
     color: white;
-    height: 190px;
+    height: fit-content;
     font-size: 16px;
-    animation: 0.6s alertFadeIn cubic-bezier(0.22, 1, 0.36, 1);
+    animation: 0.6s alertFadeIn cubic-bezier(0.22, 1, 0.36, 1)
 }
 
+.sidebar-buttons {
+    width: 100%;
+    padding-left: 0;
+}
+
+.sidebar-ribbon[data-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.gamebanana-account[data-disabled="true"] {
+    opacity: 0.5 !important;
+    pointer-events: none;
+}
 .sidebar-ribbon {
     display: inline-flex;
     justify-content: left;
     align-items: center;
-    gap: 16px;
-    margin-left: 7px;
+    gap: 7px;
+    width: 100%;
+    padding-left: 20px;
+    transition: 0.3s all cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gamebanana-account {
+    position: fixed;
+    bottom: 20px;
+    transition: 0.3s all cubic-bezier(0.16, 1, 0.3, 1);
+    left: 0;
+    z-index: 99;
+    -webkit-app-region: no-drag;
+
+    display: inline-flex;
+    justify-content: left;
+    align-items: center;
+    gap: 7px;
+    width: calc(var(--sidebar-size) * 1 - 20px);
+    padding: 20px;
+    transition: 0.3s all cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sidebar-ribbon:hover {
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+.gamebanana-account:hover {
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+.sidebar-ribbon.active {
+    background-color: var(--theme-color-point2);
 }
 * {
     -webkit-user-drag: none;
@@ -265,19 +277,15 @@ body {
 
 .sidebar {
     position: absolute;
-    top: 0;
+    top: calc(var(--topbar-height) * 1);
     left: 0;
     width: calc(var(--sidebar-size) * 1 + 20px);
-    height: 100%;
-    padding-top: 85px;
+    height: calc(100% - calc(var(--topbar-height) * 1));
     box-shadow: unset;
     padding-bottom: 15px;
-    backdrop-filter: blur(15px);
-    background-color: rgba(40, 40, 40, 0.286);
+    backdrop-filter: brightness(0.8);
+    background-color: rgba(40, 40, 40, 0.05);
     overflow-x: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: baseline;
     transition: 0.9s all cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 2;
     -webkit-app-region: drag;
@@ -285,9 +293,7 @@ body {
 }
 .sidebar > div {
     -webkit-app-region: no-drag;
-    margin-left: 5px;
     text-align: center;
-    margin-right: 5px;
     display: flex;
     justify-content: center;
     align-items: baseline;
@@ -311,34 +317,6 @@ body {
 h1 {
     margin-top: 0;
     text-shadow: 3px 3px 0px var(--theme-color);
-}
-
-.sidebar-button {
-    transition: 0.6s all cubic-bezier(0.25, 1, 0.5, 1);
-    border-radius: 50%;
-    background-color: none;
-    background: none;
-    border: none;
-    padding: 7px;
-    transition: 0.2s all;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.sidebar-button:hover {
-    scale: 1.3;
-    color: rgb(255,255,255) !important /* override basic style */;
-    border-radius: 10%;
-    background-color: var(--theme-color-point2);
-}
-
-.sidebar-button.active {
-    background-color: var(--theme-color-point2);
-}
-
-.sidebar-button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
 }
 
 .viewport {
@@ -385,15 +363,6 @@ h1 {
     }
 }
 
-.dmodicon {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    width: 50px;
-    height: auto;
-    z-index: 9999;
-}
-
 * {
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: auto;
@@ -403,16 +372,23 @@ h1 {
 .topbar {
     position: fixed;
     top: 0;
-    left: calc(var(--sidebar-size) * 1 + 20px);
-    width: calc(100% - (var(--sidebar-size) + 20px));
+    left: 0;
+    width: 100%;
     padding-left: 20px;
     height: calc(var(--topbar-height) * 1);
     font-size: 10px;
-    backdrop-filter: blur(15px);
-    background-color: rgba(40, 40, 40, 0.286);
+    backdrop-filter: brightness(0.8);
+    background-color: rgba(40, 40, 40, 0.05);
     -webkit-app-region: drag;
-    z-index: 1;
+    z-index: 99;
     user-select: none;
+}
+
+.topbar > .title {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 2px;
 }
 
 .bottombar {

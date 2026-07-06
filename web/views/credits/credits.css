@@ -31,3 +31,10 @@
     align-items: center;
     gap: 15px;
 }
+
+#credits {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 5px;
+}

@@ -143,6 +143,58 @@ function readKVSOfIndex(name, index, defaultTo = null) {
     return odb[name] ?? defaultTo;
 }
 
+function upgradeStores() {
+    try {
+        var oldStorePath = app.getPath('userData');
+
+        console.log('Checking for old stores to upgrade in ' + oldStorePath);
+
+        fs.readdirSync(oldStorePath).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
+            if (file.endsWith('unique')) return;
+
+            var indx = file.split('-')[1];
+            console.log('Checking install index ' + indx);
+            var edi = readKVSOfIndex('deltaruneEdition', indx, "none");
+
+            console.log('Found edition ' + edi + ' in index ' + indx);
+            if (edi != "rem") {
+                console.log('Upgrading index ' + indx);
+                var pid = "toby.deltarune.demo";
+                if (readKVSOfIndex('deltaruneEdition', indx, "n") == "full") {
+                    pid = "toby.deltarune";
+                }
+                setKVSOfIndex('gamePid', pid, indx);
+                setKVSOfIndex('deltaruneEdition', "rem", indx);
+                console.log('Upgraded index ' + indx + ' (Edition => GAMEID)');
+                return;
+            }
+
+            function scanFolderRecursively(folder) {
+                fs.readdirSync(folder).forEach(file => {
+                    var fullPath = path.join(folder, file);
+                    if (fs.statSync(fullPath).isDirectory()) {
+                        scanFolderRecursively(fullPath);
+                    }
+                    else if (file.endsWith('.hash')) {
+                        console.log('Found hash file: ' + fullPath);
+                        fs.rmSync(fullPath);
+                    }
+                });
+            }
+
+            var gpath = getSystemFolderOfIndex('', indx);
+            console.log('Scanning for .hash files in ' + gpath);
+
+            scanFolderRecursively(getSystemFolderOfIndex('', indx));
+
+            console.log('Finished upgrading index ' + indx);
+        });
+    }
+    catch (e) {
+        console.log('No old stores found to upgrade: ' + e);
+    }
+}
+
 function readKVS(name, defaultTo = null) {
     return kvs[name] ?? defaultTo;
 }
@@ -159,4 +211,5 @@ module.exports = {
     readKVSOfIndex,
     readKVS,
     loadUniqueDefaults,
+    upgradeStores
 };
