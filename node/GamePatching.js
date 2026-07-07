@@ -59,6 +59,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
         }
         const xml = fs.readFileSync(moddingXML, 'utf-8');
         const meta = JSON.parse(fs.readFileSync(path.join(modFolder, folder, 'meta.json'), 'utf-8'));
+
         return {
             meta,
             xml,
