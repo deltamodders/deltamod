@@ -53,7 +53,11 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
     }
     
     var moddingInfo = fs.readdirSync(modFolder).map(folder => {
-        const xml = fs.readFileSync(path.join(modFolder, folder, 'modding.xml'), 'utf-8');
+        var moddingXML = path.join(modFolder, folder, 'modding.xml');
+        if (fs.existsSync(path.join(modFolder, folder, '__variant'))) {
+            moddingXML = path.join(modFolder, folder, fs.readFileSync(path.join(modFolder, folder, '__variant'), 'utf-8').trim());
+        }
+        const xml = fs.readFileSync(moddingXML, 'utf-8');
         const meta = JSON.parse(fs.readFileSync(path.join(modFolder, folder, 'meta.json'), 'utf-8'));
         return {
             meta,
