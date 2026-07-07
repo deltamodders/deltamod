@@ -63,7 +63,9 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
     var moddingInfo = fs.readdirSync(modFolder).map(folder => {
         var moddingXML = path.join(modFolder, folder, 'modding.xml');
         if (fs.existsSync(path.join(modFolder, folder, '__variant'))) {
-            moddingXML = path.join(modFolder, folder, fs.readFileSync(path.join(modFolder, folder, '__variant'), 'utf-8').trim());
+            var filename = fs.readFileSync(path.join(modFolder, folder, '__variant'), 'utf-8').trim();
+            log(`Mod "${folder}" has a variant specified: ${filename}. Using that variant for modding.xml.`);
+            moddingXML = path.join(modFolder, folder, filename);
         }
 
         if (!fs.existsSync(moddingXML)) {

@@ -7,6 +7,15 @@ tr {
   height: 100%;
 }
 
+.variant-select {
+  appearance: base-select;
+}
+
+.variant-select option {
+  background-color: rgb(15, 15, 15);
+  color: white;
+}
+
 a {
   color: var(--theme-color);
   text-decoration: none;
