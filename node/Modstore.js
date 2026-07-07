@@ -85,9 +85,9 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
             throw new Error('Invalid mod manifest. Please ensure meta.json is correctly formatted.');
         }
 
-        var moddingXMLPath = findFirstByName(modPath, 'modding.xml') || path.join(modPath, 'modding.xml');
+        var moddingXMLPath = path.join(modPath, 'modding.xml');
+        console.log("Checking for modding.xml at:", moddingXMLPath);
         if (!fs.existsSync(moddingXMLPath)) {
-            fs.rmSync(modPath, { recursive: true, force: true });
             throw new Error('Modding XML file not found. Please ensure modding.xml is included in the mod package.');
         }
 
@@ -266,6 +266,14 @@ function modList() {
             };
             var meta = modInfo.metadata || {};
             meta.isIncompatible = false;
+
+            var moddingXMLPath = path.join(modPath, 'modding.xml');
+            console.log("Checking for modding.xml at:", moddingXMLPath);
+            if (!fs.existsSync(moddingXMLPath)) {
+                failureReason = "Modding XML file not found. Please ensure modding.xml is included in the mod package.";
+                throw new Error('Modding XML file not found. Please ensure modding.xml is included in the mod package.');
+            }
+
 
             if (meta.packageID && meta.packageID.toString().trim().toLowerCase() === "..") {
                 meta.packageID = "und.und.und"; // prevent directory traversal

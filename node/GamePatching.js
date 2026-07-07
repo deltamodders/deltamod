@@ -35,6 +35,14 @@ async function g3mtool(callback, args, gamePath) {
     });
 }
 
+function safeReadFileSync(filePath, encoding) {
+    try {
+        return fs.readFileSync(filePath, encoding);
+    } catch (err) {
+        return null;
+    }
+}
+
 async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCallback) {
     let fullLog = '';
     function log(...args) {
@@ -57,8 +65,14 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
         if (fs.existsSync(path.join(modFolder, folder, '__variant'))) {
             moddingXML = path.join(modFolder, folder, fs.readFileSync(path.join(modFolder, folder, '__variant'), 'utf-8').trim());
         }
-        const xml = fs.readFileSync(moddingXML, 'utf-8');
-        const meta = JSON.parse(fs.readFileSync(path.join(modFolder, folder, 'meta.json'), 'utf-8'));
+
+        if (!fs.existsSync(moddingXML)) {
+            log(`Modding XML file not found for mod "${folder}". Skipping this mod.`);
+            return null;
+        }
+
+        const xml = safeReadFileSync(moddingXML, 'utf-8');
+        const meta = JSON.parse(safeReadFileSync(path.join(modFolder, folder, 'meta.json'), 'utf-8'));
 
         return {
             meta,
@@ -70,9 +84,9 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
                 to: match[3],
                 modName: meta.metadata.name
             })),
-            uuid: JSON.parse(fs.readFileSync(path.join(modFolder, folder, '__deltaID.json'))).uniqueId
+            uuid: JSON.parse(safeReadFileSync(path.join(modFolder, folder, '__deltaID.json'), 'utf-8')).uniqueId
         }
-    }).filter(mod => mods.includes(mod.uuid));
+    }).filter(mod => mod != null && mods.includes(mod.uuid));
 
     var totalPatches = moddingInfo.length;
     var performedPatches = 0;
