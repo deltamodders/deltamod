@@ -31,7 +31,7 @@ const conditions = [
     },
     {
         name: 'Wine (if running on Linux)',
-        required: true,
+        required: false,
         checker: () => {
             if (process.platform === 'linux') {
                 const { execSync } = require('child_process');
