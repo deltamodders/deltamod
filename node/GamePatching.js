@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const { dialog } = require('electron');
+const TOML = require('js-toml');
 
 const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'G3MTool-win32.exe') : path.join(__dirname, '../', 'tools', 'G3MTool-linux');
 
@@ -74,7 +75,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
         }
 
         const xml = safeReadFileSync(moddingXML, 'utf-8');
-        const meta = JSON.parse(safeReadFileSync(path.join(modFolder, folder, 'meta.json'), 'utf-8'));
+        const meta = TOML.load(safeReadFileSync(path.join(modFolder, folder, 'meta.toml'), 'utf-8'));
 
         return {
             meta,
