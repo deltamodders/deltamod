@@ -1,6 +1,6 @@
 {
   "name": "deltamod",
-  "version": "2.1.0",
+  "version": "2.0.1",
   "description": "Deltarune mod manager",
   "main": "node/Runner.js",
   "discordAPI": "https://discord.com/api/guilds/1390331292993982484/widget.json",
