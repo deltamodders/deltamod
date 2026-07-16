@@ -27,7 +27,7 @@ const conditions = [
             const os = require("os");
             const { bfree, bsize } = fsp.statfsSync(os.homedir());
             free = bfree * bsize;
-            return free >= 2 * 1024 * 1024 * 1024;
+            return free >= 384 * 1024 * 1024;
         }
     },
     {
