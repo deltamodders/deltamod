@@ -24,7 +24,8 @@ const conditions = [
         required: true,
         checker: () => {
             const fsp = require("fs");
-            const { bfree, bsize } = fsp.statfsSync(__dirname);
+            const os = require("os");
+            const { bfree, bsize } = fsp.statfsSync(os.homedir());
             free = bfree * bsize;
             return free >= 2 * 1024 * 1024 * 1024;
         }
