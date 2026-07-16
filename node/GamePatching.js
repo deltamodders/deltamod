@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const { dialog } = require('electron');
+const TOML = require('js-toml');
 
 const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'G3MTool-win32.exe') : path.join(__dirname, '../', 'tools', 'G3MTool-linux');
 
@@ -35,6 +36,14 @@ async function g3mtool(callback, args, gamePath) {
     });
 }
 
+function safeReadFileSync(filePath, encoding) {
+    try {
+        return fs.readFileSync(filePath, encoding);
+    } catch (err) {
+        return null;
+    }
+}
+
 async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCallback) {
     let fullLog = '';
     function log(...args) {
@@ -53,8 +62,21 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
     }
     
     var moddingInfo = fs.readdirSync(modFolder).map(folder => {
-        const xml = fs.readFileSync(path.join(modFolder, folder, 'modding.xml'), 'utf-8');
-        const meta = JSON.parse(fs.readFileSync(path.join(modFolder, folder, 'meta.json'), 'utf-8'));
+        var moddingXML = path.join(modFolder, folder, 'modding.xml');
+        if (fs.existsSync(path.join(modFolder, folder, '__variant'))) {
+            var filename = fs.readFileSync(path.join(modFolder, folder, '__variant'), 'utf-8').trim();
+            log(`Mod "${folder}" has a variant specified: ${filename}. Using that variant for modding.xml.`);
+            moddingXML = path.join(modFolder, folder, filename);
+        }
+
+        if (!fs.existsSync(moddingXML)) {
+            log(`Modding XML file not found for mod "${folder}". Skipping this mod.`);
+            return null;
+        }
+
+        const xml = safeReadFileSync(moddingXML, 'utf-8');
+        const meta = TOML.load(safeReadFileSync(path.join(modFolder, folder, 'meta.toml'), 'utf-8'));
+
         return {
             meta,
             xml,
@@ -65,9 +87,9 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
                 to: match[3],
                 modName: meta.metadata.name
             })),
-            uuid: JSON.parse(fs.readFileSync(path.join(modFolder, folder, '__deltaID.json'))).uniqueId
+            uuid: JSON.parse(safeReadFileSync(path.join(modFolder, folder, '__deltaID.json'), 'utf-8')).uniqueId
         }
-    }).filter(mod => mods.includes(mod.uuid));
+    }).filter(mod => mod != null && mods.includes(mod.uuid));
 
     var totalPatches = moddingInfo.length;
     var performedPatches = 0;

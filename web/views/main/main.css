@@ -7,6 +7,15 @@ tr {
   height: 100%;
 }
 
+.variant-select {
+  appearance: base-select;
+}
+
+.variant-select option {
+  background-color: rgb(15, 15, 15);
+  color: white;
+}
+
 a {
   color: var(--theme-color);
   text-decoration: none;
@@ -138,10 +147,10 @@ th {
 .error-list-dialog, .error-list-dialog:focus {
   color: white;
   border: 2px solid var(--theme-color);
-  backdrop-filter: blur(8px);
-  background-color: rgba(0, 0, 0, 0.9);
-  padding: 20px;
-  border-radius: 10px;
+  backdrop-filter: blur(8px) brightness(0.8);
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 15px;
+  border-radius: 5px;
   animation: openError 0.3s ease forwards;
 }
 

@@ -20,35 +20,25 @@ function httpsPromisify(params) {
 
 async function checkUpdates() {
     try {
-        var URL = "https://gamebanana.com/apiv11/Tool/20575/ProfilePage";
-        var DATA = await JSON.parse(await httpsPromisify(URL));
-        var ARTIFACT_NEEDED = process.platform === 'win32' ? 'A' : process.platform === 'linux' ? 'C' : 'U';
         var VERSION = require('../package.json').version;
+        var URL = "https://deltamodders.com/apiv1/deltamod/latest?v=" + encodeURIComponent(VERSION);
+        var DATA = await JSON.parse(await httpsPromisify(URL));
     }
     catch (e) {
         console.warn("Failed to check for updates");
         return {update: false, newVersionLink: null, version: null};
     }
 
-    if (VERSION.includes("DiscordPreview")) {
-        console.warn("You are using a Discord Preview build. Auto-updates are disabled.");
-        return {update: false, newVersionLink: null, version: null};
-    }
-
-    if (ARTIFACT_NEEDED === 'C') {
+    if (process.platform == 'linux') {
         console.warn("Auto-updates are not supported on Linux. Please check https://github.com/deltamodders/deltamod for updates.");
         return {update: false, newVersionLink: null, version: null};
     }
 
-    var versionOffline = VERSION + ARTIFACT_NEEDED;
-    var versionOnline = DATA._aFiles.find(f => f._sVersion.toLowerCase().endsWith(ARTIFACT_NEEDED.toLowerCase()));
-
-    if (versionOffline.toLowerCase() !== versionOnline._sVersion.toLowerCase()) {
-        console.warn(`A new version is available: ${versionOnline._sVersion} (You have ${versionOffline})`);
-        return {update: true, newVersionLink: versionOnline._sDownloadUrl.replace("/dl/", "/mmdl/"), version: versionOnline._sVersion.replace(ARTIFACT_NEEDED, '')};
-    }
-
-    return {update: false, newVersionLink: null, version: null};
+    return {
+        update: DATA.update,
+        newVersionLink: DATA.newVersionLink,
+        version: DATA.version
+    };
 }
 
 module.exports = {

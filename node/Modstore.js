@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const { dialog } = require('electron');
 const {Downloader} = require("nodejs-file-downloader");
 const { url } = require('inspector');
+const TOML = require('js-toml');
 
 const computerName = os.hostname();
 
@@ -60,9 +61,6 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
         }
 
         // Legacy support: rename _deltamodInfo.json to meta.json if needed
-
-        
-
         if (fs.existsSync(path.join(modPath, '_deltamodInfo.json'))) {
             fs.copyFileSync(path.join(modPath, '_deltamodInfo.json'), path.join(modPath, 'meta.json'));
             fs.unlinkSync(path.join(modPath, '_deltamodInfo.json'));
@@ -72,45 +70,67 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
             fs.unlinkSync(path.join(modPath, '_icon.png'));
         }
 
-        // Check manifest anywhere in the tree (now usually at root after flatten)
-        const manifestPath = findFirstByName(modPath, 'meta.json') || path.join(modPath, 'meta.json');
-        if (!fs.existsSync(manifestPath)) {
-            fs.rmSync(modPath, { recursive: true, force: true });
-            throw new Error('Mod manifest not found. Please ensure the mod is properly packaged.');
+        if (fs.existsSync(path.join(modPath, 'meta.json')) && !fs.existsSync(path.join(modPath, 'meta.toml'))) {
+            console.log("Converting meta.json to meta.toml for mod at:", modPath);
+            var jsonModInfo = safeReadJSON(path.join(modPath, 'meta.json'));
+
+            // some toml converting things (move color from metadata to root)
+            var metaColor = jsonModInfo?.metadata?.color;
+            if (metaColor) {
+                delete jsonModInfo.metadata.color;
+                jsonModInfo.color = metaColor;
+            }
+            
+            var toml = TOML.dump(jsonModInfo);
+            fs.writeFileSync(path.join(modPath, 'meta.toml'), toml, 'utf8');
+            fs.unlinkSync(path.join(modPath, 'meta.json')); // delete the old JSON manifest
         }
 
-        var modInfo = safeReadJSON(manifestPath);
+        // Check manifest anywhere in the tree (now usually at root after flatten)
+        const manifestPath = findFirstByName(modPath, 'meta.toml') || path.join(modPath, 'meta.toml');
+        if (!fs.existsSync(manifestPath)) {
+            fs.rmSync(modPath, { recursive: true, force: true });
+            throw new Error('Mod TOML manifest not found. Please ensure the mod is properly packaged.');
+        }
+
+        var modInfo = safeReadTOML(manifestPath);
         if (!modInfo || !modInfo.metadata) {
             fs.rmSync(modPath, { recursive: true, force: true });
-            throw new Error('Invalid mod manifest. Please ensure meta.json is correctly formatted.');
+            throw new Error('Invalid mod manifest. Please ensure meta.toml is correctly formatted.');
+        }
+
+        var moddingXMLPath = path.join(modPath, 'modding.xml');
+        console.log("Checking for modding.xml at:", moddingXMLPath);
+        if (!fs.existsSync(moddingXMLPath)) {
+            throw new Error('Modding XML file not found. Please ensure modding.xml is included in the mod package.');
         }
 
         if (modInfo.metadata.packageID && modInfo.metadata.packageID.toString().trim().toLowerCase() === "..") {
             modInfo.metadata.packageID = "und.und.und"; // prevent directory traversal
-            fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.dump(modInfo), 'utf8');
         }
 
         if (mID && mModel) {
             modInfo.metadata.gamebanana_id = mID;
             modInfo.metadata.gamebanana_model = mModel;
-            fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.dump(modInfo), 'utf8');
         }
 
         if (modInfo.metadata.demoMod !== undefined) {
             modInfo.metadata.game = (modInfo.metadata.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
             delete modInfo.metadata.demoMod;
-            fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.dump(modInfo), 'utf8');
         }
         else if (modInfo.metadata.demoMod === undefined && modInfo.metadata.game === undefined) {
             fs.rmSync(modPath, { recursive: true, force: true });
-            throw new Error('Mod manifest is missing required field `game`.');
+            throw new Error('Mod TOML manifest is missing required field `game` (no demoMod to determine game).');
         }
 
 
         if (modInfo.metadata.packageID?.toString().trim() && modInfo.metadata.packageID.toString().trim() != "und.und.und") {
             if (fs.existsSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID)) && modInfo.metadata.packageID != "und.und.und") {
                 clangit = false;
-                var existingModInfo = safeReadJSON(path.join(system.getPacketDatabase(), modInfo.metadata.packageID, 'meta.json'));
+                var existingModInfo = safeReadTOML(path.join(system.getPacketDatabase(), modInfo.metadata.packageID, 'meta.toml'));
                 var oldVersion = existingModInfo?.metadata?.version || "Unknown";
                 var newVersion = modInfo.metadata.version || "Unknown";
                 
@@ -203,6 +223,11 @@ function safeReadJSON(p) {
     try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
 }
 
+function safeReadTOML(p) {
+    if (!p) return null;
+    try { return TOML.load(fs.readFileSync(p, 'utf8')); } catch { return null; }
+}
+
 function validatePID(pid) {
     console.log("Validating packageID:", pid);
 
@@ -248,23 +273,51 @@ function modList() {
             };
 
             // Zork's Patch: Find manifest anywhere in the mod folder, not only at root (safe)
-            const manifestPath =
+            const jsonManifestPath =
                 findFirstByName(modPath, 'meta.json') ||
                 path.join(modPath, 'meta.json');
 
-            // Zork's Patch: Read defensively; synthesize defaults if missing
-            failureReason = "Failed to read meta.json.";
-            var modInfo = safeReadJSON(manifestPath) || {
-                metadata: { name: mod, version: '1.0.0', game: 'toby.deltarune', packageID: 'und.und.und' },
-                dependencies: []
-            };
+            const tomlManifestPath =
+                findFirstByName(modPath, 'meta.toml') ||
+                path.join(modPath, 'meta.toml');
+
+
+            if (fs.existsSync(jsonManifestPath) && !fs.existsSync(tomlManifestPath)) {
+                console.log("Converting meta.json to meta.toml for mod:", mod);
+                var jsonModInfo = safeReadJSON(jsonManifestPath);
+
+                // some toml converting things (move color from metadata to root)
+                var metaColor = jsonModInfo?.metadata?.color;
+                if (metaColor) {
+                    delete jsonModInfo.metadata.color;
+                    jsonModInfo.color = metaColor;
+                }
+
+                var toml = TOML.dump(jsonModInfo);
+                fs.writeFileSync(tomlManifestPath, toml, 'utf8');
+
+                fs.unlinkSync(jsonManifestPath); // delete the old JSON manifest
+            }
+
+            var modInfo = safeReadTOML(tomlManifestPath) || null;
+            if (!modInfo || !modInfo.metadata) {
+                failureReason = "Failure reading meta.toml.";
+                throw new Error('Failure reading meta.toml.');
+            }
             var meta = modInfo.metadata || {};
             meta.isIncompatible = false;
+
+            var moddingXMLPath = path.join(modPath, 'modding.xml');
+            console.log("Checking for modding.xml at:", moddingXMLPath);
+            if (!fs.existsSync(moddingXMLPath)) {
+                failureReason = "Modding XML file not found. Please ensure modding.xml is included in the mod package.";
+                throw new Error('Modding XML file not found. Please ensure modding.xml is included in the mod package.');
+            }
+
 
             if (meta.packageID && meta.packageID.toString().trim().toLowerCase() === "..") {
                 meta.packageID = "und.und.und"; // prevent directory traversal
                 modInfo.metadata.packageID = "und.und.und"; // prevent directory traversal
-                fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
             }
 
             if (meta.packageID && meta.packageID.toString().trim().split('.').length === 3) {
@@ -283,7 +336,7 @@ function modList() {
                     console.log("Upgrading demoMod field to game field for mod:", mod);
                     meta.game = (meta.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
                     delete meta.demoMod;
-                    fs.writeFileSync(path.join(modPath, 'meta.json'), JSON.stringify(modInfo, null, 2), 'utf8');
+                    fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.dump(modInfo), 'utf8');
                 }
             }
             catch {
@@ -408,8 +461,8 @@ function modList() {
                 typeof meta.description !== 'string' ||
                 typeof meta.game === 'undefined'
             ) {
-                failureReason = "meta.json is missing required fields `name`, `description` or `game`.";
-                throw new Error(`Missing required fields in meta.json for mod: ${mod}`);
+                failureReason = "meta.toml is missing required fields `name`, `description` or `game`.";
+                throw new Error(`Missing required fields in meta.toml for mod: ${mod}`);
             }
 
             if (fs.readdirSync(modPath).filter(x => x.endsWith('.js')).length !== 0

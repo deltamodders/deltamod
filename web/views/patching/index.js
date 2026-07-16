@@ -12,10 +12,6 @@ window.currentPageStack.gpl = function (obj) {
         gplElement.scrollTop = gplElement.scrollHeight;
         gplElement.scrollLeft = 0;
     }
-
-    if (percent != -1) {
-        document.getElementById("patchingProgress").value = percent;
-    }
 }
 
 window.currentPageStack.next = function () {

@@ -16,7 +16,7 @@ const conditions = [
         required: true,
         checker: () => {
             const totalMemory = require('os').totalmem();
-            return totalMemory >= 1 * 1024 * 1024 * 1024;
+            return totalMemory >= 2 * 1024 * 1024 * 1024;
         }
     },
     {

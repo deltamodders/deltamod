@@ -10,7 +10,7 @@ function purifyDescription(desc) {
     const words = text.split(' ').slice(0, maxWords);
     text = words.join(' ') + (words.length >= maxWords ? '...' : '');
     // If too long, truncate as last resort
-    const max = 150;
+    const max = 100;
     if (text.length > max) return text.substring(0, max) + '...';
     return text;
 }
@@ -225,10 +225,12 @@ async function createMod(mod) {
     if (mod.variants != null) {
         let variantSelect = document.createElement('select');
         variantSelect.style.marginTop = '10px';
-        variantSelect.className = 'calibri';
-        variantSelect.style.backgroundColor = 'var(--theme-color)';
+        variantSelect.classList.add('variant-select');
+        variantSelect.classList.add('calibri');
+        variantSelect.style.backgroundColor = 'var(--theme-color-point3)';
         variantSelect.style.border = '1px solid var(--theme-color-point2)';
         variantSelect.style.fontSize = fontSize + 'px';
+        variantSelect.style.width = '40%';
         variantSelect.style.color = '#ffffff';
         for (const variant of mod.variants) {
             let option = document.createElement('option');
@@ -363,12 +365,12 @@ function loadInst(index) {
             var tr = document.createElement('tr');
             var td = document.createElement('td');
             td.colSpan = 3;
-            td.style.paddingLeft = '10px';
+            td.style.paddingLeft = '20px';
             td.style.fontSize = '18px';
             td.style.fontWeight = 'bold';
             td.style.backgroundColor = 'rgba(40, 40, 40, 0.05)';
             td.style.color = '#fff';
-            td.innerText = `Mods by ${x.author[0] || "Unknown"}`;
+            td.innerHTML = `<span>Mods by ${x.author[0] || "Unknown"}</span>`;
             tr.appendChild(td);
             addedAuthors.push(x.author[0] || "Unknown");
             document.getElementById('modlist').appendChild(tr);
