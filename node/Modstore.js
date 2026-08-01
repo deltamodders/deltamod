@@ -369,8 +369,8 @@ function modList() {
 
                         var fileContentsHash = fs.readFileSync(fileContentsHashCPATH, 'utf8').trim();
 
-                        console.log('CHECK FILES! ' + file.checksum + ' VS ' + fileContentsHash);
-                        if (file.checksum !== fileContentsHash) {
+                        console.log('CHECK FILES! ' + file.checksum.toLowerCase() + ' VS ' + fileContentsHash);
+                        if (file.checksum.toLowerCase() !== fileContentsHash) {
                             meta._incompatibleHASH = true;
                             meta._hashDifferentFiles = meta._hashDifferentFiles || [];
                             meta._hashDifferentFiles.push(file.file);
