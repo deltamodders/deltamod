@@ -12,7 +12,7 @@ const UTMT_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'too
 async function g3mtool(callback, args, gamePath) {
     console.log('Running G3MTool with args: G3MTool', args.join(' '));
     return new Promise((resolve, reject) => {
-        const g3mtoolProcess = spawn(PATCHER_PATH, args, { stdio: 'inherit', cwd: gamePath });
+        const g3mtoolProcess = spawn(PATCHER_PATH, args, { stdio: 'pipe', cwd: gamePath });
         var output = '';
         g3mtoolProcess.stdout.on('data', (data) => {
             output += data.toString();
