@@ -9,7 +9,7 @@ const crypto = require('crypto');
 const { dialog } = require('electron');
 const {Downloader} = require("nodejs-file-downloader");
 const { url } = require('inspector');
-const TOML = require('js-toml');
+const TOML = require('smol-toml');
 
 const computerName = os.hostname();
 
@@ -81,7 +81,7 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
                 jsonModInfo.color = metaColor;
             }
             
-            var toml = TOML.dump(jsonModInfo);
+            var toml = TOML.stringify(jsonModInfo);
             fs.writeFileSync(path.join(modPath, 'meta.toml'), toml, 'utf8');
             fs.unlinkSync(path.join(modPath, 'meta.json')); // delete the old JSON manifest
         }
@@ -107,19 +107,19 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
 
         if (modInfo.metadata.packageID && modInfo.metadata.packageID.toString().trim().toLowerCase() === "..") {
             modInfo.metadata.packageID = "und.und.und"; // prevent directory traversal
-            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.dump(modInfo), 'utf8');
+            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.stringify(modInfo), 'utf8');
         }
 
         if (mID && mModel) {
             modInfo.metadata.gamebanana_id = mID;
             modInfo.metadata.gamebanana_model = mModel;
-            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.dump(modInfo), 'utf8');
+            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.stringify(modInfo), 'utf8');
         }
 
         if (modInfo.metadata.demoMod !== undefined) {
             modInfo.metadata.game = (modInfo.metadata.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
             delete modInfo.metadata.demoMod;
-            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.dump(modInfo), 'utf8');
+            fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.stringify(modInfo), 'utf8');
         }
         else if (modInfo.metadata.demoMod === undefined && modInfo.metadata.game === undefined) {
             fs.rmSync(modPath, { recursive: true, force: true });
@@ -225,7 +225,7 @@ function safeReadJSON(p) {
 
 function safeReadTOML(p) {
     if (!p) return null;
-    try { return TOML.load(fs.readFileSync(p, 'utf8')); } catch { return null; }
+    try { return TOML.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
 }
 
 function validatePID(pid) {
@@ -293,7 +293,7 @@ function modList() {
                     jsonModInfo.color = metaColor;
                 }
 
-                var toml = TOML.dump(jsonModInfo);
+                var toml = TOML.stringify(jsonModInfo);
                 fs.writeFileSync(tomlManifestPath, toml, 'utf8');
 
                 fs.unlinkSync(jsonManifestPath); // delete the old JSON manifest
@@ -336,7 +336,7 @@ function modList() {
                     console.log("Upgrading demoMod field to game field for mod:", mod);
                     meta.game = (meta.demoMod ? "toby.deltarune.demo" : "toby.deltarune");
                     delete meta.demoMod;
-                    fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.dump(modInfo), 'utf8');
+                    fs.writeFileSync(path.join(modPath, 'meta.toml'), TOML.stringify(modInfo), 'utf8');
                 }
             }
             catch {

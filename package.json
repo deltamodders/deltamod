@@ -1,6 +1,6 @@
 {
   "name": "deltamod",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Deltarune mod manager",
   "main": "node/Runner.js",
   "discordAPI": "https://discord.com/api/guilds/1390331292993982484/widget.json",
@@ -29,10 +29,6 @@
     "win": {
       "target": [
         "portable"
-      ],
-      "exclude": [
-        "tools/g3mtool/gm3tool-win.exe",
-        "tools/utmt/linux/**"
       ]
     },
     "files": [
@@ -46,10 +42,6 @@
       "icon": "build/icon-big.png",
       "executableArgs": [
         "--no-sandbox"
-      ],
-      "exclude": [
-        "tools/g3mtool/gm3tool-win.exe",
-        "tools/utmt/win/**"
       ]
     },
     "protocols": [
@@ -70,18 +62,19 @@
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",
     "@sentry/node": "^10.43.0",
+    "@std/toml": "npm:@jsr/std__toml@^1.0.11",
     "7zip-bin": "5.1.1",
     "7zip-min": "^2.1.0",
     "axios": "^1.12.0",
     "cheerio": "^1.1.2",
     "create-desktop-shortcuts": "^1.11.1",
     "emit-keypress": "^1.0.1",
-    "js-toml": "^1.2.1",
     "mime-types": "^3.0.1",
     "node-html-parser": "^7.0.1",
     "node-pty": "^1.1.0",
     "nodejs": "^0.0.0",
     "nodejs-file-downloader": "^4.13.0",
+    "smol-toml": "^1.7.1",
     "windows-elevate": "^1.0.1",
     "xml-js": "^1.6.11",
     "yoctocolors-cjs": "^2.1.3"
