@@ -1,16 +1,18 @@
 const console = require('./Console');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execFile } = require('child_process');
 const { dialog } = require('electron');
 const TOML = require('js-toml');
+const pty = require('node-pty');
 
-const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'G3MTool-win32.exe') : path.join(__dirname, '../', 'tools', 'G3MTool-linux');
+const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'g3mtool', 'g3mtool-win.exe') : path.join(__dirname, '../', 'tools', 'g3mtool', 'g3mtool-lin');
+const UTMT_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'utmt', 'win', 'UndertaleModCli.exe') : path.join(__dirname, '../', 'tools', 'utmt', 'linux', 'UndertaleModCli');
 
 async function g3mtool(callback, args, gamePath) {
     console.log('Running G3MTool with args: G3MTool', args.join(' '));
     return new Promise((resolve, reject) => {
-        const g3mtoolProcess = spawn(PATCHER_PATH, args, { stdio: 'pipe', cwd: gamePath });
+        const g3mtoolProcess = spawn(PATCHER_PATH, args, { stdio: 'inherit', cwd: gamePath });
         var output = '';
         g3mtoolProcess.stdout.on('data', (data) => {
             output += data.toString();
@@ -32,6 +34,35 @@ async function g3mtool(callback, args, gamePath) {
                 }
                 reject(new Error(`G3MTool exited with code ${code}\n\nCOMMAND: ${PATCHER_PATH} ${args.join(' ')}\nOUTPUT:\n${output}`));
             }
+        });
+    });
+}
+
+async function utmt(callback, args) {
+    console.log('Running UndertaleModCli with args: UndertaleModCli', args.map(x => '"' + x + '"').join(' '));
+    return new Promise((resolve, reject) => {
+        const ptyProcess = pty.spawn(UTMT_PATH, args, { cwd: path.dirname(UTMT_PATH) });
+        let output = '';
+        
+        ptyProcess.on('data', (data) => {
+            var dataStr = data.toString();
+            dataStr = dataStr.replace(/\x1B\[[0-9;]*m/g, '').trim();
+            if (dataStr.length == 0) return;
+            output += dataStr;
+            process.stdout.write(dataStr);
+            callback("[UTMT] " + dataStr);
+        });
+        
+        ptyProcess.on('exit', (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`UndertaleModCli exited with code ${code}\n\nCOMMAND: ${UTMT_PATH} ${args.join(' ')}\nOUTPUT:\n${output}`));
+            }
+        });
+        
+        ptyProcess.on('error', (error) => {
+            reject(error);
         });
     });
 }
@@ -202,10 +233,43 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
     }
 
     log('Step 2 completed.');
+
+    log('Step 3: Applying CSX patches...');
+
+    for (const mod of moddingInfo) {
+        for (const patch of mod.patches.filter(p => p.type === 'csx')) {
+            const patchPath = path.join(modFolder, mod.folder, patch.patch);
+            const targetPath = path.join(gamePath, patch.to);
+
+            if (!fs.existsSync(patchPath)) {
+                return { patched: false, log: `A CSX patch file "${patch.patch}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`, fullLog: fullLog };
+            }
+
+            if (!fs.existsSync(targetPath)) {
+                return { patched: false, log: `A CSX patch target file "${patch.to}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`, fullLog: fullLog };
+            }
+
+            var backupPath = targetPath + '.bak';
+            if (!fs.existsSync(backupPath)) {
+                fs.renameSync(targetPath, backupPath);
+            }
+
+            log(`Applying CSX ${patch.patch} to ${patch.to}...`);
+
+            var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath], gamePath).catch(e =>  {
+                throw new Error(`Error applying CSX patch for ${targetPath}: ${e.message}`);
+            });
+        }
+    }
+
     return { patched: true, log: '', fullLog: fullLog };
 }
 
 async function restore(gamePath) {
+    if (!gamePath || !fs.existsSync(gamePath)) {
+        console.log('Game path does not exist: ' + gamePath);
+        return;
+    }
     const files = fs.readdirSync(gamePath);
     console.log('Restoring original game files...');
     for (const file of files) {

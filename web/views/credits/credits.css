@@ -1,40 +1,30 @@
-.gbcredits {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.credits-avatar {
-    background-color: rgba(255, 255, 255, 0.5);
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    vertical-align: middle;
-    margin-right: 6px;
-}
-
-.credits-author {
-    cursor: pointer;
-    color: white;
-    text-decoration: none;
-    width: fit-content;
-}
-
-.credits-author:hover {
-    color: yellow;
-}
-
-#discordBtn {
-    display: flex;
-    justify-content: left;
-    align-items: center;
-    gap: 15px;
-}
-
 #credits {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.creditsBox {
+    background-color: rgba(0,0,0,1);
+    border: 3px solid white;
+    height: 72px;
     display: flex;
-    justify-content: left;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
+    padding: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.credits-name {
+    font-size: 26px;
+    margin: 0;
+}
+
+.credits-role {
+    font-size: 19px;
+    font-style: italic;
+    color: rgba(255,255,255,0.7);
+    margin: 0;
 }

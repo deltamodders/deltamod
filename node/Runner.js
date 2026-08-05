@@ -220,18 +220,17 @@ function createWindow() {
 
     const unmetConditions = require('./RunConditions.js').checkConditions();
     if (unmetConditions.length > 0) {
-        const requiredUnmet = unmetConditions.filter(c => c.required);
-        if (requiredUnmet.length > 0) {
-            dialog.showMessageBoxSync({ type: 'error', title: 'PC Requirements Not Met', message: `Missing requirements:\n${requiredUnmet.map(n => n.name).join('\n')}\n\nDeltamod will not run.` });
-            return app.exit(1);
-        } else {
-            dialog.showMessageBoxSync({ type: 'warning', title: 'PC Requirements Not Met', message: `Missing suggested requirements:\n${unmetConditions.map(n => n.name).join('\n')}\n\nYou might experience issues.` });
-        }
+        dialog.showMessageBoxSync({ type: 'warning', title: 'PC Requirements Not Met', message: `Missing suggested requirements:\n${unmetConditions.map(n => n.name).join('\n')}\n\nYou might experience issues. Deltamod will continue running though.` });
     }
 
     const bounds = screen.getPrimaryDisplay().workAreaSize;
     
-    KeyValue.retrieve();
+    try {
+        KeyValue.retrieve();
+    }
+    catch (e) {
+        dialog.showMessageBoxSync({ type: 'error', title: 'Failed to load storage', message: `Deltamod failed to load your installation storage. This may be due to a corrupted file.\n\nError details:\n${e.message || e}` });
+    }
     win = new BrowserWindow({
         width: 900,
         height: 600,

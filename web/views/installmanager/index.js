@@ -1,12 +1,31 @@
 (async () => {
-    try {
-        const installs = await window.electronAPI.invoke('getInstallations', []).catch(e => {
-            throw new Error(`Error fetching installations: ${e.message}`);
-        });
-        const index = await window.electronAPI.invoke('getSystemIndex', []).catch(e => {
-            throw new Error(`Error fetching current installation index: ${e.message}`);
-        });
-        const tbody = document.querySelector('#installations-list');
+    const installs = await window.electronAPI.invoke('getInstallations', []).catch(e => {
+        return {error: e.message}
+    });
+    const index = await window.electronAPI.invoke('getSystemIndex', []).catch(e => {
+        return {error: e.message}
+    });
+    const tbody = document.querySelector('#installations-list');
+
+    if (installs.error || index.error) {
+        const errorRow = document.createElement('tr');
+        const errorCell = document.createElement('td');
+
+        errorCell.colSpan = 2;
+        errorCell.style.fontWeight = 'bold';
+        errorCell.innerText = 'Couldn\'t load installations!';
+
+        var smallError = document.createElement('small');
+        smallError.style.display = 'block';
+        smallError.style.color = 'gray';
+        smallError.innerText = installs.error || index.error;
+        errorCell.appendChild(smallError);
+
+        errorRow.appendChild(errorCell);
+        tbody.appendChild(errorRow);
+
+        return;
+    }
 
         for (const i in installs) {
             const install = installs[i];
@@ -252,27 +271,27 @@
         tbody.appendChild(newRow);
 
         genbtnstyles();
-    } catch (e) {
-        var errorTR = document.createElement('tr');
-        var errorTD = document.createElement('td');
-        errorTD.colSpan = 2;
-        errorTD.style.fontWeight = 'bold';
 
-        var errortitle = document.createElement('div');
-        errortitle.innerText = 'Error loading installations';
-        errortitle.style.fontSize = '18px';
-        errortitle.style.marginBottom = '10px';
-        errorTD.appendChild(errortitle);
-
-        var errorMsg = document.createElement('div');
-        errorMsg.innerHTML = e.message + '<br>' + e.stack || e;
-        errorMsg.style.fontSize = '14px';
-        errorTD.appendChild(errorMsg);
-
-        document.querySelector('#installations-list').appendChild(errorTR);
-    }
 })().catch(e => {
-    window.alert('Unexpected error: ' + e.message + '\n' + e.stack);
+    var tbody = document.querySelector('#installations-list');
+    tbody.innerHTML = '';
+    const errorRow = document.createElement('tr');
+    const errorCell = document.createElement('td');
+
+    errorCell.colSpan = 2;
+    errorCell.style.fontWeight = 'bold';
+    errorCell.innerText = 'Couldn\'t load installations!';
+
+    var smallError = document.createElement('small');
+    smallError.style.display = 'block';
+    smallError.style.color = 'gray';
+    smallError.innerText = installs.error || index.error;
+    errorCell.appendChild(smallError);
+
+    errorRow.appendChild(errorCell);
+    tbody.appendChild(errorRow);
+
+    return;
 });
 
 elisten(document, 'keydown', e => {

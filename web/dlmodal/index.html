@@ -11,15 +11,6 @@
 <script>
     var doneAudio;
     function updateProgress(percent) {
-        if (percent >= 100 && !doneAudio) {
-            doneAudio = new Audio("./done.mp3");
-            doneAudio.volume = 0.5;
-            doneAudio.playbackRate = 1.9;
-            doneAudio.play();
-
-            const logoEl = document.querySelector(".deltamodLogo");
-            if (logoEl) logoEl.style.animation = "rotater 0.6s infinite linear";
-        }
         const value = Math.max(0, Math.min(100, Number(percent) || 0));
         const logo = document.querySelector(".deltamodLogo");
         if (!logo) return;

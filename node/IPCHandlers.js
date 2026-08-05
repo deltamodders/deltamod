@@ -938,6 +938,10 @@ module.exports = function registerIPCHandlers(context) {
             KeyValue.setKVSOfIndex('isSteam', steam, i);
             KeyValue.setKVSOfIndex('steamAppId', steam ? chosenEdition.appid : "", i);
 
+            if (!fromIM) {
+                KeyValue.retrieve();
+            }
+
             page(fromIM ? "installmanager" : "main");
             return true;
         } catch (err) {

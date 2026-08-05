@@ -29,6 +29,10 @@
     "win": {
       "target": [
         "portable"
+      ],
+      "exclude": [
+        "tools/g3mtool/gm3tool-win.exe",
+        "tools/utmt/linux/**"
       ]
     },
     "files": [
@@ -42,6 +46,10 @@
       "icon": "build/icon-big.png",
       "executableArgs": [
         "--no-sandbox"
+      ],
+      "exclude": [
+        "tools/g3mtool/gm3tool-win.exe",
+        "tools/utmt/win/**"
       ]
     },
     "protocols": [
@@ -71,6 +79,7 @@
     "js-toml": "^1.2.1",
     "mime-types": "^3.0.1",
     "node-html-parser": "^7.0.1",
+    "node-pty": "^1.1.0",
     "nodejs": "^0.0.0",
     "nodejs-file-downloader": "^4.13.0",
     "windows-elevate": "^1.0.1",

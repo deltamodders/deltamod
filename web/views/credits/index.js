@@ -31,18 +31,30 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
             if (madeUsers.includes(credit._sName)) return;
             madeUsers.push(credit._sName);
 
+            var box = document.createElement('div');
+            box.className = 'creditsBox';
+
             var pfp = document.createElement('img');
             pfp.className = 'credits-pfp';
             pfp.style.borderRadius = '10px';
             pfp.src = credit._sAvatarUrl || 'https://images.gamebanana.com/static/img/defaults/avatar.gif';
 
-            tippy(pfp, {
-                content: credit._sName,
-                placement: 'top',
-                theme: 'light',
-            });
+            var infoDiv = document.createElement('div');
+            infoDiv.className = 'credits-info';
 
-            document.querySelector('#credits').appendChild(pfp);
+            var name = document.createElement('p');
+            name.className = 'credits-name';
+            name.innerText = credit._sName;
+            infoDiv.appendChild(name);
+
+            var role = document.createElement('p');
+            role.className = 'credits-role';
+            role.innerText = credit._sRole;
+            infoDiv.appendChild(role);
+
+            document.querySelector('#credits').appendChild(box);
+            box.appendChild(pfp);
+            box.appendChild(infoDiv);
         });
     });
 
