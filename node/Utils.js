@@ -182,7 +182,20 @@ function getSteamDirectory(dialog) {
             }
             break;
         case "linux":
-            steamdir = path.join(os.homedir(), "/.local/share/Steam/steamapps/common/");
+            const steamCommon = "steamapps/common/";
+
+            const linuxDirCandidates = [
+                path.join(os.homedir(), ".local/share/Steam"),
+                path.join(os.homedir(), ".steam/steam"),
+                path.join(os.homedir(), ".steam/root"),
+                path.join(os.homedir(), ".var/app/com.valvesoftware.Steam/.local/share/Steam"),
+            ];
+
+            steamdir =
+                  linuxDirCandidates
+                    .map(dir => path.join(dir, steamCommon))
+                    .find(dir => fs.existsSync(dir)); 
+
             break;
         case "darwin":
             steamdir = path.join(os.homedir(), "/Library/Application Support/Steam/steamapps/common/");
