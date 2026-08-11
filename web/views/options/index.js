@@ -213,6 +213,12 @@ window.currentPageStack.cat = async function(cat) {
             await addButton("Delete all data", "Deletes all Deltamod data, including installations, mods, and options.", async () => {
                 page('deleteall');
             }, "Delete", true, '', 'red');
+            await addButton("Delete all installations", "Deletes all Deltamod installations. Doesn't affect mods or other data.", async () => {
+                var response = await htmlAlert("Warning", "Are you sure you want to delete all installations? This action cannot be undone.", [{ text: "Yes", resolveWith: 'Y' }, { text: "No", resolveWith: 'N' }]);
+                if (response === 'Y') {
+                    await window.electronAPI.invoke('initializeInstalls', []);
+                }
+            }, "Delete", true, '', 'red');
             await addCheckboxOption("Prompt controller mode when available", "When enabled, you will be asked to activate Controller Mode when a compatible controller is attached. Currently only compatible with DualSense.", 'CONTROLLER');
             await addCheckboxOption("Enable hash checks", "If enabled, Deltamod will check the hashes of mods to ensure compatibility. This may slow down Deltamod and render some mods incompatible.", 'hashchecks', true);
             break;
@@ -380,6 +386,14 @@ window.currentPageStack.cat = async function(cat) {
             else {
                 await addButton("Login", "Adds a GameBanana account to Deltamod.", async () => {
                     await window.electronAPI.invoke('loginGamebanana', []);
+                    window._pageArguments = {cat: 'gb'};
+                    page('options');
+                }, "Login", !gamebananaUserinfo.loggedIn, "You are already logged in to GameBanana.", '');
+
+                await addButton("Login via existing browser session (Advanced)", "Adds a GameBanana account to Deltamod using the session in your browser.", async () => {
+                    await window.electronAPI.invoke('loginGamebananaBrowser', []);
+                    window.focus();
+                    htmlAlert("Done", "Logged in via browser session.", [{ text: "Ok", resolveWith: '' }]);
                     window._pageArguments = {cat: 'gb'};
                     page('options');
                 }, "Login", !gamebananaUserinfo.loggedIn, "You are already logged in to GameBanana.", '');

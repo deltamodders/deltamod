@@ -1,6 +1,17 @@
 (async() => {
     var table = document.getElementById("collections");
+
+    var loadingTr = document.createElement("tr");
+    var loadingTd = document.createElement("td");
+    loadingTd.colSpan = 2;
+    loadingTd.innerText = "Loading collections...";
+    loadingTr.appendChild(loadingTd);
+    table.appendChild(loadingTr);
+
     var collections = await invoke('gamebanana_getCollections');
+
+    table.removeChild(loadingTr);
+
     if (collections.success === false && collections.message == 'You must be logged in to perform this action') {
         var tr = document.createElement("tr");
         var errortd = document.createElement("td");
@@ -19,8 +30,15 @@
         var tr = document.createElement("tr");
 
         var nametd = document.createElement("td");
-        nametd.innerText = collection.name;
         tr.appendChild(nametd);
+
+        var nameDiv = document.createElement("div");
+        nametd.appendChild(nameDiv);
+
+        var nameSpan = document.createElement("span");
+        nameSpan.innerText = collection.name;
+        nameSpan.style.fontSize = "1.2em";
+        nameDiv.appendChild(nameSpan);
 
         var actiontd = document.createElement("td");
         actiontd.classList.add("actions");
@@ -84,6 +102,15 @@
         tr.appendChild(actiontd);
 
 
+        table.appendChild(tr);
+    }
+
+    if (collections.length === 0) {
+        var tr = document.createElement("tr");
+        var notd = document.createElement("td");
+        notd.colSpan = 2;
+        notd.innerText = "No collections found.";
+        tr.appendChild(notd);
         table.appendChild(tr);
     }
 

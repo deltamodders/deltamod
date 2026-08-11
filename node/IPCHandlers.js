@@ -439,6 +439,27 @@ module.exports = function registerIPCHandlers(context) {
         fs.writeFileSync(file, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(token) : token, 'utf8');
         return true;
     });
+    ipcMain.handle('loginGamebananaBrowser', async () => {
+        if (!safeStorage.isEncryptionAvailable()) {
+            dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Reduced security',
+                message: 'Your system does not support secure storage. GameBanana login information will be stored without encryption.',
+            });
+        }
+        dialog.showMessageBoxSync({
+            type: 'info',
+            title: 'How to login',
+            message: 'GameBanana will now open in your default browser.\nStep 1: Login\nStep 2: Open DevTools and then Console\nStep 3: Paste the code which has been copied to your clipboard and press Enter\n\nDeltamod will then login with your account.'
+        });
+        var script = fs.readFileSync(path.join(__dirname, '../', 'web', 'exportGBSes.js'), 'utf8');
+        require('electron').clipboard.writeText(script);
+        shell.openExternal('https://gamebanana.com/');
+        const token = await GameBanana.obtainLoginWebserver();
+        const file = getSystemFile('bananapwd', true);
+        fs.writeFileSync(file, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(token) : token, 'utf8');
+        return true;
+    });
     ipcMain.handle('logoutGamebanana', async () => {
         try { fs.unlinkSync(getSystemFile('bananapwd', true)); } catch {}
         GameBanana.clearCache();
@@ -528,9 +549,11 @@ module.exports = function registerIPCHandlers(context) {
         const processedList = modList.map(mod => {
             mod.isIncompatible = false;
             if (mod._incompatibleHASH) {
-                mod.isIncompatible = true;
-                mod.incompatibilityReason = 'Mismatching hashes for files: ' + mod._hashDifferentFiles.map(file => '"' + file + '"').join(', ');
-                delete mod._incompatibleHASH;
+                if (mod._incompatibleHASH.length > 0) {
+                    mod.isIncompatible = true;
+                    mod.incompatibilityReason = 'Mismatching hashes for files: ' + mod._hashDifferentFiles.map(file => '"' + file + '"').join(', ');
+                    delete mod._incompatibleHASH;
+                }
             }
             if (mod.game !== edition) {
                 mod.isIncompatible = true;
@@ -1038,7 +1061,7 @@ module.exports = function registerIPCHandlers(context) {
         
         var pwin = createProgressModal();
         try {
-            const installerPath = path.join(System.getTemporary(), `deltamodUpdate.${updateStackInfo.version.replace(/\./g, "")}.exe`);
+            const installerPath = path.join(app.getPath('downloads'), `deltamodUpdate.${updateStackInfo.version.replace(/\./g, "")}.exe`);
 
             await downloadFile(updateStackInfo.newVersionLink, installerPath, (progress) => {
                 if (pwin) updateProgressModal(pwin, null, progress, 'Downloading update');
@@ -1046,7 +1069,13 @@ module.exports = function registerIPCHandlers(context) {
 
             await timeoutPromise(1500);
 
-            exec(`"${installerPath}" --mode unattended --unattendedmodeui minimal`);
+            dialog.showMessageBoxSync(getWindow(), {
+                type: 'info',
+                title: 'Update downloaded',
+                message: 'The update has been downloaded! Press OK to open the installer.',
+            });
+
+            exec(`cmd /c start "" "${installerPath}" --mode unattended --unattendedmodeui minimal`);
 
             app.exit(0);
         } catch (e) {
@@ -1063,6 +1092,15 @@ module.exports = function registerIPCHandlers(context) {
             try { fs.rmSync(path.join(appdata, f), { recursive: true, force: true }); } catch {}
         });
         fs.rmSync(path.join(appdata, 'pkg.db'), { recursive: true, force: true });
+        app.quit();
+    });
+    ipcMain.handle('initializeInstalls', () => {
+        const appdata = path.join(app.getPath('appData'), 'deltamod');
+        fs.readdirSync(appdata).filter(f => f.startsWith('deltamod_system') && f != 'deltamod_system-unique').forEach(f => {
+            try { fs.rmSync(path.join(appdata, f), { recursive: true, force: true }); } catch {}
+        });
+
+        app.relaunch({ args: process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')).concat(isControllerMode ? ['-controller'] : []) });
         app.quit();
     });
 

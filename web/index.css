@@ -330,7 +330,7 @@ h1 {
     overflow-y: scroll;
     padding: 20px;
     padding-left: 40px;
-    padding-right: 80px;
+    padding-right: 70px;
     z-index: 3;
     box-sizing: border-box;
     animation: 0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1);
@@ -355,11 +355,9 @@ h1 {
 @keyframes fadeIn {
     from {
         scale: 1.1;
-        transform: scaleX(0.9);
     }
     to {
         scale: 1;
-        transform: scaleX(1);
     }
 }
 

@@ -15,6 +15,16 @@ var update = false;
 var TARGET_MUSIC_VOLUME = 0.5;
 var cmode = false; // Controller Mode
 
+var dynamicMusic = true;
+(async () => {
+    dynamicMusic = await window.electronAPI.invoke('getUniqueFlag', ["DYNAMICMUSIC"]);
+})();
+
+var shouldPlayAudio = true;
+(async () => {
+    shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
+})();
+
 window._onClosePage = window._onClosePage || [];
 
 /**
@@ -82,7 +92,7 @@ async function promptLeaveCMode() {
  * Plays the "rew" SFX.
  */
 async function rew() {
-    if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === false) {
+    if (shouldPlayAudio === false) {
         return;
     }
     var a = new Audio();
@@ -223,7 +233,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
                 // Play dismiss SFX
                 var a = new Audio();
                 a.src = 'audio/booow.mp3';
-                if (window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === true) {
+                if (shouldPlayAudio === true) {
                     a.play();
                 }
 
@@ -276,7 +286,7 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         var a = new Audio();
         a.src = 'audio/htmlalert.mp3';
         a.playbackRate = 0.9;
-        if (await window.electronAPI.invoke('getUniqueFlag', ["SFX"]) === true) {
+        if (shouldPlayAudio === true) {
             a.play();
         }
     });
@@ -418,6 +428,7 @@ async function page(name) {
     document.querySelector('.viewport').style.animation = 'none';
     document.querySelector('.viewport').style.pointerEvents = 'none';
     await new Promise(resolve => setTimeout(resolve, 50));
+
     document.querySelector('.viewport').style.animation = '0.34s fadeIn cubic-bezier(0, 0.55, 0.45, 1)';
     document.querySelector('.viewport').style.pointerEvents = 'auto';
     window.electronAPI.invoke('showWindow', []);
@@ -486,7 +497,7 @@ async function page(name) {
         if (theme.id == themeAudioExclude?.[1]) {
             audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
         }
-        if (await window.electronAPI.invoke('getUniqueFlag', ["DYNAMUSIC"]) == false) {
+        if (dynamicMusic == false) {
             audioSrc = ['AUDIO[mainTheme.mp3]', 'mainTheme.mp3'];
         }
 
@@ -514,7 +525,6 @@ async function page(name) {
             changeAudio = true;
         }
 
-        let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
         if (shouldPlayAudio) {
             audio.play();
         } else {
@@ -594,26 +604,6 @@ async function page(name) {
             console.error('Error occurred while evaluating script for page:', name, error);
         }
     }
-
-    // Trigger Initial Render Animations
-    if (!refreshing) {
-        var i = -1;
-        document.querySelectorAll('.viewport > *').forEach(el => {
-            i++;
-            const recursiveApply = (element) => {
-                if (element.classList.contains('noanim')) return;
-                
-                element.style.opacity = '0';
-                setTimeout(() => {
-                    element.style.animation = '0.5s elFadeIn cubic-bezier(0, 0.55, 0.45, 1)';
-                    element.style.opacity = '1';
-                }, 100 + (i * 50));
-                
-                element.children && Array.from(element.children).forEach(child => recursiveApply(child));
-            };
-            recursiveApply(el);
-        });
-    }
 }
 
 /**
@@ -628,7 +618,6 @@ window.addEventListener('blur', () => {
 });
 
 window.addEventListener('focus', async () => {
-    let shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
     if (audio && shouldPlayAudio) {
         audio.volume = TARGET_MUSIC_VOLUME;
     }

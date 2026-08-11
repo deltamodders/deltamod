@@ -1,6 +1,6 @@
 {
   "name": "deltamod",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Deltarune mod manager",
   "main": "node/Runner.js",
   "discordAPI": "https://discord.com/api/guilds/1390331292993982484/widget.json",
@@ -69,6 +69,7 @@
     "cheerio": "^1.1.2",
     "create-desktop-shortcuts": "^1.11.1",
     "emit-keypress": "^1.0.1",
+    "express": "^5.2.1",
     "mime-types": "^3.0.1",
     "node-html-parser": "^7.0.1",
     "node-pty": "^1.1.0",
