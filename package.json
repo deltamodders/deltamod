@@ -65,7 +65,7 @@
     "@std/toml": "npm:@jsr/std__toml@^1.0.11",
     "7zip-bin": "5.1.1",
     "7zip-min": "^2.1.0",
-    "axios": "^1.12.0",
+    "axios": "^1.18.0",
     "cheerio": "^1.1.2",
     "create-desktop-shortcuts": "^1.11.1",
     "emit-keypress": "^1.0.1",
