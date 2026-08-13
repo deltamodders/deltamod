@@ -232,7 +232,7 @@ function createWindow() {
         dialog.showMessageBoxSync({ type: 'error', title: 'Failed to load storage', message: `Deltamod failed to load your installation storage. This may be due to a corrupted file.\n\nError details:\n${e.message || e}` });
     }
     win = new BrowserWindow({
-        width: 900,
+        width: 1000,
         height: 600,
         resizable: true,
         frame: false,
@@ -274,7 +274,7 @@ function createWindow() {
 
     win.on('resized', () => {
         let [w, h] = win.getSize();
-        if (w < 900) w = 900;
+        if (w < 1000) w = 1000;
         if (h < 600) h = 600;
         win.setSize(w, h);
         win.webContents.send('winResAlert', []);

@@ -156,7 +156,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
                 fs.renameSync(targetPath, targetPath + '.bak');
             }
             else {
-                if (!fs.existsSync(path.dirname(targetPath).)) {
+                if (!fs.existsSync(path.dirname(targetPath))) {
                     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
                 }
                 fs.writeFileSync(targetPath + '.rem', "");

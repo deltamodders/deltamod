@@ -99,3 +99,13 @@ tr {
     .cat > button:not(:last-child) {
         margin-bottom: 10px;
     }
+    .optionName {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+
+.optbtn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

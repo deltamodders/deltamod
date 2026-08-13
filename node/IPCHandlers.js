@@ -567,8 +567,8 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('howManyMods', () => Modstore.howmany());
     ipcMain.handle('dlmodURL', async (event, args) => {
         const [url, queryme, modid, modmodel] = args;
-        return await Modstore.downloadModFromURL(url, (progress, downloaded) => {
-            event.sender.send('dlmodURL-progress', { progress, downloaded, queryme, error: false });
+        return await Modstore.downloadModFromURL(url, (progress, downloaded, total) => {
+            event.sender.send('dlmodURL-progress', { progress, dled: downloaded, total, queryme, error: false });
         }, modid, modmodel);
     });
     ipcMain.handle('setModVariant', (event, args) => fs.writeFileSync(path.join(System.getPacketDatabase(), args[1], '__variant'), args[0]));

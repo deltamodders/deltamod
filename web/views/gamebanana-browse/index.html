@@ -1,5 +1,14 @@
 <div>
     <div class="tspandiv">
+        <div class="downloads">
+            <button class="dlactionButton" popovertarget="dlBox" style="opacity: 0.5;">
+                <span class="material-symbols-outlined smicon">download</span>
+            </button>
+            <div popover id="dlBox">
+                <h3>Current downloads</h3>
+                <small style="font-size: 1.1em;" id="nothingHere">Nothing to see over here!</small>
+            </div>
+        </div>
         <img src="" alt="" width="32" height="32" id="gbPic">
         <button onclick="page('')">
             <span class="material-symbols-outlined smicon">home</span>
@@ -14,7 +23,7 @@
             <span class="material-symbols-outlined smicon">search</span>
         </button>
     </div>
-    <p id="searchInd" style="display: none; font-style: italic !important;"></p>
+    <p id="searchInd" style="display: none;"></p>
     <table>
         <colgroup>
             <col style="width: calc(100% - 200px);">

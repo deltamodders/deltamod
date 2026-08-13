@@ -28,10 +28,8 @@ a {
   margin-bottom: 10px;
 }
 .p2 {
-  padding: 7px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  border: 1px solid var(--theme-color);
+  padding: 10px;
+  border: 2px solid var(--theme-color);
   border-radius: 10px;
   display: flex;
   justify-content: center;
@@ -39,23 +37,19 @@ a {
   gap: 10px;
 }
 .p2 > button {
-  margin: 5px;
   margin-top: 0;
   margin-bottom: 0;
   border-radius: 10px;
-  width: 50px;
   height: 50px;
   border: 2px solid var(--theme-color) !important;
   padding: 10px;
   box-shadow: 0px 4px 6px var(--theme-color);
   filter: brightness(110%);
-}
-.p2 > button:hover {
-  background-color: var(--theme-color);
-  scale: 1.1;
-  color: white;
-  cursor: pointer;
-  transition: 0.1s all;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 10px;
+  font-size: 20px;
 }
 select {
   font-family: "Pixel", sans-serif;
@@ -98,12 +92,9 @@ th {
 .modlist-enabled-column {
   input[type=checkbox] {
       margin: 0;
-      width: 40px;
-      height: 25px;
+      width: 35px;
+      height: 35px;
       cursor: pointer;
-      accent-color: rgba(57, 57, 57, 0.455);
-      border: 6px solid white;
-      scale: 1.1;
     }
 }
 

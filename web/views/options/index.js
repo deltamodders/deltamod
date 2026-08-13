@@ -5,6 +5,7 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
     span.innerText = name;
+    span.className = 'optionName';
     tdLabel.appendChild(span);
 
     tdLabel.appendChild(document.createElement('br'));
@@ -47,7 +48,7 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
 
 window.electronAPI.invoke('isDevMode', []).then((devmode) => {
     if (devmode) {
-        document.getElementById('b_dev').style.display = 'inline-block';
+        document.getElementById('b_dev').style.display = 'flex';
     }
     else {
         const devBtn = document.getElementById('b_dev');
@@ -61,6 +62,7 @@ async function addSelectOption(name, description, options, requiresRestart = fal
 
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
+    span.className = 'optionName';
     span.innerText = name;
     tdLabel.appendChild(span);
 
@@ -123,6 +125,7 @@ async function addButton(name, description, click, buttonText, enabled = true, d
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
     span.innerText = name;
+    span.className = 'optionName';
     if (colour != '') {
         span.style.color = colour;
     }

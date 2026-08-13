@@ -15,15 +15,11 @@
             </span>
         </div>
         <div class="p2">
-            <button onclick="window.electronAPI.invoke('importMod',[])" id="importModBtn">
-                <span class="material-symbols-outlined">
-                    add_box
-                </span>
-            </button>
             <button onclick="window.currentPageStack.patchAndRun()" id="par">
                 <span class="material-symbols-outlined" style="scale: 1.2;">
                     arrow_circle_right
                 </span>
+                Patch and run
             </button>
         </div>
     </div>
@@ -45,6 +41,26 @@
             </div>
             <tbody id="modlist">
             </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="padding: 10px;">
+                        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+                            <button onclick="invoke('importMod',[])" style="width: 100%; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <span class="material-symbols-outlined">
+                                    add_box
+                                </span>
+                                Import a mod manually
+                            </button>
+                            <button onclick="page('gamebanana-browse')" style="width: 100%; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <span class="material-symbols-outlined">
+                                    shopping_bag
+                                </span>
+                                Search mods via the Mod Shop
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
         </table>
     </div>
 

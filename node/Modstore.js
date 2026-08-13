@@ -16,16 +16,24 @@ const computerName = os.hostname();
 function downloadModFromURL(url, onProgress, mID, mModel) {
     return new Promise(async (resolve, reject) => {
         try {
+            var totalSize = 0;
+            function onResponse(response) {
+                totalSize = parseInt(response.headers['content-length'], 10);
+            }
             const downloader = new Downloader({
                 url: url,
                 directory: require('os').tmpdir(),
-                onProgress: (percentage) => {
+                onResponse: onResponse,
+                onProgress: (percentage, _, remaining) => {
+                    var downloadedMB = (totalSize - remaining) / (1024 * 1024);
+                    var totalMB = totalSize / (1024 * 1024);
                     console.log(`Download progress: ${percentage}%`);
-                    if (onProgress) onProgress(percentage, 200);
+                    if (onProgress) onProgress(percentage, downloadedMB.toFixed(2) + " MB", totalMB.toFixed(2) + " MB");
                 }
             });
             const { filePath } = await downloader.download();
             await importMod(filePath, "donothing", mID, mModel);
+            await new Promise(resolve => setTimeout(resolve, 1000));
             resolve(true);
         } catch (err) {
             reject(err);

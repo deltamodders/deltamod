@@ -194,6 +194,7 @@ button:disabled {
     gap: 7px;
     width: 100%;
     padding-left: 20px;
+    background-color: rgba(0, 0, 0, 0);
     transition: 0.3s all cubic-bezier(0.16, 1, 0.3, 1);
 }
 .gamebanana-account {
@@ -221,7 +222,7 @@ button:disabled {
     background-color: rgba(255, 255, 255, 0.05);
 }
 .sidebar-ribbon.active {
-    background-color: var(--theme-color-point2);
+    background-color: var(--theme-color-point3);
 }
 * {
     -webkit-user-drag: none;
@@ -291,14 +292,13 @@ body {
     -webkit-app-region: drag;
     user-select: none;
 }
-.sidebar > div {
+.sidebar-buttons {
     -webkit-app-region: no-drag;
     text-align: center;
     display: flex;
     justify-content: center;
     align-items: baseline;
     flex-direction: column;
-    gap: 10px
 }
 
 @keyframes sidebarBtnFadeIn {
@@ -330,7 +330,7 @@ h1 {
     overflow-y: scroll;
     padding: 20px;
     padding-left: 40px;
-    padding-right: 70px;
+    padding-right: 80px;
     z-index: 3;
     box-sizing: border-box;
     animation: 0.4s fadeIn cubic-bezier(0, 0.55, 0.45, 1);
@@ -365,6 +365,12 @@ h1 {
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: auto;
     font-smoothing: none;
+}
+
+small {
+    font-size: 14px;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .topbar {

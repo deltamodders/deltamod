@@ -17,7 +17,7 @@ var cmode = false; // Controller Mode
 
 var dynamicMusic = true;
 (async () => {
-    dynamicMusic = await window.electronAPI.invoke('getUniqueFlag', ["DYNAMICMUSIC"]);
+    dynamicMusic = await window.electronAPI.invoke('getUniqueFlag', ["DYNAMUSIC"]);
 })();
 
 var shouldPlayAudio = true;
@@ -713,9 +713,6 @@ async function renderuser() {
                 if (await window.electronAPI.invoke('getUniqueFlag', ["CONTROLLER"]) === false) {
                     return;
                 }
-                if (!event.gamepad.id.toLowerCase().includes('dualshock') && !event.gamepad.id.toLowerCase().includes('dualsense')) {
-                    return;
-                }
                 var res = await htmlAlert(
                     "Controller mode",
                     "It looks like you have a controller connected. Do you want to enable controller mode? Controller mode allows you to use Deltamod with your controller. Your left stick can help you move your mouse.",
@@ -738,16 +735,6 @@ async function renderuser() {
         page('goc-dl');
         return;
     }
-
-    await new Promise(resolve => {
-        var int = setInterval(async () => {
-            if (renderedUser) {
-                clearInterval(int);
-                resolve();
-            }
-        }, 50);
-    });
-
     // Main App Branching Route
     if (loaded.loaded) {
         var available = await window.electronAPI.invoke('fireUpdate', []);
