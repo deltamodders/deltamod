@@ -182,7 +182,7 @@ async function getGBUIConf() {
         return uiConfCache;
     }
 
-    var uiconf = await authenticatedAPICall('get', 'https://gamebanana.com/apiv12/Member/UiConfig?_sUrl=/');
+    var uiconf = await authenticatedAPICall('get', 'https://gamebanana.com/apiv13/Member/UiConfig?_sUrl=/');
 
     console.log('Fetched GameBanana UI Config for user ID ' + uiconf._idMemberRow);
 
@@ -196,7 +196,7 @@ function clearCache() {
 }
 
 async function leaveComment(id, comment, model) {
-    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv12/${model}/${id}/Post/Add`, {
+    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/${model}/${id}/Post/Add`, {
         _aImageFiles: [],
         _aImages: [],
         _aMentionedMemberRowIds: [],
@@ -207,13 +207,13 @@ async function leaveComment(id, comment, model) {
 }
 
 async function likeMod(model, id) {
-    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv12/${model}/${id}/Like`, {});
+    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/${model}/${id}/Like`, {});
 
     return { status: response.status, data: response.data };
 }
 
 async function createDeltamodBackup(name) {
-    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv12/Collection/Add`, {
+    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/Collection/Add`, {
         _bIsPrivate: true,
         _sName: name,
         _sPassword: "deltamod"
@@ -231,7 +231,7 @@ async function addModToBackup(collectionId, itemId, itemType) {
         return { success: false, message: "User not logged in" };
     }
 
-    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv12/${itemType}/${itemId}/AddToCollection`, {
+    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/${itemType}/${itemId}/AddToCollection`, {
         _idCollectionRow: collectionId
     });
 
@@ -247,7 +247,7 @@ async function getCollections() {
         return { success: false, message: "You must be logged in to perform this action" };
     }
 
-    var response = await authenticatedAPICall('get', `https://gamebanana.com/apiv12/Tool/20575/AccessorCollections`, {});
+    var response = await authenticatedAPICall('get', `https://gamebanana.com/apiv13/Tool/20575/AccessorCollections`, {});
 
     return response.data._aAllCollections || [];
 }
@@ -265,7 +265,7 @@ async function getCollectionMods(collectionId) {
     var page = 0;
     while (true) {
         page++;
-        var response = await authenticatedAPICall('get', `https://gamebanana.com/apiv12/Collection/${collectionId}/Items?_nPage=${page}&_sDirection=DESC&_sNameOperator=contains`, {});
+        var response = await authenticatedAPICall('get', `https://gamebanana.com/apiv13/Collection/${collectionId}/Items?_nPage=${page}&_sDirection=DESC&_sNameOperator=contains`, {});
 
         allMods = allMods.concat(response.data._aRecords || []);
 
@@ -278,7 +278,7 @@ async function getCollectionMods(collectionId) {
     
     var allDownloads = [];
     for (const mod of allMods) {
-        var profilepage = await authenticatedAPICall('get', `https://gamebanana.com/apiv12/${mod._sModelName}/${mod._idRow}/ProfilePage`, {});
+        var profilepage = await authenticatedAPICall('get', `https://gamebanana.com/apiv13/${mod._sModelName}/${mod._idRow}/ProfilePage`, {});
         var files = profilepage.data._aFiles
             .filter(x => x._aModManagerIntegrations.map(y => y._idToolRow).includes(20575))
             .map((x) => {
@@ -305,7 +305,7 @@ async function deleteCollection(collectionId) {
         return { success: false, message: "User not logged in" };
     }
 
-    var response = await authenticatedAPICall('delete', `https://gamebanana.com/apiv12/Collection/${collectionId}`, {
+    var response = await authenticatedAPICall('delete', `https://gamebanana.com/apiv13/Collection/${collectionId}`, {
         _idReasonRow: 1,
         _sNotes: "<p>Deleted by Deltamod on request of user</p>"
     });
@@ -313,10 +313,19 @@ async function deleteCollection(collectionId) {
     return { success: response.status == 200, error: response.status == 200 ? null : response.data };
 }
 
+async function replyToComment(commentId, commentText) {
+    var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/Post/${commentId}`, {
+        _sText: commentText
+    });
+
+    return { success: response.status == 200, error: response.status == 200 ? null : response.data, id: response.data._aPost._idRow };
+}
+
 module.exports = {
     obtainLogin,
     getGBUIConf,
     leaveComment,
+    replyToComment,
     obtainLoginWebserver,
     likeMod,
     collections: {

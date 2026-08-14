@@ -239,6 +239,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
 
     log('Step 3: Applying CSX patches...');
 
+    let performedCsxPatches = 0;
     for (const mod of moddingInfo) {
         for (const patch of mod.patches.filter(p => p.type === 'csx')) {
             const patchPath = path.join(modFolder, mod.folder, patch.patch);
@@ -252,9 +253,14 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
                 return { patched: false, log: `A CSX patch target file "${patch.to}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`, fullLog: fullLog };
             }
 
-            var backupPath = targetPath + '.bak';
-            if (!fs.existsSync(backupPath)) {
-                fs.renameSync(targetPath, backupPath);
+            if (performedCsxPatches > 0) {
+                var backupPath = path.join(gamePath, patch.to);
+            }
+            else {
+                var backupPath = path.join(gamePath, patch.to + '.bak');
+                if (!fs.existsSync(backupPath)) {
+                    fs.renameSync(targetPath, backupPath);
+                }
             }
 
             log(`Applying CSX ${patch.patch} to ${patch.to}...`);
@@ -262,6 +268,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
             var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath], gamePath).catch(e =>  {
                 throw new Error(`Error applying CSX patch for ${targetPath}: ${e.message}`);
             });
+            performedCsxPatches++;
         }
     }
 

@@ -470,6 +470,10 @@ module.exports = function registerIPCHandlers(context) {
         const uiconf = await GameBanana.getGBUIConf();
         if (uiconf._idMemberRow > 0) return await GameBanana.leaveComment(args[0], args[1], args[2]);
     });
+    ipcMain.handle('replyCommentGamebanana', async (event, args) => {
+        const uiconf = await GameBanana.getGBUIConf();
+        if (uiconf._idMemberRow > 0) return await GameBanana.replyToComment(args[0], args[1]);
+    });
     ipcMain.handle('openImageViewer', async (event, args) => {
         return new Promise(resolve => {
             const temp = path.join(app.getPath('temp'), `gb_image_${Date.now()}${path.extname(args[0])}`);

@@ -1,0 +1,24 @@
+.stamp {
+    padding: 6px;
+    padding-left: 13px;
+    padding-right: 13px;
+    font-size: 0.95em;
+    background-color: var(--theme-color-rgbaless);
+    color: white;
+    border-radius: 5px;
+}
+.commentBox {
+    background-color: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--theme-color);
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+.commentArea {
+    width: calc(100% - 55px);
+}
