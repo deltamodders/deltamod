@@ -1,8 +1,14 @@
 #credits {
-    width: 100%;
+    width: calc(100% - 80px);
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
+
+    padding: 40px;
+    background: url('./img/battle.gif') no-repeat center center;
+    background-size: cover;
+
+    border: 3px solid white;
 }
 
 .creditsBox {
@@ -15,6 +21,8 @@
     padding: 5px;
     padding-left: 20px;
     padding-right: 20px;
+    flex: 1;
+    cursor: pointer;
 }
 
 .credits-name {

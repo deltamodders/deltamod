@@ -444,10 +444,13 @@ function modList() {
                 console.log('deltamodExclusive uniqueId version parse failed, regenerating uniqueId for mod:', mod);
             }
 
-            if (deltamodExclusive.validFor !== computerName) {
-                console.log('mod validFor mismatch, regenerating uniqueId for mod:', mod);
-                deltamodExclusive = null; // force regeneration below
+            try {
+                if (deltamodExclusive.validFor && deltamodExclusive.validFor !== computerName) {
+                    console.log('mod validFor mismatch, regenerating uniqueId for mod:', mod);
+                    deltamodExclusive = null; // force regeneration below
+                }
             }
+            catch {}
 
             if (!deltamodExclusive || !deltamodExclusive.uniqueId) {
                 console.log('generating unique uid for mod:', mod);

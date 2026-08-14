@@ -34,6 +34,14 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
             var box = document.createElement('div');
             box.className = 'creditsBox';
 
+            var heart = document.createElement('img');
+            heart.className = 'credits-heart';
+            heart.src = './img/redsoul.svg';
+            heart.style.width = '20px';
+            heart.style.height = '20px';
+            heart.style.opacity = 0;
+            box.appendChild(heart);
+
             var pfp = document.createElement('img');
             pfp.className = 'credits-pfp';
             pfp.style.borderRadius = '10px';
@@ -55,6 +63,21 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
             document.querySelector('#credits').appendChild(box);
             box.appendChild(pfp);
             box.appendChild(infoDiv);
+
+            box.addEventListener('mouseenter', () => {
+                heart.style.opacity = 1;
+            });
+
+            box.addEventListener('mouseleave', () => {
+                heart.style.opacity = 0;
+            });
+
+            box.addEventListener('click', () => {
+                var sel = new Audio('./audio/sel.wav');
+                sel.play();
+                
+                window.open('https://gamebanana.com/members/' + credit._idRow, '_blank');
+            });
         });
     });
 
