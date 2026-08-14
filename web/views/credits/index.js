@@ -78,6 +78,10 @@ const CREDITS = [
             {
                 name: "GameBanana",
                 url: "https://gamebanana.com/members/4548254"
+            },
+            {
+                name: "Reddit",
+                url: "https://www.reddit.com/user/techy804/"
             }
         ]
     },
