@@ -188,6 +188,7 @@ window.currentPageStack.cat = async function(cat) {
     document.getElementById('b_inst').classList.remove('selected');
     document.getElementById('b_adv').classList.remove('selected');
     document.getElementById('b_gb').classList.remove('selected');
+    document.getElementById('b_help').classList.remove('selected');
     
     try {
         document.getElementById('b_dev').classList.remove('selected');
@@ -402,6 +403,10 @@ window.currentPageStack.cat = async function(cat) {
                 }, "Login", !gamebananaUserinfo.loggedIn, "You are already logged in to GameBanana.", '');
             }
             break;
+        case 'help':
+            await addButton("Open the Deltamod tutorial", "Opens the Deltamod tutorial video by Zatmaggot in your default browser.", async () => {
+                window.open('https://www.youtube.com/watch?v=vFj0wFI5kp4', '_blank');
+            }, "Open");
     }
     // theme adjustments
     // as far as i know this page is the only page that needs ts

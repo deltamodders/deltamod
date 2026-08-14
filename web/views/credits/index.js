@@ -1,4 +1,99 @@
-const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
+const CREDITS = [
+    {
+        name: "GhinoRhino",
+        role: "Owner & Lead Dev",
+        pfp: "ghino.png",
+        socials: [
+            {
+                name: "GameBanana",
+                url: "https://gamebanana.com/members/4526373"
+            },
+            {
+                name: "YouTube",
+                url: "https://youtube.com/@ghinoyt"
+            }
+        ]
+    },
+    {
+        name: "mc-intosh",
+        role: "Director",
+        pfp: "mc.png",
+        socials: [
+            {
+                name: "GameBanana",
+                url: "https://gamebanana.com/members/1712567"
+            },
+            {
+                name: "YouTube",
+                url: "https://youtube.com/@mc-intosh"
+            }
+        ]
+    },
+    {
+        name: "Toastie",
+        role: "Lead Artist",
+        pfp: "toastie.png",
+        socials: [
+            {
+                name: "GameBanana",
+                url: "https://gamebanana.com/members/4635904"
+            },
+            {
+                name: "YouTube",
+                url: "https://youtube.com/@Its_Toastie"
+            },
+            {
+                name: "Twitter",
+                url: "https://x.com/ItToastie"
+            }
+        ]
+    },
+    {
+        name: "oh ok",
+        role: "Artist",
+        pfp: "ohok.png",
+        socials: [
+            {
+                name: "GameBanana",
+                url: "https://gamebanana.com/members/4635904"
+            }
+        ]
+    },
+    {
+        name: "Zatmaggot",
+        role: "Partnered YouTuber",
+        pfp: "zat.png",
+        socials: [
+            {
+                name: "YouTube",
+                url: "https://youtube.com/@zatmaggotDR"
+            }
+        ]
+    },
+    {
+        name: "techy804",
+        role: "Developer",
+        pfp: "techy.png",
+        socials: [
+            {
+                name: "GameBanana",
+                url: "https://gamebanana.com/members/4548254"
+            }
+        ]
+    },
+    {
+        name: "Myggins07",
+        role: "Musician",
+        pfp: "myzmyggins.png",
+        socials: [
+            {
+                name: "YouTube",
+                url: "https://www.youtube.com/@Myggins"
+            }
+        ]
+    }
+];
+
 
 (async() => {
     document.querySelector('#credits').innerHTML = '';
@@ -7,77 +102,56 @@ const GB_URL = 'https://gamebanana.com/apiv11/Tool/20575/ProfilePage';
     var version = (await window.electronAPI.invoke('version',[]));
     document.querySelector('#version').innerText = 'Deltamod ' + version;
 
-    try {
-        console.log('Obtaining credits from ' + GB_URL);
-        var gbpage = await fetch(GB_URL).then(r => r.json());
-        localStorage.setItem('gbpage', JSON.stringify(gbpage));
-    }
-    catch (e) {
-        if (localStorage.getItem('gbpage')) {
-            var gbpage = JSON.parse(localStorage.getItem('gbpage'));
-        } else {
-            console.error('Failed to fetch GameBanana profile page:', e);
-            window.alert('Failed to load credits! You must be online to view credits.');
-            page('main');
-            return;
-        }
-    }
+    CREDITS.forEach((credit) => {
+        var box = document.createElement('div');
+        box.className = 'creditsBox';
 
+        var heart = document.createElement('img');
+        heart.className = 'credits-heart';
+        heart.src = credit.name == "Zatmaggot" ? './img/zatsoul.svg' : './img/redsoul.svg';
+        heart.style.width = '20px';
+        heart.style.height = '20px';
+        heart.style.opacity = 0;
+        box.appendChild(heart);
 
-    var madeUsers = [];
+        var pfp = document.createElement('img');
+        pfp.className = 'credits-pfp';
+        pfp.style.width = '50px';
+        pfp.style.height = '50px';
+        pfp.style.borderRadius = '10px';
+        pfp.src = "views/credits/pfp/" + credit.pfp;
 
-    gbpage._aCredits.forEach(group => {
-        group._aAuthors.forEach(credit => {
-            if (madeUsers.includes(credit._sName)) return;
-            madeUsers.push(credit._sName);
+        var infoDiv = document.createElement('div');
+        infoDiv.className = 'credits-info';
 
-            var box = document.createElement('div');
-            box.className = 'creditsBox';
+        var name = document.createElement('p');
+        name.className = 'credits-name';
+        name.innerText = credit.name;
+        infoDiv.appendChild(name);
 
-            var heart = document.createElement('img');
-            heart.className = 'credits-heart';
-            heart.src = './img/redsoul.svg';
-            heart.style.width = '20px';
-            heart.style.height = '20px';
+        var role = document.createElement('p');
+        role.className = 'credits-role';
+        role.innerText = credit.role;
+        infoDiv.appendChild(role);
+
+        document.querySelector('#credits').appendChild(box);
+        box.appendChild(pfp);
+        box.appendChild(infoDiv);
+
+        var socials = document.createElement('div');
+        socials.className = 'credits-socials';
+        infoDiv.appendChild(socials);
+
+        socials.innerHTML = credit.socials.map(social => {
+            return `<a href="${social.url}" target="_blank" class="credits-social">${social.name}</a>`;
+        }).join(' • ');
+
+        box.addEventListener('mouseenter', () => {
+            heart.style.opacity = 1;
+        });
+
+        box.addEventListener('mouseleave', () => {
             heart.style.opacity = 0;
-            box.appendChild(heart);
-
-            var pfp = document.createElement('img');
-            pfp.className = 'credits-pfp';
-            pfp.style.borderRadius = '10px';
-            pfp.src = credit._sAvatarUrl || 'https://images.gamebanana.com/static/img/defaults/avatar.gif';
-
-            var infoDiv = document.createElement('div');
-            infoDiv.className = 'credits-info';
-
-            var name = document.createElement('p');
-            name.className = 'credits-name';
-            name.innerText = credit._sName;
-            infoDiv.appendChild(name);
-
-            var role = document.createElement('p');
-            role.className = 'credits-role';
-            role.innerText = credit._sRole;
-            infoDiv.appendChild(role);
-
-            document.querySelector('#credits').appendChild(box);
-            box.appendChild(pfp);
-            box.appendChild(infoDiv);
-
-            box.addEventListener('mouseenter', () => {
-                heart.style.opacity = 1;
-            });
-
-            box.addEventListener('mouseleave', () => {
-                heart.style.opacity = 0;
-            });
-
-            box.addEventListener('click', () => {
-                var sel = new Audio('./audio/sel.wav');
-                sel.play();
-                
-                window.open('https://gamebanana.com/members/' + credit._idRow, '_blank');
-            });
         });
     });
 
