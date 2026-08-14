@@ -533,13 +533,13 @@ module.exports = function registerIPCHandlers(context) {
     });
     
     // Mod Management
-    ipcMain.handle('importMod', async () => {
+    ipcMain.handle('importMod', async (event, args) => {
         const win = getWindow();
         const { canceled, filePaths } = await dialog.showOpenDialog(win, {
             properties: ['openFile'],
             filters: [{ name: 'Deltamod compatible archive', extensions: ['zip', '7z', 'tar.gz', 'lzma'] }]
         });
-        if (!canceled && filePaths?.[0]) Modstore.importMod(filePaths[0]);
+        if (!canceled && filePaths?.[0]) Modstore.importMod(filePaths[0], args[0]);
     });
     ipcMain.handle('removeMod', async (event, args) => await Modstore.removeModSafe(args[0]));
     ipcMain.handle('toggleModState', (event, args) => {
@@ -661,9 +661,13 @@ module.exports = function registerIPCHandlers(context) {
 
         var gbMods = args[1];
 
+        var progressWin = createProgressModal();
+
         const skippedMods = [];
+        let mods = 0;
         
         for (const mod of gbMods) {
+            mods++;
             const added = await GameBanana.collections.add(args[0], mod.id, mod.model);
             if (!added.success) {
                 skippedMods.push({
@@ -673,8 +677,13 @@ module.exports = function registerIPCHandlers(context) {
                     api: added.error
                 });
             }
+            if (progressWin) updateProgressModal(progressWin, null, mods / gbMods.length, 'Importing mods to collection');
         }
 
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (progressWin) progressWin.close();
+        
         return { done: true, skippedMods };
     });
 

@@ -52,8 +52,18 @@ async function crawlComment(comment, div, depth = 0) {
 
     var contentDiv = document.createElement('div');
     contentDiv.classList.add('commentArea');
-    contentDiv.innerText = comment._sText.replaceAll(/<[^>]+>/g, '');
     commentDiv.appendChild(contentDiv);
+
+    var commenter = document.createElement('span');
+    commenter.style.fontSize = '1.2em';
+    commenter.innerText = comment._aPoster._sName || 'Unknown';
+    contentDiv.appendChild(commenter);
+
+    contentDiv.appendChild(document.createElement('br'));
+
+    var commentText = document.createElement('span');
+    commentText.innerHTML = comment._sText.replaceAll(/<[^>]+>/g, '');;
+    contentDiv.appendChild(commentText);
 
     var stampsDiv = document.createElement('div');
     stampsDiv.classList.add('stampsArea');
