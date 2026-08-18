@@ -2,22 +2,22 @@ name: Build Deltamod - Windows
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: ["develop"]
+
   pull_request:
-    branches: [ "develop" ]
+    branches: ["develop"]
 
 jobs:
   build:
-
     runs-on: windows-latest
 
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
-steps:
-      - uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -25,17 +25,21 @@ steps:
           node-version: ${{ matrix.node-version }}
           cache: npm
 
-      - name: Build
+      - name: Install dependencies
+        run: npm i
+        
+      - name: Build Windows version
         run: npm run build-windows
 
-      - name: Zip files
+      - name: Create ZIP archive
+        shell: pwsh
         run: |
           Compress-Archive `
-            -Path dist/win-unpacked/* `
-            -DestinationPath dist/Deltamod-${{ matrix.node-version }}.zip
+            -Path "dist/win-unpacked/*" `
+            -DestinationPath "dist/Deltamod-${{ matrix.node-version }}.zip"
 
-      - name: Upload
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Deltamod-${{ matrix.node-version }}
+          name: Deltamod-Windows-Node-${{ matrix.node-version }}
           path: dist/Deltamod-${{ matrix.node-version }}.zip
