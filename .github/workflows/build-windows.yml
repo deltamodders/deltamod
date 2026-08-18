@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     strategy:
       matrix:
@@ -27,7 +27,8 @@ jobs:
 
       - name: Setup build tools (2 / 3)
         shell: powershell
-        run: choco install visualstudio2022-workload-vctools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64.Spectre --add Microsoft.VisualStudio.Component.VC.Redist.Spectre --includeRecommended" -y
+        run: |
+          choco install visualstudio2022buildtools --package-parameters "--passive --wait --norestart --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64.Spectre --add Microsoft.VisualStudio.Component.VC.ATL.Spectre --add Microsoft.VisualStudio.Component.VC.Redist.Spectre --includeRecommended" -y
 
       - name: Setup build tools (3 / 3)
         uses: actions/setup-python@v5
