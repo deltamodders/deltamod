@@ -28,7 +28,9 @@ jobs:
       - name: Install Visual Studio C++ build tools
         shell: powershell
         run: |
-          choco install visualstudio2022-workload-vctools -y
+          choco install visualstudio2022-workload-vctools `
+            --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64.Spectre --includeRecommended" `
+            -y
 
       - name: Setup Python
         uses: actions/setup-python@v5

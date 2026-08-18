@@ -9,9 +9,9 @@
   ],
   "scripts": {
     "test": "electron . --developer",
-    "build-windows": "electron-builder --win",
-    "build-win32": "electron-builder --win --ia32",
-    "build-linux": "electron-builder --linux",
+    "build-windows": "electron-builder --win --publish never",
+    "build-win32": "electron-builder --win --ia32 --publish never",
+    "build-linux": "electron-builder --linux --publish never",
     "erase-data": "Erase.bat",
     "build-g3mtool-win": "dotnet publish G3MToolCLI/G3MToolCLI.csproj -c Release -r win-x64 --self-contained true -o tools",
     "build-g3mtool-linux": "dotnet publish G3MToolCLI/G3MToolCLI.csproj -c Release -r linux-x64 --self-contained true -o tools"
