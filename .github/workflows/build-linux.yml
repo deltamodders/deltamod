@@ -1,4 +1,4 @@
-name: build on Windows
+name: build on Linux
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -22,13 +22,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Visual Studio MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Install Visual Studio C++ build tools
-        shell: powershell
+      - name: Install Linux build tools
         run: |
-          choco install visualstudio2022-workload-vctools -y
+          sudo apt-get update
+          sudo apt-get install -y build-essential
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -42,7 +39,6 @@ jobs:
           cache: npm
 
       - name: Display tool versions
-        shell: powershell
         run: |
           node --version
           npm --version
@@ -54,18 +50,16 @@ jobs:
       - name: Rebuild native modules
         run: npm rebuild
 
-      - name: Build Windows application
-        run: npm run build-windows
+      - name: Build Linux application
+        run: npm run build-linux
 
       - name: Create ZIP archive
-        shell: powershell
         run: |
-          Compress-Archive `
-            -Path "dist/win-unpacked/*" `
-            -DestinationPath "dist/Deltamod-files.zip"
+          cd dist
+          zip -r Deltamod-linux-files.zip linux-unpacked
 
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: deltamod-win-unpacked
-          path: dist/Deltamod-files.zip
+          name: deltamod-linux-unpacked
+          path: dist/Deltamod-linux-files.zip
