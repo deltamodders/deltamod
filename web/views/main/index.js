@@ -104,7 +104,7 @@ async function createMod(mod) {
     bigAhhContainer.style.gap = '10px';
     bigAhhContainer.style.justifyContent = 'left';
 
-    let IMAGE_DIMENSION = 70;
+    let IMAGE_DIMENSION = 35;
     let imageContainer = document.createElement('div');
     imageContainer.style.width = IMAGE_DIMENSION + 'px';
     imageContainer.style.height = IMAGE_DIMENSION + 'px';
@@ -151,20 +151,20 @@ async function createMod(mod) {
     let infoContainer = document.createElement('div');
     let titleSpan = document.createElement('span');
     titleSpan.innerText = mod.name;
-    titleSpan.style.fontSize = '23px';
+    titleSpan.style.fontSize = '19px';
+    titleSpan.style.display = 'block';
     if (mod.new) {
-        titleSpan = adaptForIconsA(titleSpan);
+        titleSpan.style.alignItems = 'center';
+        titleSpan.style.gap = '4px';
         titleSpan.style.marginBottom = '0px';
-        titleSpan.innerHTML = `${icon('fiber_new', '30px')} ${titleSpan.innerHTML}`;
+        titleSpan.innerHTML = `${icon('fiber_new', '15px')} ${titleSpan.innerHTML}`;
     }
     titleSpan.id = `modtitle-${mod.uid}`;
     infoContainer.appendChild(titleSpan);
 
-    infoContainer.appendChild(document.createElement('br'));
-
     let descSpan = document.createElement('span');
     descSpan.className = 'calibri';
-    descSpan.style = 'font-size: 12px; color: #ffffff;';
+    descSpan.style = 'font-size: 13px; color: #ffffff;';
     descSpan.innerText = purifyDescription(mod.description);
     descSpan.id = `moddesc-${mod.uid}`;
     infoContainer.appendChild(descSpan);
@@ -179,9 +179,9 @@ async function createMod(mod) {
     flexContnainer.style.backdropFilter = 'blur(5px)';
     flexContnainer.style.borderRadius = '50px';
     flexContnainer.style.width = 'fit-content';
-    flexContnainer.style.padding = '4px';
-    flexContnainer.style.paddingLeft = '10px';
-    flexContnainer.style.paddingRight = '10px';
+    flexContnainer.style.padding = '3px';
+    flexContnainer.style.paddingLeft = '15px';
+    flexContnainer.style.paddingRight = '15px';
     infoContainer.appendChild(flexContnainer);
 
     var reducedAuthorStr = mod.author.slice(0,2).join(', ');
@@ -207,6 +207,22 @@ async function createMod(mod) {
     versionSpan.id = `modsize-${mod.uid}`;
     flexContnainer.appendChild(versionSpan);
 
+    let aiSpan = document.createElement('p');
+    aiSpan = adaptForIconsA(aiSpan);
+    aiSpan.style.margin = '0px';
+    aiSpan.className = 'calibri';
+    aiSpan.style.fontSize = fontSize + 'px';
+    aiSpan.style.color = '#ffffff';
+    var map = {
+        'fully': 'Fully AI-generated',
+        'partial': 'Partially AI-generated',
+        'no': 'No AI used'
+    }
+    aiSpan.innerHTML = `${icon('robot_2', fontSize + 'px')} ${map[mod.ai]}`;
+    if (mod.ai != 'no') {
+        flexContnainer.appendChild(aiSpan);
+    }
+
     if (!mod.mergeSupport) {
         noMergeMods.push({uid: mod.uid, name: mod.name});  
 
@@ -221,7 +237,6 @@ async function createMod(mod) {
         mergeSpan.id = `modmerge-${mod.uid}`;
         infoContainer.appendChild(mergeSpan);
     }
-
     if (mod.variants != null) {
         let variantSelect = document.createElement('select');
         variantSelect.style.marginTop = '10px';
@@ -268,7 +283,7 @@ async function createMod(mod) {
         enabled.type = 'checkbox';
         enabled.id = `modcheck-${mod.uid}`;
         enabled.checked = await window.electronAPI.invoke('getModState', [mod.uid]);
-        enabled.onchange = e => {
+        enabled.onchange = async (e) => {
             const c = e.target;
             const isEnabled = c.checked;
             const forMod = mod.uid;

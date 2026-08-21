@@ -520,6 +520,14 @@ function modList() {
                 throw new Error(`Mod targets unknown game: ${meta.game}`);
             }
 
+            var ai = modInfo.metadata.ai || "no";
+
+            if (['fully', 'partial', 'no'].indexOf(ai) === -1) {
+                failureReason = `Mod has invalid AI disclosure value: ${ai}`;
+                throw new Error(`Mod has invalid AI disclosure value: ${ai}`);
+            }
+
+
             try {
                 var variant = fs.readFileSync(path.join(modPath, '__variant'), 'utf8').trim();
             }
@@ -540,6 +548,7 @@ function modList() {
                 variants:     modInfo.variants || null,
                 game:         meta.game || "toby.deltarune",
                 dependencies: modInfo.dependencies || [],
+                ai:           ai,
                 packageID: pid,
                 gamebanana: {
                     supports: meta.gamebanana_id != null && meta.gamebanana_model != null,

@@ -139,6 +139,7 @@ async function createMod(mod, compatible, loggedIn) {
     compatSpan.id = `modcompat-${mod.uid}`;
     modNameContainer.appendChild(compatSpan);
     
+    
     if (mod.gamebanana.supports) {
         let gbSpan = document.createElement('p');
         gbSpan = adaptForIcons(gbSpan);
@@ -151,6 +152,23 @@ async function createMod(mod, compatible, loggedIn) {
         gbSpan.id = `modgb-${mod.uid}`;
         modNameContainer.appendChild(gbSpan);
     }
+
+    let aiSpan = document.createElement('p');
+    aiSpan = adaptForIcons(aiSpan);
+    aiSpan.style.margin = '0px';
+    aiSpan.style.marginTop = '4px';
+    aiSpan.className = 'calibri';
+    aiSpan.style.fontSize = 'smaller';
+    aiSpan.style.color = '#888';
+    var map = {
+        'fully': 'Fully AI-generated',
+        'partial': 'Partially AI-generated',
+        'no': 'No AI used'
+    }
+    aiSpan.innerHTML = `${icon('robot_2', 'small')} ${map[mod.ai]}`;
+    aiSpan.id = `modai-${mod.uid}`;
+    modNameContainer.appendChild(aiSpan);
+
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
     actionContainer.style.textAlign = 'center';
