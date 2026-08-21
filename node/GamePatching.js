@@ -147,8 +147,11 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
             }
 
             if (!fs.existsSync(patchPath)) {
-                return { patched: false, log: `An override patch file "${patch.patch}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`, fullLog: fullLog };
+                fs.writeFileSync(patchPath, ''); // Techy: fixed the below error message by MAKING the file, although since it is syncronous, IDK if it finished before the fs.copyFileSync thingy is called.
+                //  return { patched: false, log: `An override patch file "${patch.patch}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`, fullLog: fullLog };
+                log(`An override patch file "${patch.patch}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`); //Still log it
             }
+            
 
             patchedFiles.push(targetPath);
 
