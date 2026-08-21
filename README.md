@@ -1,10 +1,9 @@
 <p align="center"><img width="100" alt="Deltamod" src="./build/icon-big.png" /></p>
 <h1 align="center">Deltamod</h1>
 <p align="center"><b>A Deltarune mod manager, written in Node.js and Electron.</b> </p>
-<br /><br /><br />
-
 <p align="center"><img alt="Windows build status" src="https://github.com/deltamodders/deltamod/actions/workflows/build-windows.yml/badge.svg" /> <img alt="Linux build status" src="https://github.com/deltamodders/deltamod/actions/workflows/build-linux.yml/badge.svg" /></p>
 
+<br /><br /><br />
 
 
 # Running Deltamod from source
