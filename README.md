@@ -3,7 +3,7 @@
 <p align="center"><b>A Deltarune mod manager, written in Node.js and Electron.</b> </p>
 <p align="center"><img alt="Windows build status" src="https://github.com/deltamodders/deltamod/actions/workflows/build-windows.yml/badge.svg" /> <img alt="Linux build status" src="https://github.com/deltamodders/deltamod/actions/workflows/build-linux.yml/badge.svg" /></p>
 
-<br /><br /><br />
+<br />
 
 
 # Running Deltamod from source
