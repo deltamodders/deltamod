@@ -163,7 +163,8 @@ async function createMod(mod, compatible, loggedIn) {
     var map = {
         'fully': 'Fully AI-generated',
         'partial': 'Partially AI-generated',
-        'no': 'No AI used'
+        'no': 'No AI used',
+        'na': '<i>AI disclosure not provided</i>'
     }
     aiSpan.innerHTML = `${icon('robot_2', 'small')} ${map[mod.ai]}`;
     aiSpan.id = `modai-${mod.uid}`;

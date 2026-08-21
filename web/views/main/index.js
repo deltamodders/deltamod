@@ -215,11 +215,10 @@ async function createMod(mod) {
     aiSpan.style.color = '#ffffff';
     var map = {
         'fully': 'Fully AI-generated',
-        'partial': 'Partially AI-generated',
-        'no': 'No AI used'
+        'partial': 'Partially AI-generated'
     }
     aiSpan.innerHTML = `${icon('robot_2', fontSize + 'px')} ${map[mod.ai]}`;
-    if (mod.ai != 'no') {
+    if (mod.ai != 'no' && mod.ai != 'na') {
         flexContnainer.appendChild(aiSpan);
     }
 

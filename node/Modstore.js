@@ -520,9 +520,9 @@ function modList() {
                 throw new Error(`Mod targets unknown game: ${meta.game}`);
             }
 
-            var ai = modInfo.metadata.ai || "no";
+            var ai = modInfo.metadata.ai || "na";
 
-            if (['fully', 'partial', 'no'].indexOf(ai) === -1) {
+            if (['fully', 'partial', 'no', 'na'].indexOf(ai) === -1) {
                 failureReason = `Mod has invalid AI disclosure value: ${ai}`;
                 throw new Error(`Mod has invalid AI disclosure value: ${ai}`);
             }

@@ -3,6 +3,10 @@
 <p align="center"><b>A Deltarune mod manager, written in Node.js and Electron.</b> </p>
 <br /><br /><br />
 
+<p align="center"><img alt="Windows build status" src="https://github.com/deltamodders/deltamod/actions/workflows/build-windows.yml/badge.svg" /> <img alt="Linux build status" src="https://github.com/deltamodders/deltamod/actions/workflows/build-linux.yml/badge.svg" /></p>
+
+
+
 # Running Deltamod from source
 - Download Node.js [here](https://nodejs.org/en).
 - Download the latest G3MTool release.
