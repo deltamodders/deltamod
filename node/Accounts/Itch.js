@@ -78,6 +78,10 @@ async function getAccountInfo() {
 async function getDatabase() {
     var accountInfo = AccountManager.getAccountInfo('itch') || "null";
 
+    if (!accountInfo.token) {
+        return { collections: [] };
+    }
+
     var data = await axios.get(BASE_API_URL + '/deltamod_itch_db/data?token=' + accountInfo.token);
     return data.data.data; // json obj
 }

@@ -443,7 +443,7 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             td.innerHTML = `<small style='color:#888; font-style: normal;'>
             DELTAModders runs the server responsible for storing itch.io-related information. 
             The itch.io account info you submit is tied to an account created on our server.
-            Please read our Terms of Service and Privacy Policy before using this feature.
+            Please read our <a href="https://deltamodders.com/itch-privacy.pdf" target="_blank" style="color:#888;">Terms of Service and Privacy Policy</a> before using this feature.
             </small>`;
             var tr = document.createElement('tr');
             tr.appendChild(td);

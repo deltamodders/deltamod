@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Notification, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Notification, safeStorage, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -365,7 +365,11 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('logout_account', async (event, args) => {
         var accountProvider = args[0];
 
-        require('./AccountManager.js').deleteAccountInfo(accountProvider);
+        if (accountProvider == 'gamebanana') {
+            await require('./Accounts/GameBanana.js').clearCache();
+        }
+
+        await require('./AccountManager.js').deleteAccountInfo(accountProvider);
 
         return true;
     });
@@ -585,7 +589,34 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('gamebanana_createCollection', async (event, args) => {
-        return await require('./Accounts/' + args[1] + '.js').collections.create(args[0]);
+        return new Promise(async (resolve) => {
+            const collectionName = args[0];
+            var providers = [{
+                name: 'GameBanana',
+                file: './Accounts/GameBanana.js'
+            }, {
+                name: 'Itch.io',
+                file: './Accounts/Itch.js'
+            }];
+            const menu = Menu.buildFromTemplate([
+                ...providers.map(p => ({ label: p.name, click: async () => {
+                    if ((await require(p.file).isLoggedIn()) == false) {
+                        dialog.showMessageBoxSync({
+                            type: 'error',
+                            title: 'Not logged in',
+                            message: `You must be logged in to ${p.name} to create a collection.`
+                        });
+                        return;
+                    }
+                    await require(p.file).collections.create(collectionName);
+                    resolve({ success: true });
+                }})),
+                { type: 'separator' },
+                { label: 'Cancel', click: () => resolve({ success: false }) }
+            ]);
+
+            menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
+        });
     });
 
     ipcMain.handle('gamebanana_deleteCollection', async (event, args) => {

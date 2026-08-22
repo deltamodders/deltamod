@@ -82,11 +82,9 @@ function login() {
     });
 }
 
-function isLoggedIn() {
-    return new Promise(async (resolve, reject) => {
-        var uiconf = await getGBUIConf();
-        resolve(uiconf && uiconf._idMemberRow > 0);
-    });
+async function isLoggedIn() {
+    var uiconf = await getGBUIConf();
+    return uiconf && uiconf._idMemberRow > 0;
 }
 
 async function authenticatedAPICall(method, url, data = {}) {
@@ -145,7 +143,7 @@ async function authenticatedAPICall(method, url, data = {}) {
 let uiConfCache = null;
 
 async function getGBUIConf(skipCache = false) {
-    if (uiConfCache && !skipCache) {
+    if (uiConfCache && !skipCache && AccountManager.loadAccountInfo('gamebanana')?.cookie) {
         return uiConfCache;
     }
 
@@ -212,33 +210,23 @@ async function addModToBackup(collectionId, itemId, itemType) {
 }
 
 async function getCollections() {
-    try {
-        var file = getSystemFile('bananapwd', true);
-        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
-    }
-    catch {
-        return { success: false, message: "You must be logged in to perform this action" };
-    }
-
     var response = await authenticatedAPICall('get', `https://gamebanana.com/apiv13/Tool/20575/AccessorCollections`, {});
 
-    return response.data._aAllCollections.map(x => {
+    if (response.success != true) {
+        return [];
+    }
+
+    var collections = response.data._aAllCollections.map(x => {
         return {
             id: x._idRow,
             name: x._sName
         };
     });
+    console.log("GameBanana collections: " + JSON.stringify(collections));
+    return collections;
 }
 
 async function getCollectionMods(collectionId) {
-    try {
-        var file = getSystemFile('bananapwd', true);
-        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
-    }
-    catch {
-        return { success: false, message: "User not logged in" };
-    }
-
     var allMods = [];
     var page = 0;
     while (true) {
@@ -273,14 +261,6 @@ async function getCollectionMods(collectionId) {
 }
 
 async function deleteCollection(collectionId) {
-    try {
-        var file = getSystemFile('bananapwd', true);
-        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
-    }
-    catch {
-        return { success: false, message: "User not logged in" };
-    }
-
     var response = await authenticatedAPICall('delete', `https://gamebanana.com/apiv13/Collection/${collectionId}`, {
         _idReasonRow: 1,
         _sNotes: "<p>Deleted via Deltamod</p>"
