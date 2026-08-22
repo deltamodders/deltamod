@@ -47,5 +47,5 @@ To package Deltamod installers, you will need an <b>InstallBuilder</b> license. 
 ## Licensing
 The software is licensed under the EUPL 1.2. You can read the license [here](./LICENSE.txt).<br /><br />
 All rights are reserved on the Deltamod name and app icon, though. You may not advertise forks of the program using them - their use is subject to proper authorization, and may be revoked at any time by DELTAModders.<br /><br />
-Additionally, some code related to Itch.io login (which runs on our servers) is All Rights Reserved too.<br /><br />
+Additionally, some code related to Itch.io login (which depends on our own servers) is All Rights Reserved and may not be used in forks or unofficial builds.<br /><br />
 Some assets in Deltamod are property of Toby Fox - if you're the copyright owner of these and would like to remove them from the program, feel free to email [ghinorhino@deltamodders.com](mailto:ghinorhino@deltamodders.com).
