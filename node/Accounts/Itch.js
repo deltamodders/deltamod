@@ -1,3 +1,10 @@
+// NOTICE: 
+// This component is licensed under an All Rights Reserved license, different from the Deltamod project.
+// Usage in builds that are not made directly by DELTAModders is not permitted without explicit permission from the author.
+// Rights to use this component in builds made by DELTAModders are revokable at any time.
+
+
+
 const AccountManager = require('../AccountManager');
 const { app, shell } = require('electron');
 const express = require('express');
