@@ -75,7 +75,7 @@ function safeReadFileSync(filePath, encoding) {
     }
 }
 
-async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCallback) {
+async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     let fullLog = '';
     function log(...args) {
         console.log(...args);
@@ -170,8 +170,6 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
             performedOverridePatches++;
             performedPatches++;
             log(performedOverridePatches + '/' + mod.patches.filter(p => p.type === 'override' || p.type === 'copy').length + ' override patches applied.');
-
-            progressCallback(performedPatches / totalPatches * 100);
         }
     }
 
@@ -229,8 +227,6 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
         i++;
         performedPatches++;
         log((i + 1) + '/' + xdeltasMapArr.length + ' merging patches applied.');
-
-        progressCallback(performedPatches / totalPatches * 100);
     }));
 
     if (hasFailed) {

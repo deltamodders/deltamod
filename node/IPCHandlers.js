@@ -567,7 +567,7 @@ module.exports = function registerIPCHandlers(context) {
         if (isControllerMode) CMode.stop();
 
         exec(`"${exePath}"`, { cwd: path.dirname(exePath) }, () => {
-            try { GamePatching.restoreOriginalsIfAny(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
+            try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
             if (isControllerMode) CMode.start();
             if (win) {
                 win.show();
@@ -696,7 +696,7 @@ module.exports = function registerIPCHandlers(context) {
             const pathname = KeyValue.readKVS('gamePath');
             if (!pathname) return dialog.showErrorBox('Error', 'Please import a Deltarune install first.');
 
-            GamePatching.restoreOriginalsIfAny(pathname);
+            GamePatching.restore(pathname);
 
             let mods = fs.readdirSync(getPacketDatabase()).filter(f => fs.existsSync(path.join(getPacketDatabase(), f, '__deltaID.json'))).map(f => {
                 const dataPath = path.join(getPacketDatabase(), f, '__deltaID.json');
@@ -708,7 +708,9 @@ module.exports = function registerIPCHandlers(context) {
                 return data;
             });
 
-            const log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0], BrowserWindow.fromWebContents(event.sender));
+            const log = await GamePatching.startGamePatch(pathname, getPacketDatabase(), args[0], (log) => {
+                win.webContents.send('gplog', log);
+            });
 
             if (!log.patched) {
                 await dialog.showErrorBox('Patching failed', `Please check the log and try again.\n\n${log.log}`);

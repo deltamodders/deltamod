@@ -1,8 +1,5 @@
 window.currentPageStack = {};
-window.currentPageStack.gpl = function (obj) {
-    var message = obj.log;
-    var percent = obj.percent;
-
+window.currentPageStack.gpl = function (message) {
     if (message != "") {
         if (document.getElementById("gpl").innerHTML.length > 10000) {
             document.getElementById("gpl").innerHTML = document.getElementById("gpl").innerHTML.slice(document.getElementById("gpl").innerHTML.length - 8000);
