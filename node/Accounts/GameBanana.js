@@ -2,48 +2,12 @@ const { BrowserWindow, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
-const { getSystemFile } = require('./System');
-const console = require('./Console');
+const { getSystemFile } = require('../System');
+const console = require('../Console');
 const express = require('express');
+const AccountManager = require('../AccountManager');
 
-function obtainLoginWebserver() {
-    return new Promise(async (resolve, reject) => {
-        const expressApp = express();
-
-        let serve;
-
-        expressApp.get('/', async (req, res) => {
-            var token = atob(req.query.token);
-
-            var map = {};
-
-            token.split(':').forEach((x) => {
-                var parts = x.split('.');
-                map[parts[0]] = parts[1];
-            });
-
-            var cookieString = Object.entries(map).map(([key, value]) => `${key}=${value}`).join('; ');
-            console.log('got this from webserver login callback: ' + cookieString);
-            resolve(cookieString);
-
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-            res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-            res.json({ success: true, message: "Logged in to Deltamod successfully! You can now close this tab." });
-
-            serve.close(() => {
-                console.log('Webserver closed after GameBanana login callback');
-            });
-        });
-
-        serve = expressApp.listen(4912, () => {
-            console.log('Webserver listening on port 4912 for GameBanana login callback');
-        });
-    });
-}
-
-function obtainLogin() {
+function login() {
     return new Promise(async (resolve, reject) => {
         let loginWindow = new BrowserWindow({
             width: 700,
@@ -110,6 +74,7 @@ function obtainLogin() {
                 });
                 console.log('Found ' + allCookies.length + ' GameBanana account cookies after login: ' + allCookies.map(c => c.name).join(', '));
                 const cookieHeader = allCookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
+                AccountManager.saveAccountInfo('gamebanana', { cookie: cookieHeader });
                 resolve(cookieHeader);
                 loginWindow.close();
             }
@@ -117,14 +82,17 @@ function obtainLogin() {
     });
 }
 
+function isLoggedIn() {
+    return new Promise(async (resolve, reject) => {
+        var uiconf = await getGBUIConf();
+        resolve(uiconf && uiconf._idMemberRow > 0);
+    });
+}
+
 async function authenticatedAPICall(method, url, data = {}) {
-    try {
-        var file = getSystemFile('bananapwd', true);
-        var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
-    }
-    catch {
-        var file = "";
-        var token = "";
+    var token = AccountManager.loadAccountInfo('gamebanana')?.cookie;
+    if (!token) {
+        return { success: false, message: "User not logged in" };
     }
 
     console.log(`Making authenticated API call to ${url} with method ${method} and data:`, data);
@@ -176,25 +144,32 @@ async function authenticatedAPICall(method, url, data = {}) {
 
 let uiConfCache = null;
 
-async function getGBUIConf() {
-    if (uiConfCache) {
-        console.log('Using cached GameBanana UI Config for user ID ' + uiConfCache._idMemberRow);
+async function getGBUIConf(skipCache = false) {
+    if (uiConfCache && !skipCache) {
         return uiConfCache;
     }
 
+    console.log('Fetching GameBanana UI config...');
+
     var uiconf = await authenticatedAPICall('get', 'https://gamebanana.com/apiv13/Member/UiConfig?_sUrl=/');
-
-    console.log('Fetched GameBanana UI Config for user ID ' + uiconf._idMemberRow);
-
     uiConfCache = uiconf.data;
-
     return uiconf.data;
 }
-
+function getAccountInfo() {
+    return new Promise(async (resolve, reject) => {
+        var uiconf = await getGBUIConf();
+        if (!uiconf || !uiconf._idMemberRow) {
+            resolve({ loggedIn: false });
+            return;
+        }
+        console.log('GameBanana account info:', uiconf);
+        var profilePage = await axios.get(`https://gamebanana.com/apiv13/Member/${uiconf._idMemberRow}/ProfilePage`);
+        resolve({ name: profilePage.data._sName, pic: profilePage.data._sAvatarUrl, id: uiconf._idMemberRow, loggedIn: true });
+    });
+}
 function clearCache() {
     uiConfCache = null;
 }
-
 async function leaveComment(id, comment, model) {
     var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/${model}/${id}/Post/Add`, {
         _aImageFiles: [],
@@ -208,7 +183,6 @@ async function leaveComment(id, comment, model) {
 
 async function likeMod(model, id) {
     var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/${model}/${id}/Like`, {});
-
     return { status: response.status, data: response.data };
 }
 
@@ -218,7 +192,6 @@ async function createDeltamodBackup(name) {
         _sName: name,
         _sPassword: "deltamod"
     });
-
     return { id: response.data._idRow, success: response.data._sStatus == 'SUCCESS', error: response.data._sStatus == 'SUCCESS' ? null : response.data };
 }
 
@@ -273,8 +246,6 @@ async function getCollectionMods(collectionId) {
             break;
         }
     }
-
-    console.log(`Found ${allMods.length} mods in collection ${collectionId}`);
     
     var allDownloads = [];
     for (const mod of allMods) {
@@ -307,7 +278,7 @@ async function deleteCollection(collectionId) {
 
     var response = await authenticatedAPICall('delete', `https://gamebanana.com/apiv13/Collection/${collectionId}`, {
         _idReasonRow: 1,
-        _sNotes: "<p>Deleted by Deltamod on request of user</p>"
+        _sNotes: "<p>Deleted via Deltamod</p>"
     });
 
     return { success: response.status == 200, error: response.status == 200 ? null : response.data };
@@ -322,11 +293,9 @@ async function replyToComment(commentId, commentText) {
 }
 
 module.exports = {
-    obtainLogin,
     getGBUIConf,
     leaveComment,
     replyToComment,
-    obtainLoginWebserver,
     likeMod,
     collections: {
         create: createDeltamodBackup,
@@ -335,5 +304,9 @@ module.exports = {
         list: getCollections,
         inspect: getCollectionMods
     },
-    clearCache
+    clearCache,
+    login,
+    validateToken: isLoggedIn,
+    getAccountInfo,
+    isLoggedIn
 };

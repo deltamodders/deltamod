@@ -26,10 +26,26 @@
                 </span> 
                 Advanced
             </button>
-            <button onclick="window.currentPageStack.cat('gb')" id="b_gb" class="noScaleBTN optbtn">
-                <img src="./img/banana-outline.png" width="24" height="24">
-                GameBanana
+            <button id="b_accounts" onclick="window.currentPageStack.expandSemimenu('accounts')" class="noScaleBTN optbtn semimenuCollapser">
+                <span class="material-symbols-outlined">
+                    account_circle
+                </span> 
+                Accounts
             </button>
+            <div class="semimenu" id="accounts" style="display: none;">
+                <button onclick="window.currentPageStack.cat('gb', false)" id="b_gb" class="noScaleBTN optbtn minibtn">
+                    <brand-icon>B</brand-icon>
+                    GameBanana
+                </button>
+                <button onclick="window.currentPageStack.cat('itch', false)" id="b_itch" class="noScaleBTN optbtn minibtn">
+                    <brand-icon>I</brand-icon>
+                    itch.io
+                </button>
+                <button onclick="window.currentPageStack.cat('gamejolt', false)" id="b_gamejolt" class="noScaleBTN optbtn minibtn">
+                    <brand-icon>J</brand-icon>
+                    GameJolt
+                </button>
+            </div>
             <button onclick="window.currentPageStack.cat('help')" id="b_help" class="noScaleBTN optbtn">
                 <span class="material-symbols-outlined">
                     question_mark

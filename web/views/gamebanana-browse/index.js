@@ -121,15 +121,15 @@ let isGBLoggedIn = false;
 
 async function gameBananaLogin() {
     const loggedin = await Promise.race([
-        window.electronAPI.invoke('validateGamebananaToken', []),
+        window.electronAPI.invoke('getAccountInfo', ['gamebanana']),
         new Promise(resolve => setTimeout(() => resolve(false), 5000))
     ]);
 
-    isGBLoggedIn = loggedin;
+    isGBLoggedIn = loggedin.loggedIn;
     const gbPic = document.getElementById('gbPic');
 
     if (loggedin) {
-        gbPic.src = await window.electronAPI.invoke('getGamebananaPic', []);
+        gbPic.src = await loggedin.pic;
     } else {
         gbPic.src = './img/mod-placeholder.png';
     }

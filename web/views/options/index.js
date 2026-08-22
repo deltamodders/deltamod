@@ -46,6 +46,22 @@ async function addCheckboxOption(name, description, flagid, requiresRestart = fa
     table.appendChild(tr);
 }
 
+
+window.currentPageStack.expandSemimenu = function(sm) {
+    document.querySelector('.semimenu#' + sm).style.display = 'block';
+    document.querySelector('.semimenuCollapser#b_' + sm).style.opacity = 0.5;
+    rew();
+};
+
+window.currentPageStack.collapseSemimenu = function() {
+    Array.from(document.querySelectorAll('.semimenu')).forEach(menu => {
+        menu.style.display = 'none';
+    });
+    Array.from(document.querySelectorAll('.semimenuCollapser')).forEach(btn => {
+        btn.style.opacity = 0.5;
+    });
+};
+
 window.electronAPI.invoke('isDevMode', []).then((devmode) => {
     if (devmode) {
         document.getElementById('b_dev').style.display = 'flex';
@@ -175,20 +191,104 @@ async function addRowHeader(name) {
     table.appendChild(tr);
 }
 
+async function renderAccount(backendName, displayName, cat, tbody = document.querySelector('tbody')) {
+    var children = [];
+    if (backendName === 'gamebanana') {
+        await invoke('eraseGamebananaCache', []);
+    }
+
+    var loadtr = document.createElement('tr');
+    loadtr.innerHTML = '<td colspan="2" style="text-align:center; display: flex; justify-content: center; align-items: center;"><div class="loadingBar"></div></td>';
+    tbody.appendChild(loadtr);
+
+    var tr = document.createElement('tr');
+    tbody.appendChild(tr);
+
+    var td = document.createElement('td');
+    td.colSpan = 2;
+    td.innerHTML = "Loading...";
+
+    var userInfo = await Promise.race([
+        window.electronAPI.invoke('getAccountInfo', [backendName]),
+        new Promise(resolve => setTimeout(() => resolve({ loggedIn: false }), 5000))
+    ]);
+
+    if (userInfo === null || userInfo === undefined) {
+        userInfo = { loggedIn: false };
+    }
+            
+    tbody.removeChild(loadtr);
+    td.innerHTML = '';
+
+    var flexdiv = document.createElement('div');
+    flexdiv.style.display = 'flex';
+    flexdiv.style.alignItems = 'center';
+    flexdiv.style.gap = '10px';
+    td.appendChild(flexdiv);
+
+    var img = document.createElement('img');
+    img.src = userInfo.pic || './img/mod-placeholder.png';
+    img.style.width = '32px';
+    img.style.height = '32px';
+    img.style.border = '1px solid var(--theme-color)';
+    flexdiv.appendChild(img);
+
+    img.style.borderRadius = '5px';
+    var span = document.createElement('span');
+    flexdiv.appendChild(span);
+    span.innerText = `Currently logged in as ${userInfo.name}`;
+
+    if (userInfo.name == undefined) {
+        span.innerText = "You aren't logged in to " + displayName + ".";
+        userInfo = { loggedIn: false };
+    }
+    else {
+        userInfo.loggedIn = true;
+    }
+
+    tr.appendChild(td);
+
+    if (userInfo.loggedIn && userInfo.name != undefined) {
+        await addButton("Logout", "Removes your " + displayName + " account from Deltamod.", async () => {
+            await window.electronAPI.invoke('logout_account', [backendName]);
+            window._pageArguments = {cat: cat};
+            page('options');
+        }, "Logout", userInfo.loggedIn, "You aren't logged in to " + displayName + ".", '');
+    }
+    else {
+        await addButton("Login", "Adds a " + displayName + " account to Deltamod.", async () => {
+            await window.electronAPI.invoke('login_account', [backendName]);
+            window._pageArguments = {cat: cat};
+            page('options');
+        }, "Login", !userInfo.loggedIn, "You are already logged in to " + displayName + ".", '');
+    }
+}
+
 var tempLock = false;
 
-window.currentPageStack.cat = async function(cat) {
+window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
     if (tempLock) return;
     tempLock = true;
     let tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
 
-    document.getElementById('b_gen').classList.remove('selected');
-    document.getElementById('b_ui').classList.remove('selected');
-    document.getElementById('b_inst').classList.remove('selected');
-    document.getElementById('b_adv').classList.remove('selected');
-    document.getElementById('b_gb').classList.remove('selected');
-    document.getElementById('b_help').classList.remove('selected');
+    try {
+        if (collapseSemimenu) {
+            window.currentPageStack.collapseSemimenu();
+        }
+
+        var currentCatbtn = document.getElementById('b_' + cat);
+        var isInSemimenu = currentCatbtn?.closest('div.semimenu') !== null;
+        if (isInSemimenu) {
+            window.currentPageStack.expandSemimenu(currentCatbtn.closest('div.semimenu').id);
+        }
+    }
+    catch {}
+
+
+    document.querySelectorAll('[id^="b_"]').forEach(btn => {
+        btn.classList.remove('selected');
+    });
     
     try {
         document.getElementById('b_dev').classList.remove('selected');
@@ -331,77 +431,15 @@ window.currentPageStack.cat = async function(cat) {
             }, "Open");
             break;
         case 'gb':
-            await invoke('eraseGamebananaCache', []);
-
-            var loadtr = document.createElement('tr');
-            loadtr.innerHTML = '<td colspan="2" style="text-align:center; display: flex; justify-content: center; align-items: center;"><div class="loadingBar"></div></td>';
-            tbody.appendChild(loadtr);
-
-            var tr = document.createElement('tr');
-            tbody.appendChild(tr);
-
-            var td = document.createElement('td');
-            td.colSpan = 2;
-            td.innerHTML = "Loading...";
-
-            var gamebananaUserinfo = await Promise.race([
-                window.electronAPI.invoke('getGamebananaUserinfo', []),
-                new Promise(resolve => setTimeout(() => resolve({ loggedIn: false }), 5000))
-            ]);
-            
-            tbody.removeChild(loadtr);
-            td.innerHTML = '';
-
-            var flexdiv = document.createElement('div');
-            flexdiv.style.display = 'flex';
-            flexdiv.style.alignItems = 'center';
-            flexdiv.style.gap = '10px';
-            td.appendChild(flexdiv);
-
-            var img = document.createElement('img');
-            img.src = gamebananaUserinfo._sAvatarUrl || './img/mod-placeholder.png';
-            img.style.width = '32px';
-            img.style.height = '32px';
-            img.style.border = '1px solid var(--theme-color)';
-            flexdiv.appendChild(img);
-
-            img.style.borderRadius = '5px';
-            var span = document.createElement('span');
-            flexdiv.appendChild(span);
-            span.innerText = `Currently logged in as ${gamebananaUserinfo._sName}`;
-
-            if (gamebananaUserinfo._sName == undefined) {
-                span.innerText = "You aren't logged in to GameBanana.";
-                gamebananaUserinfo = { loggedIn: false };
-            }
-            else {
-                gamebananaUserinfo.loggedIn = true;
-            }
-
-            tr.appendChild(td);
-
-            if (gamebananaUserinfo.loggedIn && gamebananaUserinfo._sName != undefined) {
-                await addButton("Logout", "Removes your GameBanana account from Deltamod.", async () => {
-                    await window.electronAPI.invoke('logoutGamebanana', []);
-                    window._pageArguments = {cat: 'gb'};
-                    page('options');
-                }, "Logout", gamebananaUserinfo.loggedIn, "You aren't logged in to GameBanana.", '');
-            }
-            else {
-                await addButton("Login", "Adds a GameBanana account to Deltamod.", async () => {
-                    await window.electronAPI.invoke('loginGamebanana', []);
-                    window._pageArguments = {cat: 'gb'};
-                    page('options');
-                }, "Login", !gamebananaUserinfo.loggedIn, "You are already logged in to GameBanana.", '');
-
-                await addButton("Login via existing browser session (Advanced)", "Adds a GameBanana account to Deltamod using the session in your browser.", async () => {
-                    await window.electronAPI.invoke('loginGamebananaBrowser', []);
-                    window.focus();
-                    htmlAlert("Done", "Logged in via browser session.", [{ text: "Ok", resolveWith: '' }]);
-                    window._pageArguments = {cat: 'gb'};
-                    page('options');
-                }, "Login", !gamebananaUserinfo.loggedIn, "You are already logged in to GameBanana.", '');
-            }
+            renderAccount('gamebanana', 'GameBanana', 'gb');
+            break;
+        case 'itch':
+            renderAccount('itch', 'Itch.io', 'itch');
+            break;
+        case 'gamejolt':
+            await addButton("wip", "wip!", async () => {
+                window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+            }, "Open");
             break;
         case 'help':
             await addButton("Open the Deltamod tutorial", "Opens the Deltamod tutorial video by Zatmaggot in your default browser.", async () => {

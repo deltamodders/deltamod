@@ -103,9 +103,9 @@ async function crawlComment(comment, div, depth = 0) {
 }
 
 (async () => {
-    var gbPic = await window.electronAPI.invoke('getGamebananaPic',[]);
-    document.getElementById('gbPic').src = gbPic || 'deltapack://web/img/mod-placeholder.png';
-    if (gbPic) {
+    var gbPic = await window.electronAPI.invoke('getAccountInfo', ['gamebanana']);
+    document.getElementById('gbPic').src = gbPic?.pic || "";
+    if (gbPic.pic) {
         document.getElementById('myCommentBox').style.display = 'flex';
     }
     var comments = await fetch('https://gamebanana.com/apiv11/' + gbModel + '/' + gbModID + '/Posts?_nPage=1&_nPerpage=30&_sSort=popular&' + new Date().getTime());

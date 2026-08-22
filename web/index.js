@@ -25,7 +25,12 @@ var shouldPlayAudio = true;
     shouldPlayAudio = await window.electronAPI.invoke('getUniqueFlag', ["AUDIO"]);
 })();
 
+
 window._onClosePage = window._onClosePage || [];
+
+function brandIcon(code) {
+    return `<brand-icon>${code}</brand-icon>`;
+}
 
 /**
  * Wrapper for invoking Electron IPC calls.
@@ -473,9 +478,9 @@ async function page(name) {
     // Handle NO-SIDEBAR tag
     if (purifiedHTML.includes('NO-SIDEBAR')) {
         purifiedHTML = purifiedHTML.replace('NO-SIDEBAR', '');
-        ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
+        ([...Array.from(document.getElementsByClassName('sidebar-ribbon'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
     } else {
-        ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
+        ([...Array.from(document.getElementsByClassName('sidebar-ribbon'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
     }
 
     // Extract Title Tag
@@ -537,7 +542,7 @@ async function page(name) {
     document.getElementsByClassName('viewport')[0].innerHTML = purifiedHTML;
 
     // Set Active Sidebar Button
-    ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => {
+    ([...Array.from(document.getElementsByClassName('sidebar-ribbon'))]).forEach(button => {
         if (button.getAttribute('data-page') === name) {
             button.classList.add('active');
         } else {
@@ -633,32 +638,6 @@ if (!window.electronAPI) {
     document.getElementById('versionTitle').innerText = '(v.' + await invoke('version',[]) + ')';
 })();
 
-var renderedUser = false;
-async function renderuser() {
-    if (!(await window.electronAPI.invoke('validateGamebananaToken')) || !navigator.onLine) {
-        renderedUser = true;
-        return;
-    }
-    var gbuser = await window.electronAPI.invoke('getGamebananaUserinfo', []);
-
-    var gbaccount = document.querySelector('.gamebanana-account');
-    gbaccount.innerHTML = `
-        <img src="${gbuser._sAvatarUrl}" alt="Avatar" width="25" height="25" style="border-radius: 15px;">
-        <span>${gbuser._sName}</span>
-    `;
-    gbaccount.style.opacity = '1';
-    gbaccount.addEventListener('click', async () => {
-        if (gbaccount.getAttribute('data-disabled') === 'true') {
-            return;
-        }
-        window._pageArguments = {
-            cat: 'gb'
-        };
-        page('options');
-    });
-
-    renderedUser = true;
-}
 
 /**
  * ==========================================
@@ -781,16 +760,3 @@ function openAudio() {
         });
     }
 }
-
-/**
- * ==========================================
- * Late Execution Modules (Shop Checker)
- * ==========================================
- */
-(async () => {
-    renderuser();
-
-    if ((await window.electronAPI.invoke('validateGamebananaToken'))) {
-        document.getElementById('collectionsRibbon').style.display = 'inline-flex';
-    }
-})();

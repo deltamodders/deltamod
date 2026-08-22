@@ -148,7 +148,7 @@ async function createMod(mod, compatible, loggedIn) {
         gbSpan.className = 'calibri';
         gbSpan.style.fontSize = 'smaller';
         gbSpan.style.color = '#888';
-        gbSpan.innerHTML = `<img src="./img/banana-outline.png" width="15" height="15"> ${"Installed through GameBanana"}`;
+        gbSpan.innerHTML = `${brandIcon('B')} ${"Installed through GameBanana"}`;
         gbSpan.id = `modgb-${mod.uid}`;
         modNameContainer.appendChild(gbSpan);
     }
@@ -296,7 +296,7 @@ async function createErroringMods(errors) {
 }
 
 (async () => {
-    var loggedIn = await window.electronAPI.invoke('validateGamebananaToken', []);
+    var loggedIn = await window.electronAPI.invoke('isLoggedIn', ['gamebanana']);
     const errorBanner = document.getElementById("error-banner");
 
     let filterFunc = (x) => true;
