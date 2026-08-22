@@ -90,7 +90,7 @@ window.currentPageStack.exportMods = async function() {
         }
     });
 
-    await invoke('gamebanana_importToCollection', [window._pageArguments.collectionId, selectedMods]);
+    await invoke('gamebanana_importToCollection', [window._pageArguments.collectionId, selectedMods, window._pageArguments.collectionProvider]);
 
     await htmlAlert("Done", "The selected mods have been imported to the collection.", [{
         text: "Ok",

@@ -576,19 +576,20 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('gamebanana_getCollections', async () => {
-        var res = await collections.list();
-        return (typeof res === 'object' && Array.isArray(res)) ? res.map(c => ({
-            id: c._idRow,
-            name: c._sName,
-        })) : res;
+        var collections = [
+            ...(await require('./Accounts/GameBanana.js').collections.list()).map(c => ({ ...c, provider: 'GameBanana', providerTechnical: 'GameBanana' })),
+            ...(await require('./Accounts/Itch.js').collections.list()).map(c => ({ ...c, provider: 'Itch.io', providerTechnical: 'Itch' }))
+        ];
+
+        return collections;
     });
 
     ipcMain.handle('gamebanana_createCollection', async (event, args) => {
-        return await collections.create(args[0]);
+        return await require('./Accounts/' + args[1] + '.js').collections.create(args[0]);
     });
 
     ipcMain.handle('gamebanana_deleteCollection', async (event, args) => {
-        return await collections.delete(args[0]);
+        return await require('./Accounts/' + args[1] + '.js').collections.delete(args[0]);
     });
 
     ipcMain.handle('gamebanana_importToCollection', async (event, args) => {
@@ -596,10 +597,12 @@ module.exports = function registerIPCHandlers(context) {
 
         var gbMods = args[1];
 
+        var provider = args[2];
+
         const skippedMods = [];
         
         for (const mod of gbMods) {
-            const added = await collections.add(args[0], mod.id, mod.model);
+            const added = await require('./Accounts/' + provider + '.js').collections.add(args[0], mod.id, mod.model);
             if (!added.success) {
                 skippedMods.push({
                     name: mod.name,
@@ -614,7 +617,7 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('gamebanana_downloadAllInCollection', async (event, args) => {
-        var mods = await collections.inspect(args[0]);
+        var mods = await require('./Accounts/' + args[1] + '.js').collections.inspect(args[0]);
 
         var pwin = createProgressModal();
 

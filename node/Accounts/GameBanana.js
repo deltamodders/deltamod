@@ -192,7 +192,7 @@ async function createDeltamodBackup(name) {
         _sName: name,
         _sPassword: "deltamod"
     });
-    return { id: response.data._idRow, success: response.data._sStatus == 'SUCCESS', error: response.data._sStatus == 'SUCCESS' ? null : response.data };
+    return true;
 }
 
 async function addModToBackup(collectionId, itemId, itemType) {
@@ -201,14 +201,14 @@ async function addModToBackup(collectionId, itemId, itemType) {
         var token = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(fs.readFileSync(file)) : fs.readFileSync(file, 'utf8');
     }
     catch {
-        return { success: false, message: "User not logged in" };
+        return false;
     }
 
     var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/${itemType}/${itemId}/AddToCollection`, {
         _idCollectionRow: collectionId
     });
 
-    return { success: response.data._sStatus == 'SUCCESS', error: response.data._sStatus == 'SUCCESS' ? null : response.data };
+    return true;
 }
 
 async function getCollections() {
@@ -222,7 +222,12 @@ async function getCollections() {
 
     var response = await authenticatedAPICall('get', `https://gamebanana.com/apiv13/Tool/20575/AccessorCollections`, {});
 
-    return response.data._aAllCollections || [];
+    return response.data._aAllCollections.map(x => {
+        return {
+            id: x._idRow,
+            name: x._sName
+        };
+    });
 }
 
 async function getCollectionMods(collectionId) {
@@ -260,8 +265,8 @@ async function getCollectionMods(collectionId) {
             });
 
         allDownloads.push({
-            mod: profilepage.data._sName,
-            files: files
+            name: profilepage.data._sName,
+            downloads: files
         });
     }
     return allDownloads;

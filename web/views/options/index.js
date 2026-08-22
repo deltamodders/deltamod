@@ -213,6 +213,8 @@ async function renderAccount(backendName, displayName, cat, tbody = document.que
         new Promise(resolve => setTimeout(() => resolve({ loggedIn: false }), 5000))
     ]);
 
+    console.log("User info for " + backendName + ": " + JSON.stringify(userInfo));
+
     if (userInfo === null || userInfo === undefined) {
         userInfo = { loggedIn: false };
     }
@@ -431,10 +433,22 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             }, "Open");
             break;
         case 'gb':
-            renderAccount('gamebanana', 'GameBanana', 'gb');
+            await renderAccount('gamebanana', 'GameBanana', 'gb');
             break;
         case 'itch':
-            renderAccount('itch', 'Itch.io', 'itch');
+            await renderAccount('itch', 'Itch.io', 'itch');
+
+            var td = document.createElement('td');
+            td.colSpan = 2;
+            td.innerHTML = `<small style='color:#888; font-style: normal;'>
+            DELTAModders runs the server responsible for storing itch.io-related information. 
+            The itch.io account info you submit is tied to an account created on our server.
+            Please read our Terms of Service and Privacy Policy before using this feature.
+            </small>`;
+            var tr = document.createElement('tr');
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+
             break;
         case 'gamejolt':
             await addButton("wip", "wip!", async () => {
