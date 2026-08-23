@@ -647,13 +647,19 @@ module.exports = function registerIPCHandlers(context) {
         return { done: true, skippedMods };
     });
 
+    ipcMain.handle('areCollectionsAvailable', async (event, args) => {
+        return (
+            await require('./Accounts/GameBanana.js').isLoggedIn() || await require('./Accounts/Itch.js').isLoggedIn()
+        )
+    });
+
     ipcMain.handle('gamebanana_downloadAllInCollection', async (event, args) => {
         var mods = await require('./Accounts/' + args[1] + '.js').collections.inspect(args[0]);
 
         var pwin = createProgressModal();
 
         for (const mod of mods) {
-
+            console.log(JSON.stringify(mod, null, 4));
             var todownload = mod.files[0];
             if (mod.files.length > 1) {
                 var result = dialog.showMessageBoxSync({

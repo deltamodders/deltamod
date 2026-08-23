@@ -194,8 +194,14 @@ button:disabled {
     gap: 7px;
     width: 100%;
     padding-left: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     background-color: rgba(0, 0, 0, 0);
     transition: 0.3s all cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sidebar-ribbon > p {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 .gamebanana-account {
     position: fixed;
@@ -284,6 +290,7 @@ body {
     height: calc(100% - calc(var(--topbar-height) * 1));
     box-shadow: unset;
     padding-bottom: 15px;
+    border-right: 1px solid var(--theme-color);
     backdrop-filter: brightness(0.8);
     background-color: rgba(40, 40, 40, 0.05);
     overflow-x: hidden;
@@ -321,11 +328,13 @@ h1 {
 
 .viewport {
     position: absolute;
+    max-width: 1200px;
     top: calc(var(--topbar-height) * 1);
     left: calc(var(--sidebar-size) * 1 + 20px);
-    width: calc(100% - (var(--sidebar-size) * 1));
-    border: 1px solid var(--theme-color);
-    border-top-left-radius: 10px;
+    right: 0;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
     height: calc(100% - calc(var(--topbar-height) * 1) - 20px);
     overflow-y: scroll;
     padding: 20px;
@@ -385,6 +394,7 @@ small {
     background-color: rgba(40, 40, 40, 0.05);
     -webkit-app-region: drag;
     z-index: 99;
+    border-bottom: 1px solid var(--theme-color);
     user-select: none;
 }
 

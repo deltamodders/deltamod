@@ -212,7 +212,8 @@ async function addModToBackup(collectionId, itemId, itemType) {
 async function getCollections() {
     var response = await authenticatedAPICall('get', `https://gamebanana.com/apiv13/Tool/20575/AccessorCollections`, {});
 
-    if (response.success != true) {
+    console.log(JSON.stringify(response.data));
+    if (response.status != 200) {
         return [];
     }
 
@@ -254,7 +255,7 @@ async function getCollectionMods(collectionId) {
 
         allDownloads.push({
             name: profilepage.data._sName,
-            downloads: files
+            files
         });
     }
     return allDownloads;

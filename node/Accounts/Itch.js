@@ -157,14 +157,12 @@ async function inspectCollection(id) {
     for (const mod of allMods) {
         console.log(`Inspecting mod ${mod.model} ${mod.id}`);
         var profilepage = await axios.get(`https://gamebanana.com/apiv13/${mod.model}/${mod.id}/ProfilePage`);
-        var files = (profilepage.data._aFiles
-            .filter(x => x._aModManagerIntegrations.map(y => y._idToolRow).includes(20575))) || []
-            .map((x) => {
-                return {
-                    url: x._sDownloadUrl.replace('https://gamebanana.com/dl/', 'https://gamebanana.com/mmdl/'),
-                    filename: x._sFile
-                };
-            });
+        var files = (profilepage.data._aFiles.filter(x => x._aModManagerIntegrations.map(y => y._idToolRow).includes(20575))).map((x) => {
+            return {
+                url: x._sDownloadUrl.replace('https://gamebanana.com/dl/', 'https://gamebanana.com/mmdl/'),
+                filename: x._sFile
+            };
+        });
 
         allDownloads.push({
             name: profilepage.data._sName,

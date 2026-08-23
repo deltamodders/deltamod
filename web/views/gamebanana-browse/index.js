@@ -324,7 +324,6 @@ function buildModDetails(mod, featuredIDs, img) {
     });
 
     let nameauthor = mod._aSubmitter._sName;
-    if (mod._aSubmitter._idRow === 1712567) nameauthor += ' (Tenna lover)';
     
     const authorSpan = document.createElement('span');
     authorSpan.className = 'modAuthorSpan iptspan';

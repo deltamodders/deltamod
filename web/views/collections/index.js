@@ -8,6 +8,39 @@
     loadingTr.appendChild(loadingTd);
     table.appendChild(loadingTr);
 
+    if (!navigator.onLine) {
+        table.removeChild(loadingTr);
+        var tr = document.createElement("tr");
+        var errortd = document.createElement("td");
+        errortd.colSpan = 2;
+        var errordiv = document.createElement("div");
+        errordiv.style.display = "flex";
+        errordiv.style.alignItems = "center";
+        errordiv.style.gap = "0.5em";
+        errordiv.innerHTML = icon('android_wifi_3_bar_off', '1.5em') + "<span>" + "Collections are not available without an Internet connection." + "</span>";
+        errortd.appendChild(errordiv);
+        tr.appendChild(errortd);
+        table.appendChild(tr);
+        return;
+    }
+
+    var areAvailable = await invoke('areCollectionsAvailable');
+    if (!areAvailable) {
+        table.removeChild(loadingTr);
+        var tr = document.createElement("tr");
+        var errortd = document.createElement("td");
+        errortd.colSpan = 2;
+        var errordiv = document.createElement("div");
+        errordiv.style.display = "flex";
+        errordiv.style.alignItems = "center";
+        errordiv.style.gap = "0.5em";
+        errordiv.innerHTML = icon('error', '1.5em') + "<span>" + "Collections are not available without having logged in with an account." + "</span>";
+        errortd.appendChild(errordiv);
+        tr.appendChild(errortd);
+        table.appendChild(tr);
+        return;
+    }
+
     var collections = await invoke('gamebanana_getCollections');
 
     table.removeChild(loadingTr);
