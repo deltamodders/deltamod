@@ -43,6 +43,7 @@ async function utmt(callback, args) {
     return new Promise((resolve, reject) => {
         const ptyProcess = pty.spawn(UTMT_PATH, args, { cwd: path.dirname(UTMT_PATH) });
         let output = '';
+        let closed = false;
         
         ptyProcess.on('data', (data) => {
             var dataStr = data.toString();
@@ -51,6 +52,10 @@ async function utmt(callback, args) {
             output += dataStr;
             process.stdout.write(dataStr);
             callback("[UTMT] " + dataStr);
+        });
+
+        ptyProcess.on('close', (code) => {
+            closed = true;
         });
         
         ptyProcess.on('exit', (code) => {
@@ -61,7 +66,13 @@ async function utmt(callback, args) {
             }
         });
         
+        // "node-pty" has a race condition that can cause
+        // EIO errors on Unix systems when a process exits; 
+        // this is normal behaviour and does not imply a 
+        // state of failure.
+        // see: https://github.com/microsoft/node-pty/issues/178
         ptyProcess.on('error', (error) => {
+            if (closed && error.code == "EIO") return;
             reject(error);
         });
     });
