@@ -16,22 +16,7 @@
 <br />
 
 # Building
-Run `npm run build-windows` or `npm run build-linux` to package Deltamod files. This will not generate installers.
-
-## Note on installers
-<img width="128" align="left" src="https://github.com/user-attachments/assets/23c5d57c-56eb-4287-a0ec-14a4fca03d3d" />
-To package Deltamod installers, you will need an <b>InstallBuilder</b> license. <br /> <br />We understand that using commercial products may be an hassle to people wanting to build these, however we need to do so as the product is robust and fixes many of the hassles of the legacy installer tech. <br /><br /><i>We do not condone piracy of said software; Deltamod's owner has a regular copy that the team generously gave us free of charge, for use in open source development of Deltamod.</i><br /><br /> If you need to compile Deltamod, we encourage you download their 30-day free trial at https://installbuilder.com/ or to write to <a href="mailto:sales@installbuilder.com">sales@installbuilder.com</a> to request an open source license like we did. No piracy!
-
-<br />
-
-## Process
-- Run the command [above](#building) to create the files needed for the installer.
-- Open InstallBuilder Enterprise.
-- Click `Open` and choose the `project.xml` file.
-- In the same folder, download a .NET 8.0 installer and name it `dotnet.exe`.
-- Also download a GitSCM installer and name it `git.exe`.
-- Press Build to build your Deltamod installer.
-- You can find the output in Documents > InstallBuilder > output.
+Run `npm run build-windows` or `npm run build-linux` to package Deltamod as an installer and as unpacked files.
 
 ## OS support
 |               | Windows       | Native Linux  | Native macOS | _macOS/Linux_ (w/ CrossOver or Wine) | _All OSes_ (w/ Windows emulation) |

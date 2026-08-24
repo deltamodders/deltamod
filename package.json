@@ -11,40 +11,53 @@
     "test": "electron . --developer",
     "build-windows": "electron-builder --win --publish never",
     "build-win32": "electron-builder --win --ia32 --publish never",
-    "build-linux": "electron-builder --linux --publish never",
-    "erase-data": "Erase.bat",
-    "build-g3mtool-win": "dotnet publish G3MToolCLI/G3MToolCLI.csproj -c Release -r win-x64 --self-contained true -o tools",
-    "build-g3mtool-linux": "dotnet publish G3MToolCLI/G3MToolCLI.csproj -c Release -r linux-x64 --self-contained true -o tools"
+    "build-linux": "electron-builder --linux --publish never"
   },
   "build": {
+    "appId": "com.deltamod.app",
+    "productName": "Deltamod",
+
     "icon": "build/icon-big.png",
+
     "asar": false,
+
     "asarUnpack": [
-      "node_modules/7zip-bin/win",
-      "node_modules/7zip-bin/linux",
-      "node_modules/7zip-bin/mac",
+      "node_modules/7zip-bin/win/**",
+      "node_modules/7zip-bin/linux/**",
+      "node_modules/7zip-bin/mac/**",
       "node_modules/7zip-bin/7x.sh",
-      "gm3p"
+      "gm3p/**"
     ],
-    "win": {
-      "target": [
-        "portable"
-      ]
-    },
+
     "files": [
-      "!**/output",
-      "!**/installbuilder",
+      "!**/output/**",
+      "!**/installbuilder/**",
       "!G3MToolCLI/**"
     ],
-    "linux": {
-      "target": "AppImage",
-      "category": "Utility",
-      "icon": "build/icon-big.png",
-      "artifactName": "Deltamod-AppImage.${ext}",
-      "executableArgs": [
-        "--no-sandbox"
+
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
       ]
     },
+
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Deltamod-Setup.${ext}"
+    },
+
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility",
+      "icon": "build/icon-big.png",
+      "artifactName": "Deltamod-AppImage.${ext}"
+    },
+
     "protocols": [
       {
         "name": "Deltamod",
