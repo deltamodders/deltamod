@@ -60,90 +60,92 @@
         return;
     }
     for (const collection of collections) {
-        var tr = document.createElement("tr");
+        await (async() => {
+            var tr = document.createElement("tr");
 
-        var nametd = document.createElement("td");
-        tr.appendChild(nametd);
+            var nametd = document.createElement("td");
+            tr.appendChild(nametd);
 
-        var nameDiv = document.createElement("div");
-        nametd.appendChild(nameDiv);
+            var nameDiv = document.createElement("div");
+            nametd.appendChild(nameDiv);
 
-        var nameSpan = document.createElement("span");
-        nameSpan.innerText = collection.name;
-        nameSpan.style.fontSize = "1.2em";
-        nameDiv.appendChild(nameSpan);
+            var nameSpan = document.createElement("span");
+            nameSpan.innerText = collection.name;
+            nameSpan.style.fontSize = "1.2em";
+            nameDiv.appendChild(nameSpan);
 
-        nameDiv.appendChild(document.createElement("br"));
+            nameDiv.appendChild(document.createElement("br"));
 
-        var providerSpan = document.createElement("span");
-        providerSpan.innerText = collection.provider ? `(${collection.provider})` : "";
-        providerSpan.style.fontSize = "0.8em";
-        nameDiv.appendChild(providerSpan);
+            var providerSpan = document.createElement("span");
+            providerSpan.innerText = collection.provider ? `(${collection.provider})` : "";
+            providerSpan.style.fontSize = "0.8em";
+            nameDiv.appendChild(providerSpan);
 
-        var actiontd = document.createElement("td");
-        actiontd.classList.add("actions");
-        
-        var openInBrowser = document.createElement("button");
-        openInBrowser.innerHTML = icon('open_in_new', '1em');
-        openInBrowser.addEventListener('click', async () => {
-            window.open(`https://gamebanana.com/collections/${collection.id}`, '_blank');
-        });
-        actiontd.appendChild(openInBrowser);
+            var actiontd = document.createElement("td");
+            actiontd.classList.add("actions");
+            
+            var openInBrowser = document.createElement("button");
+            openInBrowser.innerHTML = icon('open_in_new', '1em');
+            openInBrowser.addEventListener('click', async () => {
+                window.open(`https://gamebanana.com/collections/${collection.id}`, '_blank');
+            });
+            actiontd.appendChild(openInBrowser);
 
-        var trash = document.createElement("button");
-        trash.innerHTML = icon('delete', '1em');
-        trash.addEventListener('click', async () => {
-            var htmlresp = await htmlAlert(("Delete collection"), ("Are you sure you want to delete this collection? This action is irreversible."), [{
-                text: "Yes",
-                resolveWith: 'y'
-            }, {
-                text: "No",
-                resolveWith: 'n'
-            }]);
-            if (htmlresp !== 'y') {
-                return;
-            }
-            var resp = await invoke('gamebanana_deleteCollection', [collection.id, collection.providerTechnical]);
-            if (!resp.success) {
-                await htmlAlert("Error", `Failed to delete collection: ${JSON.stringify(resp.error)}`, [{
+            var trash = document.createElement("button");
+            trash.innerHTML = icon('delete', '1em');
+            trash.addEventListener('click', async () => {
+                var htmlresp = await htmlAlert(("Delete collection"), ("Are you sure you want to delete this collection? This action is irreversible."), [{
+                    text: "Yes",
+                    resolveWith: 'y'
+                }, {
+                    text: "No",
+                    resolveWith: 'n'
+                }]);
+                if (htmlresp !== 'y') {
+                    return;
+                }
+                var resp = await invoke('gamebanana_deleteCollection', [collection.id, collection.providerTechnical]);
+                if (!resp.success) {
+                    await htmlAlert("Error", `Failed to delete collection: ${JSON.stringify(resp.error)}`, [{
+                        text: "Ok",
+                        resolveWith: 'ok'
+                    }]);
+                } else {
+                    page('collections');
+                }
+            });
+            actiontd.appendChild(trash);
+            tr.appendChild(actiontd);
+
+            var backup = document.createElement("button");
+            backup.innerHTML = icon('bottom_panel_open', '1em');
+            backup.addEventListener('click', async () => {
+                window._pageArguments = {
+                    collectionId: collection.id,
+                    collectionProvider: collection.providerTechnical
+                };
+                page('collection-exportchoose');
+            });
+            actiontd.appendChild(backup);
+            tr.appendChild(actiontd);
+
+            var download = document.createElement("button");
+            download.innerHTML = icon('bottom_panel_close', '1em');
+            download.addEventListener('click', async () => {
+                download.disabled = true;
+                var resp = await invoke('gamebanana_downloadAllInCollection', [collection.id, collection.providerTechnical]);
+                await htmlAlert("Done", `Collection restore complete! Skipped ${(resp && (resp.skipped ?? resp.skippedMods ?? 0))} mods in download process.`, [{
                     text: "Ok",
                     resolveWith: 'ok'
                 }]);
-            } else {
-                page('collections');
-            }
-        });
-        actiontd.appendChild(trash);
-        tr.appendChild(actiontd);
-
-        var backup = document.createElement("button");
-        backup.innerHTML = icon('bottom_panel_open', '1em');
-        backup.addEventListener('click', async () => {
-            window._pageArguments = {
-                collectionId: collection.id,
-                collectionProvider: collection.providerTechnical
-            };
-            page('collection-exportchoose');
-        });
-        actiontd.appendChild(backup);
-        tr.appendChild(actiontd);
-
-        var download = document.createElement("button");
-        download.innerHTML = icon('bottom_panel_close', '1em');
-        download.addEventListener('click', async () => {
-            download.disabled = true;
-            var resp = await invoke('gamebanana_downloadAllInCollection', [collection.id, collection.providerTechnical]);
-            await htmlAlert("Done", `Collection restore complete! Skipped ${(resp && (resp.skipped ?? resp.skippedMods ?? 0))} mods in download process.`, [{
-                text: "Ok",
-                resolveWith: 'ok'
-            }]);
-            download.disabled = false;
-        });
-        actiontd.appendChild(download);
-        tr.appendChild(actiontd);
+                download.disabled = false;
+            });
+            actiontd.appendChild(download);
+            tr.appendChild(actiontd);
 
 
-        table.appendChild(tr);
+            table.appendChild(tr);
+        })();
     }
 
     if (collections.length === 0) {

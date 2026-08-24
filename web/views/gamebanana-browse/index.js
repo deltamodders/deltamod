@@ -203,7 +203,7 @@ async function dlmod(dlurl, buttonElem=null, modid, modmodel, modname) {
 
         const p = Math.max(0, Math.min(100, Number(info.progress) || 0));
         if (p < 100) {
-            opbox.setProgress(p, `${info.dled} / ${info.total || 'unknown'} (${p}%)`, null);
+            opbox.setProgress(p, `Downloading... ${p}%`, null);
         } else {
             opbox.setProgress(p, 'Importing', 'yellow');
         }

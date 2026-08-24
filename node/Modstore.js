@@ -204,9 +204,12 @@ function removeModSafe(modid) {
     if (fs.existsSync(path.join(modPath, "__deltaID.json")) && fs.existsSync(modPath)) {
         console.log("Deleting mod", modPath);
         fs.rmSync(modPath, { recursive: true });
-    } else console.warn("Error: Mod", modPath, "doesn't seem to be a valid mod with a __deltaID.json.");
+    } else {
+        console.warn("Error: Mod", modPath, "doesn't seem to be a valid mod with a __deltaID.json.");
+        return false;
+    }
 
-    page("");
+    return true;
 }
 
 // [ADDED] depth-first search for a file by name anywhere under root

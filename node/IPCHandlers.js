@@ -487,7 +487,7 @@ module.exports = function registerIPCHandlers(context) {
         });
         if (!canceled && filePaths?.[0]) Modstore.importMod(filePaths[0]);
     });
-    ipcMain.handle('removeMod', async (event, args) => await Modstore.removeModSafe(args[0]));
+    ipcMain.handle('removeMod', async (event, args) => Modstore.removeModSafe(args[0]));
     ipcMain.handle('toggleModState', (event, args) => {
         const enabled = KeyValue.readKVS("enabledMods", []);
         KeyValue.setKVS("enabledMods", args[1] ? [...enabled, args[0]] : enabled.filter(x => x !== args[0]));

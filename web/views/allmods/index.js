@@ -185,8 +185,14 @@ async function createMod(mod, compatible, loggedIn) {
         bdiv.appendChild(exploreModButton);
 
         const deleteModButton = document.createElement('button');
-        deleteModButton.onclick = () => {
-            window.electronAPI.invoke('removeMod', [mod.folder]);
+        deleteModButton.onclick = async () => {
+            var result = await window.electronAPI.invoke('removeMod', [mod.folder]);
+            if (result) {
+                rew();
+                modRow.classList.add('fadingOut');
+                await new Promise(resolve => setTimeout(resolve, 400));
+                modRow.remove();
+            }
         };
         deleteModButton.innerHTML = icon('delete_forever', '20px');
         bdiv.appendChild(deleteModButton);

@@ -56,6 +56,21 @@
             </div>
         </dialog>
 </div>
+<style>
+    @keyframes fadeOut {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+    .fadingOut {
+        animation: 0.3s fadeOut ease forwards;
+    }
+</style>
 JSL
 AUDIO[mainTheme.mp3]
 STYLESHEET[../main/main]
