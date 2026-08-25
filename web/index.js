@@ -62,6 +62,10 @@ async function makeGlyphs(jsonArr) {
 
 async function reapplyHAStyles() {
     var alignment = localStorage.getItem('alertAlignment') || 'Bottom';
+    if (alignment == 'Separate') {
+        alignment = 'Bottom';
+        localStorage.setItem('alertAlignment', alignment);
+    }
     if (!localStorage.getItem('alertAlignment')) {
         localStorage.setItem('alertAlignment', alignment);
     }
@@ -167,21 +171,8 @@ async function htmlAlertRaw(title, message, buttons, specialIcon = 'info') {
         isAlertShowing = true;
 
         if (localStorage.getItem('alertAlignment') == "Separate") {
-            var index = await window.electronAPI.invoke('htmlAlert_outwin', [title, message, buttons]);
-            isAlertShowing = false;
-            var button = buttons[index];
-
-            if (button.resolveWith) {
-                resolve(button.resolveWith);
-                return;
-            }
-
-            if (button.rejectWith) {
-                reject(button.rejectWith);
-                return;
-            }
-
-            return;
+            localStorage.setItem('alertAlignment', 'Bottom');
+            await reapplyHAStyles();
         }
 
         var alertMain = document.getElementsByClassName('alertMain')[0];

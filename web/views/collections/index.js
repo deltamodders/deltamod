@@ -89,6 +89,9 @@
             openInBrowser.addEventListener('click', async () => {
                 window.open(`https://gamebanana.com/collections/${collection.id}`, '_blank');
             });
+            if (collection.provider.toLowerCase() != 'gamebanana') {
+                openInBrowser.disabled = true;
+            }
             actiontd.appendChild(openInBrowser);
 
             var trash = document.createElement("button");
@@ -111,7 +114,11 @@
                         resolveWith: 'ok'
                     }]);
                 } else {
-                    page('collections');
+                    rew();
+                    tr.style.transition = "opacity 0.3s ease";
+                    tr.style.opacity = "0";
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    tr.parentNode.removeChild(tr);
                 }
             });
             actiontd.appendChild(trash);

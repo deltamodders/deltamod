@@ -83,8 +83,13 @@ function login() {
 }
 
 async function isLoggedIn() {
-    var uiconf = await getGBUIConf();
-    return uiconf && uiconf._idMemberRow > 0;
+    try {
+        var uiconf = await getGBUIConf();
+        return uiconf._idMemberRow > 0;
+    }
+    catch {
+        return false;
+    }
 }
 
 async function authenticatedAPICall(method, url, data = {}) {
@@ -162,7 +167,7 @@ function getAccountInfo() {
         }
         console.log('GameBanana account info:', uiconf);
         var profilePage = await axios.get(`https://gamebanana.com/apiv13/Member/${uiconf._idMemberRow}/ProfilePage`);
-        resolve({ name: profilePage.data._sName, pic: profilePage.data._sAvatarUrl, id: uiconf._idMemberRow, loggedIn: true });
+        resolve({ name: profilePage.data._sName, pic: profilePage.data._sHdAvatarUrl || profilePage.data._sAvatarUrl, id: uiconf._idMemberRow, loggedIn: true });
     });
 }
 function clearCache() {

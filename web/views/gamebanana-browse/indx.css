@@ -48,6 +48,7 @@
     cursor: pointer;
     border-radius: 10px;
     border: 1px solid var(--theme-color);
+    anchor-name: --gb-button;
 }
 
 .modAvatarImg {
@@ -167,6 +168,11 @@ input:focus {
     justify-content: center;
 }
 
+@keyframes boxOpen {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 #dlBox > h3 {
     margin-top: 0;
     margin-bottom: 10px;
@@ -180,7 +186,8 @@ input:focus {
     
     width: 400px;
     min-height: 200px;
-    background-color: rgb(38, 38, 38);
+    background-color: rgba(10, 10, 10, 0.775);
+    backdrop-filter: blur(5px);
     border-radius: 10px;
     border: 1px solid var(--theme-color);
     margin-top: 10px;
@@ -190,7 +197,48 @@ input:focus {
 
     padding: 10px;
     padding-left: 16px;
+
+    animation: boxOpen 0.3s ease-out;
 }
+
+/* gamebanana box */
+.gamebanana {
+    display: flex;
+    align-items: left;
+    flex-direction: column;
+    z-index: 100;
+    overflow: unset;
+}
+
+
+#gbBox > h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: white;
+}
+
+#gbBox {
+    position-anchor: --gb-button;
+    position-area: bottom center;
+    
+    width: 200px;
+    min-height: 60px;
+    background-color: rgba(10, 10, 10, 0.775);
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    border: 1px solid var(--theme-color);
+    margin-top: 10px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    padding: 10px;
+    padding-left: 16px;
+
+    animation: boxOpen 0.3s ease-out;
+}
+
 
 .dlOP {
     width: calc(100% - 32px);

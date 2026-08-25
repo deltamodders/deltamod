@@ -134,10 +134,41 @@ async function gameBananaLogin() {
         gbPic.src = './img/mod-placeholder.png';
     }
 
-    gbPic.onclick = async () => {
+    var box = document.querySelector('#gbBox');
+
+    var flexbox = document.createElement('div');
+    flexbox.style.display = 'flex';
+    flexbox.style.alignItems = 'center';
+    flexbox.style.justifyContent = 'left';
+    box.appendChild(flexbox);
+
+    var pic = document.createElement('img');
+    pic.src = gbPic.src;
+    pic.width = 64;
+    pic.height = 64;
+    flexbox.appendChild(pic);
+
+    var infoBox = document.createElement('div');
+    infoBox.style.display = 'flex';
+    infoBox.style.flexDirection = 'column';
+    infoBox.style.marginLeft = '8px';
+    flexbox.appendChild(infoBox);
+
+    var text = document.createElement('span');
+    text.innerText = loggedin ? loggedin.name : 'Not logged in';
+    text.style.color = 'white';
+    text.style.fontSize = '1em';
+    text.style.marginBottom = '8px';
+    text.style.marginLeft = '8px';
+    infoBox.appendChild(text);
+
+    var optbutton = document.createElement('button');
+    optbutton.innerText = loggedin ? 'Settings' : 'Log in';
+    optbutton.onclick = async () => {
         window._pageArguments = { cat: 'gb' };
         page('options');
     };
+    infoBox.appendChild(optbutton);
 }
 
 function roundViews(views) {
@@ -247,9 +278,11 @@ function buildModThumbnail(mod) {
     const img = document.createElement('img');
     img.className = 'modThumbImg';
     img.src = thumbs[0].urlA;
+    var width = 150;
+    var height = width * 9 / 16;
     Object.assign(img.style, {
-        width: '130px', 
-        height: '73px', 
+        width: width + 'px', 
+        height: height + 'px', 
         margin: '4px', 
         aspectRatio: '16 / 9', 
         borderRadius: '4px',
@@ -272,7 +305,7 @@ function buildModThumbnail(mod) {
         gridTemplateRows: 'repeat(3, auto)', gap: '4px', marginTop: '4px', width: '100%'
     });
 
-    thumbs.slice(0, 9).forEach((thumb) => {
+    thumbs.slice(0, 12).forEach((thumb) => {
         const smallImg = document.createElement('img');
         smallImg.src = thumb.urlB;
         Object.assign(smallImg.style, {
@@ -290,7 +323,7 @@ function buildModThumbnail(mod) {
         gridSmallImages.appendChild(smallImg);
     });
 
-    const emptySpaces = 9 - thumbs.slice(0, 9).length;
+    const emptySpaces = 12 - thumbs.slice(0, 12).length;
     for (let j = 0; j < emptySpaces; j++) {
         const emptyDiv = document.createElement('div');
         Object.assign(emptyDiv.style, {
@@ -306,7 +339,7 @@ function buildModThumbnail(mod) {
 
 function buildModDetails(mod, featuredIDs, img) {
     const div1 = document.createElement('div');
-    Object.assign(div1.style, { marginLeft: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' });
+    Object.assign(div1.style, { marginLeft: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px' });
 
     const biggerSpan = document.createElement('span');
     biggerSpan.className = 'modTitleSpan';

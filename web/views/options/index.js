@@ -357,8 +357,7 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
                 [
                     { value: "Top", label: "Top" },
                     { value: "Center", label: "Center" },
-                    { value: "Bottom", label: "Bottom" },
-                    { value: "Separate", label: "Separate" }
+                    { value: "Bottom", label: "Bottom" }
                 ],
                 true,
                 async (val) => {

@@ -9,7 +9,12 @@
                 <small style="font-size: 1.1em;" id="nothingHere">Nothing to see over here!</small>
             </div>
         </div>
-        <img src="" alt="" width="32" height="32" id="gbPic">
+        <div class="gamebanana">
+            <img id="gbPic" popovertarget="gbBox" width="32" height="32" onclick="document.querySelector('#gbBox').showPopover()">
+            <div popover id="gbBox">
+                
+            </div>
+        </div>
         <button onclick="page('')">
             <span class="material-symbols-outlined smicon">home</span>
         </button>

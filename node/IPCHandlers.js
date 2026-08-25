@@ -27,6 +27,14 @@ const { PARTITION } = require('./Config');
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;
 
+const ACCOUNT_PROVIDERS = [{
+    name: 'GameBanana',
+    file: './Accounts/GameBanana.js'
+}, {
+    name: 'Itch.io',
+    file: './Accounts/Itch.js'
+}];
+
 // --- IPC Helper Functions ---
 
 async function dominantColor(imagePath) {
@@ -591,20 +599,14 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('gamebanana_createCollection', async (event, args) => {
         return new Promise(async (resolve) => {
             const collectionName = args[0];
-            var providers = [{
-                name: 'GameBanana',
-                file: './Accounts/GameBanana.js'
-            }, {
-                name: 'Itch.io',
-                file: './Accounts/Itch.js'
-            }];
             const menu = Menu.buildFromTemplate([
-                ...providers.map(p => ({ label: p.name, click: async () => {
-                    if ((await require(p.file).isLoggedIn()) == false) {
-                        dialog.showMessageBoxSync({
+                ...ACCOUNT_PROVIDERS.map(p => ({ label: p.name, click: async () => {
+                    var isloggedin = await require(p.file).isLoggedIn();
+                    if ([false, { success: false }].includes(isloggedin)) {
+                        dialog.showMessageBoxSync(getWindow(), {
                             type: 'error',
                             title: 'Not logged in',
-                            message: `You must be logged in to ${p.name} to create a collection.`
+                            message: `You must be logged in to ${p.name} to create a collection there.`
                         });
                         return;
                     }

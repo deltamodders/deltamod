@@ -6,10 +6,11 @@
 
 
 const AccountManager = require('../AccountManager');
-const { app, shell } = require('electron');
+const { app, shell, dialog } = require('electron');
 const express = require('express');
 const console = require('../Console');
 const axios = require('axios');
+const crypto = require('crypto');
 
 const BASE_API_URL = 'https://deltamodders.com/apiv1';
 
@@ -17,13 +18,27 @@ function login() {
     return new Promise((resolve, reject) => {
         var app = express();
         var http;
-        app.get('/callback', (req, res) => {
-            var token = req.query.token;
+        var sectoken = crypto.randomBytes(16).toString('hex');
+
+        // security measure: non
+        app.get('/addr', (req, res) => {
+            res.setHeader("Access-Control-Allow-Origin", "https://deltamodders.com");
+            res.send('http://localhost:2900/' + sectoken);
+        });
+
+        app.get('/' + sectoken, (req, res) => {
+            res.setHeader("Access-Control-Allow-Origin", "https://deltamodders.com");
+
+            var token = req.headers['x-token'] || "";
+            if (!token || token.trim() == "") {
+                res.send({ success: false, error: "NO_TOKEN" });
+                return;
+            }
             AccountManager.saveAccountInfo('itch', { token: token });
 
             console.log("Saved itch token: " + token);
 
-            res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Origin", "https://deltamodders.com");
             res.send({ success: true });
 
             http.close();
@@ -31,9 +46,16 @@ function login() {
             resolve();
         });
 
-        http = app.listen(2900, () => {
-            shell.openExternal('https://itch.io/user/oauth?client_id=605f3bf508de861ba94641192b43e69d&scope=profile&response_type=token&redirect_uri=https%3A%2F%2Fdeltamodders.com%2Flogin%2Fitch');
-        });
+        try {
+            http = app.listen(2900, () => {
+                shell.openExternal('https://itch.io/user/oauth?client_id=605f3bf508de861ba94641192b43e69d&scope=profile&response_type=token&redirect_uri=https%3A%2F%2Fdeltamodders.com%2Flogin%2Fitch&state=' + sectoken);
+            });
+        }
+        catch (e) {
+            console.error("Error starting itch login server: " + e);
+            dialog.showErrorBox("Itch Login Error", "An error occurred while starting the itch.io login flow.\nPlease make sure port 2900 is not in use and try again.");
+            reject(e);
+        }
     });
 }
 

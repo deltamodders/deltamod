@@ -1,0 +1,9 @@
+{
+    "name": "TV World (Chapter 3) Theme",
+    "background": "ch3.png",
+    "mainSong": "ch3.mp3",
+    "description": "A theme inspired by the TV World in Chapter 3.",
+    "musicTrack": "TV World - Toby Fox",
+    "id": "ch3",
+    "color": "rgb(137, 0, 0)"
+}
