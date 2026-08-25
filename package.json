@@ -93,5 +93,9 @@
     "windows-elevate": "^1.0.1",
     "xml-js": "^1.6.11",
     "yoctocolors-cjs": "^2.1.3"
+  },
+  "allowScripts": {
+    "electron@40.10.3": true,
+    "node-pty@1.1.0": true
   }
 }
