@@ -302,6 +302,21 @@ if (!app.requestSingleInstanceLock()) {
     });
 }
 
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'deltapack',
+        privileges: {
+            corsEnabled: true
+        }
+    },
+    {
+        scheme: "themeprot",
+        privileges: {
+            corsEnabled: true
+        }
+    }
+]);
+
 app.whenReady().then(() => {
     if (['win32', 'linux'].includes(process.platform)) {
         const maybeUrl = process.argv.find(arg => arg.startsWith('deltamod://'));
