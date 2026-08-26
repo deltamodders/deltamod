@@ -29,7 +29,7 @@ function login() {
         app.get('/' + sectoken, (req, res) => {
             res.setHeader("Access-Control-Allow-Origin", "https://deltamodders.com");
 
-            var token = req.headers['x-token'] || "";
+            var token = req.query.token;
             if (!token || token.trim() == "") {
                 res.send({ success: false, error: "NO_TOKEN" });
                 return;
@@ -39,7 +39,7 @@ function login() {
             console.log("Saved itch token: " + token);
 
             res.header("Access-Control-Allow-Origin", "https://deltamodders.com");
-            res.send({ success: true });
+            res.send('<h1>Login successful!</h1><p>You can now close this window and return to Deltamod.</p>');
 
             http.close();
 

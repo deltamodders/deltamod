@@ -508,12 +508,12 @@ module.exports = function registerIPCHandlers(context) {
             mod.isIncompatible = false;
             if (mod._incompatibleHASH) {
                 mod.isIncompatible = true;
-                mod.incompatibilityReason = 'Mismatching hashes (disable advanced mod compatibility checks to ignore)';
+                mod.incompatibilityReason = 'Mod is built for a different ' + (GameDB.getGameById(mod.game)?.name || 'Unknown') + ' version (hash mismatch)';
                 delete mod._incompatibleHASH;
             }
             if (mod.game !== edition) {
                 mod.isIncompatible = true;
-                mod.incompatibilityReason = 'Mod not made for this game';
+                mod.incompatibilityReason = 'Mod is built for ' + (GameDB.getGameById(mod.game)?.name || 'Unknown') + ' (you are running ' + (GameDB.getGameById(edition)?.name || 'Unknown') + ')';
             }
             return mod;
         });

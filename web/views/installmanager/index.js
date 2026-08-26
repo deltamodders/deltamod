@@ -36,6 +36,10 @@
                 const goCell = document.createElement('td');
                 const buttonsDiv = document.createElement('div');
 
+                if (install.index == index) {
+                    row.style.backgroundColor = '#3b3b3b73';
+                }
+
                 buttonsDiv.style.display = 'flex';
                 buttonsDiv.style.gap = '10px';
                 buttonsDiv.style.alignItems = 'center';
@@ -53,6 +57,7 @@
 
                 const editablespan = document.createElement('input');
                 editablespan.type = 'text';
+                editablespan.style.width = '100%';
                 editablespan.style.display = 'block';
                 editablespan.style.margin = '0';
                 editablespan.style.height = '22px';
@@ -82,7 +87,7 @@
                 };
 
                 const boldName = document.createElement('img');
-                boldName.style.width = '43px';
+                boldName.style.width = '32px';
                 boldName.src = './gamesIco/' + install.pid + '.png';
 
                 nameContainer.appendChild(boldName);
@@ -103,6 +108,7 @@
                 details.classList.add('calibri');
                 details.style.color = '#888';
                 details.style.display = 'block';
+                details.style.minWidth = '200px';
 
                 nameContainer.appendChild(details);
 
