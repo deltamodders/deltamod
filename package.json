@@ -70,7 +70,7 @@
   "author": "Deltamodders",
   "license": "EUPL-1.2",
   "devDependencies": {
-    "electron": "^40.6.0",
+    "electron": "^40.10.3",
     "electron-builder": "^26.7.0"
   },
   "dependencies": {
