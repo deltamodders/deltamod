@@ -833,6 +833,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('getEditionByIndex', (event, args) => KeyValue.readKVSOfIndex('gamePid', args[0]) || "Unknown");
     
     ipcMain.handle('createNewInstallation', async (event, args) => {
+        // arguments
         const win = getWindow();
         const steam = args[0] === 'steam';
         const isFromLocate = args[1] === 'locate';
@@ -841,32 +842,15 @@ module.exports = function registerIPCHandlers(context) {
         let selectedGame = args[4];
         let copyToDMod = args[5] == 'copy';
 
+        let i = 0;
+        fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
+            const idx = file.split('-')[1];
+            if (idx !== 'unique') i = Math.max(i, parseInt(idx, 10));
+        });
+        i = (isFromLocate && !fromIM) ? parseInt(System.getCurrentSystemIndex()) : i + 1;
+        
         let sourcePath = specifiedLocatePath;
         let chosenEdition;
-
-        if (!steam && !isFromLocate) {
-            const result = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
-            if (result.canceled || !result.filePaths[0]) return false;
-            sourcePath = result.filePaths[0];
-        } else if (steam && !isFromLocate) {
-            state.STEAM_BASE = getSteamDirectory(dialog);
-            chosenEdition = GameDB.getFeatInfo(selectedGame, "steam").data;
-            selectedGame = chosenEdition.pid;
-
-            if ((await getInstallations(true)).some(x => x.appid === chosenEdition.appid)) {
-                dialog.showErrorBox('Already imported', 'Game already imported.');
-                return false;
-            }
-            sourcePath = path.join(state.STEAM_BASE, chosenEdition.folder);
-        }
-
-        if (!validateDeltarune(sourcePath)) {
-            dialog.showErrorBox('Invalid folder', steam ? 'Game missing from Steam library.' : 'Invalid game installation.');
-            if (steam && chosenEdition?.downloadable && process.platform === 'win32' && dialog.showMessageBoxSync({ type: 'question', title: 'Download Demo', message: 'Download demo from Steam?', buttons: ['Yes', 'No'] }) === 0) {
-                shell.openExternal(`steam://install/${chosenEdition.appid}`);
-            }
-            return false;
-        }
 
         if (!selectedGame) {
             const games = GameDB.getGames();
@@ -875,18 +859,40 @@ module.exports = function registerIPCHandlers(context) {
         }
 
         const gameInfo = GameDB.getGameById(selectedGame);
+
+        if (steam) {
+            var steamdata = gameInfo.availableFeatures.find(e => e.feat == 'steam').data;
+            var steamPath = path.join(getSteamDirectory(dialog), steamdata.folder);
+
+            sourcePath = steamPath;
+            chosenEdition = { appid: steamdata.appid };
+
+            var el = (await getInstallations(true)).find(inst => inst.appid == chosenEdition.appid);
+            if (el) {
+                dialog.showErrorBox('Duplicate Steam install', 'You can\'t import the same Steam installation twice. Looks like you already have this game imported as "' + el.name + '".');
+                return false;
+            }
+        }
+
+        if (!validateDeltarune(sourcePath)) {
+            dialog.showErrorBox('Invalid folder', steam ? 'Game missing from Steam library.' : 'Invalid game installation.');
+            return false;
+        }
+
         if (!fs.existsSync(path.join(sourcePath, gameInfo.exeName))) {
             dialog.showErrorBox('Invalid install', `Missing executable: ${gameInfo.exeName}`);
             return false;
         }
 
-        let uid = generateUUID();
-
-        fs.mkdirSync(path.join(app.getPath('userData'), `installations`, uid), { recursive: true });
+        if (!fs.existsSync(path.join(app.getPath('userData'), `deltamod_system-${i}`))) {
+            console.log('Initialized sysdir for new installation at index', i);
+            fs.mkdirSync(path.join(app.getPath('userData'), `deltamod_system-${i}`), { recursive: true });
+        }
 
         let destPath;
+
         if (copyToDMod) {
-            destPath = path.join(app.getPath('userData'), `installations`, uid, 'game');
+            destPath = path.join(app.getPath('userData'), `deltamod_system-${i}`, 'deltaruneInstall');
             console.log(`Copying files from ${sourcePath} to Deltamod storage (${destPath})...`);
             fs.mkdirSync((destPath), { recursive: true });
             try {
@@ -923,8 +929,11 @@ module.exports = function registerIPCHandlers(context) {
             KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i); // stub to signal it has been upgraded
             KeyValue.setKVSOfIndex('enabledMods', [], i);
             KeyValue.setKVSOfIndex('isSteam', steam, i);
-            KeyValue.setKVSOfIndex('originalSteamPath', steam ? sourcePath : "", i);
             KeyValue.setKVSOfIndex('steamAppId', steam ? chosenEdition.appid : "", i);
+
+            if (!fromIM) {
+                KeyValue.retrieve();
+            }
 
             page(fromIM ? "installmanager" : "main");
             return true;

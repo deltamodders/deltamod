@@ -128,7 +128,7 @@ async function gameBananaLogin() {
     isGBLoggedIn = loggedin.loggedIn;
     const gbPic = document.getElementById('gbPic');
 
-    if (loggedin) {
+    if (loggedin && loggedin.pic) {
         gbPic.src = await loggedin.pic;
     } else {
         gbPic.src = './img/mod-placeholder.png';
@@ -155,7 +155,7 @@ async function gameBananaLogin() {
     flexbox.appendChild(infoBox);
 
     var text = document.createElement('span');
-    text.innerText = loggedin ? loggedin.name : 'Not logged in';
+    text.innerText = loggedin && loggedin.name ? loggedin.name : 'Not logged in';
     text.style.color = 'white';
     text.style.fontSize = '1em';
     text.style.marginBottom = '8px';
@@ -163,7 +163,7 @@ async function gameBananaLogin() {
     infoBox.appendChild(text);
 
     var optbutton = document.createElement('button');
-    optbutton.innerText = loggedin ? 'Settings' : 'Log in';
+    optbutton.innerText = loggedin && loggedin.name ? 'Settings' : 'Log in';
     optbutton.onclick = async () => {
         window._pageArguments = { cat: 'gb' };
         page('options');
