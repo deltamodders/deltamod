@@ -126,12 +126,13 @@ async function getInstallations(suppressWarnings = false) {
         const index = parseInt(file.split('-')[1], 10);
         const storeJSON = path.join(installPath, 'store.json');
 
+        // TODO: is this a TOC TOU bug?
         var storeData = JSON.parse(fs.existsSync(storeJSON) ? fs.readFileSync(storeJSON, 'utf8') : '{}');
-        const deltaruneInstall = validateDeltarune(storeData.gamePath);
+        const deltaruneInstall = storeData.gamePath ? validateDeltarune(storeData.gamePath) : null;
 
         const cnamePath = path.join(installPath, '_cname');
 
-        if (!fs.existsSync(deltaruneInstall) || !fs.existsSync(storeJSON)) {
+        if (!deltaruneInstall || !fs.existsSync(deltaruneInstall)) {
             const defaultCName = `Install #${index + 1}`;
             const cname = fs.existsSync(cnamePath) ? fs.readFileSync(cnamePath, 'utf8') : defaultCName;
 
