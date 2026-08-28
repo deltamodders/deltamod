@@ -11,14 +11,21 @@ function hash(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
 }
 
+/**
+ * Loads `store.json` of current installation into global `kvs`.
+ * Returns whether `store.json` exists.
+ * @returns bool
+ */
 function retrieve() {
     healthCheck();
     var pathname = getSystemFile('store.json', false);
-    if (!fs.existsSync(pathname)) {
-        console.log('Creating blank store');
-        fs.writeFileSync(pathname, '{}');
+    try {
+        var raw = fs.readFileSync(pathname, 'utf8');
+    } catch (e) {
+        if (e.code == "ENOENT")
+            return false;
+        throw e;
     }
-    var raw = fs.readFileSync(pathname, 'utf8');
     kvs = JSON.parse(raw.split('##')[0]);
     console.log('Store loaded')
     return true;
