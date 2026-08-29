@@ -700,7 +700,7 @@ window._intervals.push(setInterval(async () => {
         return;
     }
 
-    const res = await fetch(`https://gamebanana.com/apiv12/Util/Search/Suggestions?_idGameRow=6755&_sSearchString=${searchel.value}`);
+    const res = await fetch(`https://gamebanana.com/apiv12/Util/Search/Suggestions?_idGameRow=${window.currentPageStack.gameID}&_sSearchString=${searchel.value}`);
     const elems = JSON.parse(await res.text());
 
     autocomplete.style.opacity = '1';
