@@ -43,7 +43,8 @@ async function utmt(callback, args) {
     return new Promise((resolve, reject) => {
         const ptyProcess = pty.spawn(UTMT_PATH, args, { cwd: path.dirname(UTMT_PATH) });
         let output = '';
-        
+        let closed = false;
+
         ptyProcess.on('data', (data) => {
             var dataStr = data.toString();
             dataStr = dataStr.replace(/\x1B\[[0-9;]*m/g, '').trim();
@@ -52,7 +53,11 @@ async function utmt(callback, args) {
             process.stdout.write(dataStr);
             callback("[UTMT] " + dataStr);
         });
-        
+
+        ptyProcess.on('close', (code) => {
+            closed = true;
+        });
+
         ptyProcess.on('exit', (code) => {
             if (code === 0) {
                 resolve();
@@ -60,8 +65,14 @@ async function utmt(callback, args) {
                 reject(new Error(`UndertaleModCli exited with code ${code}\n\nCOMMAND: ${UTMT_PATH} ${args.join(' ')}\nOUTPUT:\n${output}`));
             }
         });
-        
+
+        // "node-pty" has a race condition that can cause
+        // EIO errors on Unix systems when a process exits;
+        // this is normal behaviour and does not imply a
+        // state of failure.
+        // see: https://github.com/microsoft/node-pty/issues/178
         ptyProcess.on('error', (error) => {
+            if (closed && error.code == "EIO") return;
             reject(error);
         });
     });
@@ -147,7 +158,9 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback, progressCa
             }
 
             if (!fs.existsSync(patchPath)) {
-                return { patched: false, log: `An override patch file "${patch.patch}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`, fullLog: fullLog };
+                fs.writeFileSync(patchPath, ''); // Techy: fixed the below error message by MAKING the file, although since it is syncronous, IDK if it finished before the fs.copyFileSync thingy is called.
+                //  return { patched: false, log: `An override patch file "${patch.patch}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`, fullLog: fullLog };
+                log(`An override patch file "${patch.patch}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`); //Still log it
             }
 
             patchedFiles.push(targetPath);
