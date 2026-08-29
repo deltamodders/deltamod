@@ -227,7 +227,7 @@ async function handleProtocolLaunch(url) {
             log("Download successful -- extracting using 7zip");
             const items = await _7z.list(filepath);
             var cantFindMeta = false;
-            if (!items.find(x => x.name === "meta.json") && !items.find(x => x.name === "_deltamodInfo.json")) {
+            if (!items.find(x => x.name === "meta.toml") && !items.find(x => x.name === "meta.json") && !items.find(x => x.name === "_deltamodInfo.json")) {
                 cantFindMeta = true;
             }
             if (cantFindMeta || !items.find(x => x.name === "modding.xml")) {
