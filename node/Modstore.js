@@ -623,8 +623,60 @@ if (!fs.existsSync(system.getPacketDatabase())) {
     fs.mkdirSync(system.getPacketDatabase(), { recursive: true });
 }
 
+/**
+ * Creates a new mod
+ * @param {string} name
+ * @param {string} patch_file
+ * @param {string} target_file
+ */
+function modCreate(
+    name,
+    patch_file,
+    target_file,
+) {
+    if (!fs.existsSync(patch_file)) {
+        throw `Specified patch file doesn't exist: ${patch_file}`;
+    }
+    let pkg_db_path = system.getPacketDatabase();
+    let mod_id = "";
+    while (!mod_id || fs.existsSync(path.join(pkg_db_path, mod_id))) {
+        let mod_id_name = randomString(16);
+        mod_id = "local.deltamod." + mod_id_name;
+    }
+    let patch_file_name = path.basename(patch_file);
+    let metax = {
+        "name": name,
+        "packageID": mod_id,
+        "game": "toby.deltarune",
+        "version": "0.0.0",
+        "author": ["You"],
+        "description": "Mod created by Deltamod XDelta import function",
+    };
+    let filex = {
+        "file": `./${target_file}`,
+        "checksum": "82c2bb61b8d78cd287120f6301588fecba34ec5a890bac711b7a8774c760ec70",
+    }
+    let meta = {
+        "metadata": metax,
+        "neededFiles": [filex],
+    };
+    let modding_xml = `<patch type="xdelta" patch="./${patch_file_name}" to="./${target_file}" />`;
+    let deltaid = {
+        uniqueId: system.generateUniqueId(),
+        validFor: computerName,
+        new: true
+    };
+    let mod_dir = path.join(pkg_db_path, mod_id);
+    fs.mkdirSync(mod_dir);
+    fs.writeFileSync(path.join(mod_dir, "meta.toml"), TOML.stringify(meta), { encoding: "utf8" });
+    fs.writeFileSync(path.join(mod_dir, "modding.xml"), modding_xml, { encoding: "utf8" });
+    fs.writeFileSync(path.join(mod_dir, "__deltaID.json"), JSON.stringify(deltaid), { encoding: "utf8" });
+    fs.copyFileSync(patch_file, path.join(mod_dir, patch_file_name));
+}
+
 module.exports = {
     modList,
+    modCreate,
     importMod,
     howmany,
     downloadModFromURL,

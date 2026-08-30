@@ -305,6 +305,15 @@ async function createErroringMods(errors) {
     var loggedIn = await window.electronAPI.invoke('isLoggedIn', ['GameBanana']);
     const errorBanner = document.getElementById("error-banner");
 
+    // this is borked for now
+    /*if (window.game == "deltarune") {
+        document.getElementById('bmodcreate').disabled = false;
+        document.getElementById('bmodcreate').style.opacity = 1;
+    } else {
+        document.getElementById('bmodcreate').disabled = true;
+        document.getElementById('bmodcreate').style.opacity = 0.4;
+    }*/
+
     let filterFunc = (x) => true;
     try {
         if (window._pageArguments.specID != undefined && window._pageArguments.specID !== 'all') {

@@ -524,6 +524,12 @@ module.exports = function registerIPCHandlers(context) {
         return { modList: processedList, errors };
     });
     ipcMain.handle('getModListFull', () => Modstore.modList());
+    ipcMain.handle('pickPatchFile', async () => {
+        const win = getWindow();
+        const pathdial = await dialog.showOpenDialog(win, { filters: [{ name: "XDelta patch file", extensions: ["xdelta"] }], properties: ['openFile'] });
+        return pathdial.canceled ? null : pathdial.filePaths[0];
+    });
+    ipcMain.handle('modCreate', (_event, args) => Modstore.modCreate(...args));
     ipcMain.handle('howManyMods', () => Modstore.howmany());
     ipcMain.handle('dlmodURL', async (event, args) => {
         const [url, queryme, modid, modmodel] = args;

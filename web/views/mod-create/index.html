@@ -1,0 +1,28 @@
+<div>
+
+<input type="text" name="" id="mname" placeholder="Mod name" style="width: 100%;">
+
+<p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
+<span class="material-symbols-outlined">folder</span>
+Select the file used to patch the game.
+</p>
+<div class="fileInput" style="display: flex; justify-content: left; align-items: center; gap: 5px;">
+    <input type="text" name="" id="mpatchpath" placeholder="Path to your game patch" style="width: 100%;">
+    <button onclick="window.currentPageStack.locatePatch()">
+        <span class="material-symbols-outlined" style="font-size: 17px;">folder_open</span>
+    </button>
+</div>
+
+<input type="text" name="" id="mpatchtarget" placeholder="Patch target" style="width: 100%;">
+
+<p></p>
+
+<div style="position: right;">
+<button onclick="window.currentPageStack.onDone()">Done</button>
+<button onclick="window.currentPageStack.onCancel()">Cancel</button>
+</div>
+
+</div>
+JSL
+AUDIO[mainTheme.mp3]
+TITLE[Create a new mod]
