@@ -121,7 +121,7 @@ let isGBLoggedIn = false;
 
 async function gameBananaLogin() {
     const loggedin = await Promise.race([
-        window.electronAPI.invoke('getAccountInfo', ['gamebanana']),
+        window.electronAPI.invoke('getAccountInfo', ['GameBanana']),
         new Promise(resolve => setTimeout(() => resolve(false), 5000))
     ]);
 
