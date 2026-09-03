@@ -12,11 +12,6 @@ function generateUniqueId() {
 }
 
 function healthCheck() {
-    if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + systemIndex))) {
-        fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-' + systemIndex), { recursive: true });
-        console.log('Created deltamod_system folder in userData');
-    }
-
     if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-unique'))) {
         fs.mkdirSync(path.join(app.getPath('userData'), 'deltamod_system-unique'), { recursive: true });
         console.log('Created deltamod_system-unique folder in userData');
