@@ -70,7 +70,7 @@
   "author": "Deltamodders",
   "license": "EUPL-1.2",
   "devDependencies": {
-    "electron": "^40.6.0",
+    "electron": "^40.10.3",
     "electron-builder": "^26.7.0"
   },
   "dependencies": {
@@ -93,5 +93,10 @@
     "windows-elevate": "^1.0.1",
     "xml-js": "^1.6.11",
     "yoctocolors-cjs": "^2.1.3"
+  },
+  "allowScripts": {
+    "electron@40.10.3": true,
+    "electron-winstaller@5.4.0": true,
+    "node-pty@1.1.0": true
   }
 }
