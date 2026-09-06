@@ -23,6 +23,7 @@ const GamePatching = require('./GamePatching');
 const Junction = require('./Junction');
 const console = require('./Console');
 const { PARTITION } = require('./Config');
+const { findGame } = require('./SteamUtils/FindGame');
 
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;
@@ -848,7 +849,7 @@ module.exports = function registerIPCHandlers(context) {
             const idx = file.split('-')[1];
             if (idx !== 'unique') i = Math.max(i, parseInt(idx, 10));
         });
-        i = (isFromLocate && !fromIM) ? parseInt(System.getCurrentSystemIndex()) : i + 1;
+        i = !fromIM ? parseInt(System.getCurrentSystemIndex()) : i + 1;
         
         let sourcePath = specifiedLocatePath;
         let chosenEdition;
@@ -863,9 +864,8 @@ module.exports = function registerIPCHandlers(context) {
 
         if (steam) {
             var steamdata = gameInfo.availableFeatures.find(e => e.feat == 'steam').data;
-            var steamPath = path.join(getSteamDirectory(dialog), steamdata.folder);
 
-            sourcePath = steamPath;
+            sourcePath = findGame(state, steamdata, dialog);
             chosenEdition = { appid: steamdata.appid };
 
             var el = (await getInstallations(true)).find(inst => inst.appid == chosenEdition.appid);
