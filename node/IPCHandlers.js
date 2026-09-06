@@ -849,7 +849,7 @@ module.exports = function registerIPCHandlers(context) {
             const idx = file.split('-')[1];
             if (idx !== 'unique') i = Math.max(i, parseInt(idx, 10));
         });
-        i = (isFromLocate && !fromIM) ? parseInt(System.getCurrentSystemIndex()) : i + 1;
+        i = !fromIM ? parseInt(System.getCurrentSystemIndex()) : i + 1;
         
         let sourcePath = specifiedLocatePath;
         let chosenEdition;
