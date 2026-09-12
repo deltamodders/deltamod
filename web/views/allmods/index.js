@@ -302,7 +302,7 @@ async function createErroringMods(errors) {
 }
 
 (async () => {
-    var loggedIn = await window.electronAPI.invoke('isLoggedIn', ['gamebanana']);
+    var loggedIn = await window.electronAPI.invoke('isLoggedIn', ['GameBanana']);
     const errorBanner = document.getElementById("error-banner");
 
     let filterFunc = (x) => true;
