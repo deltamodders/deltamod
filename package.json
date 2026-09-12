@@ -16,11 +16,8 @@
   "build": {
     "appId": "com.deltamod.app",
     "productName": "Deltamod",
-
     "icon": "build/icon-big.png",
-
     "asar": false,
-
     "asarUnpack": [
       "node_modules/7zip-bin/win/**",
       "node_modules/7zip-bin/linux/**",
@@ -28,27 +25,23 @@
       "node_modules/7zip-bin/7x.sh",
       "gm3p/**"
     ],
-
     "files": [
       "!**/output/**",
       "!**/installbuilder/**",
       "!G3MToolCLI/**"
     ],
-
     "win": {
       "target": [
         "portable",
         "nsis"
       ]
     },
-
     "nsis": {
       "oneClick": false,
       "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "artifactName": "Deltamod-Setup.${ext}"
     },
-
     "linux": {
       "target": [
         "AppImage"
@@ -57,7 +50,6 @@
       "icon": "build/icon-big.png",
       "artifactName": "Deltamod-AppImage.${ext}"
     },
-
     "protocols": [
       {
         "name": "Deltamod",
@@ -84,6 +76,7 @@
     "create-desktop-shortcuts": "^1.11.1",
     "emit-keypress": "^1.0.1",
     "express": "^5.2.1",
+    "kvparser": "^1.0.2",
     "mime-types": "^3.0.1",
     "node-html-parser": "^7.0.1",
     "node-pty": "^1.1.0",
