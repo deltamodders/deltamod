@@ -26,9 +26,17 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Setup build tools (2 / 3)
-        shell: powershell
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
+          toolset: 14.44
+          spectre: true
+
+      - name: "[TMP] TESTING THINGS"
+        shell: powershell  
         run: |
-          choco install visualstudio2022buildtools --package-parameters "--passive --wait --norestart --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64.Spectre --add Microsoft.VisualStudio.Component.VC.ATL.Spectre --add Microsoft.VisualStudio.Component.VC.Redist.Spectre --includeRecommended" -y
+            vswhere -products * -latest -requires Microsoft.VisualStudio.Component.VS.Tools.x86.x64
+            exit 1
 
       - name: Setup build tools (3 / 3)
         uses: actions/setup-python@v5
