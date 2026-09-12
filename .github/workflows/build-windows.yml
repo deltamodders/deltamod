@@ -32,6 +32,12 @@ jobs:
           toolset: 14.44
           spectre: true
 
+      - name: "[TMP] TESTING THINGS"
+        shell: powershell  
+        run: |
+            vswhere -products * -latest -requires Microsoft.VisualStudio.Component.VS.Tools.x86.x64
+            exit 1
+
       - name: Setup build tools (3 / 3)
         uses: actions/setup-python@v5
         with:
