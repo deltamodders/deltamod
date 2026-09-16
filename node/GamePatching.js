@@ -275,7 +275,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
             log(`Applying CSX ${patch.patch} to ${patch.to}...`);
 
-            var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath], gamePath).catch(e =>  {
+            var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath, '--overwrite'], gamePath).catch(e =>  {
                 throw new Error(`Error applying CSX patch for ${targetPath}: ${e.message}`);
             });
             performedCsxPatches++;
