@@ -11,7 +11,7 @@
     "test": "electron . --developer",
     "build-windows": "electron-builder --win --publish never",
     "build-win32": "electron-builder --win --ia32 --publish never",
-    "build-linux": "electron-builder --linux --publish never"
+    "build-linux": "electron-builder --linux --publish never "
   },
   "build": {
     "appId": "com.deltamod.app",
@@ -44,7 +44,8 @@
     },
     "linux": {
       "target": [
-        "AppImage"
+        "AppImage",
+        "deb"
       ],
       "category": "Utility",
       "icon": "build/icon-big.png",
@@ -63,7 +64,7 @@
   "license": "EUPL-1.2",
   "devDependencies": {
     "electron": "^40.10.3",
-    "electron-builder": "^26.7.0"
+    "electron-builder": "^26.15.3"
   },
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",
