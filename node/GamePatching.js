@@ -6,7 +6,7 @@ const { dialog } = require('electron');
 const TOML = require('smol-toml');
 const pty = require('node-pty');
 
-const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'g3mtool', 'g3mtool-win.exe') : path.join(__dirname, '../', 'tools', 'g3mtool', 'g3mtool-lin');
+const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'g3mtool', 'g3mtool.exe') : path.join(__dirname, '../', 'tools', 'g3mtool', 'g3mtool');
 const UTMT_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'utmt', 'win', 'UndertaleModCli.exe') : path.join(__dirname, '../', 'tools', 'utmt', 'linux', 'UndertaleModCli');
 
 async function g3mtool(callback, args, gamePath) {
@@ -275,7 +275,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
             log(`Applying CSX ${patch.patch} to ${patch.to}...`);
 
-            var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath, '--overwrite'], gamePath).catch(e =>  {
+            var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath, '--overwrite']).catch(e =>  {
                 throw new Error(`Error applying CSX patch for ${targetPath}: ${e.message}`);
             });
             performedCsxPatches++;
