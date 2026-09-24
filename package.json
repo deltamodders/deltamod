@@ -60,7 +60,10 @@
       }
     ]
   },
-  "author": "Deltamodders",
+  "author": {
+    "name": "Deltamodders",
+    "email": "support@Deltamodders.com"
+  },
   "license": "EUPL-1.2",
   "devDependencies": {
     "electron": "^44.4.5",
