@@ -556,15 +556,36 @@ module.exports = function registerIPCHandlers(context) {
             win.hide();
             win.webContents.send('audio', false);
         }
-
-        if (KeyValue.readKVS('isSteam')) {
-            shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
-            app.quit();
-            return process.exit(0);
-        }
-
         const gameConfig = GameDB.getGameById(KeyValue.readKVS('gamePid'));
         const exePath = path.join(installPath, gameConfig.exeName);
+        if (KeyValue.readKVS('isSteam')) {
+            if (os.platform() === 'win32') {
+                exec(`start steam://rungameid/${KeyValue.readKVS('steamAppId')}`, /**{ cwd: path.dirname(exePath) }, () => {
+                    try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
+                    if (isControllerMode) CMode.start();
+                    if (win) {
+                        win.show();
+                        win.webContents.send('audio', true);
+                        win.webContents.send('page', 'main');
+                    }
+                }*/);
+            }
+            else if (os.platform() === 'linux') {
+                exec(`xdg-open steam://rungameid/${KeyValue.readKVS('steamAppId')}`/**, { cwd: path.dirname(exePath) }, () => {
+                    try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
+                    if (isControllerMode) CMode.start();
+                    if (win) {
+                        win.show();
+                        win.webContents.send('audio', true);
+                        win.webContents.send('page', 'main');
+                    }
+                }*/);
+            }
+            //app.quit();
+            //process.exit(0);
+        }
+
+
         if (!fs.existsSync(exePath)) {
             errorWin('Could not find executable to run.');
             if (win) {
@@ -745,7 +766,7 @@ module.exports = function registerIPCHandlers(context) {
 
             state.callbackNPS = () => ipcMain.emit('startGame', null, []);
             
-            if (!baking) {
+            /**if (!baking) {
                 state.callbackNPSPassWith = [pathname];
                 if (win) win.webContents.send('finishedPatch', mods);
             } else {
@@ -755,7 +776,7 @@ module.exports = function registerIPCHandlers(context) {
                 GamePatching.deleteOriginals(pathname);
                 app.relaunch(properRelaunch());
                 app.exit();
-            }
+            }*/
         } catch (err) {
             if (err.message && err.message.includes('Restarting')) return false;
             errorWin(`Couldn't patch and run game: ${err.message}`);

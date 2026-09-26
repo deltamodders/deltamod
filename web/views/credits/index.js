@@ -80,9 +80,20 @@ const CREDITS = [
                 url: "https://gamebanana.com/members/4548254"
             },
             {
+                name: "YouTube",
+                url: "https://www.youtube.com/@techy804"
+            },
+            {
                 name: "Reddit",
                 url: "https://www.reddit.com/user/techy804/"
             }
+        ]
+    },
+    {
+        name: "fnr1r0",
+        role: "Developer",
+        pfp: "fnr1r0.png",
+        socials: [
         ]
     },
     {
