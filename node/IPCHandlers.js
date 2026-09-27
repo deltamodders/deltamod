@@ -24,6 +24,8 @@ const Junction = require('./Junction');
 const console = require('./Console');
 const { PARTITION } = require('./Config');
 const { findGame } = require('./SteamUtils/FindGame');
+const { locateSteamDir } = require('@unlomtrois/steampath');
+const { processExists } = require('process-exists');
 
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;
@@ -556,11 +558,27 @@ module.exports = function registerIPCHandlers(context) {
             win.hide();
             win.webContents.send('audio', false);
         }
+        const steamDir = locateSteamDir();
+
         const gameConfig = GameDB.getGameById(KeyValue.readKVS('gamePid'));
         const exePath = path.join(installPath, gameConfig.exeName);
+        if (!fs.existsSync(exePath)) {
+            errorWin('Could not find executable to run.');
+            if (win) {
+                win.show();
+                win.webContents.send('audio', true);
+            }
+            return false;
+        }
+        if (isControllerMode) CMode.stop();
+        /**if (KeyValue.readKVS('isSteam')) {
+            shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
+            //app.quit();
+            //return process.exit(0);
+        }*/
         if (KeyValue.readKVS('isSteam')) {
             if (os.platform() === 'win32') {
-                exec(`start steam://rungameid/${KeyValue.readKVS('steamAppId')}`, /**{ cwd: path.dirname(exePath) }, () => {
+                exec(`"${steamDir}\\steam.exe" -applaunch ${KeyValue.readKVS('steamAppId')}`, { cwd: path.dirname(exePath) }/**, () => {
                     try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
                     if (isControllerMode) CMode.start();
                     if (win) {
@@ -571,7 +589,7 @@ module.exports = function registerIPCHandlers(context) {
                 }*/);
             }
             else if (os.platform() === 'linux') {
-                exec(`xdg-open steam://rungameid/${KeyValue.readKVS('steamAppId')}`/**, { cwd: path.dirname(exePath) }, () => {
+                exec(`"${steamDir}/steam" -applaunch ${KeyValue.readKVS('steamAppId')}`, { cwd: path.dirname(exePath) }/**, () => {
                     try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
                     if (isControllerMode) CMode.start();
                     if (win) {
@@ -581,31 +599,32 @@ module.exports = function registerIPCHandlers(context) {
                     }
                 }*/);
             }
+        }
             //app.quit();
             //process.exit(0);
+
+            else {
+                exec(`"${exePath}"`, { cwd: path.dirname(exePath) }/**, () => {
+                    try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
+                    if (isControllerMode) CMode.start();
+                    if (win) {
+                        win.show();
+                        win.webContents.send('audio', true);
+                        win.webContents.send('page', 'main');
+                    }
+                }*/);
+            }
+        while (processExists(gameConfig.exeName)) {
+            // wait for the game to exit
+        }
+        try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
+        if (isControllerMode) CMode.start();
+        if (win) {
+            win.show();
+            win.webContents.send('audio', true);
+            win.webContents.send('page', 'main');
         }
 
-
-        if (!fs.existsSync(exePath)) {
-            errorWin('Could not find executable to run.');
-            if (win) {
-                win.show();
-                win.webContents.send('audio', true);
-            }
-            return false;
-        }
-
-        if (isControllerMode) CMode.stop();
-
-        exec(`"${exePath}"`, { cwd: path.dirname(exePath) }, () => {
-            try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
-            if (isControllerMode) CMode.start();
-            if (win) {
-                win.show();
-                win.webContents.send('audio', true);
-                win.webContents.send('page', 'main');
-            }
-        });
 
         return true;
     });
@@ -766,10 +785,10 @@ module.exports = function registerIPCHandlers(context) {
 
             state.callbackNPS = () => ipcMain.emit('startGame', null, []);
             
-            /**if (!baking) {
+            if (!baking) {
                 state.callbackNPSPassWith = [pathname];
                 if (win) win.webContents.send('finishedPatch', mods);
-            } else {
+            }/** else {
                 const bakeList = Modstore.modList().modList.filter(m => args[0].includes(m.uniqueId))
                     .map(m => ({ name: m.name, description: m.description, author: m.author, version: m.version }));
                 KeyValue.setKVS('bakeList', bakeList);

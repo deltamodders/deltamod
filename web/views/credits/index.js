@@ -1,7 +1,7 @@
 const CREDITS = [
     {
         name: "GhinoRhino",
-        role: "Owner & Lead Dev",
+        role: "Owner",
         pfp: "ghino.png",
         socials: [
             {

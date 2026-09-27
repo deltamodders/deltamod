@@ -167,7 +167,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
             patchedFiles.push(targetPath);
 
             if (fs.existsSync(targetPath)) {
-                fs.renameSync(targetPath, targetPath + '.bak');
+                fs.copyFileSync(targetPath, targetPath + '.bak');
             }
             else {
                 if (!fs.existsSync(path.dirname(targetPath))) {
@@ -212,7 +212,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     var i = -1;
     await Promise.all(xdeltasMapArr.map(async ([targetFile, patches]) => {
         var newp = path.join(gamePath, targetFile + '.bak');
-        fs.renameSync(path.join(gamePath, targetFile), newp);
+        fs.copyFileSync(path.join(gamePath, targetFile), newp);
 
         var relativeTargetFile = path.relative(gamePath, path.join(gamePath, targetFile));
         var relativeBackupFile = path.relative(gamePath, newp);
@@ -268,9 +268,8 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
             }
             else {
                 var backupPath = path.join(gamePath, patch.to + '.bak');
-                if (!fs.existsSync(backupPath)) {
-                    fs.renameSync(targetPath, backupPath);
-                }
+                fs.copyFileSync(targetPath, backupPath);
+                
             }
 
             log(`Applying CSX ${patch.patch} to ${patch.to}...`);
@@ -300,7 +299,7 @@ async function restore(gamePath) {
             console.log('Restoring file: ' + file);
             const originalFile = file.slice(0, -4);
             fs.rmSync(path.join(gamePath, originalFile), { force: true });
-            fs.renameSync(path.join(gamePath, file), path.join(gamePath, originalFile));
+            fs.copyFileSync(path.join(gamePath, file), path.join(gamePath, originalFile));
         }
         if (file.endsWith('.rem')) {
             fs.rmSync(path.join(gamePath, file), { force: true });
