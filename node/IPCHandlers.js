@@ -550,7 +550,7 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('startGame', (event, args) => ipcMain.emit('startGame', event, args));
-    ipcMain.on('startGame', () => {
+    ipcMain.on('startGame', async () => {
         const win = getWindow();
         const installPath = KeyValue.readKVS('gamePath');
 
@@ -558,7 +558,7 @@ module.exports = function registerIPCHandlers(context) {
             win.hide();
             win.webContents.send('audio', false);
         }
-        const steamDir = locateSteamDir();
+        //const steamDir = locateSteamDir();
 
         const gameConfig = GameDB.getGameById(KeyValue.readKVS('gamePid'));
         const exePath = path.join(installPath, gameConfig.exeName);
@@ -571,13 +571,13 @@ module.exports = function registerIPCHandlers(context) {
             return false;
         }
         if (isControllerMode) CMode.stop();
-        /**if (KeyValue.readKVS('isSteam')) {
+        if (KeyValue.readKVS('isSteam')) {
             shell.openExternal(`steam://rungameid/${KeyValue.readKVS('steamAppId')}`);
             //app.quit();
             //return process.exit(0);
-        }*/
+        }
         if (KeyValue.readKVS('isSteam')) {
-            if (os.platform() === 'win32') {
+            /**if (os.platform() === 'win32') {
                 exec(`"${steamDir}\\steam.exe" -applaunch ${KeyValue.readKVS('steamAppId')}`, { cwd: path.dirname(exePath) }/**, () => {
                     try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
                     if (isControllerMode) CMode.start();
@@ -586,7 +586,7 @@ module.exports = function registerIPCHandlers(context) {
                         win.webContents.send('audio', true);
                         win.webContents.send('page', 'main');
                     }
-                }*/);
+                });
             }
             else if (os.platform() === 'linux') {
                 exec(`"${steamDir}/steam" -applaunch ${KeyValue.readKVS('steamAppId')}`, { cwd: path.dirname(exePath) }/**, () => {
@@ -597,8 +597,8 @@ module.exports = function registerIPCHandlers(context) {
                         win.webContents.send('audio', true);
                         win.webContents.send('page', 'main');
                     }
-                }*/);
-            }
+                });
+            }*/
         }
             //app.quit();
             //process.exit(0);
@@ -613,19 +613,35 @@ module.exports = function registerIPCHandlers(context) {
                         win.webContents.send('page', 'main');
                     }
                 }*/);
-            }
-        while (processExists(gameConfig.exeName)) {
+        }
+        function sleep(ms) {
+            return new Promise((resolve) => {
+                setTimeout(resolve, ms);
+            });
+        }
+
+        await sleep(10000); // wait 10 seconds before checking if the game is running, to give it time to start up properly
+        console.log(await processExists((gameConfig.exeName)));
+        var increment = 0;
+        while (await processExists((gameConfig.exeName))) {
             // wait for the game to exit
+            increment++;
+            if (increment > 30) {
+                console.log('Game process still running...');
+                increment = 0;
+            }
+            await sleep(1000); // give a second before checking if the game is still running, for multi-chapter games.
         }
-        try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
-        if (isControllerMode) CMode.start();
-        if (win) {
-            win.show();
-            win.webContents.send('audio', true);
-            win.webContents.send('page', 'main');
+        async function restore() {
+            try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
+            if (isControllerMode) CMode.start();
+            if (win) {
+                win.show();
+                win.webContents.send('audio', true);
+                win.webContents.send('page', 'main');
+            }
         }
-
-
+        await restore();
         return true;
     });
 
