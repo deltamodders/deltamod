@@ -6,7 +6,7 @@ const { dialog } = require('electron');
 const TOML = require('smol-toml');
 const pty = require('node-pty');
 
-const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'g3mtool', 'g3mtool.exe') : path.join(__dirname, '../', 'tools', 'g3mtool', 'g3mtool');
+const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'g3mtool', 'G3MTool.exe') : path.join(__dirname, '../', 'tools', 'g3mtool', 'G3MTool');
 const UTMT_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'utmt', 'win', 'UndertaleModCli.exe') : path.join(__dirname, '../', 'tools', 'utmt', 'linux', 'UndertaleModCli');
 
 async function g3mtool(callback, args, gamePath) {
@@ -263,14 +263,11 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
                 return { patched: false, log: `A CSX patch target file "${patch.to}", indicated by mod "${patch.modName}", wasn't found. Please check the mod files.`, fullLog: fullLog };
             }
 
-            if (performedCsxPatches > 0) {
-                var backupPath = path.join(gamePath, patch.to);
-            }
-            else {
+
                 var backupPath = path.join(gamePath, patch.to + '.bak');
                 fs.copyFileSync(targetPath, backupPath);
                 
-            }
+            
 
             log(`Applying CSX ${patch.patch} to ${patch.to}...`);
 
