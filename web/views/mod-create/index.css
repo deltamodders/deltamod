@@ -1,0 +1,10 @@
+input {
+    width: 100%;
+}
+
+textarea {
+    width: 100%;
+    /*border: 1px solid var(--theme-color);*/
+    accent-color: var(--theme-color);
+    resize: none;
+}
