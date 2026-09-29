@@ -45,3 +45,7 @@
     color: rgba(255,255,255,0.7);
     margin: 0;
 }
+
+.credits-pfp_fnrir {
+    image-rendering: pixelated;
+}

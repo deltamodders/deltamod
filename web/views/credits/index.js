@@ -90,10 +90,22 @@ const CREDITS = [
         ]
     },
     {
-        name: "fnr1r0",
+        name: "fnrir",
         role: "Developer",
-        pfp: "fnr1r0.png",
+        pfp: "fnrir.png",
         socials: [
+            {
+                name: "GitHub",
+                url: "https://github.com/fnr1r"
+            },
+            {
+                name: "Sharkey (Fediverse)",
+                url: "https://booping.synth.download/@fnrir"
+            },
+            {
+                name: "GameBanana",
+                url: "https://gamebanana.com/members/3604018"
+            }
         ]
     },
     {
@@ -131,6 +143,7 @@ const CREDITS = [
 
         var pfp = document.createElement('img');
         pfp.className = 'credits-pfp';
+        pfp.classList.add(`credits-pfp_${credit.pfp.split('.')[0]}`);
         pfp.style.width = '50px';
         pfp.style.height = '50px';
         pfp.style.borderRadius = '10px';
