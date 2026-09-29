@@ -13,7 +13,8 @@
 
 <p style="margin-bottom: 0;"><b>Please declare if your mod was created or assisted by Generative AI.</b></p>
 <p style="margin-top: 0;"><i>It is recommended to declare AI assistance to ensure proper compliance with AI disclosure policies which are in place on various platforms.</i></p>
-<select id="mod_meta_ai">
+<select id="mod_meta_ai" required>
+    <option value="" disabled hidden selected>AI Disclaimer (Required)</option>
     <option value="no">Not AI-assisted</option>
     <option value="partial">Partially AI-assisted</option>
     <option value="fully">Fully AI-generated</option>
@@ -28,6 +29,7 @@
     <input type="text" placeholder="author" id="mod_meta_package_id_3" oninput="lowercase(this)">
 </div>
 
+<!--
 <p style="display: flex; justify-content: left; align-items: center; gap: 10px;">
 <span class="material-symbols-outlined">folder</span>
 Select the file used to patch the game.
@@ -40,6 +42,31 @@ Select the file used to patch the game.
 </div>
 
 <input type="text" name="" id="mpatchtarget" placeholder="Patch target" style="width: 100%;">
+-->
+
+<select name="metadata.game" id="mod_meta_game">
+    <option value="null" style="display: none;">Select an option </option>
+    <option value="unsel" disabled>DELTARUNE games</option>
+    <option value="toby.deltarune">Deltarune (paid)</option>
+    <option value="toby.deltarune.demo">Deltarune (demo)</option>
+    <option value="toby.deltarune.demolts">Deltarune (demo) (LTS)</option>
+    <option value="unsel" disabled>Other games</option>
+    <option value="toby.undertale">Undertale</option>
+    <option value="fans.utyellow">Undertale Yellow</option>
+    <option value="other.pizzatower">Pizza Tower</option>
+</select>
+
+<h3>Patch list:</h3>
+
+<div id="mod_patch_list">
+    <!-- dynamic contents -->
+</div>
+
+<p></p>
+
+ <button style="width: 100%; padding: 10px; font-size: 1em; cursor: pointer;" class="icon_holder" onclick="window.currentPageStack.addPatch()">
+     <span class="material-symbols-outlined">add</span> Add patch
+ </button>
 
 <p></p>
 
