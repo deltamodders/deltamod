@@ -58,6 +58,35 @@ function el_input_new(parent, class_name, placeholder) {
     return res;
 }
 
+/**
+ * @param {HTMLElement?} parent
+ * @param {string} field_class_name
+ * @param {string} field_placeholder
+ * @param {string} icon_kind
+ * @param {(event: PointerEvent, field: HTMLInputElement) => void} btn_onclick
+ * @returns {{section: HTMLDivElement, field: HTMLInputElement}}
+ */
+function el_input_plus(parent, field_class_name, field_placeholder, icon_kind, btn_onclick) {
+    let res = document.createElement("div");
+    res.style = "display: flex; justify-content: left; align-items: center; gap: 5px;";
+    let field = el_input_new(
+        res,
+        field_class_name,
+        field_placeholder,
+    );
+    let btn = document.createElement("button");
+    res.appendChild(btn);
+    btn.onclick = (event) => { btn_onclick(event, field) };
+    let icon = document.createElement("span");
+    btn.appendChild(icon);
+    icon.className = "material-symbols-outlined";
+    icon.innerText = icon_kind;
+    if (parent) parent.appendChild(res);
+    return { section: res, field: field };
+}
+
+var patch_counter = 0;
+
 function addPatch() {
     let uid =
         Date.now().toString() + Math.floor(Math.random() * 1000).toString();
@@ -65,48 +94,66 @@ function addPatch() {
     let patch_id = `mod_patch_${uid}`;
     let new_patch = document.createElement("div");
     new_patch.id = patch_id;
+    new_patch.style = "animation: 0.34s cubic-bezier(0, 0.55, 0.45, 1) 0s 1 normal none running fadeIn;";
 
     let subsec = document.createElement("div");
-    subsec.style = "layout: flex; justify-content: left;";
+    subsec.style = "layout: flex;";
     new_patch.appendChild(subsec);
 
     let lab = document.createElement("p");
-    lab.style = "width: 50%;";
-    lab.innerText = `Patch 1 (${uid})`;
+    lab.style = "width: 50%; display: inline-block;";
+    patch_counter += 1;
+    lab.innerText = `Patch ${patch_counter} (${uid})`;
     subsec.appendChild(lab);
 
     let dropdown = el_select_new(subsec, "Patch type (Required)");
     dropdown.className = "mod_patch_type";
-    dropdown.style = "width: 50%";
+    dropdown.style = "width: 50%; display: inline-block;";
     el_option_new(dropdown, "csx");
     el_option_new(dropdown, "g3mpatch");
     el_option_new(dropdown, "xdelta");
     el_option_new(dropdown, "override");
 
-    el_input_new(new_patch, "mod_patch_src", "Patch source file (Required)");
-    el_input_new(
+    el_input_plus(
+        new_patch,
+        "mod_patch_src",
+        "Patch source file (Required)",
+        "file_open",
+        (_event, field) => { locatePatch(field) }
+    );
+
+    let patch_dst_field = el_input_new(
         new_patch,
         "mod_patch_dst",
         "Patch destination file (Required)",
     );
-    el_input_new(
+    patch_dst_field.style = "width: stretch";
+
+    el_input_plus(
         new_patch,
         "mod_patch_dst_csum",
         "Patch destination file checksum (SHA256)",
+        "function",
+        (_event, _field) => { }
     );
+
+    new_patch.appendChild(document.createElement("p"));
 
     let remove_button = document.createElement("button");
     new_patch.appendChild(remove_button);
+    remove_button.style = "padding: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; justify-self: right;";
     remove_button.innerHTML =
         '<span class="material-symbols-outlined">remove</span> Remove';
     remove_button.onclick = (_event) => {
         patch_list.removeChild(new_patch);
     };
 
+    new_patch.appendChild(document.createElement("hr"));
+
     patch_list.appendChild(new_patch);
 }
 
-async function locatePatch() {
+async function locatePatch(field) {
     let path = await window.electronAPI.invoke("pickPatchFile", []);
     if (!path || path == "Invalid") {
         htmlAlert("Error", "No file seemed to be selected.", [
@@ -114,7 +161,7 @@ async function locatePatch() {
         ]);
         return;
     }
-    document.querySelector('input[id="mpatchpath"]').value = path;
+    field.value = path;
 }
 
 /**

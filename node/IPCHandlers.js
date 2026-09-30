@@ -526,7 +526,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('getModListFull', () => Modstore.modList());
     ipcMain.handle('pickPatchFile', async () => {
         const win = getWindow();
-        const pathdial = await dialog.showOpenDialog(win, { filters: [{ name: "XDelta patch file", extensions: ["xdelta"] }], properties: ['openFile'] });
+        const pathdial = await dialog.showOpenDialog(win, { properties: ['openFile'] });
         return pathdial.canceled ? null : pathdial.filePaths[0];
     });
     ipcMain.handle('modCreate', (_event, args) => Modstore.modCreate(...args));
