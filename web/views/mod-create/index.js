@@ -59,12 +59,19 @@ function el_input_new(parent, class_name, placeholder) {
 }
 
 /**
+ * @typedef {Object} InputPlus
+ * @property {HTMLDivElement} section
+ * @property {HTMLInputElement} field
+ * @property {HTMLButtonElement} button
+ */
+
+/**
  * @param {HTMLElement?} parent
  * @param {string} field_class_name
  * @param {string} field_placeholder
  * @param {string} icon_kind
  * @param {(event: PointerEvent, field: HTMLInputElement) => void} btn_onclick
- * @returns {{section: HTMLDivElement, field: HTMLInputElement}}
+ * @returns {InputPlus}
  */
 function el_input_plus(
     parent,
@@ -87,7 +94,7 @@ function el_input_plus(
     icon.className = "material-symbols-outlined";
     icon.innerText = icon_kind;
     if (parent) parent.appendChild(res);
-    return { section: res, field: field };
+    return { section: res, field: field, button: btn };
 }
 
 var patch_counter = 0;
@@ -120,7 +127,7 @@ function addPatch() {
     el_option_new(dropdown, "xdelta");
     el_option_new(dropdown, "override");
 
-    el_input_plus(
+    let patch_src = el_input_plus(
         new_patch,
         "mod_patch_src",
         "Patch source file (Required)",
@@ -140,15 +147,29 @@ function addPatch() {
         },
     );
 
-    el_input_plus(
+    let patch_dst_csum = el_input_plus(
         new_patch,
         "mod_patch_dst_csum",
         "Patch destination file checksum (SHA256)",
         "function",
         (_event, field) => {
-            calculateFileHash(field, patch_dst.field)
+            calculateFileHash(field, patch_dst.field);
         },
     );
+
+    let revdeps = [patch_src, patch_dst, patch_dst_csum];
+    /**
+     * @param {InputPlus} input_plus
+     * @param {boolean} state
+     */
+    let revdep_f = (input_plus, state) => {
+        input_plus.button.disabled = state;
+        input_plus.field.disabled = state;
+    };
+    revdeps.forEach((input_plus) => revdep_f(input_plus, true));
+    dropdown.onchange = (_event) => {
+        revdeps.forEach((input_plus) => revdep_f(input_plus, false));
+    };
 
     new_patch.appendChild(document.createElement("p"));
 
@@ -191,7 +212,9 @@ async function locatePatchFile(field, dropdown) {
  */
 async function locatePatchDestFile(field, dropdown) {
     let patch_type = dropdown.value;
-    let path = await window.electronAPI.invoke("pickPatchDestFile", [patch_type]);
+    let path = await window.electronAPI.invoke("pickPatchDestFile", [
+        patch_type,
+    ]);
     if (path && path !== "Invalid") {
         field.value = path;
         return;
@@ -208,7 +231,9 @@ async function locatePatchDestFile(field, dropdown) {
  */
 async function calculateFileHash(csum_field, patch_dst_field) {
     let patch_dst = patch_dst_field.value;
-    let csum = await window.electronAPI.invoke("calculateFileHash", [patch_dst]);
+    let csum = await window.electronAPI.invoke("calculateFileHash", [
+        patch_dst,
+    ]);
     if (csum) {
         csum_field.value = csum;
         return;
