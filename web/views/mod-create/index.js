@@ -66,17 +66,22 @@ function el_input_new(parent, class_name, placeholder) {
  * @param {(event: PointerEvent, field: HTMLInputElement) => void} btn_onclick
  * @returns {{section: HTMLDivElement, field: HTMLInputElement}}
  */
-function el_input_plus(parent, field_class_name, field_placeholder, icon_kind, btn_onclick) {
+function el_input_plus(
+    parent,
+    field_class_name,
+    field_placeholder,
+    icon_kind,
+    btn_onclick,
+) {
     let res = document.createElement("div");
-    res.style = "display: flex; justify-content: left; align-items: center; gap: 5px;";
-    let field = el_input_new(
-        res,
-        field_class_name,
-        field_placeholder,
-    );
+    res.style =
+        "display: flex; justify-content: left; align-items: center; gap: 5px;";
+    let field = el_input_new(res, field_class_name, field_placeholder);
     let btn = document.createElement("button");
     res.appendChild(btn);
-    btn.onclick = (event) => { btn_onclick(event, field) };
+    btn.onclick = (event) => {
+        btn_onclick(event, field);
+    };
     let icon = document.createElement("span");
     btn.appendChild(icon);
     icon.className = "material-symbols-outlined";
@@ -94,7 +99,8 @@ function addPatch() {
     let patch_id = `mod_patch_${uid}`;
     let new_patch = document.createElement("div");
     new_patch.id = patch_id;
-    new_patch.style = "animation: 0.34s cubic-bezier(0, 0.55, 0.45, 1) 0s 1 normal none running fadeIn;";
+    new_patch.style =
+        "animation: 0.34s cubic-bezier(0, 0.55, 0.45, 1) 0s 1 normal none running fadeIn;";
 
     let subsec = document.createElement("div");
     subsec.style = "layout: flex;";
@@ -119,29 +125,37 @@ function addPatch() {
         "mod_patch_src",
         "Patch source file (Required)",
         "file_open",
-        (_event, field) => { locatePatch(field) }
+        (_event, field) => {
+            locatePatchFile(field, dropdown);
+        },
     );
 
-    let patch_dst_field = el_input_new(
+    let patch_dst = el_input_plus(
         new_patch,
         "mod_patch_dst",
         "Patch destination file (Required)",
+        "file_open",
+        (_event, field) => {
+            locatePatchDestFile(field, dropdown);
+        },
     );
-    patch_dst_field.style = "width: stretch";
 
     el_input_plus(
         new_patch,
         "mod_patch_dst_csum",
         "Patch destination file checksum (SHA256)",
         "function",
-        (_event, _field) => { }
+        (_event, field) => {
+            calculateFileHash(field, patch_dst.field)
+        },
     );
 
     new_patch.appendChild(document.createElement("p"));
 
     let remove_button = document.createElement("button");
     new_patch.appendChild(remove_button);
-    remove_button.style = "padding: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; justify-self: right;";
+    remove_button.style =
+        "padding: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; justify-self: right;";
     remove_button.innerHTML =
         '<span class="material-symbols-outlined">remove</span> Remove';
     remove_button.onclick = (_event) => {
@@ -153,15 +167,55 @@ function addPatch() {
     patch_list.appendChild(new_patch);
 }
 
-async function locatePatch(field) {
-    let path = await window.electronAPI.invoke("pickPatchFile", []);
-    if (!path || path == "Invalid") {
-        htmlAlert("Error", "No file seemed to be selected.", [
-            { text: "Ok", resolveWith: "ok" },
-        ]);
+/**
+ * @param {HTMLInputElement} field
+ * @param {HTMLSelectElement} dropdown
+ * @returns
+ */
+async function locatePatchFile(field, dropdown) {
+    let patch_type = dropdown.value;
+    let path = await window.electronAPI.invoke("pickPatchFile", [patch_type]);
+    if (path && path !== "Invalid") {
+        field.value = path;
         return;
     }
-    field.value = path;
+    htmlAlert("Error", "No file seemed to be selected.", [
+        { text: "Ok", resolveWith: "ok" },
+    ]);
+}
+
+/**
+ * @param {HTMLInputElement} field
+ * @param {HTMLSelectElement} dropdown
+ * @returns
+ */
+async function locatePatchDestFile(field, dropdown) {
+    let patch_type = dropdown.value;
+    let path = await window.electronAPI.invoke("pickPatchDestFile", [patch_type]);
+    if (path && path !== "Invalid") {
+        field.value = path;
+        return;
+    }
+    htmlAlert("Error", "No file seemed to be selected.", [
+        { text: "Ok", resolveWith: "ok" },
+    ]);
+}
+
+/**
+ * @param {HTMLInputElement} csum_field
+ * @param {HTMLInputElement} patch_dst_field
+ * @returns
+ */
+async function calculateFileHash(csum_field, patch_dst_field) {
+    let patch_dst = patch_dst_field.value;
+    let csum = await window.electronAPI.invoke("calculateFileHash", [patch_dst]);
+    if (csum) {
+        csum_field.value = csum;
+        return;
+    }
+    htmlAlert("Error", "Destination file checksum calculation failed.", [
+        { text: "Ok", resolveWith: "ok" },
+    ]);
 }
 
 /**
@@ -275,4 +329,4 @@ async function onDone() {
     }
 }
 
-window.currentPageStack = { locatePatch, onCancel, onDone, addPatch };
+window.currentPageStack = { onCancel, onDone, addPatch };
