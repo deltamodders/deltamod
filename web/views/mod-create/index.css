@@ -8,3 +8,7 @@ textarea {
     accent-color: var(--theme-color);
     resize: none;
 }
+
+#modform > * {
+    margin-bottom: 10px;
+}

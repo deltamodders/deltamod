@@ -303,7 +303,7 @@ function query_meta() {
         description: qi_textarea("mod_meta_desc", "Description"),
         author: [qi_input("mod_meta_authors", "Authors")],
         version: qi_input("mod_meta_version", "Version"),
-        ai: qi("mod_meta_ai", "AI Disclaimer", "dropdown"),
+        ai: "no",
         packageID: query_pid(),
         game: qi("mod_meta_game", "Game", "dropdown"),
     };
@@ -355,3 +355,8 @@ async function onDone() {
 }
 
 window.currentPageStack = { onCancel, onDone, addPatch };
+
+(async () => {
+    var currentgame = document.getElementById("currentGame");
+    currentgame.innerText = `Currently using ${(await invoke("getCurrentGameInfo")).name}`;
+})();
