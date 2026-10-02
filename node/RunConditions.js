@@ -16,18 +16,18 @@ const conditions = [
         required: true,
         checker: () => {
             const totalMemory = require('os').totalmem();
-            return totalMemory >= 2 * 1024 * 1024 * 1024;
+            return totalMemory >= 1 * 1024 * 1024 * 1024;
         }
     },
     {
-        name: 'At least 2GB of storage available',
+        name: 'At least 32MB of storage available',
         required: true,
         checker: () => {
             const fsp = require("fs");
             const os = require("os");
             const { bfree, bsize } = fsp.statfsSync(os.homedir());
             free = bfree * bsize;
-            return free >= 384 * 1024 * 1024;
+            return free >= 32 * 1024 * 1024;
         }
     },
     {
