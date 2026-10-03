@@ -71,7 +71,7 @@ p {
 button:not(.sidebar-button):not(:hover) {
     background-color: var(--theme-color) !important; 
 }
-button, input, select {
+button, input, select, textarea {
     font-family: "Pixel", sans-serif;
     font-size: 16px;
     color: white;
@@ -82,7 +82,7 @@ button, input, select {
     transition: 0.2s all;
 }
 
-input:focus {
+input:focus, textarea:focus {
     outline: none;
     scale: 1.12;
     box-shadow: 0 0 10px var(--theme-color-point2);
@@ -102,11 +102,11 @@ button:active:not(.noScaleBTN) {
     scale: 1.2;
 }
 
-input {
+input, textarea {
     cursor: text;
 }
 
-input::placeholder {
+input::placeholder, textarea::placeholder {
     color: rgb(150, 150, 150);
     font-style: italic;
 }

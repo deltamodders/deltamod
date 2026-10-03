@@ -24,6 +24,7 @@ const Junction = require('./Junction');
 const console = require('./Console');
 const { PARTITION } = require('./Config');
 const { findGame } = require('./SteamUtils/FindGame');
+const { pick_src_patch_file, pick_patch_dest_file, calculate_file_hash } = require('./CreateMod');
 const { locateSteamDir } = require('@unlomtrois/steampath');
 const { processExists } = require('process-exists');
 
@@ -524,6 +525,10 @@ module.exports = function registerIPCHandlers(context) {
         return { modList: processedList, errors };
     });
     ipcMain.handle('getModListFull', () => Modstore.modList());
+    ipcMain.handle('pickPatchFile', (_event, [patch_type]) => pick_src_patch_file(getWindow(), patch_type));
+    ipcMain.handle('pickPatchDestFile', (_event, [patch_type]) => pick_patch_dest_file(getWindow(), patch_type));
+    ipcMain.handle('calculateFileHash', (_event, [patch_dest_file]) => calculate_file_hash(patch_dest_file));
+    ipcMain.handle('modCreate', (_event, args) => Modstore.modCreate(...args));
     ipcMain.handle('howManyMods', () => Modstore.howmany());
     ipcMain.handle('dlmodURL', async (event, args) => {
         const [url, queryme, modid, modmodel] = args;
