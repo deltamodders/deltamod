@@ -327,6 +327,8 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             }, "Delete", true, '', 'red');
             await addCheckboxOption("Prompt controller mode when available", "When enabled, you will be asked to activate Controller Mode when a compatible controller is attached. Currently only compatible with DualSense.", 'CONTROLLER');
             await addCheckboxOption("Enable hash checks", "If enabled, Deltamod will check the hashes of mods to ensure compatibility. This may slow down Deltamod and render some mods incompatible.", 'hashchecks', true);
+            await addCheckboxOption("Enable AI disclaimers", "If enabled, Deltamod will warn you if a mod utilized AI in its development. Please note that this is not a guarantee of AI usage, and may be inaccurate since it is based on metadata provided by the mod author.", 'aiDisclaimers', true);
+
             break;
         case 'ui':
             await addCheckboxOption("Enable music in menus", "Plays background music in the main menus.", 'audio', false, (enabled) => {

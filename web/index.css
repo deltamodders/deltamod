@@ -7,7 +7,7 @@
 }
 
 :root {
-    --topbar-height: 40px;
+    --topbar-height: 50px;
     --sidebar-size: 150px;
 }
 .loadingBar {
@@ -98,19 +98,16 @@ button:disabled {
     border: 1px solid rgba(255, 255, 255, 0.23);
     font-size: 15px;
     width: 45px;
-    border-bottom-left-radius: 9px;
-    border-bottom-right-radius: 9px;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
     margin-right: 3px;
     margin-left: 3px;
     height: 30px;
     padding: 5px;
-    transform: translateY(-7px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .bar-button:hover {
-    transform: translateY(-3px);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     cursor: pointer;
 }
@@ -191,13 +188,13 @@ button:disabled {
     display: inline-flex;
     justify-content: left;
     align-items: center;
-    gap: 7px;
+    gap: 10px;
     width: 100%;
     padding-left: 20px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 6px;
+    padding-bottom: 6px;
     background-color: rgba(0, 0, 0, 0);
-    transition: 0.3s all cubic-bezier(0.16, 1, 0.3, 1);
+    transition: 0.2s all cubic-bezier(0.16, 1, 0.3, 1);
 }
 .sidebar-ribbon > p {
     margin-top: 0;
@@ -221,7 +218,7 @@ button:disabled {
 }
 .sidebar-ribbon:hover {
     cursor: pointer;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.23);
 }
 .gamebanana-account:hover {
     cursor: pointer;

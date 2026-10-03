@@ -1,0 +1,69 @@
+<div id="modform">
+
+<h1>Create a new mod manually</h1>
+
+<h2>Mod metadata</h2>
+<input id="mod_meta_name" type="text" placeholder="Mod name (Required)">
+
+<textarea
+    id="mod_meta_desc"
+    placeholder="Mod description (max. 100 chars) (Required)"
+    maxlength="100"
+></textarea>
+
+<input id="mod_meta_authors" type="text" placeholder="Mod authors (Required)" >
+<input id="mod_meta_version" type="text" placeholder="Mod version (Required)" >
+
+<div class="pid" style="display: flex; justify-content: left; align-items: center;">
+    <p style="width: 50vw;"><b>Package ID: </b></p>
+    <input type="text" placeholder="website" id="mod_meta_package_id_1" oninput="lowercase(this)">
+    <span style="margin: 0 5px;">.</span>
+    <input type="text" placeholder="mod" id="mod_meta_package_id_2" oninput="lowercase(this)">
+    <span style="margin: 0 5px;">.</span>
+    <input type="text" placeholder="author" id="mod_meta_package_id_3" oninput="lowercase(this)">
+</div>
+
+<div style="display: flex; justify-content: left; align-items: center; gap: 10px;">
+    <div>
+        <p style="margin: 0;"><b>Choose the target game: </b></p>
+        <p id="currentGame" style="color: gray; margin: 0;">Currently using DELTARUNE</p>
+    </div>
+    <select name="metadata.game" id="mod_meta_game">
+        <option value="null" style="display: none;">Select an option </option>
+        <option value="unsel" disabled>DELTARUNE games</option>
+        <option value="toby.deltarune">Deltarune (paid)</option>
+        <option value="toby.deltarune.demo">Deltarune (demo)</option>
+        <option value="toby.deltarune.demolts">Deltarune (demo) (LTS)</option>
+        <option value="unsel" disabled>Other games</option>
+        <option value="toby.undertale">Undertale</option>
+        <option value="fans.utyellow">Undertale Yellow</option>
+        <option value="other.pizzatower">Pizza Tower</option>
+    </select>
+</div>
+
+<h3>Patch list:</h3>
+
+<hr>
+
+<div id="mod_patch_list">
+    <!-- dynamic contents -->
+</div>
+
+<p></p>
+
+ <button style="width: 100%; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;" class="icon_holder" onclick="window.currentPageStack.addPatch()">
+     <span class="material-symbols-outlined">add</span> Add patch
+ </button>
+
+<p></p>
+
+<div style="position: right;">
+<button onclick="window.currentPageStack.onDone()">Done</button>
+<button onclick="window.currentPageStack.onCancel()">Cancel</button>
+</div>
+
+</div>
+JSL
+AUDIO[mainTheme.mp3]
+STYLESHEET[index]
+TITLE[Create a new mod]

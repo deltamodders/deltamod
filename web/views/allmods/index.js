@@ -153,22 +153,27 @@ async function createMod(mod, compatible, loggedIn) {
         modNameContainer.appendChild(gbSpan);
     }
 
-    let aiSpan = document.createElement('p');
-    aiSpan = adaptForIcons(aiSpan);
-    aiSpan.style.margin = '0px';
-    aiSpan.style.marginTop = '4px';
-    aiSpan.className = 'calibri';
-    aiSpan.style.fontSize = 'smaller';
-    aiSpan.style.color = '#888';
-    var map = {
-        'fully': 'Fully AI-generated',
-        'partial': 'Partially AI-generated',
-        'no': 'No AI used',
-        'na': '<i>AI disclosure not provided</i>'
+    if (window.currentPageStack.aiDisclaimer) {
+        let aiSpan = document.createElement('p');
+        aiSpan = adaptForIcons(aiSpan);
+        aiSpan.style.margin = '0px';
+        aiSpan.style.marginTop = '4px';
+        aiSpan.className = 'calibri';
+        aiSpan.style.fontSize = 'smaller';
+        aiSpan.style.color = '#888';
+        var map = {
+            'fully': 'Mod is fully AI-generated',
+            'partial': 'Mod is partially AI-generated',
+            'no': 'Mod is not AI-generated',
+            'na': '<i>AI disclosure not provided</i>'
+        }
+        if (['fully', 'partial'].indexOf(mod.ai) >= 0) {
+            aiSpan.style.color = '#f0ff6e';
+        }
+        aiSpan.innerHTML = `${icon('robot_2', 'small')} ${map[mod.ai]}`;
+        aiSpan.id = `modai-${mod.uid}`;
+        modNameContainer.appendChild(aiSpan);
     }
-    aiSpan.innerHTML = `${icon('robot_2', 'small')} ${map[mod.ai]}`;
-    aiSpan.id = `modai-${mod.uid}`;
-    modNameContainer.appendChild(aiSpan);
 
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
@@ -302,6 +307,12 @@ async function createErroringMods(errors) {
 }
 
 (async () => {
+    var aidisclaimers = await window.electronAPI.invoke('getUniqueFlag', ['aidisclaimers']);
+    if (aidisclaimers == undefined || aidisclaimers == null) {
+        await window.electronAPI.invoke('setUniqueFlag', ['aidisclaimers', true]);
+        aidisclaimers = true;
+    }
+    window.currentPageStack.aiDisclaimer = aidisclaimers;
     var loggedIn = await window.electronAPI.invoke('isLoggedIn', ['GameBanana']);
     const errorBanner = document.getElementById("error-banner");
 

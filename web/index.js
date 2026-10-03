@@ -570,7 +570,7 @@ async function page(name) {
         --theme-color-point2: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.2);
         --theme-color-point3: rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.3);
     }
-    button:not(.sidebar-button), input, select {
+    button:not(.sidebar-button), input, textarea, select {
         border: 1px solid rgba(${rgbNumbers.r}, ${rgbNumbers.g}, ${rgbNumbers.b}, 0.5);
     }
     input, progress {
