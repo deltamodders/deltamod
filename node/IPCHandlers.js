@@ -24,6 +24,7 @@ const Junction = require('./Junction');
 const console = require('./Console');
 const { PARTITION } = require('./Config');
 const { findGame } = require('./SteamUtils/FindGame');
+const { pick_src_patch_file, pick_patch_dest_file, calculate_file_hash } = require('./CreateMod');
 const { locateSteamDir } = require('@unlomtrois/steampath');
 const { processExists } = require('process-exists');
 
@@ -524,82 +525,9 @@ module.exports = function registerIPCHandlers(context) {
         return { modList: processedList, errors };
     });
     ipcMain.handle('getModListFull', () => Modstore.modList());
-    ipcMain.handle('pickPatchFile', async (_event, [patch_type]) => {
-        /**
-         * @type {Array<Electron.FileFilter>}
-         */
-        let filters = [];
-        switch (patch_type) {
-            case "csx":
-                filters.push({ name: "C# script file", extensions: ["csx"] });
-                break;
-            case "g3mpatch":
-                filters.push({ name: "G3M patch file", extensions: ["xdelta"] });
-                break;
-            case "xdelta":
-                filters.push({ name: "XDelta patch file", extensions: ["xdelta"] });
-                break;
-            case "override":
-                break;
-        }
-        /**
-         * Why tf does electron always default to ~/Downloads instead of
-         * letting the file picker remember the last path?
-         * @type {Electron.OpenDialogOptions}
-         */
-        let options = { properties: ['openFile'] };
-        if (filters) options.filters = filters;
-        const win = getWindow();
-        const pathdial = await dialog.showOpenDialog(win, options);
-        return pathdial.canceled ? null : pathdial.filePaths[0];
-    });
-    ipcMain.handle('pickPatchDestFile', async (_event, [patch_type]) => {
-        const installPath = KeyValue.readKVS('gamePath');
-        /**
-         * @type {Array<Electron.FileFilter>}
-         */
-        let filters = [];
-        /**
-         * @type {Electron.FileFilter}
-         */
-        const GM_DATA_FILE = { name: "GameMaker data.win file", extensions: ["win"] };
-        switch (patch_type) {
-            case "csx":
-                filters.push(GM_DATA_FILE);
-                break;
-            case "g3mpatch":
-                filters.push(GM_DATA_FILE);
-                break;
-            case "xdelta":
-                break;
-            case "override":
-                break;
-        }
-        /**
-         * @type {Electron.OpenDialogOptions}
-         */
-        let options = { defaultPath: installPath, properties: ['openFile'] };
-        if (filters) options.filters = filters;
-        const win = getWindow();
-        const pathdial = await dialog.showOpenDialog(win, options);
-        if (pathdial.canceled) return null;
-        let game_file_path = pathdial.filePaths[0];
-        if (!game_file_path) return null;
-        let res = path.relative(installPath, game_file_path);
-        // patchers don't seem to normalize the path, so we have to add a ./
-        // since most mods use that
-        if (!res.startsWith("./"))
-            res = `./${res}`;
-        return res;
-    });
-    ipcMain.handle('calculateFileHash', async (_event, [patch_dest_file]) => {
-        const installPath = KeyValue.readKVS('gamePath');
-        if (patch_dest_file.startsWith("./"))
-            patch_dest_file = patch_dest_file.slice(2, patch_dest_file.length);
-        let file_path = path.join(installPath, patch_dest_file);
-        const fileBuffer = fs.readFileSync(file_path);
-        return crypto.createHash('sha256').update(fileBuffer).digest('hex');
-    });
+    ipcMain.handle('pickPatchFile', (_event, [patch_type]) => pick_src_patch_file(getWindow(), patch_type));
+    ipcMain.handle('pickPatchDestFile', (_event, [patch_type]) => pick_patch_dest_file(getWindow(), patch_type));
+    ipcMain.handle('calculateFileHash', (_event, [patch_dest_file]) => calculate_file_hash(patch_dest_file));
     ipcMain.handle('modCreate', (_event, args) => Modstore.modCreate(...args));
     ipcMain.handle('howManyMods', () => Modstore.howmany());
     ipcMain.handle('dlmodURL', async (event, args) => {
