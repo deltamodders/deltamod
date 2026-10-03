@@ -623,84 +623,8 @@ if (!fs.existsSync(system.getPacketDatabase())) {
     fs.mkdirSync(system.getPacketDatabase(), { recursive: true });
 }
 
-/**
- * @typedef {Object} ModdingXmlEarlyEntry
- * @property {string} type
- * @property {string} from
- * @property {string} to
- * @property {string | undefined} csum
- * @property {string | undefined} basename
- * @typedef {Array<ModdingXmlEarlyEntry>} ModdingXmlEarly
- */
-
-function randomModId() {
-    let pkg_db_path = system.getPacketDatabase();
-    let mod_id = "";
-    while (!mod_id || fs.existsSync(path.join(pkg_db_path, mod_id))) {
-        let mod_id_name = randomString(16);
-        mod_id = "local.deltamod." + mod_id_name;
-    }
-}
-
-/**
- * @param {Object} dat
- */
-function dat_clean_undefined(dat) {
-    for (const k of Object.keys(dat)) {
-        if (dat[k] === undefined)
-            delete dat[k];
-    }
-}
-
-/**
- * Creates a new mod
- *
- * TODO: make this atomic to avoid any issues with half-added mods
- *
- * @param {Object} metadata
- * @param {ModdingXmlEarly} modding_data
- */
-function modCreate(
-    metadata,
-    modding_data,
-) {
-    dat_clean_undefined(metadata.metadata);
-    for (const item of modding_data) {
-        if (!fs.existsSync(item.from)) {
-            throw `Specified patch file doesn't exist: ${item.from}`;
-        }
-    }
-    let needed_files = modding_data.map((item) => {
-        if (!item.csum) return null;
-        console.log(JSON.stringify(item), item.csum);
-        return { file: item.to, checksum: item.csum };
-    });
-    let modding_xml = modding_data.map((item) => {
-        item.basename = path.basename(item.from);
-        return `<patch type="${item.type}" patch="./${item.basename}" to="${item.to}" />`;
-    }).join("\n") + "\n";
-    if (needed_files)
-        metadata.neededFiles = needed_files;
-    let deltaid = {
-        uniqueId: system.generateUniqueId(),
-        validFor: computerName,
-        new: true
-    };
-    let pkg_db_path = system.getPacketDatabase();
-    let mod_id = metadata.metadata.packageID;
-    let mod_dir = path.join(pkg_db_path, mod_id);
-    fs.mkdirSync(mod_dir);
-    fs.writeFileSync(path.join(mod_dir, "__deltaID.json"), JSON.stringify(deltaid), { encoding: "utf8" });
-    fs.writeFileSync(path.join(mod_dir, "modding.xml"), modding_xml, { encoding: "utf8" });
-    fs.writeFileSync(path.join(mod_dir, "meta.toml"), TOML.stringify(metadata), { encoding: "utf8" });
-    for (const item of modding_data) {
-        fs.copyFileSync(item.from, path.join(mod_dir, item.basename));
-    }
-}
-
 module.exports = {
     modList,
-    modCreate,
     importMod,
     howmany,
     downloadModFromURL,
