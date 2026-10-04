@@ -259,8 +259,10 @@ async function renderAccount(backendName, displayName, cat, tbody = document.que
     }
     else {
         await addButton("Login", "Adds a " + displayName + " account to Deltamod.", async () => {
+            var overlay = makeOverlay("Logging in to " + displayName + "...");
             await window.electronAPI.invoke('login_account', [backendName]);
             window._pageArguments = {cat: cat};
+            overlay.obj.remove();
             page('options');
         }, "Login", !userInfo.loggedIn, "You are already logged in to " + displayName + ".", '');
     }
