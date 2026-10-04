@@ -86,6 +86,20 @@ function safeReadFileSync(filePath, encoding) {
     }
 }
 
+// 0x40 = 0o100 (u+x) (user executable bit)
+const MODE_USER_EXEC = 0x40;
+
+/**
+ * Make a file executable by the user, if not already exec
+ * @param {string} path
+ */
+function maybeChmodExec(path) {
+    if (process.platform !== 'linux') return;
+    const mode = fs.statSync(path).mode;
+    if (mode & MODE_USER_EXEC) return;
+    fs.chmodSync(path, mode | MODE_USER_EXEC);
+}
+
 async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     let fullLog = '';
     function log(...args) {
@@ -98,10 +112,9 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
         throw new Error('G3MTool not found in tools folder.');
     }
 
-    if (process.platform === 'linux') {
-        // ensure the G3MTool-linux file is executable
-        fs.chmodSync(PATCHER_PATH, 0o755);
-    }
+    // ensure the G3MTool-linux file is executable
+    maybeChmodExec(PATCHER_PATH);
+    maybeChmodExec(UTMT_PATH);
     
     var moddingInfo = fs.readdirSync(modFolder).map(folder => {
         var moddingXML = path.join(modFolder, folder, 'modding.xml');
