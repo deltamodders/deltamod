@@ -39,6 +39,30 @@ async function invoke(...params) {
     return window.electronAPI.invoke(...params);
 }
 
+function makeOverlay(html) {
+    var overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.fontSize = '24px';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    overlay.style.zIndex = '9999';
+    overlay.innerHTML = html;
+    document.body.appendChild(overlay);
+
+    return {
+        close: () => {
+            document.body.removeChild(overlay);
+        },
+        obj: overlay
+    };
+}
+
 /**
  * Generates and appends glyph icons to the DOM.
  * @param {Array} jsonArr - Array of glyph objects { icon, description }

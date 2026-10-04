@@ -1,58 +1,42 @@
 <div>
     <h1>Options</h1>
-    <div style="overflow-y: scroll; height: 100%; overflow-x: hidden; display: flex; justify-content: left; align-items: baseline; gap: 70px;">
-        <div class="cat" style="width: 20%; display: unset;">
+    <div>
+        <div class="cat" style="display: flex; align-items: center; justify-content: left; gap: 10px;">
             <button onclick="window.currentPageStack.cat('gen')" id="b_gen" class="noScaleBTN optbtn">
-                <span class="material-symbols-outlined">
+                <span class="material-symbols-outlined catIcons">
                 discover_tune
                 </span>
-                General
             </button>
             <button onclick="window.currentPageStack.cat('ui')" id="b_ui" class="noScaleBTN optbtn">
-                <span class="material-symbols-outlined">
+                <span class="material-symbols-outlined catIcons">
                     palette
                 </span>
-                Interface
             </button>
             <button onclick="window.currentPageStack.cat('inst')" id="b_inst" class="noScaleBTN optbtn">
-                <span class="material-symbols-outlined">
+                <span class="material-symbols-outlined catIcons">
                     computer
                 </span>
-                Installation
             </button>
             <button onclick="window.currentPageStack.cat('adv')" id="b_adv" class="noScaleBTN optbtn">
-                <span class="material-symbols-outlined">
+                <span class="material-symbols-outlined catIcons">
                     terminal_2
                 </span> 
-                Advanced
             </button>
-            <button id="b_accounts" onclick="window.currentPageStack.expandSemimenu('accounts')" class="noScaleBTN optbtn semimenuCollapser">
-                <span class="material-symbols-outlined">
-                    account_circle
-                </span> 
-                Accounts
+            <button id="b_gb" onclick="window.currentPageStack.cat('gb')" class="noScaleBTN optbtn">
+                <brand-icon class="catIcons">B</brand-icon>
             </button>
-            <div class="semimenu" id="accounts" style="display: none;">
-                <button onclick="window.currentPageStack.cat('gb', false)" id="b_gb" class="noScaleBTN optbtn minibtn">
-                    <brand-icon>B</brand-icon>
-                    GameBanana
-                </button>
-                <button onclick="window.currentPageStack.cat('itch', false)" id="b_itch" class="noScaleBTN optbtn minibtn">
-                    <brand-icon>I</brand-icon>
-                    itch.io
-                </button>
-            </div>
+            <button id="b_itch" onclick="window.currentPageStack.cat('itch')" class="noScaleBTN optbtn">
+                <brand-icon class="catIcons">I</brand-icon>
+            </button>
             <button onclick="window.currentPageStack.cat('help')" id="b_help" class="noScaleBTN optbtn">
-                <span class="material-symbols-outlined">
+                <span class="material-symbols-outlined catIcons">
                     question_mark
                 </span> 
-                Help
             </button>
             <button onclick="window.currentPageStack.cat('dev')" id="b_dev" style="display: none;" class="noScaleBTN optbtn">
-                <span class="material-symbols-outlined">
+                <span class="material-symbols-outlined catIcons">
                     code
                 </span>
-                Developer
             </button>
         </div>
         <div class="opt" style="width: 70%; display: unset;">

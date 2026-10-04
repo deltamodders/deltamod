@@ -2,6 +2,14 @@ input {
     width: 100%;
 }
 
+.workspaceWarning {
+    width: calc(100% - 20px);
+    background-color: rgb(141, 0, 0);
+    color: var(--theme-color-contrast);
+    margin-bottom: 10px;
+    border-radius: 5px;
+    padding: 10px;
+}
 textarea {
     width: 100%;
     /*border: 1px solid var(--theme-color);*/

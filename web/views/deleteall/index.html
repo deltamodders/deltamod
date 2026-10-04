@@ -1,4 +1,6 @@
 <div>
+    <button onclick="page('options')">Back</button>
+    <br>
     <h1>Delete all installations</h1>
     <p class="calibri">Via this page you will be able to delete all Deltamod data.</p>
     <div style="font-family: 'Calibri';">
@@ -11,18 +13,25 @@
         <p><i>This action is irreversible! Are you sure you want to proceed?</i></p>
     </div>
     <p>Are you sure you want to delete all data? This action is irreversible!</p>
-    <button style="display: flex; align-items: center; gap: 10px;" id="initbtn">
-        <span class="material-symbols-outlined">bomb</span> <b>Delete all data</b>
-    </button>
-    <br>
-    <progress id="progbar" value="0" max="100"></progress>
+    <button style="display: flex; flex-direction: column; gap: 10px;" id="initbtn">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined">bomb</span> <b>Delete all data</b>
+        </div>
+        <small style="text-align: left;">Hold to confirm</small>
+    </button>                                                                                                                                                                                                                                                                                
 </div>
 <style>
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
     }
+
+    #initbtn:hover {
+        background: var(--theme-color);
+        color: white;
+    }
+
+    #ini
 </style>
 JSL
-AUDIO[views/deleteall/minigame.mp3]
 TITLE[Delete all installations]

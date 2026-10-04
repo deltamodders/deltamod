@@ -62,27 +62,35 @@ function strip_dotslash(path) {
  * @param {Electron.BrowserWindow} win
  * @param {Electron.FileFilter[]?} filters
  * @param {Electron.OpenDialogOptions?} extra_options
+ * @param {string} mandatory_main_dir
  * @returns {string?}
  */
-function openFileDialog(win, filters, extra_options = {}) {
+function openFileDialog(win, filters, extra_options = {}, mandatory_main_dir = null) {
     /**
      * Why tf does electron always default to ~/Downloads instead of
      * letting the file picker remember the last path?
      * @type {Electron.OpenDialogOptions}
      */
     let options = { properties: ["openFile"] };
+    if (mandatory_main_dir != null && mandatory_main_dir != "") options.defaultPath = mandatory_main_dir;
     if (filters) options.filters = filters;
     if (extra_options) Object.assign(options, extra_options);
     const res = dialog.showOpenDialogSync(win, options);
+    if (mandatory_main_dir != "") {
+        if (!res || !res[0].startsWith(mandatory_main_dir)) {
+            return "invalid_md";
+        }
+    }
     return res ? res[0] : null;
 }
 
 /**
  * @param {Electron.BrowserWindow} win
  * @param {PatchType} patch_type
+ * @param {string} main_dir
  * @returns {string?}
  */
-function pick_src_patch_file(win, patch_type) {
+function pick_src_patch_file(win, patch_type, main_dir) {
     /**
      * @type {Electron.FileFilter[]}
      */
@@ -98,7 +106,7 @@ function pick_src_patch_file(win, patch_type) {
             filters.push(XDELTA_PATCH_FILE);
             break;
     }
-    return openFileDialog(win, filters);
+    return openFileDialog(win, filters, {}, main_dir);
 }
 
 /**

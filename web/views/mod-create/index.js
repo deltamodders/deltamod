@@ -195,7 +195,13 @@ function addPatch() {
  */
 async function locatePatchFile(field, dropdown) {
     let patch_type = dropdown.value;
-    let path = await window.electronAPI.invoke("pickPatchFile", [patch_type]);
+    let path = await window.electronAPI.invoke("pickPatchFile", [patch_type, window.currentPageStack.currentMainDir || ""]);
+    if (path === "invalid_md") {
+        htmlAlert("Error", "Selected file is not within the workspace.", [
+            { text: "Ok", resolveWith: "ok" },
+        ]);
+        return;
+    }
     if (path && path !== "Invalid") {
         field.value = path;
         return;
@@ -360,3 +366,9 @@ window.currentPageStack = { onCancel, onDone, addPatch };
     var currentgame = document.getElementById("currentGame");
     currentgame.innerText = `Currently using ${(await invoke("getCurrentGameInfo")).name}`;
 })();
+
+if (window._pageArguments.isWorkspace) {
+    window.currentPageStack.currentMainDir = window._pageArguments.path;
+    document.querySelector(".workspaceWarning").style.display = "block";
+    document.querySelector(".workspaceWarning").innerText = "You may only choose files within the downloaded \"" + window._pageArguments.name + "\" folder.";
+}

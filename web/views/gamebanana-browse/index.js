@@ -216,7 +216,7 @@ async function featured() {
 window.currentPageStack.featured = featured;
 window.currentPageStack.qms = {}; 
 
-async function dlmod(dlurl, buttonElem=null, modid, modmodel, modname) {
+async function dlmod(dlurl, buttonElem=null, modid, modmodel, modname, hasOneClick) {
     lockUs = true;
 
     const queryme = Math.random().toString(36).substring(2, 15);
@@ -243,13 +243,26 @@ async function dlmod(dlurl, buttonElem=null, modid, modmodel, modname) {
         buttonElem.style.background = `linear-gradient(90deg, var(--theme-color) 0%, var(--theme-color) ${p}%, rgba(255,255,255,0.14) ${p}%, rgba(255,255,255,0.14) 100%)`;
     };
     
-    await window.electronAPI.invoke('dlmodURL', [dlurl, queryme, modid, modmodel]);
+    if (hasOneClick) {
+        await window.electronAPI.invoke('dlmodURL', [dlurl, queryme, modid, modmodel]);
     
-    lockUs = false;
-    buttonElem.innerHTML = icon('done_outline', '0.9em');
+        lockUs = false;
+        buttonElem.innerHTML = icon('done_outline', '0.9em');
 
-    opbox.setProgress(100, 'Done', 'green');
-    setTimeout(() => opbox.delete(), 2000);
+        opbox.setProgress(100, 'Done', 'green');
+        setTimeout(() => opbox.delete(), 2000);
+    } else {
+        var path = await window.electronAPI.invoke('dlmodManual', [dlurl, queryme, modid, modmodel]);
+    
+        lockUs = false;
+        buttonElem.innerHTML = icon('done_outline', '0.9em');
+
+        opbox.setProgress(100, 'Done', 'green');
+        setTimeout(() => opbox.delete(), 2000);
+
+        window._pageArguments = { path, name: modname || 'mod', isWorkspace: true };
+        page('mod-create');
+    }
 }
 
 window.currentPageStack.dlmod = async function(info) {
@@ -433,11 +446,10 @@ function buildModActions(mod, table, tr) {
         let dlpage = await fetch(`https://gamebanana.com/apiv11/${mod._sModelName}/${mod._idRow}/ProfilePage`);
         dlpage = await dlpage.json();
 
-        const eligibleDownloads = dlpage._aFiles.filter(file => {
-            try {
-                return file._aModManagerIntegrations.map(x => x._idToolRow).includes(20575);
-            } catch {
-                return false;
+        const eligibleDownloads = dlpage._aFiles.map(file => {
+            return {
+                ...file,
+                hasOCS: file._aModManagerIntegrations.map(x => x._idToolRow).includes(20575)
             }
         });
 
@@ -462,7 +474,7 @@ function buildModActions(mod, table, tr) {
                 const thisBtn = document.createElement('button');
                 Object.assign(thisBtn.style, { display: 'inline-flex', alignItems: 'center', gap: '4px', margin: '4px', width: '100%' });
                 thisBtn.onclick = async () => {
-                    dlmod(file._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName, mod._sName);
+                    dlmod(file._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName, mod._sName, file.hasOCS);
                     dtr.remove();
                 };
                 
@@ -508,7 +520,7 @@ function buildModActions(mod, table, tr) {
             return;
         }
 
-        dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName, mod._sName);
+        dlmod(eligibleDownloads[0]._sDownloadUrl.replace('dl','mmdl'), dlBtn, mod._idRow, mod._sModelName, mod._sName, eligibleDownloads[0].hasOCS);
     };
     td1.appendChild(dlBtn);
 

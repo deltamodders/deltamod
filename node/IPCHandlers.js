@@ -525,11 +525,44 @@ module.exports = function registerIPCHandlers(context) {
         return { modList: processedList, errors };
     });
     ipcMain.handle('getModListFull', () => Modstore.modList());
-    ipcMain.handle('pickPatchFile', (_event, [patch_type]) => pick_src_patch_file(getWindow(), patch_type));
+    ipcMain.handle('pickPatchFile', (_event, [patch_type, main_dir]) => pick_src_patch_file(getWindow(), patch_type, main_dir));
     ipcMain.handle('pickPatchDestFile', (_event, [patch_type]) => pick_patch_dest_file(getWindow(), patch_type));
     ipcMain.handle('calculateFileHash', (_event, [patch_dest_file]) => calculate_file_hash(patch_dest_file));
     ipcMain.handle('modCreate', (_event, args) => mod_create(...args));
     ipcMain.handle('howManyMods', () => Modstore.howmany());
+    ipcMain.handle('dlmodManual', async (event, args) => {
+        const url = args[0];
+        const modid = args[2];
+        const modmodel = args[3];
+        const parsedUrl = new URL(url);
+        const extension = path.extname(parsedUrl.pathname) || '.zip';
+        const tempFile = path.join(app.getPath('temp'), `deltamod_${modid || modmodel || Date.now()}_${Date.now()}${extension}`);
+
+        try {
+            const output = fs.createWriteStream(tempFile);
+            const response = await axios.get(url, { responseType: 'stream' });
+            response.data.on('data', (chunk) => {
+                var progress = (output.bytesWritten / parseInt(response.headers['content-length'], 10)) * 100;
+                event.sender.send('dlmodManual-progress', { progress, downloaded: output.bytesWritten, queryme: args[1], error: false });
+            });
+            await new Promise((resolve, reject) => {
+                output.once('error', reject);
+                response.data.once('error', reject);
+                response.data.pipe(output);
+                output.once('finish', resolve);
+            });
+
+            const extractionDir = fs.mkdtempSync(path.join(app.getPath('temp'), 'deltamod_extract_'));
+            await new Promise((resolve, reject) => {
+                _7z.unpack(tempFile, extractionDir, error => error ? reject(error) : resolve(extractionDir));
+            });
+            fs.rmSync(tempFile, { force: true });
+            return extractionDir;
+        } catch (error) {
+            fs.rmSync(tempFile, { force: true });
+            throw error;
+        }
+    });
     ipcMain.handle('dlmodURL', async (event, args) => {
         const [url, queryme, modid, modmodel] = args;
         return await Modstore.downloadModFromURL(url, (progress, downloaded) => {

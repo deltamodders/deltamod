@@ -31,14 +31,15 @@ btn.addEventListener('mouseleave', () => {
     holding = false;
 });
 
+var btn = document.getElementById('initbtn');
 setInterval(() => {
     if (holding) {
         holdTimer = (holdTimer || 0) + 100;
-        document.getElementById('progbar').value = holdTimer / 5000 * 100;
+        btn.style.background = 'linear-gradient(to right, white ' + (holdTimer / 5000 * 100) + '%, var(--theme-color) ' + (holdTimer / 5000 * 100) + '%)';
     }
     else {
         holdTimer = (holdTimer <= 0) ? 0 : holdTimer - 100;
-        document.getElementById('progbar').value = holdTimer / 5000 * 100;
+        btn.style.background = 'linear-gradient(to right, white ' + (holdTimer / 5000 * 100) + '%, var(--theme-color) ' + (holdTimer / 5000 * 100) + '%)';
     }
 
     if (holdTimer >= 5000) {
