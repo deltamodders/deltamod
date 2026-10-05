@@ -1110,29 +1110,7 @@ module.exports = function registerIPCHandlers(context) {
             return false;
         } catch { return false; }
     });
-    ipcMain.handle('start-update', async (event, args) => {
-        if (!updateStackInfo) return;
-        
-        var pwin = createProgressModal();
-        try {
-            const installerPath = path.join(System.getTemporary(), `deltamodUpdate.${updateStackInfo.version.replace(/\./g, "")}.exe`);
-
-            await downloadFile(updateStackInfo.newVersionLink, installerPath, (progress) => {
-                if (pwin) updateProgressModal(pwin, null, progress, 'Downloading update');
-            });
-
-            await timeoutPromise(1500);
-
-            exec(`"${installerPath}" --mode unattended --unattendedmodeui minimal`);
-
-            app.exit(0);
-        } catch (e) {
-            dialog.showErrorBox("Update Failed", "Failed to download update. Please reinstall from GameBanana. Opening browser...");
-            shell.openExternal('https://gamebanana.com/tools/20575');
-            state.ignoreUpdate = true;
-            page("main");
-        }
-    });
+    ipcMain.handle('start-update', async (_event, _args) => await Updates.doUpdate(updateStackInfo, state));
     ipcMain.handle('ignore-update', () => { state.ignoreUpdate = true; page("main"); });
     ipcMain.handle('initialize', () => {
         const appdata = path.join(app.getPath('appData'), 'deltamod');
