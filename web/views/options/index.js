@@ -193,7 +193,7 @@ async function addRowHeader(name) {
 
 async function renderAccount(backendName, displayName, cat, tbody = document.querySelector('tbody')) {
     var children = [];
-    if (backendName === 'gamebanana') {
+    if (backendName === 'GameBanana') {
         await invoke('eraseGamebananaCache', []);
     }
 
@@ -436,10 +436,10 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             }, "Open");
             break;
         case 'gb':
-            await renderAccount('gamebanana', 'GameBanana', 'gb');
+            await renderAccount('GameBanana', 'GameBanana', 'gb');
             break;
         case 'itch':
-            await renderAccount('itch', 'Itch.io', 'itch');
+            await renderAccount('Itch', 'Itch.io', 'itch');
 
             var td = document.createElement('td');
             td.colSpan = 2;
