@@ -180,6 +180,89 @@ async function addButton(name, description, click, buttonText, enabled = true, d
     table.appendChild(tr);
 }
 
+/**
+ * @typedef PathPicker
+ * @property {HTMLElement} small
+ * @property {HTMLButtonElement} change_button
+ * @property {HTMLButtonElement} clear_button
+ * @returns {void}
+ */
+/**
+ * @callback OptPathPickerCb
+ * @param {PointerEvent} event
+ * @param {PathPicker} state
+ */
+
+/**
+ * @param {string} name
+ * @param {string} description
+ * @param {OptPathPickerCb} click
+ * @param {*} buttonText
+ * @param {*} enabled
+ * @param {*} disabledReason
+ * @param {*} colour
+ * @param {OptPathPickerCb} on_clear
+ */
+async function addOptPathPicker(name, description, click, buttonText, enabled = true, disabledReason = '', colour = '', on_clear = () => {}) {
+    const table = document.querySelector('tbody');
+    const tr = document.createElement('tr');
+
+    const tdLabel = document.createElement('td');
+    const span = document.createElement('span');
+    span.innerText = name;
+    span.className = 'optionName';
+    if (colour != '') {
+        span.style.color = colour;
+    }
+    tdLabel.appendChild(span);
+
+    tdLabel.appendChild(document.createElement('br'));
+
+    const small = document.createElement('small');
+    small.className = 'calibri';
+    small.innerText = description;
+    tdLabel.appendChild(small);
+
+    const tdInput = document.createElement('td');
+    tdInput.classList.add('center');
+
+    const change_button = document.createElement('button');
+    change_button.innerText = "Change";
+    tdInput.appendChild(change_button);
+    if (!enabled) {
+        change_button.disabled = true;
+        change_button.style.opacity = "0.5";
+        change_button.style.cursor = 'not-allowed';
+    }
+
+    const clear_button = document.createElement('button');
+    clear_button.innerText = "Clear";
+    tdInput.appendChild(clear_button);
+    if (!enabled) {
+        clear_button.disabled = true;
+        clear_button.style.opacity = "0.5";
+        clear_button.style.cursor = 'not-allowed';
+    }
+
+    const state = {
+        small: small,
+        change_button: change_button,
+        clear_button: clear_button
+    };
+
+    change_button.onclick = (event) => {
+        click(event, state)
+    };
+    clear_button.onclick = (event) => {
+        on_clear(event, state)
+    };
+
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdInput);
+
+    table.appendChild(tr);
+}
+
 async function addRowHeader(name) {
     const table = document.querySelector('tbody');
     const tr = document.createElement('tr');
@@ -418,6 +501,23 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
                 if (res) {
                     await htmlAlert("Done","Operation successful!",[{text: "Ok", resolveWith:''}]);
                 }
+            }, "Open");
+
+            await addOptPathPicker("Change G3MTool path", "", async (_event, state) => {
+                //var res = await window.electronAPI.invoke('installDeltamodCLI', []);
+                /*var res = true;
+                if (res) {
+                    await htmlAlert("Done","Operation successful!",[{text: "Ok", resolveWith:''}]);
+                }*/
+                state.small.innerText = "dingus";
+            }, "Open");
+
+            await addOptPathPicker("Change UndertaleModCli path", "", async (_event, state) => {
+                /*var res = true;
+                if (res) {
+                    await htmlAlert("Done","Operation successful!",[{text: "Ok", resolveWith:''}]);
+                }*/
+                state.small.innerText = "dingus";
             }, "Open");
 
             break;

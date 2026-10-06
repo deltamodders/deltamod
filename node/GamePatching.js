@@ -6,13 +6,13 @@ const { dialog } = require('electron');
 const TOML = require('smol-toml');
 const pty = require('node-pty');
 
-const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'g3mtool', 'G3MTool.exe') : path.join(__dirname, '../', 'tools', 'g3mtool', 'G3MTool');
-const UTMT_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'utmt', 'win', 'UndertaleModCli.exe') : path.join(__dirname, '../', 'tools', 'utmt', 'linux', 'UndertaleModCli');
+const { get_tools } = require('./GamePatchingTools');
 
-async function g3mtool(callback, args, gamePath) {
+async function g3mtool(callback, args, gamePath, tool_bins) {
+    const tool_bin = tool_bins.g3mtool;
     console.log('Running G3MTool with args: G3MTool', args.join(' '));
     return new Promise((resolve, reject) => {
-        const g3mtoolProcess = spawn(PATCHER_PATH, args, { stdio: 'pipe', cwd: gamePath });
+        const g3mtoolProcess = spawn(tool_bin, args, { stdio: 'pipe', cwd: gamePath });
         var output = '';
         g3mtoolProcess.stdout.on('data', (data) => {
             output += data.toString();
@@ -32,16 +32,17 @@ async function g3mtool(callback, args, gamePath) {
                     reject(new Error('This mod can\'t be merged due to an xdelta being applied to the wrong source file. Please make sure your mods are compatible with your install.'));
                     return;
                 }
-                reject(new Error(`G3MTool exited with code ${code}\n\nCOMMAND: ${PATCHER_PATH} ${args.join(' ')}\nOUTPUT:\n${output}`));
+                reject(new Error(`G3MTool exited with code ${code}\n\nCOMMAND: ${tool_bin} ${args.join(' ')}\nOUTPUT:\n${output}`));
             }
         });
     });
 }
 
-async function utmt(callback, args) {
+async function utmt(callback, args, tool_bins) {
+    const tool_bin = tool_bins.utmt;
     console.log('Running UndertaleModCli with args: UndertaleModCli', args.map(x => '"' + x + '"').join(' '));
     return new Promise((resolve, reject) => {
-        const ptyProcess = pty.spawn(UTMT_PATH, args, { cwd: path.dirname(UTMT_PATH) });
+        const ptyProcess = pty.spawn(tool_bin, args, { cwd: path.dirname(tool_bin) });
         let output = '';
         let closed = false;
         
@@ -62,7 +63,7 @@ async function utmt(callback, args) {
             if (code === 0) {
                 resolve();
             } else {
-                reject(new Error(`UndertaleModCli exited with code ${code}\n\nCOMMAND: ${UTMT_PATH} ${args.join(' ')}\nOUTPUT:\n${output}`));
+                reject(new Error(`UndertaleModCli exited with code ${code}\n\nCOMMAND: ${tool_bin} ${args.join(' ')}\nOUTPUT:\n${output}`));
             }
         });
         
@@ -108,13 +109,14 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
         if (logCallback) logCallback(args.join(' '));
     }
 
-    if (!fs.existsSync(PATCHER_PATH)) {
+    const tool_bins = get_tools();
+
+    if (!fs.existsSync(tool_bins.g3mtool)) {
         throw new Error('G3MTool not found in tools folder.');
     }
 
     // ensure the G3MTool-linux file is executable
-    maybeChmodExec(PATCHER_PATH);
-    maybeChmodExec(UTMT_PATH);
+    Object.values(tool_bins).forEach(maybeChmodExec);
     
     var moddingInfo = fs.readdirSync(modFolder).map(folder => {
         var moddingXML = path.join(modFolder, folder, 'modding.xml');
@@ -232,12 +234,12 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
         try {
             if (patches.length > 1) {
-                var output = await g3mtool(log, ['patch', 'merge', newp, ...patches.map(p => p.patch), '-a', path.join(gamePath, targetFile)], gamePath).catch(e =>  {
+                var output = await g3mtool(log, ['patch', 'merge', newp, ...patches.map(p => p.patch), '-a', path.join(gamePath, targetFile)], gamePath, tool_bins).catch(e =>  {
                     throw new Error(`Error merging patches for ${targetFile}: ${e.message}`);
                 });
             }
             else {
-                var output = await g3mtool(log, ['patch', 'apply', relativeBackupFile, patches[0].patch, relativeTargetFile], gamePath).catch(e =>  {
+                var output = await g3mtool(log, ['patch', 'apply', relativeBackupFile, patches[0].patch, relativeTargetFile], gamePath, tool_bins).catch(e =>  {
                     throw new Error(`Error applying patch for ${targetFile}: ${e.message}`);
                 });
             }
@@ -284,7 +286,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
             log(`Applying CSX ${patch.patch} to ${patch.to}...`);
 
-            var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath, '--overwrite']).catch(e =>  {
+            var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath, '--overwrite'], tool_bins).catch(e =>  {
                 throw new Error(`Error applying CSX patch for ${targetPath}: ${e.message}`);
             });
             performedCsxPatches++;
