@@ -61,11 +61,12 @@ function login() {
 
 async function isLoggedIn() {
     try {
-        var accountInfo = AccountManager.getAccountInfo('itch') || "null";
+        var accountInfo = AccountManager.getAccountInfo('itch');
     }
     catch (e) {
         return false;
     }
+    if (!accountInfo) return false;
 
     var resp = await axios.get(BASE_API_URL + '/deltamod_itch/' + accountInfo.token);
 
