@@ -8,7 +8,7 @@ const { error } = require("console");
 const { importMod } = require("./Modstore");
 const fs = require("fs");
 const path = require("path");
-const { dialog, app } = require("electron");
+const { dialog, app, Notification } = require("electron");
 const { page, setSharedVar } = require("./Utils");
 const { errorWin } = require("./ErrorWin");
 const mime = require("mime-types");
@@ -178,6 +178,7 @@ async function handleProtocolLaunch(url) {
 
     switch (command) {
         case "gb": {
+            require('./Utils').page('goc-dl');
             if (!isFeatureEnabled("GB-OneClick")) break;
             if (args.length < 3) break;
 
@@ -258,13 +259,11 @@ async function handleProtocolLaunch(url) {
 
             log("remote download credentials saved:", memberID, secretKey);
 
-            dialog.showMessageBox({
-                type: 'info',
-                title: 'Remote Download',
-                message: 'Deltamod has been paired with GameBanana\'s remote install successfully.',
-                buttons: ['OK']
-            });
-            
+            new Notification({
+                title: "Deltamod",
+                body: "Remote download pairing was completed successfully."
+            }).show();
+
             break;
         }
 

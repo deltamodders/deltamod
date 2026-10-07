@@ -317,7 +317,6 @@ if (!app.requestSingleInstanceLock()) {
         const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
         if (maybeUrl) {
             handleProtocolLaunch(maybeUrl);
-            page('goc-dl');
             if (win) win.focus();
         }
     });
