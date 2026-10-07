@@ -257,6 +257,14 @@ async function handleProtocolLaunch(url) {
             fs.writeFileSync(System.getSystemFile('remotedl', true), JSON.stringify({ memberID, secretKey }));
 
             log("remote download credentials saved:", memberID, secretKey);
+
+            dialog.showMessageBox({
+                type: 'info',
+                title: 'Remote Download',
+                message: 'Deltamod has been paired with GameBanana\'s remote install successfully.',
+                buttons: ['OK']
+            });
+            
             break;
         }
 
