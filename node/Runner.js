@@ -21,6 +21,8 @@ const { isFeatureEnabled } = require('./FeatureFlags');
 const { PARTITION } = require('./Config');
 const registerIPCHandlers = require('./IPCHandlers');
 
+require('./RemoteDL.js'); // Start GameBanana remote download check loop
+
 // --- Global Setup & State ---
 let win;
 
@@ -242,6 +244,8 @@ function createWindow() {
 
     setWindow(win);
 
+    require('./TrayIcon.js').makeTray().catch(e => console.error('Failed to create tray icon:', e));
+
     // --- Inject State and Register IPC Handlers ---
     registerIPCHandlers({
         getWindow: () => win,
@@ -249,6 +253,22 @@ function createWindow() {
         isDevToolsEnabled,
         errorWin,
         state: appState
+    });
+
+    win.on('close', (e) => {
+        var background = KeyValue.readUniqueFlag('background');
+        if (background) {
+            e.preventDefault();
+            win.hide();
+        }
+        else {
+            try {
+                CMode.stop();
+            }
+            catch {}
+
+            process.exit(0);
+        }
     });
 
     if (isControllerMode) {
@@ -293,6 +313,7 @@ if (!app.requestSingleInstanceLock()) {
     app.quit();
 } else {
     app.on('second-instance', (e, argv) => {
+        win?.show();
         const maybeUrl = argv.find(arg => arg.startsWith('deltamod://'));
         if (maybeUrl) {
             handleProtocolLaunch(maybeUrl);

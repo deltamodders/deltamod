@@ -7,6 +7,14 @@ const { get } = require('http');
 const crypto = require('crypto');
 const console = require('./Console.js');
 
+const KVS_DATABASE_DEFAULTS = {
+    'setup': true,
+    'audio': true,
+    'sfx': true,
+    'controller': false,
+    'aidisclaimers': true
+};
+
 function hash(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
 }
@@ -118,18 +126,11 @@ function setKVS(name, value) {
 }
 
 function loadUniqueDefaults() {
-    var defaults = {
-        'setup': true,
-        'audio': true,
-        'sfx': true,
-        'controller': false,
-    };
-
-    for (var key in defaults) {
+    for (var key in KVS_DATABASE_DEFAULTS) {
         if (!existsUniqueFlag(key)) {
-            console.log('Setting flag default for ' + key + ' to ' + defaults[key]);
+            console.log('Setting flag default for ' + key + ' to ' + KVS_DATABASE_DEFAULTS[key]);
             // set unique flags
-            writeUniqueFlag(key, defaults[key]);
+            writeUniqueFlag(key, KVS_DATABASE_DEFAULTS[key]);
         }
     }
 }
@@ -211,6 +212,7 @@ module.exports = {
     retrieve,
     kvsFlush,
     writeUniqueFlag,
+    existsUniqueFlag,
     readUniqueFlag,
     kvsWipe,
     setKVS,

@@ -221,12 +221,24 @@ module.exports = function registerIPCHandlers(context) {
     const { getGBUIConf, collections } = require('./Accounts/GameBanana.js');
 
     ipcMain.handle('isCMode', () => isControllerMode);
+    ipcMain.handle('reboot', () => {
+        app.relaunch({ args: process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')).concat(isControllerMode ? ['-controller'] : []) });
+        app.exit(0);
+    });
     ipcMain.handle('shouldGoIM', () => process.argv.includes('---im'));
     ipcMain.handle('diagnosticInfo', () => `Deltamod ${app.getVersion()} - Running on ${os.platform()} ${os.release()} - cmode ${isControllerMode ? 'on' : 'off'} - devtools ${isDevToolsEnabled ? 'enabled' : 'disabled'} - ${state.updateAvailable ? 'update available' : 'no update'}`);
     ipcMain.handle('isPackaged', () => app.isPackaged);
     ipcMain.handle('version', () => require('../package.json').version);
     ipcMain.handle('getOS', () => ({ platform: process.platform, release: os.release(), version: os.version() }));
     ipcMain.handle('isDevMode', () => process.argv.includes('--developer'));
+    ipcMain.handle('rdlCredentialsPresent', () => fs.existsSync(System.getSystemFile('remotedl', true)));
+    ipcMain.handle('rdlRemoveCredentials', (event, args) => {
+        if (fs.existsSync(System.getSystemFile('remotedl', true))) {
+            fs.unlinkSync(System.getSystemFile('remotedl', true));
+        }
+
+        return true;
+    });
 
     ipcMain.handle('sampleError', () => errorWin('This is a sample error triggered from the renderer process.'));
     ipcMain.handle('log', (event, args) => console.rendererLog(args[1], args[2], args[0]));
@@ -1077,6 +1089,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('openModFolder', (event, args) => shell.openPath(path.join(getPacketDatabase(), args[0])));
     ipcMain.handle('getUniqueFlag', (event, args) => KeyValue.readUniqueFlag(args[0].toUpperCase()));
     ipcMain.handle('setUniqueFlag', (event, args) => KeyValue.writeUniqueFlag(args[0].toUpperCase(), args[1]));
+    ipcMain.handle('existsUniqueFlag', (event, args) => KeyValue.existsUniqueFlag(args[0].toUpperCase()));
     ipcMain.handle('fetchSharedVariable', (event, args) => getSharedVar(args[0]));
     ipcMain.handle('isBaked', () => KeyValue.readKVS('baked'));
     ipcMain.handle('npsCallback', () => { if (state.callbackNPS) { state.callbackNPS(...state.callbackNPSPassWith); state.callbackNPS = null; } });

@@ -250,6 +250,16 @@ async function handleProtocolLaunch(url) {
             break;
         }
 
+        case "rdl": {
+            var memberID = args.shift();
+            var secretKey = args.shift();
+
+            fs.writeFileSync(System.getSystemFile('remotedl', true), JSON.stringify({ memberID, secretKey }));
+
+            log("remote download credentials saved:", memberID, secretKey);
+            break;
+        }
+
         case "launch": {
             if (args.length < 1) break;
 
