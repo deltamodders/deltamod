@@ -28,6 +28,7 @@ const { pick_src_patch_file, pick_patch_dest_file, calculate_file_hash, mod_crea
 const { locateSteamDir } = require('@unlomtrois/steampath');
 const { processExists } = require('process-exists');
 const { createCanvas, loadImage } = require('canvas');
+const { get_tool_overrides, set_tool_overrides } = require('./GamePatchingTools');
 
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;
@@ -1121,6 +1122,8 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('getUniqueFlag', (event, args) => KeyValue.readUniqueFlag(args[0].toUpperCase()));
     ipcMain.handle('setUniqueFlag', (event, args) => KeyValue.writeUniqueFlag(args[0].toUpperCase(), args[1]));
     ipcMain.handle('existsUniqueFlag', (event, args) => KeyValue.existsUniqueFlag(args[0].toUpperCase()));
+    ipcMain.handle('toolOverridesGet', () => get_tool_overrides());
+    ipcMain.handle('toolOverridesSet', (_event, [overrides]) => set_tool_overrides(overrides));
     ipcMain.handle('fetchSharedVariable', (event, args) => getSharedVar(args[0]));
     ipcMain.handle('isBaked', () => KeyValue.readKVS('baked'));
     ipcMain.handle('npsCallback', () => { if (state.callbackNPS) { state.callbackNPS(...state.callbackNPSPassWith); state.callbackNPS = null; } });
