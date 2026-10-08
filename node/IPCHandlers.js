@@ -27,6 +27,7 @@ const { findGame } = require('./SteamUtils/FindGame');
 const { pick_src_patch_file, pick_patch_dest_file, calculate_file_hash, mod_create } = require('./CreateMod');
 const { locateSteamDir } = require('@unlomtrois/steampath');
 const { processExists } = require('process-exists');
+const { createCanvas, loadImage } = require('canvas');
 
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;
@@ -220,13 +221,50 @@ module.exports = function registerIPCHandlers(context) {
     const { getWindow, isControllerMode, isDevToolsEnabled, errorWin, state } = context;
     const { getGBUIConf, collections } = require('./Accounts/GameBanana.js');
 
+    ipcMain.handle('startModDrag', async (e, args) => {
+        const iconPath = path.join(System.getPacketDatabase(), args[0], 'icon.png');
+        let dragIcon = iconPath;
+        try {
+            const image = await loadImage(iconPath);
+            const canvas = createCanvas(32, 32);
+            canvas.getContext('2d').drawImage(image, 0, 0, 32, 32);
+            const dragIconDir = path.join(app.getPath('temp'), 'deltamod');
+            fs.mkdirSync(dragIconDir, { recursive: true });
+            dragIcon = path.join(dragIconDir, 'drag-icon.png');
+            fs.writeFileSync(dragIcon, canvas.toBuffer('image/png'));
+        } catch (error) {
+            console.log('Unable to resize drag icon:', error);
+        }
+
+        e.sender.startDrag({
+            file: path.join(System.getPacketDatabase(), args[0]),
+            icon: dragIcon
+        });
+    });
     ipcMain.handle('isCMode', () => isControllerMode);
+    ipcMain.handle('reboot', () => {
+        app.relaunch({ args: process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')).concat(isControllerMode ? ['-controller'] : []) });
+        app.exit(0);
+    });
     ipcMain.handle('shouldGoIM', () => process.argv.includes('---im'));
     ipcMain.handle('diagnosticInfo', () => `Deltamod ${app.getVersion()} - Running on ${os.platform()} ${os.release()} - cmode ${isControllerMode ? 'on' : 'off'} - devtools ${isDevToolsEnabled ? 'enabled' : 'disabled'} - ${state.updateAvailable ? 'update available' : 'no update'}`);
     ipcMain.handle('isPackaged', () => app.isPackaged);
     ipcMain.handle('version', () => require('../package.json').version);
     ipcMain.handle('getOS', () => ({ platform: process.platform, release: os.release(), version: os.version() }));
     ipcMain.handle('isDevMode', () => process.argv.includes('--developer'));
+    ipcMain.handle('rdlGetMID', () => {
+        if (fs.existsSync(System.getSystemFile('remotedl', true))) {
+            return JSON.parse(fs.readFileSync(System.getSystemFile('remotedl', true), 'utf8')).memberID;
+        }
+        return null;
+    });
+    ipcMain.handle('rdlRemoveCredentials', (event, args) => {
+        if (fs.existsSync(System.getSystemFile('remotedl', true))) {
+            fs.unlinkSync(System.getSystemFile('remotedl', true));
+        }
+
+        return true;
+    });
 
     ipcMain.handle('sampleError', () => errorWin('This is a sample error triggered from the renderer process.'));
     ipcMain.handle('log', (event, args) => console.rendererLog(args[1], args[2], args[0]));
@@ -824,6 +862,11 @@ module.exports = function registerIPCHandlers(context) {
         }
     });
 
+    ipcMain.handle('quit', (event, args) => {
+        app.quit();
+        process.exit(0);
+    });
+
     ipcMain.handle('downloadGame', async (event, args) => {
         const win = getWindow();
         const dataFeat = GameDB.getFeatInfo(args[0], 'autodownload').data;
@@ -1077,6 +1120,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('openModFolder', (event, args) => shell.openPath(path.join(getPacketDatabase(), args[0])));
     ipcMain.handle('getUniqueFlag', (event, args) => KeyValue.readUniqueFlag(args[0].toUpperCase()));
     ipcMain.handle('setUniqueFlag', (event, args) => KeyValue.writeUniqueFlag(args[0].toUpperCase(), args[1]));
+    ipcMain.handle('existsUniqueFlag', (event, args) => KeyValue.existsUniqueFlag(args[0].toUpperCase()));
     ipcMain.handle('fetchSharedVariable', (event, args) => getSharedVar(args[0]));
     ipcMain.handle('isBaked', () => KeyValue.readKVS('baked'));
     ipcMain.handle('npsCallback', () => { if (state.callbackNPS) { state.callbackNPS(...state.callbackNPSPassWith); state.callbackNPS = null; } });

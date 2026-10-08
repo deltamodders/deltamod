@@ -59,12 +59,6 @@
 
 }
 
-
-.bar-button > span {
-    margin-top: 4px;
-    font-size: 15px !important;
-}
-
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -96,8 +90,8 @@ button:disabled {
 .bar-button {
     background-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.23);
-    font-size: 15px;
-    width: 45px;
+    font-size: 10px;
+    width: 30px;
     margin-right: 3px;
     margin-left: 3px;
     height: 30px;
@@ -105,11 +99,14 @@ button:disabled {
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: 0.6s all cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .bar-button:hover {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     cursor: pointer;
+    width: 50px;
+    scale: 1.1;
 }
 
 .close-button:hover {
@@ -325,7 +322,7 @@ h1 {
 
 .viewport {
     position: absolute;
-    max-width: 1200px;
+    max-width: 1300px;
     top: calc(var(--topbar-height) * 1);
     left: calc(var(--sidebar-size) * 1 + 20px);
     right: 0;

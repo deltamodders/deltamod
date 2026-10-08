@@ -8,7 +8,7 @@ const { error } = require("console");
 const { importMod } = require("./Modstore");
 const fs = require("fs");
 const path = require("path");
-const { dialog, app } = require("electron");
+const { dialog, app, Notification } = require("electron");
 const { page, setSharedVar } = require("./Utils");
 const { errorWin } = require("./ErrorWin");
 const mime = require("mime-types");
@@ -178,6 +178,7 @@ async function handleProtocolLaunch(url) {
 
     switch (command) {
         case "gb": {
+            require('./Utils').page('goc-dl');
             if (!isFeatureEnabled("GB-OneClick")) break;
             if (args.length < 3) break;
 
@@ -247,6 +248,23 @@ async function handleProtocolLaunch(url) {
 
             // cleanup
             rmSync(filepath);
+            break;
+        }
+
+        case "rdl": {
+            var memberID = args.shift();
+            var secretKey = args.shift();
+
+            fs.writeFileSync(System.getSystemFile('remotedl', true), JSON.stringify({ memberID, secretKey }));
+
+            log("remote download credentials saved:", memberID, secretKey);
+
+            new Notification({
+                title: "Deltamod",
+                body: "Remote download pairing was completed successfully.",
+                icon: join(__dirname, "..", "assets", "icon_rdl.png")
+            }).show();
+
             break;
         }
 

@@ -259,10 +259,8 @@ async function renderAccount(backendName, displayName, cat, tbody = document.que
     }
     else {
         await addButton("Login", "Adds a " + displayName + " account to Deltamod.", async () => {
-            var overlay = makeOverlay("Logging in to " + displayName + "...");
             await window.electronAPI.invoke('login_account', [backendName]);
             window._pageArguments = {cat: cat};
-            overlay.obj.remove();
             page('options');
         }, "Login", !userInfo.loggedIn, "You are already logged in to " + displayName + ".", '');
     }
@@ -314,7 +312,8 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
         }
     });
     switch (cat) {
-        case 'gen':            
+        case 'gen':       
+            await addCheckboxOption("Enable background mode", "If enabled, Deltamod will run in the background when the window is closed. This option is recommended for using GameBanana's remote install feature.", 'background', false);     
             await addButton("Open mod folder", "Open the folder where your mods are stored.", async () => {
                 await window.electronAPI.invoke('openSysFolder', ['mods']);
             }, "Open");
@@ -437,6 +436,19 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             break;
         case 'gb':
             await renderAccount('GameBanana', 'GameBanana', 'gb');
+            var rdl = await window.electronAPI.invoke('rdlGetMID', []);
+            if (rdl != null) {
+                var tr = document.createElement('th');
+                tr.colSpan = 2;
+                tr.innerHTML = "Remote download settings";
+                tbody.appendChild(tr);
+
+                await addButton('Remove remote download credentials', 'Removes your GameBanana remote download credentials from Deltamod.', async () => {
+                    await window.electronAPI.invoke('rdlRemoveCredentials', []);
+                    window._pageArguments = {cat: 'gb'};
+                    page('options');
+                }, "Remove", true, '', 'red');
+            }
             break;
         case 'itch':
             await renderAccount('Itch', 'Itch.io', 'itch');
