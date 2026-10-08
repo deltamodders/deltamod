@@ -38,6 +38,9 @@ async function createMod(mod, compatible, loggedIn) {
     titleSpan.style.gap = '8px';
     titleSpan.style.marginBottom = '4px';
     titleSpan.id = `modtitle-${mod.uid}`;
+    titleSpan.addEventListener('mousedown', async (e) => {
+        invoke('startModDrag', [mod.folder]);
+    });
     modNameContainer.appendChild(titleSpan);
 
     if (window._pageArguments && window._pageArguments.highlightMod === mod.uid) {

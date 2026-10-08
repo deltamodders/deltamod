@@ -73,6 +73,13 @@ async function crawlComment(comment, div, depth = 0) {
     stampsDiv.style.alignItems = 'center';
     contentDiv.appendChild(stampsDiv);
 
+    if (comment._iPinLevel != 0) {
+        var pin = document.createElement('span');
+        pin.className = 'pinIcon';
+        pin.innerHTML = icon('keep');
+        commentDiv.appendChild(pin);
+    }
+
     try {
         (comment._aStamps || []).forEach(stampObj => {
             var stamp = document.createElement('span');
@@ -95,8 +102,7 @@ async function crawlComment(comment, div, depth = 0) {
                 const reply = repliesJson._aRecords[i];
                 await crawlComment(reply, div, depth + 1);
             }
-        }
-        catch (e) {
+        } catch (e) {
             console.error(e);
         }
     }

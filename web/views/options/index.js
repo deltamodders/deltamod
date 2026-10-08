@@ -259,10 +259,8 @@ async function renderAccount(backendName, displayName, cat, tbody = document.que
     }
     else {
         await addButton("Login", "Adds a " + displayName + " account to Deltamod.", async () => {
-            var overlay = makeOverlay("Logging in to " + displayName + "...");
             await window.electronAPI.invoke('login_account', [backendName]);
             window._pageArguments = {cat: cat};
-            overlay.obj.remove();
             page('options');
         }, "Login", !userInfo.loggedIn, "You are already logged in to " + displayName + ".", '');
     }
@@ -438,13 +436,11 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             break;
         case 'gb':
             await renderAccount('GameBanana', 'GameBanana', 'gb');
-            var rdl = await window.electronAPI.invoke('rdlCredentialsPresent', []);
-            if (rdl) {
-                var td = document.createElement('td');
-                td.colSpan = 2;
-                td.innerHTML = `Remote download settings`;
-                var tr = document.createElement('tr');
-                tr.appendChild(td);
+            var rdl = await window.electronAPI.invoke('rdlGetMID', []);
+            if (rdl != null) {
+                var tr = document.createElement('th');
+                tr.colSpan = 2;
+                tr.innerHTML = "Remote download settings";
                 tbody.appendChild(tr);
 
                 await addButton('Remove remote download credentials', 'Removes your GameBanana remote download credentials from Deltamod.', async () => {

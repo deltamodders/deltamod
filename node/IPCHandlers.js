@@ -27,6 +27,7 @@ const { findGame } = require('./SteamUtils/FindGame');
 const { pick_src_patch_file, pick_patch_dest_file, calculate_file_hash, mod_create } = require('./CreateMod');
 const { locateSteamDir } = require('@unlomtrois/steampath');
 const { processExists } = require('process-exists');
+const { createCanvas, loadImage } = require('canvas');
 
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;
@@ -220,6 +221,26 @@ module.exports = function registerIPCHandlers(context) {
     const { getWindow, isControllerMode, isDevToolsEnabled, errorWin, state } = context;
     const { getGBUIConf, collections } = require('./Accounts/GameBanana.js');
 
+    ipcMain.handle('startModDrag', async (e, args) => {
+        const iconPath = path.join(System.getPacketDatabase(), args[0], 'icon.png');
+        let dragIcon = iconPath;
+        try {
+            const image = await loadImage(iconPath);
+            const canvas = createCanvas(32, 32);
+            canvas.getContext('2d').drawImage(image, 0, 0, 32, 32);
+            const dragIconDir = path.join(app.getPath('temp'), 'deltamod');
+            fs.mkdirSync(dragIconDir, { recursive: true });
+            dragIcon = path.join(dragIconDir, 'drag-icon.png');
+            fs.writeFileSync(dragIcon, canvas.toBuffer('image/png'));
+        } catch (error) {
+            console.log('Unable to resize drag icon:', error);
+        }
+
+        e.sender.startDrag({
+            file: path.join(System.getPacketDatabase(), args[0]),
+            icon: dragIcon
+        });
+    });
     ipcMain.handle('isCMode', () => isControllerMode);
     ipcMain.handle('reboot', () => {
         app.relaunch({ args: process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')).concat(isControllerMode ? ['-controller'] : []) });
@@ -231,7 +252,12 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('version', () => require('../package.json').version);
     ipcMain.handle('getOS', () => ({ platform: process.platform, release: os.release(), version: os.version() }));
     ipcMain.handle('isDevMode', () => process.argv.includes('--developer'));
-    ipcMain.handle('rdlCredentialsPresent', () => fs.existsSync(System.getSystemFile('remotedl', true)));
+    ipcMain.handle('rdlGetMID', () => {
+        if (fs.existsSync(System.getSystemFile('remotedl', true))) {
+            return JSON.parse(fs.readFileSync(System.getSystemFile('remotedl', true), 'utf8')).memberID;
+        }
+        return null;
+    });
     ipcMain.handle('rdlRemoveCredentials', (event, args) => {
         if (fs.existsSync(System.getSystemFile('remotedl', true))) {
             fs.unlinkSync(System.getSystemFile('remotedl', true));
@@ -834,6 +860,11 @@ module.exports = function registerIPCHandlers(context) {
             errorWin(`Couldn't patch and run game: ${err.message}`);
             return false;
         }
+    });
+
+    ipcMain.handle('quit', (event, args) => {
+        app.quit();
+        process.exit(0);
     });
 
     ipcMain.handle('downloadGame', async (event, args) => {

@@ -261,7 +261,8 @@ async function handleProtocolLaunch(url) {
 
             new Notification({
                 title: "Deltamod",
-                body: "Remote download pairing was completed successfully."
+                body: "Remote download pairing was completed successfully.",
+                icon: join(__dirname, "..", "assets", "icon_rdl.png")
             }).show();
 
             break;

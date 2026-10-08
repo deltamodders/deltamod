@@ -134,6 +134,9 @@ async function createMod(mod) {
     img.style.width = IMAGE_DIMENSION + 'px';
     img.style.height = IMAGE_DIMENSION + 'px';
     img.style.objectFit = 'cover';
+    img.addEventListener('mousedown', async (e) => {
+        invoke('startModDrag', [mod.folder]);
+    });
     imageContainer.appendChild(img);
 
     imageContainer.oncontextmenu = async e => {

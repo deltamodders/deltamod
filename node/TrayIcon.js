@@ -1,7 +1,7 @@
 const { Tray, Menu } = require('electron');
 const path = require('path');
 async function makeTray() {
-    const tray = new Tray(path.join(__dirname, '../', 'tray.png'));
+    const tray = new Tray(path.join(__dirname, '../assets', 'tray.png'));
 
     tray.on('click', () => {
         const contextMenu = Menu.buildFromTemplate([
