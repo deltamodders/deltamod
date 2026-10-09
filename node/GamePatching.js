@@ -177,7 +177,7 @@ function maybeChmodExec(path) {
 async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     let fullLog = '';
     function log(...args) {
-        console.log(...args);
+        console.log_internal("LOG", args, new Error().stack, 2);
         fullLog += args.join(' ') + '\n';
         if (logCallback) logCallback(args.join(' '));
     }

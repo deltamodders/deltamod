@@ -9,9 +9,9 @@ const prefixColorMap = {
 }
 const FIXED_LENGTH = 50;
 
-function log(prefix, ...args) {
-    const stack = new Error().stack;
-    const callerDetails = stack.split("\n")[3].trim();
+function log_internal(prefix, args, stack = null, stack_idx = 3) {
+    if (!stack) stack = new Error().stack;
+    const callerDetails = stack.split("\n")[stack_idx].trim();
     const callerFile = lastOfArray(callerDetails.split("\\")).split(":")[0];
     const callerLine = lastOfArray(callerDetails.split("\\")).split(":")[1];
     const callerInfo = `${callerFile} : ${callerLine}`;
@@ -23,14 +23,15 @@ function rendererLog(prefix, page, ...args) {
     process.stdout.write(colors.bold(prefixColorMap[prefix]('[' + prefix + ']')) + ' ' + colors.yellowBright('[RENDER] ' + (page !== null ? '["' + page + '"] ' : '' )) + args.join(' ') + '\n');
 }
 
-
+const l = log_internal;
 
 module.exports = {
-    log: (...a) => log('LOG', ...a),
+    log_internal,
     rendererLog,
-    warn: (...a) => log('WARN', ...a),
-    error: (...a) => log('ERROR', ...a),
-    info: (...a) => log('INFO', ...a),
-    debug: (...a) => log('DEBUG', ...a),
+    log: (...a) => l('LOG', a),
+    warn: (...a) => l('WARN', a),
+    error: (...a) => l('ERROR', a),
+    info: (...a) => l('INFO', a),
+    debug: (...a) => l('DEBUG', a),
     clear: () => process.stdout.write('\x1b[2J\x1b[0f'),
 };
