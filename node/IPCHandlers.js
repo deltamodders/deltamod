@@ -28,6 +28,7 @@ const { pick_src_patch_file, pick_patch_dest_file, calculate_file_hash, mod_crea
 const { locateSteamDir } = require('@unlomtrois/steampath');
 const { processExists } = require('process-exists');
 const { createCanvas, loadImage } = require('canvas');
+const Plugin = require('./Plugins');
 
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;

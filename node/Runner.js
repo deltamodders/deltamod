@@ -20,6 +20,7 @@ const { handleProtocolLaunch, registerProtocolSchemesAsPrivileged, registerProto
 const { isFeatureEnabled } = require('./FeatureFlags');
 const { PARTITION } = require('./Config');
 const registerIPCHandlers = require('./IPCHandlers');
+const Plugin = require('./Plugins');
 
 require('./RemoteDL.js'); // Start GameBanana remote download check loop
 
@@ -244,6 +245,8 @@ function createWindow() {
 
     setWindow(win);
 
+    Plugin.call('onWindowCreated', win);
+
     require('./TrayIcon.js').makeTray().catch(e => console.error('Failed to create tray icon:', e));
 
     // --- Inject State and Register IPC Handlers ---
@@ -342,6 +345,8 @@ app.whenReady().then(() => {
         const maybeUrl = process.argv.find(arg => arg.startsWith('deltamod://'));
         if (maybeUrl) handleProtocolLaunch(maybeUrl);
     }
+
+    Plugin.call('onAppReady', app);
 
     try {
         const p = KeyValue.readKVS('deltarunePath');
