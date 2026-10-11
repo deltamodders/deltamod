@@ -480,21 +480,10 @@ async function patchAndRun() {
     }
     if (!goOn) return;
 
-<<<<<<< Updated upstream
-=======
-    document.querySelectorAll('input, button:not(.bar-button):not(#closePLExtended)').forEach(cb => {
-        cb.disabled = true;
-        cb.style.opacity = '0.5';
-    });
-
-    ([...Array.from(document.getElementsByClassName('sidebar-ribbon'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
-
->>>>>>> Stashed changes
     if (selectedMods.length === 0) {
         window.electronAPI.invoke('startGame', []);
     }
     else {
-<<<<<<< Updated upstream
         page('patching');
         setTimeout(() => {
             window.electronAPI.invoke('patchAndRun', [selectedMods]);
@@ -503,55 +492,3 @@ async function patchAndRun() {
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
-=======
-        var par = document.getElementById("par");
-        par.innerHTML = "Working on it...";
-        window.electronAPI.invoke('patchAndRun', [selectedMods]);
-    }
-}
-
-window.currentPageStack.patchAndRun = patchAndRun;
-window.currentPageStack.startGame = startGame;
-
-window.currentPageStack.gpl = function (message) {
-    var par = document.getElementById("par");
-    if (message != "") {
-        if (document.getElementById("patchingLogs").innerHTML.length > 10000) {
-            document.getElementById("patchingLogs").innerHTML = document.getElementById("patchingLogs").innerHTML.slice(document.getElementById("patchingLogs").innerHTML.length - 8000);
-        }
-        document.getElementById("patchingLogs").innerHTML += "<span>" + message + "</span>" + "<br>";
-        const gplElement = document.getElementById("patchingLogs");
-        gplElement.scrollTop = gplElement.scrollHeight;
-        gplElement.scrollLeft = 0;
-    }
-};
-
-window.currentPageStack.fp = async function () {
-    // when patching is complete...
-    var par = document.getElementById("par");
-
-    isPatched = true;
-    par.disabled = false;
-    par.style.opacity = '1';
-    par.innerHTML = "Launch " + (await invoke('getCurrentGameInfo', [])).name;
-    par.onclick = async () => {
-        page('gameopen');
-        window.electronAPI.invoke('npsCallback', []);
-    };
-}
-
-document.querySelector('#patchingLogs').addEventListener('click', (e) => {
-    document.querySelector('#patchingLogs').classList.add('extended');
-
-    if (document.querySelector('#patchingLogs').classList.contains('extended')) {
-        document.querySelector('#closePLExtended').style.display = 'block';
-    } else {
-        document.querySelector('#closePLExtended').style.display = 'none';
-    }
-});
-
-document.querySelector('#closePLExtended').addEventListener('click', (e) => {
-    document.querySelector('#patchingLogs').classList.remove('extended');
-    document.querySelector('#closePLExtended').style.display = 'none';
-});
->>>>>>> Stashed changes
