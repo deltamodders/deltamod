@@ -7,6 +7,67 @@ tr {
   height: 100%;
 }
 
+<<<<<<< Updated upstream
+=======
+#patchingLogs {
+  background-color: rgba(15, 15, 15, 0.5);
+  color: white;
+  border: 2px solid var(--theme-color);
+  border-radius: 10px;
+  height: 30vh;
+  width: 100%;
+  overflow: auto;
+  padding: 10px;
+  font-size: 8px;
+  font-family: monospace;
+  white-space: nowrap;
+  user-select: text;
+  box-sizing: border-box;
+
+  position: relative;
+  inset: auto;
+  z-index: 1;
+
+  transition:
+    inset 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    font-size 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.4s ease;
+
+  cursor: zoom-in;
+}
+
+#closePLExtended {
+  position: fixed;
+  position-anchor: auto;
+  background-color: rgb(72, 0, 0) !important;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  font-size: 16px;
+}
+
+#patchingLogs.extended {
+  position: fixed;
+  inset: 10dvh 10dvw;
+  width: auto;
+  height: auto;
+  z-index: 1000;
+  font-size: 12px;
+  border-radius: 10px;
+  background-color: rgba(10, 10, 10, 1);
+  cursor: default;
+}
+
+#patchingLogs > span {
+  user-select: text;
+  cursor: text;
+}
+
+>>>>>>> Stashed changes
 .variant-select {
   appearance: base-select;
 }

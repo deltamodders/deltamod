@@ -44,11 +44,30 @@ async function utmt(callback, args) {
         const ptyProcess = pty.spawn(UTMT_PATH, args, { cwd: path.dirname(UTMT_PATH) });
         let output = '';
         let closed = false;
+        let pendingEscape = '';
+
+        function stripTerminalControls(data) {
+            let text = pendingEscape + data.toString();
+            pendingEscape = '';
+
+            // Remove OSC title sequences and CSI cursor/screen/control sequences.
+            text = text.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '');
+            text = text.replace(/\x1b\[[0-?]*[ -\/]*[@-~]/g, '');
+
+            // Keep an incomplete escape sequence for the next PTY chunk.
+            const lastEscape = text.lastIndexOf('\x1b');
+            if (lastEscape !== -1) {
+                pendingEscape = text.slice(lastEscape);
+                text = text.slice(0, lastEscape);
+            }
+
+            return text.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
+        }
         
         ptyProcess.on('data', (data) => {
-            var dataStr = data.toString();
-            dataStr = dataStr.replace(/\x1B\[[0-9;]*m/g, '').trim();
-            if (dataStr.length == 0) return;
+            var dataStr = stripTerminalControls(data);
+            
+            if (dataStr.trim().length == 0) return;
             output += dataStr;
             process.stdout.write(dataStr);
             callback("[UTMT] " + dataStr);

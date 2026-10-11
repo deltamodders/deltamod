@@ -225,20 +225,20 @@ async function renderAccount(backendName, displayName, cat, tbody = document.que
     var flexdiv = document.createElement('div');
     flexdiv.style.display = 'flex';
     flexdiv.style.alignItems = 'center';
-    flexdiv.style.gap = '10px';
+    flexdiv.style.gap = '20px';
     td.appendChild(flexdiv);
 
     var img = document.createElement('img');
     img.src = userInfo.pic || './img/mod-placeholder.png';
-    img.style.width = '32px';
-    img.style.height = '32px';
-    img.style.border = '1px solid var(--theme-color)';
+    img.style.width = '64px';
+    img.style.height = '64px';
     flexdiv.appendChild(img);
 
     img.style.borderRadius = '5px';
     var span = document.createElement('span');
     flexdiv.appendChild(span);
     span.innerText = `Currently logged in as ${userInfo.name}`;
+    span.style.fontSize = '1.2em';
 
     if (userInfo.name == undefined) {
         span.innerText = "You aren't logged in to " + displayName + ".";

@@ -15,6 +15,7 @@
     /* bold fucks shit up the entire font */
 }
 
+
 /* I did everything to use Calibri but I realized I actually want a font from my library.... */
 @font-face {
     font-family: "Calibri";
@@ -66,6 +67,10 @@ h2 {
 
 p {
     font-size: 16px;
+}
+
+:root {
+  interpolate-size: allow-keywords;
 }
 
 button:not(.sidebar-button):not(:hover) {
