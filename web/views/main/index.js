@@ -364,6 +364,7 @@ function loadInst(index) {
 }
 
 (async () => {
+    let canMakeNoFoundRow = true;
     const errorBanner = document.getElementById("error-banner");
 
     var { modList, errors } = (await window.electronAPI.invoke('getModList', []));
@@ -374,6 +375,31 @@ function loadInst(index) {
     else {
         // sort by name ascending by default
         modList = modList.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    if (localStorage.getItem('aiFilter') == 'true') {
+        modList = modList.filter(x => x.ai == 'no' || x.ai == 'na');
+        document.getElementById('aiMods').checked = true;
+    }
+    if (window._pageArguments && window._pageArguments.searchTerm) {
+        document.getElementById('searchMods').value = window._pageArguments.searchTerm;
+        
+        modList = modList.filter(x => x.name.toLowerCase().includes(window._pageArguments.searchTerm.toLowerCase()));
+
+        canMakeNoFoundRow = false;
+
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.colSpan = 3;
+        td.style.paddingLeft = '20px';
+        td.style.fontSize = '18px';
+        td.style.fontWeight = 'bold';
+        td.style.backgroundColor = 'rgba(40, 40, 40, 0.05)';
+        td.style.color = '#fff';
+        td.innerHTML = `<span>Found ${modList.length} mod(s) matching "${purifyDescription(window._pageArguments.searchTerm)}"</span>`;
+        tr.appendChild(td);
+        document.getElementById('modlist').appendChild(tr);
+
+        delete window._pageArguments.searchTerm;
     }
     let addedAuthors = [];
     for (const x of modList.filter(x => !x.isIncompatible)) {
@@ -425,6 +451,24 @@ function loadInst(index) {
         }
     };
 
+    document.getElementById('aiMods').onclick = async (e) => {
+        var value = e.target.checked;
+
+        localStorage.setItem('aiFilter', value ? 'true' : 'false');
+
+        window._pageArguments.searchTerm = document.getElementById('searchMods').value;
+
+        page('');
+    };
+
+    document.getElementById('searchBtn').onclick = async (e) => {
+        var value = document.getElementById('searchMods').value;
+
+        window._pageArguments = window._pageArguments || {};
+        window._pageArguments.searchTerm = value;
+        page('');
+    };
+
     if (errors.length > 0) {
         errorBanner.onclick = () => {
             rew();
@@ -434,7 +478,7 @@ function loadInst(index) {
         errorBanner.style.display = "inherit";
     } else errorBanner.style.display = "none";
 
-    if (modList.filter(x => !x.isIncompatible).length === 0) {
+    if (modList.filter(x => !x.isIncompatible).length === 0 && canMakeNoFoundRow) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 3;
@@ -454,12 +498,20 @@ function loadInst(index) {
         //document.getElementById('par').innerText = 'Run without patches';
     }
 
-    window._pageArguments = null;
-
     genbtnstyles();
 })();
 
+async function startGame() {
+    page('gameopen');
+    window.electronAPI.invoke('startGame', []);
+}
+
+let isPatched = false;
+
 async function patchAndRun() {
+    if (isPatched) {
+        return;
+    }
     var allChecks = Array.from(document.querySelectorAll('input[type="checkbox"]')).filter(cb => cb.id.startsWith('modcheck-'));
     var selectedMods = allChecks.filter(cb => cb.checked).map(cb => cb.id.replace('modcheck-', ''));
     console.log('Selected mods:', selectedMods);
@@ -480,11 +532,17 @@ async function patchAndRun() {
     }
     if (!goOn) return;
 
+    document.querySelectorAll('input, button:not(.bar-button)').forEach(cb => {
+        cb.disabled = true;
+        cb.style.opacity = '0.5';
+    });
+
+    ([...Array.from(document.getElementsByClassName('sidebar-ribbon'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
+
     if (selectedMods.length === 0) {
         window.electronAPI.invoke('startGame', []);
     }
     else {
-        page('patching');
         setTimeout(() => {
             window.electronAPI.invoke('patchAndRun', [selectedMods]);
         }, 1000);
@@ -492,3 +550,28 @@ async function patchAndRun() {
 }
 
 window.currentPageStack.patchAndRun = patchAndRun;
+window.currentPageStack.startGame = startGame;
+
+window.currentPageStack.gpl = function (message) {
+    if (message != "") {
+        if (document.getElementById("patchingLogs").innerHTML.length > 10000) {
+            document.getElementById("patchingLogs").innerHTML = document.getElementById("patchingLogs").innerHTML.slice(document.getElementById("patchingLogs").innerHTML.length - 8000);
+        }
+        document.getElementById("patchingLogs").innerHTML += message + "<br>";
+        const gplElement = document.getElementById("patchingLogs");
+        gplElement.scrollTop = gplElement.scrollHeight;
+        gplElement.scrollLeft = 0;
+    }
+};
+
+window.currentPageStack.fp = async function () {
+    // when patching is complete...
+    isPatched = true;
+    document.getElementById("par").disabled = false;
+    document.getElementById("par").style.opacity = '1';
+    document.getElementById("par").innerHTML = "Launch " + (await invoke('getCurrentGameInfo', [])).name;
+    document.getElementById("par").onclick = async () => {
+        page('gameopen');
+        window.electronAPI.invoke('npsCallback', []);
+    };
+}

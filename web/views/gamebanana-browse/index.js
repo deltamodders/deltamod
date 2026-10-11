@@ -419,11 +419,18 @@ function buildModDetails(mod, featuredIDs, img) {
 }
 
 function buildModActions(mod, table, tr) {
-    const td1 = document.createElement('td');
-    td1.style.textAlign = 'center';
+    const tdc1 = document.createElement('td');
+
+    const td1 = document.createElement('div');
+    td1.style.display = 'flex';
+    td1.style.alignItems = 'center';
+    td1.style.justifyContent = 'center';
+    td1.style.gap = '2px';
+    tdc1.appendChild(td1);
 
     const dlBtn = document.createElement('button');
     dlBtn.innerHTML = icon('download', '0.9em');
+    dlBtn.style.padding = '10px';
     dlBtn.className = 'serietast';
     dlBtn.onclick = async () => {
         dlBtn.disabled = true;
@@ -513,8 +520,11 @@ function buildModActions(mod, table, tr) {
     td1.appendChild(dlBtn);
 
     const commentBtn = document.createElement('button');
-    commentBtn.innerHTML = icon('comment', '0.9em');
+    commentBtn.innerHTML = icon('comment', '0.9em') + ' ' + (mod._nPostCount || 0);
     commentBtn.className = 'serietast';
+    commentBtn.style.display = 'inline-flex';
+    commentBtn.style.alignItems = 'center';
+    commentBtn.style.gap = '4px';
     commentBtn.style.marginLeft = '8px';
     commentBtn.onclick = async () => {
         window._pageArguments = { id: mod._idRow, model: mod._sModelName };
@@ -523,18 +533,21 @@ function buildModActions(mod, table, tr) {
     td1.appendChild(commentBtn);
 
     const likeBtn = document.createElement('button');
-    likeBtn.innerHTML = icon('mood_heart', '0.9em');
+    likeBtn.innerHTML = icon('mood_heart', '0.9em') + ' ' + (mod._nLikeCount || 0);
     likeBtn.className = 'serietast';
     likeBtn.style.marginLeft = '8px';
+    likeBtn.style.display = 'inline-flex';
+    likeBtn.style.alignItems = 'center';
+    likeBtn.style.gap = '4px';
     likeBtn.disabled = !isGBLoggedIn;
     likeBtn.onclick = async () => {
         const res = await window.electronAPI.invoke('gbLikeMod', [mod._sModelName, mod._idRow]);
         if (res.status === 200) {
-            likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em');
+            likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + ' ' + (mod._nLikeCount + 1 || 1);
             likeBtn.disabled = true;
         } else if (res.data._sErrorCode.toLowerCase() === 'already_liked') {
-            await htmlAlert("Can't like the mod", "You've already liked this mod. Can't get any more likes than that!", [{text:'Ok', resolveWith:'ok'}], 'sentiment_very_satisfied');
-            likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em');
+            await htmlAlert("Can't like the mod", "You've already liked this mod.", [{text:'Ok', resolveWith:'ok'}], 'sentiment_very_satisfied');
+            likeBtn.innerHTML = icon('sentiment_very_satisfied', '0.9em') + ' ' + (mod._nLikeCount || 0);
             likeBtn.disabled = true;
         } else {
             await htmlAlert("Can't like the mod", res.data._sErrorCode, [{text:'Ok', resolveWith:'ok'}], 'error');
@@ -542,7 +555,7 @@ function buildModActions(mod, table, tr) {
     };
     td1.appendChild(likeBtn);
 
-    return td1;
+    return tdc1;
 }
 
 async function renderMods(table, GB_API, filter, gameID) {

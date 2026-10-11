@@ -2,29 +2,7 @@
     <div class="spacebet">
         <div class="p1">
             <h1 id="ptitle" style="margin-bottom: 5px;">Patch menu</h1>
-            <span style="display: flex; justify-content: left; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span>
-                    Sort by
-                </span> <select name="sortWay" id="sortWay" style="width: 100px !important; margin: 0;">
-                    <option value="asc">Name (A-Z)</option>
-                    <option value="desc">Name (Z-A)</option>
-                    <option value="size-asc">Size (Smallest)</option>
-                    <option value="size-desc">Size (Largest)</option>
-                    <option value="author">By author</option>
-                </select>
-            </span>
-        </div>
-        <div class="p2">
-            <button onclick="window.currentPageStack.patchAndRun()" id="par">
-                <span class="material-symbols-outlined" style="scale: 1.2;">
-                    arrow_circle_right
-                </span>
-                Patch and run
-            </button>
-        </div>
-    </div>
-    <div style="overflow-y: scroll; min-height: 530px; overflow-x: hidden; mask-image: linear-gradient(180deg, black 90%, transparent 100%); padding: 0 0 20px 0;">
-        <table style="width: 100%; max-height: 200px; overflow-y: scroll;" id="modtable">
+            <table style="width: 100%; max-height: 200px; overflow-y: scroll;" id="modtable">
             <colgroup>
                 <col style="width: 85%;">
                 <col style="width: 15%;">
@@ -62,6 +40,47 @@
                 </tr>
             </tfoot>
         </table>
+        </div>
+        <div class="p2">
+            <div class="checkback">
+                <!-- sort by -->
+                <span style="display: flex; justify-content: left; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <span>
+                        Sort by
+                    </span> <select name="sortWay" id="sortWay" style="width: 100px !important; margin: 0;">
+                        <option value="asc">Name (A-Z)</option>
+                        <option value="desc">Name (Z-A)</option>
+                        <option value="size-asc">Size (Smallest)</option>
+                        <option value="size-desc">Size (Largest)</option>
+                        <option value="author">By author</option>
+                    </select>
+                </span>
+                <!-- filter by -->
+                <span style="display: flex; justify-content: left; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <input type="checkbox" id="aiMods" style="margin: 0;">
+                    <span>
+                        Hide AI-generated mods
+                    </span>
+                </span>
+                <!-- search -->
+                <span style="margin-bottom: 10px; display: flex; flex-direction: column; gap: 2px;">
+                    <input type="text" id="searchMods" placeholder="Search mods..." style="margin-bottom: 10px;" onkeydown="if(event.key === 'Enter'){document.getElementById('searchBtn').click();}">
+                    <button id="searchBtn" style="width: 100%; padding: 5px;">Search</button>
+                </span>
+
+                <div id="patchingLogs">
+                    Patching logs will appear here.
+                </div>
+            </div>
+            <div class="launchOptions">
+                <button onclick="window.currentPageStack.patchAndRun()" id="par" class="patch-button">
+                    Patch game
+                </button>
+                <button onclick="window.currentPageStack.startGame()" id="lva" class="patch-button">
+                    Launch vanilla game
+                </button>
+            </div>
+        </div>
     </div>
 
         <dialog class="error-list-dialog" id="error-list-dialog">

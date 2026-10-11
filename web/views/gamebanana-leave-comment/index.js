@@ -59,6 +59,13 @@ async function crawlComment(comment, div, depth = 0) {
     commenter.innerText = comment._aPoster._sName || 'Unknown';
     contentDiv.appendChild(commenter);
 
+    comment._aLabels?.forEach(label => {
+        var labelSpan = document.createElement('span');
+        labelSpan.classList.add('label');
+        labelSpan.innerText = label;
+        contentDiv.appendChild(labelSpan);
+    });
+
     contentDiv.appendChild(document.createElement('br'));
 
     var commentText = document.createElement('span');
@@ -72,6 +79,29 @@ async function crawlComment(comment, div, depth = 0) {
     stampsDiv.style.marginTop = '10px';
     stampsDiv.style.alignItems = 'center';
     contentDiv.appendChild(stampsDiv);
+
+    contentDiv.appendChild(document.createElement('br'));
+
+    var timeDiv = document.createElement('span');
+    timeDiv.style.fontSize = '0.8em';
+    timeDiv.style.color = '#888';
+    var elapsedSeconds = Math.floor((Date.now() - comment._tsDateAdded * 1000) / 1000);
+    var timeValue = elapsedSeconds;
+    var timeUnit = 'second';
+    if (elapsedSeconds >= 86400) {
+        timeValue = Math.floor(elapsedSeconds / 86400);
+        timeUnit = 'day';
+    }
+    else if (elapsedSeconds >= 3600) {
+        timeValue = Math.floor(elapsedSeconds / 3600);
+        timeUnit = 'hour';
+    }
+    else if (elapsedSeconds >= 60) {
+        timeValue = Math.floor(elapsedSeconds / 60);
+        timeUnit = 'minute';
+    }
+    timeDiv.innerText = `${timeValue} ${timeUnit}${timeValue === 1 ? '' : 's'} ago`;
+    stampsDiv.appendChild(timeDiv);
 
     if (comment._iPinLevel != 0) {
         var pin = document.createElement('span');
