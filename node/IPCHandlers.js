@@ -146,7 +146,7 @@ async function getInstallations(suppressWarnings = false) {
                 dialog.showMessageBoxSync({
                     type: 'warning',
                     title: 'Invalid Installation Found',
-                    message: `An invalid or not fully imported installation of Deltarune was found and will be removed from Deltamod: ${cname}.\n\n${storeJSON}\n\n${deltaruneInstall}`,
+                    message: `An invalid or not fully imported installation of a game was found and will be removed from Deltamod: ${cname}.\n\n${storeJSON}\n\n${deltaruneInstall}`,
                 });
             }
 
@@ -599,7 +599,6 @@ module.exports = function registerIPCHandlers(context) {
         const installPath = KeyValue.readKVS('gamePath');
 
         if (win) {
-            win.hide();
             win.webContents.send('audio', false);
         }
         //const steamDir = locateSteamDir();
@@ -664,7 +663,10 @@ module.exports = function registerIPCHandlers(context) {
             });
         }
 
-        await sleep(10000); // wait 10 seconds before checking if the game is running, to give it time to start up properly
+        while (!(await processExists((gameConfig.exeName)))) {
+            // wait for the game to start
+            await sleep(1000);
+        }
         console.log(await processExists((gameConfig.exeName)));
         var increment = 0;
         while (await processExists((gameConfig.exeName))) {
@@ -674,13 +676,12 @@ module.exports = function registerIPCHandlers(context) {
                 console.log('Game process still running...');
                 increment = 0;
             }
-            await sleep(1000); // give a second before checking if the game is still running, for multi-chapter games.
+            await sleep(500); // give a second before checking if the game is still running, for multi-chapter games.
         }
         async function restore() {
             try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
             if (isControllerMode) CMode.start();
             if (win) {
-                win.show();
                 win.webContents.send('audio', true);
                 win.webContents.send('page', 'main');
             }
@@ -804,7 +805,7 @@ module.exports = function registerIPCHandlers(context) {
         try {
             const baking = args[1] === 'baker';
             const pathname = KeyValue.readKVS('gamePath');
-            if (!pathname) return dialog.showErrorBox('Error', 'Please import a Deltarune install first.');
+            if (!pathname) return dialog.showErrorBox('Error', 'Please import a game install first.');
 
             GamePatching.restore(pathname);
 
@@ -831,7 +832,7 @@ module.exports = function registerIPCHandlers(context) {
                 return false;
             }
 
-            const notif = new Notification({ title: 'Patch complete!', body: 'Deltarune has been patched successfully!' });
+            const notif = new Notification({ title: 'Patch complete!', body: 'The game has been patched successfully!' });
             notif.on('click', () => {
                 const currentWin = getWindow();
                 if (!currentWin) return;
