@@ -1,6 +1,6 @@
 {
   "name": "deltamod",
-  "version": "2.2.0",
+  "version": "2.1.5",
   "description": "Deltarune mod manager",
   "main": "node/Runner.js",
   "homepage": "https://deltamodders.com",

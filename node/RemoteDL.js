@@ -34,13 +34,22 @@ async function check() {
         console.log('Found ' + resp.length + ' remote download(s).');
         lock = true;
         for (const url of resp) {
-            await Modstore.downloadModFromURL(url, () => {}, null, null);
-        }
+            // gb/Mod/692002/https://gamebanana.com/mmdl/1845548
+            var code = url.split('/');
+            var gbCommand = code.shift();
+            var gbModel = code.shift();
+            var gbID = code.shift();
+            var gbURL = code.join('/');
 
-        new Notification({
-            title: 'Remote download',
-            body: 'Downloaded ' + resp.length + ' mod(s) from GameBanana\'s remote install query.',
-        }).show();
+            await Modstore.downloadModFromURL(gbURL, () => {}, gbID, gbModel);
+
+            var ppage = await axios.get('https://gamebanana.com/apiv11/' + gbModel + '/' + gbID + '/ProfilePage');
+
+            new Notification({
+                title: 'Download complete',
+                body: 'Downloaded "' + ppage.data._sName + '" from GameBanana\'s remote install service.'
+            }).show();
+        }
 
         lock = false;
     }
