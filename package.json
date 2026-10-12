@@ -41,7 +41,7 @@
       "oneClick": false,
       "perMachine": true,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "Deltamod-Setup.${ext}"
+      "artifactName": "Deltamod-${version}-Setup.${ext}"
     },
     "linux": {
       "target": [
@@ -50,7 +50,7 @@
       ],
       "category": "Utility",
       "icon": "build/icon-big.png",
-      "artifactName": "Deltamod-AppImage.${ext}"
+      "artifactName": "Deltamod-${version}-AppImage.${ext}"
     },
     "protocols": [
       {
