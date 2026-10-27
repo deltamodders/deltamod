@@ -67,6 +67,10 @@ window.currentPageStack.downloadDelta = async function() {
         await (async() => {
             var game = games[l];
 
+            if (game.deprecated) {
+                return;
+            }
+
             var img = document.createElement('img');
             img.id = game.id;
             img.classList.add('gameIco');

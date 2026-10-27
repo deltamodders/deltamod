@@ -27,6 +27,8 @@
         return;
     }
 
+    var isThereDeprecated = false;
+
         for (const i in installs) {
             const install = installs[i];
 
@@ -95,13 +97,19 @@
 
                 const details = document.createElement('small');
                 {
-                    const gname = await window.electronAPI
+                    const ginfo = await window.electronAPI
                         .invoke('getGameInfo', [install.pid])
-                        .then(g => g.name);
+
+                    const gname = ginfo.name;
+
+                    if (ginfo.deprecated) {
+                        isThereDeprecated = true;
+                    }
 
                     details.innerHTML = `
                         ${icon('stadia_controller', '14px')} ${gname}<br>
                         ${icon('gite', '14px')} ${install.steam ? 'Steam' : 'Manual'}
+                        ${ginfo.deprecated ? '<br>' + icon('elderly', '14px') + ' No longer supported' : ''}
                     `;
                 }
 
@@ -278,6 +286,19 @@
 
         genbtnstyles();
 
+        if (isThereDeprecated) {
+            const warningRow = document.createElement('tr');
+            const warningCell = document.createElement('td');
+
+            warningCell.colSpan = 2;
+            warningCell.style.fontSize = '16px';
+            warningCell.innerHTML = 'Some of your game installations are no longer supported by Deltamod.';
+
+            warningRow.appendChild(warningCell);
+            // add to start of tbody
+            tbody.insertBefore(warningRow, tbody.firstChild);
+        }
+    
 })().catch(e => {
     var tbody = document.querySelector('#installations-list');
     tbody.innerHTML = '';

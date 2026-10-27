@@ -1,4 +1,5 @@
 {
+    "deprecated": true,
     "name": "Pizza Tower",
     "author": "Tour de Pizza",
     "id": "other.pizzatower",

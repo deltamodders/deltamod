@@ -626,7 +626,7 @@ if (!window.electronAPI) {
 }
 
 (async() => {
-    document.getElementById('versionTitle').innerText = '(v.' + await invoke('version',[]) + ')';
+    document.getElementById('versionTitle').innerText = '(version ' + await invoke('version',[]) + ')';
 })();
 
 

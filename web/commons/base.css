@@ -73,13 +73,17 @@ button:not(.sidebar-button):not(:hover) {
 }
 button, input, select, textarea {
     font-family: "Pixel", sans-serif;
-    font-size: 16px;
+    font-size: 15px;
     color: white;
-    background-color: rgb(15,15,15);
-    padding: 8px 11px;
-    border-radius: 5px;
+    background-color: rgb(20, 20, 20);
+    padding: 10px 12px;
+    border-radius: 3px;
     cursor: pointer;
     transition: 0.2s all;
+}
+
+input[type="checkbox"] {
+    cursor: pointer;
 }
 
 input:focus, textarea:focus {
@@ -141,7 +145,7 @@ h1 {
 table {
     width: 100%;
     border: 1px solid var(--theme-color);
-    border-radius: 10px;
+    border-radius: 5px;
     padding: 10px;
     background: rgba(40, 40, 40, 0.05);
     backdrop-filter: brightness(0.8);
@@ -158,7 +162,7 @@ table:hover {
 th,
 td {
     border: 1px solid var(--theme-color-rgbaless);
-    border-radius: 10px;
+    border-radius: 6px;
     padding: 10px 18px;
     text-align: left;
     animation: 0.2s spawn ease-in-out;
@@ -176,7 +180,7 @@ td {
 }
 th {
     color: rgba(255, 255, 255, 1);
-    border-radius: 10px;
+    border-radius: 6px;
     background-color: var(--theme-color-rgbaless);
     border: 2px solid var(--theme-color);
     animation: 0.5s spawn ease-in-out;
