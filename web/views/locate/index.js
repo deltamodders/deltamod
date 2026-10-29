@@ -67,7 +67,7 @@ window.currentPageStack.downloadDelta = async function() {
         await (async() => {
             var game = games[l];
 
-            if (game.deprecated) {
+            if (game.deprecated && !(window._pageArguments && window._pageArguments.allowDeprecated)) {
                 return;
             }
 

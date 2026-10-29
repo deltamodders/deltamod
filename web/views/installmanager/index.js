@@ -95,10 +95,11 @@
                 nameContainer.appendChild(boldName);
                 nameContainer.appendChild(editablespan);
 
+                const ginfo = await window.electronAPI
+                        .invoke('getGameInfo', [install.pid])
+
                 const details = document.createElement('small');
                 {
-                    const ginfo = await window.electronAPI
-                        .invoke('getGameInfo', [install.pid])
 
                     const gname = ginfo.name;
 
@@ -109,8 +110,13 @@
                     details.innerHTML = `
                         ${icon('stadia_controller', '14px')} ${gname}<br>
                         ${icon('gite', '14px')} ${install.steam ? 'Steam' : 'Manual'}
-                        ${ginfo.deprecated ? '<br>' + icon('elderly', '14px') + ' No longer supported' : ''}
                     `;
+                    if (ginfo.deprecated) {
+                        var deprecatedSpan = document.createElement('span');
+                        deprecatedSpan.style.color = 'orange';
+                        deprecatedSpan.innerHTML = `<br>${icon('warning', '14px')} Out of support`;
+                        details.appendChild(deprecatedSpan);
+                    }
                 }
 
                 details.classList.add('calibri');
@@ -128,8 +134,25 @@
                 goBtn = adaptForIcons(goBtn);
                 goBtn.innerHTML = icon('sync_arrow_up', '18px');
 
-                goBtn.onclick = () => {
+                goBtn.onclick = async () => {
                     console.log('Switching to installation index:', install.index);
+
+                    if (ginfo.deprecated) {
+                        var resp = await htmlAlert(
+                            'Warning',
+                            'This installation is no longer supported by Deltamod and cannot be used. What do you want to do?',
+                            [{ text: 'Delete', resolveWith: 'delete' }, { text: 'Load anyway', resolveWith: 'load' }]
+                        );
+                        if (resp === 'delete') {
+                            window.electronAPI.invoke('deleteSystemIndex', [
+                                install.index.toString(),
+                            ]);
+                        }
+                        if (resp != 'load') {
+                            return;
+                        }
+                        
+                    }
 
                     window.electronAPI.invoke('changeSystemIndex', [
                         install.index.toString(),
