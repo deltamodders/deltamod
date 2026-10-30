@@ -134,13 +134,44 @@ async function addSelectOption(name, description, options, requiresRestart = fal
     table.appendChild(tr);
 }
 
+async function addText(name, description, text, color) {
+    const table = document.querySelector('tbody');
+    const tr = document.createElement('tr');
+
+    const tdLabel = document.createElement('td');
+    const span = document.createElement('span');
+    span.className = 'optionName';
+    span.innerText = name;
+    tdLabel.appendChild(span);
+
+    tdLabel.appendChild(document.createElement('br'));
+
+    const small = document.createElement('small');
+    small.className = 'calibri';
+    small.innerHTML = description;
+    tdLabel.appendChild(small);
+
+    const tdInput = document.createElement('td');
+    tdInput.className = 'input';
+    tdInput.classList.add('center');
+
+    const textSpan = document.createElement('span');
+    textSpan.innerText = text;
+    textSpan.style.color = color;
+    tdInput.appendChild(textSpan);
+
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdInput);
+    table.appendChild(tr);
+}
+
 async function addButton(name, description, click, buttonText, enabled = true, disabledReason = '', colour = '') {
     const table = document.querySelector('tbody');
     const tr = document.createElement('tr');
 
     const tdLabel = document.createElement('td');
     const span = document.createElement('span');
-    span.innerText = name;
+    span.innerHTML = name;
     span.className = 'optionName';
     if (colour != '') {
         span.style.color = colour;
@@ -210,7 +241,7 @@ async function renderAccount(backendName, displayName, cat, tbody = document.que
 
     var userInfo = await Promise.race([
         window.electronAPI.invoke('getAccountInfo', [backendName]),
-        new Promise(resolve => setTimeout(() => resolve({ loggedIn: false }), 5000))
+        new Promise(resolve => setTimeout(() => resolve({ loggedIn: false }), 10000))
     ]);
 
     console.log("User info for " + backendName + ": " + JSON.stringify(userInfo));
@@ -436,44 +467,78 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             break;
         case 'gb':
             await renderAccount('GameBanana', 'GameBanana', 'gb');
-            var rdl = await window.electronAPI.invoke('rdlGetMID', []);
-            if (rdl != null) {
-                var tr = document.createElement('th');
-                tr.colSpan = 2;
-                tr.innerHTML = "Remote download settings";
-                tbody.appendChild(tr);
-
-                await addButton('Remove remote download credentials', 'Removes your GameBanana remote download credentials from Deltamod.', async () => {
-                    await window.electronAPI.invoke('rdlRemoveCredentials', []);
-                    window._pageArguments = {cat: 'gb'};
-                    page('options');
-                }, "Remove", true, '', 'red');
-            }
             break;
-        case 'itch':
-            await renderAccount('Itch', 'Itch.io', 'itch');
+        case 'remote':
+            var rdl = await window.electronAPI.invoke('rdlGetMID', []);
+            var info = await window.electronAPI.invoke('getAccountInfo', ['gamebanana']);
+            var gbIsLoggedIn = (info != null && info != undefined && info.loggedIn == true);
+            var isRDLImported = (rdl != null && rdl != undefined && rdl != '');
+            var hasBackground = await window.electronAPI.invoke('getUniqueFlag', ['background']);
 
-            var td = document.createElement('td');
-            td.colSpan = 2;
-            td.innerHTML = `<small style='color:#888; font-style: normal;'>
-            DELTAModders runs the server responsible for storing itch.io-related information. 
-            The itch.io account info you submit is tied to an account created on our server.
-            Please read our <a href="https://deltamodders.com/itch-privacy.pdf" target="_blank" style="color:#888;">Terms of Service and Privacy Policy</a> before using this feature.
-            </small>`;
+            if (!hasBackground) {
+                var warningTr = document.createElement('tr');
+                var warningTd = document.createElement('td');
+                warningTd.colSpan = 2;
+                warningTd.innerHTML = "<span style='color:orange;'>Note: you have background mode off - you may want to enable it so Deltamod can fetch mods even while closed.</span>";
+
+                warningTr.appendChild(warningTd);
+                tbody.appendChild(warningTr);
+            }
+
+            await addText("Remote install state", "Shows the state of the remote install feature.", isRDLImported ? "Connected" : "Not connected", isRDLImported ? "lightgreen" : "red");
+            
             var tr = document.createElement('tr');
-            tr.appendChild(td);
+            var th = document.createElement('th');
+            th.colSpan = 2;
+            th.innerHTML = "Available actions";
+            tr.appendChild(th);
             tbody.appendChild(tr);
 
-            break;
-        case 'gamejolt':
-            await addButton("wip", "wip!", async () => {
-                window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
-            }, "Open");
+            if (isRDLImported) {
+                await addButton('Remove remote download credentials', 'Removes your GameBanana remote download credentials from Deltamod.', async () => {
+                    await window.electronAPI.invoke('rdlRemoveCredentials', []);
+                    window._pageArguments = {cat: 'remote'};
+                    page('options');
+                }, "Remove", isRDLImported, 'Only available when connected');
+            }
+            else if (gbIsLoggedIn) {
+                await addButton('Pair as <img src="' + info.pic + '" alt="GameBanana" width="28" height="28" style="vertical-align: middle; border-radius: 50%; margin-left: 5px; margin-right: 5px;"> ' + info.name, 'Since you are logged in as ' + info.name + ', you can pair automatically with this account.', async () => {
+                    var res = await invoke('rdlPair', []);
+                    if (!res.success) {
+                        await htmlAlert('Error', 'Couldn\'t pair: ' + res.error, [{text: 'OK', resolveWith: 'ok'}], 'warning');
+                        return;
+                    }
+                    window._pageArguments = {cat: 'remote'};
+                    page('options');
+                }, "Open", gbIsLoggedIn, 'You must be logged in to GameBanana to use this feature.');
+            }
+
+            if (!isRDLImported) {
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 2;
+                tr.appendChild(td);
+
+                const span = document.createElement('span');
+                span.className = 'optionName';
+                span.innerText = (gbIsLoggedIn) ? "...or pair manually" : "Pair manually";
+                td.appendChild(span);
+
+                td.appendChild(document.createElement('br'));
+
+                const small = document.createElement('small');
+                small.className = 'calibri';
+                small.innerHTML = "To pair manually, go on GameBanana, select the arrow next to a GameBanana Deltamod 1-click link and select Enroll & Pair to start.";
+                td.appendChild(small);
+
+                tbody.appendChild(tr);
+            }
             break;
         case 'help':
             await addButton("Open the Deltamod tutorial", "Opens the Deltamod tutorial video by Zatmaggot in your default browser.", async () => {
                 window.open('https://www.youtube.com/watch?v=vFj0wFI5kp4', '_blank');
             }, "Open");
+
     }
     // theme adjustments
     // as far as i know this page is the only page that needs ts

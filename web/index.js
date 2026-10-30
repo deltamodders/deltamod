@@ -707,8 +707,7 @@ if (!window.electronAPI) {
     }
     // Main App Branching Route
     if (loaded.loaded) {
-        var available = await window.electronAPI.invoke('fireUpdate', []);
-        console.log('Update check complete. Update available:', available);
+        window.electronAPI.invoke('fireUpdate', []);
 
         var im = await window.electronAPI.invoke('shouldGoIM', []);
         if (im) {

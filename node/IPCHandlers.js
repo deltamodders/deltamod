@@ -36,9 +36,6 @@ let updateStackInfo = null;
 const ACCOUNT_PROVIDERS = [{
     name: 'GameBanana',
     file: './Accounts/GameBanana.js'
-}, {
-    name: 'Itch.io',
-    file: './Accounts/Itch.js'
 }];
 
 // --- IPC Helper Functions ---
@@ -253,6 +250,28 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('version', () => require('../package.json').version);
     ipcMain.handle('getOS', () => ({ platform: process.platform, release: os.release(), version: os.version() }));
     ipcMain.handle('isDevMode', () => process.argv.includes('--developer'));
+    ipcMain.handle('rdlPair', async () => {
+        var res = await require('./Accounts/GameBanana.js').pairRemoteDownload();
+        var success = res.success;
+        if (success) {
+            var command = res.pair.replace('deltamod://', '');
+            var parts = command.split('/');
+
+            var command = parts.shift();
+            if (command != 'rdl') {
+                return { success: false, error: 'Invalid command returned from GameBanana' };
+            }
+            var memberID = parts.shift();
+            var secretKey = parts.shift();
+            
+            fs.writeFileSync(System.getSystemFile('remotedl', true), JSON.stringify({ memberID, secretKey }));
+        }
+        else {
+            return { success: false, error: 'Error during pairing request' };
+        }
+
+        return { success: true }
+    });
     ipcMain.handle('rdlGetMID', () => {
         if (fs.existsSync(System.getSystemFile('remotedl', true))) {
             return JSON.parse(fs.readFileSync(System.getSystemFile('remotedl', true), 'utf8')).memberID;
@@ -692,8 +711,7 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('gamebanana_getCollections', async () => {
         var collections = [
-            ...(await require('./Accounts/GameBanana.js').collections.list()).map(c => ({ ...c, provider: 'GameBanana', providerTechnical: 'GameBanana' })),
-            ...(await require('./Accounts/Itch.js').collections.list()).map(c => ({ ...c, provider: 'Itch.io', providerTechnical: 'Itch' }))
+            ...(await require('./Accounts/GameBanana.js').collections.list()).map(c => ({ ...c, provider: 'GameBanana', providerTechnical: 'GameBanana' }))
         ];
 
         return collections;
@@ -754,7 +772,7 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('areCollectionsAvailable', async (event, args) => {
         return (
-            await require('./Accounts/GameBanana.js').isLoggedIn() || await require('./Accounts/Itch.js').isLoggedIn()
+            await require('./Accounts/GameBanana.js').isLoggedIn()
         )
     });
 

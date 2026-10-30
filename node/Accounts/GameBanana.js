@@ -283,11 +283,22 @@ async function replyToComment(commentId, commentText) {
     return { success: response.status == 200, error: response.status == 200 ? null : response.data, id: response.data._aPost._idRow };
 }
 
+async function pairRemoteDownload() {
+    var response = await authenticatedAPICall('post', 'https://gamebanana.com/apiv13/RemoteInstall/Enroll/Deltamod', {});
+
+    return { 
+        success: response.status == 200 && response.data._sStatus == "SUCCESS", 
+        pair: response.data._sPairingCommand, 
+        error: response._sStatus == "SUCCESS" ? null : response.data 
+    };
+}
+
 module.exports = {
     getGBUIConf,
     leaveComment,
     replyToComment,
     likeMod,
+    pairRemoteDownload,
     collections: {
         create: createDeltamodBackup,
         delete: deleteCollection,
