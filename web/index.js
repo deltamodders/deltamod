@@ -32,6 +32,20 @@ function brandIcon(code) {
     return `<brand-icon>${code}</brand-icon>`;
 }
 
+var profilingData = {};
+
+function startProfiling(label) {
+    profilingData[label] = performance.now();
+}
+
+function endProfiling(label) {
+    if (profilingData[label]) {
+        const duration = performance.now() - profilingData[label];
+        console.log(`took ${duration.toFixed(2)} ms (${label})`);
+        delete profilingData[label];
+    }
+}
+
 /**
  * Wrapper for invoking Electron IPC calls.
  */
@@ -415,15 +429,10 @@ async function page(name) {
         name = pageN;
     }
 
-    // Prevents escaping to home if game is baked
-    if (await window.electronAPI.invoke('isBaked', []) && name == 'main') {
-        name = 'bakedhome';
-    }
-
     // Viewport animation reset
     document.querySelector('.viewport').style.animation = 'none';
     document.querySelector('.viewport').style.pointerEvents = 'none';
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 25));
 
     document.querySelector('.viewport').style.animation = '0.34s fadeIn cubic-bezier(0, 0.55, 0.45, 1)';
     document.querySelector('.viewport').style.pointerEvents = 'auto';

@@ -293,6 +293,8 @@ async function pairRemoteDownload() {
     };
 }
 
+getGBUIConf(); // start caching the UI config on startup
+
 module.exports = {
     getGBUIConf,
     leaveComment,

@@ -19,7 +19,7 @@ function purify(text) {
     return text.replace(/<[^>]*>/g, '');
 }
 
-async function createMod(mod, compatible, loggedIn) {
+async function createMod(mod, compatible) {
     const modRow = document.createElement('tr');
 
     let imeta = await window.electronAPI.invoke('getModImage', [mod.uid]);
@@ -102,7 +102,9 @@ async function createMod(mod, compatible, loggedIn) {
     gameSpan.className = 'calibri';
     gameSpan.style.fontSize = 'smaller';
     gameSpan.style.color = '#888';
+    startProfiling(`getGameInfo: ${mod.game}`);
     gameSpan.innerHTML = `${icon('stadia_controller', 'small')} ${await window.electronAPI.invoke('getGameInfo', [mod.game]).then(g => g.name)}`;
+    endProfiling(`getGameInfo: ${mod.game}`);
     gameSpan.id = `modgame-${mod.uid}`;
     modNameContainer.appendChild(gameSpan);
 
@@ -205,44 +207,12 @@ async function createMod(mod, compatible, loggedIn) {
         deleteModButton.innerHTML = icon('delete_forever', '20px');
         bdiv.appendChild(deleteModButton);
 
-            const gbModButton = document.createElement('button');
-            gbModButton.onclick = () => {
-                window._pageArguments = {
-                    id: mod.gamebanana.id,
-                    model: mod.gamebanana.model
-                };
-                page(`gamebanana-leave-comment`);
-            };
-            gbModButton.innerHTML = icon('comment', '20px');
-            bdiv.appendChild(gbModButton);
-
-            const likeBtn = document.createElement('button');
-            likeBtn.onclick = async () => {
-                let res = await window.electronAPI.invoke('gbLikeMod',[mod.gamebanana.model, mod.gamebanana.id]);
-                    if (res.status == 200) {
-                        likeBtn.innerHTML = icon('sentiment_very_satisfied', '20px') + '';
-                        likeBtn.disabled = true;
-                    }
-                    else if (res.data._sErrorCode.toLowerCase() == 'already_liked') {
-                        await htmlAlert("Can't like mod","You've already liked this mod. Can't get any more likes than that!",[{text:"Ok",resolveWith:'ok'}], 'sentiment_very_satisfied');
-                        likeBtn.innerHTML = icon('sentiment_very_satisfied', '20px') + '';
-                        likeBtn.disabled = true;
-                    } else {
-                        await htmlAlert("Can't like mod",res.data._sErrorCode,[{text:"Ok",resolveWith:'ok'}], 'error');
-                    }
-            };
-            likeBtn.innerHTML = icon('mood_heart', '20px');
-            bdiv.appendChild(likeBtn);
-
-            tippy(likeBtn, {
-                content: "Like this mod on GameBanana",
-            });
-            tippy(gbModButton, {
-                content: loggedIn ? "Leave a comment on GameBanana" : "View the GameBanana comments for this mod",
-            });
-
-            likeBtn.disabled = !mod.gamebanana.supports || !loggedIn;
-            gbModButton.disabled = !mod.gamebanana.supports;
+        const openInGBButton = document.createElement('button');
+        openInGBButton.onclick = () => {
+            window.open('https://gamebanana.com/' + mod.gamebanana.model.toLowerCase() + 's/' + mod.gamebanana.id, '_blank');
+        };
+        openInGBButton.innerHTML = icon('open_in_new', '20px');
+        bdiv.appendChild(openInGBButton);
     }
 
     modRow.appendChild(modNameContainer);
@@ -310,13 +280,15 @@ async function createErroringMods(errors) {
 }
 
 (async () => {
+    startProfiling('allmods page load');
+    startProfiling('getUniqueFlag: aidisclaimers');
     var aidisclaimers = await window.electronAPI.invoke('getUniqueFlag', ['aidisclaimers']);
     if (aidisclaimers == undefined || aidisclaimers == null) {
         await window.electronAPI.invoke('setUniqueFlag', ['aidisclaimers', true]);
         aidisclaimers = true;
     }
+    endProfiling('getUniqueFlag: aidisclaimers');
     window.currentPageStack.aiDisclaimer = aidisclaimers;
-    var loggedIn = await window.electronAPI.invoke('isLoggedIn', ['GameBanana']);
     const errorBanner = document.getElementById("error-banner");
 
     let filterFunc = (x) => true;
@@ -329,7 +301,9 @@ async function createErroringMods(errors) {
         console.error("Failed to apply filter function:", e);
     }
 
+    startProfiling('getAvailableGames');
     var enumerateGames = await window.electronAPI.invoke('getAvailableGames', []);
+    endProfiling('getAvailableGames');
     const gamesShowSelect = document.getElementById('gamesShow');
     for (const game of enumerateGames) {
         const option = document.createElement('option');
@@ -353,11 +327,15 @@ async function createErroringMods(errors) {
     }
     
 
+    startProfiling('getModList');
     var { modList, errors } = await window.electronAPI.invoke('getModList', []);
+    endProfiling('getModList');
 
     var list = modList.filter(filterFunc);
     for (const mod of list) {
-        await createMod(mod, mod.isCompatible, loggedIn);
+        startProfiling(`createMod: ${mod.uid}`);
+        await createMod(mod, mod.isCompatible);
+        endProfiling(`createMod: ${mod.uid}`);
     }
     window._pageArguments = {}; // Clear it so it doesn't affect other mods
 
@@ -380,4 +358,5 @@ async function createErroringMods(errors) {
     }
 
     genbtnstyles();
+    endProfiling('allmods page load');
 })();
