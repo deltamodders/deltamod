@@ -28,7 +28,7 @@ Commit messages should:
 - Always start with one of the approved prefixes.
 - Be concise and descriptive.
 
-Commits with more things can have more prefix + description combinations divided by `/`, like: ``feat: added this / bugfix: fixed that`
+Commits with more things can have more prefix + description combinations divided by `/`, like: `feat: added this / bugfix: fixed that`
 
 Branch names should be formatted using a prefix + a noun or short phrase describing changes, for example:
 
