@@ -5,7 +5,7 @@ Thank you for contributing to Deltamod! Below are some best practices to keep th
 ## 1. Branching and Pull Requests
 
 - Do not commit directly to the `develop` branch unless it is a commit of minor entity.
-- All work must be done on a separate branch.
+- All work must be done on a separate branch (unless of minor entity).
 - Once your work is complete, open a pull request.
 - Provide a clear description of the changes in your PR.
 - Wait for at least 1 fellow dev to approve of your PR before merging.
