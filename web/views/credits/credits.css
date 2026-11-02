@@ -32,6 +32,11 @@
     gap: 10px;
     flex: 1;
     cursor: pointer;
+    transition: all 200ms ease-in-out;
+}
+
+.creditsBox:hover {
+    scale: 1.05;
 }
 
 .credits-name {

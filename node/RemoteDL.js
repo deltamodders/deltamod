@@ -5,7 +5,10 @@ const System = require('./System.js');
 const { Notification } = require('electron');
 const console = require('./Console.js');
 
+let CHECKS_PER_MINUTE = 5;
+
 let lock = false;
+
 async function check() {
     if (lock) {
         return;
@@ -61,4 +64,4 @@ async function check() {
 
 check();
 
-setInterval(check, 20000);
+setInterval(check, 60000 / CHECKS_PER_MINUTE); // Check every 5 minutes
