@@ -1,7 +1,25 @@
+// @ts-check
+
 const https = require('https');
 const console = require('./Console.js');
 const { version } = require('os');
 
+/**
+ * @typedef SomeUpdateInfo
+ * @property {true} update
+ * @property {string} newVersionLink
+ * @property {string} version
+ * @typedef NoneUpdateInfo
+ * @property {false} update
+ * @property {null} newVersionLink
+ * @property {null} version
+ * @typedef {SomeUpdateInfo | NoneUpdateInfo} UpdateInfo
+ */
+
+/**
+ * @param {string | URL | https.RequestOptions} params
+ * @returns {Promise<string>}
+ */
 function httpsPromisify(params) {
     return new Promise((resolve, reject) => {
         https.get(params, (res) => {
@@ -18,6 +36,7 @@ function httpsPromisify(params) {
     });
 }
 
+/** @returns {Promise<UpdateInfo>} */
 async function checkUpdates() {
     try {
         var VERSION = require('../package.json').version;
