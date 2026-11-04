@@ -1,3 +1,5 @@
+// @ts-check
+
 const { readFileSync, existsSync } = require('fs');
 const path = require('path');
 
@@ -34,7 +36,7 @@ function tryGameDir(libfolder, chosenEdition) {
  * @param {*} state
  * @param {ChosenEdition} chosenEdition
  * @param {Electron.Dialog} dialog
- * @returns {string | null}
+ * @returns {string?}
  */
 function findGame(state, chosenEdition, dialog) {
     state.STEAM_BASE = getSteamDirectory(dialog);
@@ -43,7 +45,8 @@ function findGame(state, chosenEdition, dialog) {
      * @type Object<string, SteamLibrary>
      */
     let vvv = kvparser.parse(libfolders).libraryfolders;
-    return Object.values(vvv).map(libfolder => tryGameDir(libfolder, chosenEdition)).find(x => !!x);
+    const libfolder = Object.values(vvv).map(libfolder => tryGameDir(libfolder, chosenEdition)).find(x => !!x);
+    return libfolder ? libfolder : null;
 }
 
 module.exports = {
