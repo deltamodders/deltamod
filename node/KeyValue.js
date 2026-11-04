@@ -1,12 +1,17 @@
+// @ts-check
+// TODO(fnrir): fixup readKVS(OfIndex) overloads
+
 const path = require('path');
 const app = require('electron').app;
 const fs = require('fs');
-let kvs = {};
 const { getSystemFile, getSystemFolder, healthCheck, getSystemFileOfIndex, getSystemFolderOfIndex } = require('./System.js');
 const { get } = require('http');
 const crypto = require('crypto');
 const console = require('./Console.js');
 
+/**
+ * @type {Object<string, boolean>}
+ */
 const KVS_DATABASE_DEFAULTS = {
     'setup': true,
     'audio': true,
@@ -15,6 +20,15 @@ const KVS_DATABASE_DEFAULTS = {
     'aidisclaimers': true
 };
 
+/**
+ * @type {Object<string, any>}
+ */
+let kvs = {};
+
+/**
+ * @param {string} str
+ * @returns {string}
+ */
 function hash(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
 }
@@ -30,7 +44,7 @@ function retrieve() {
     try {
         var raw = fs.readFileSync(pathname, 'utf8');
     } catch (e) {
-        if (e.code == "ENOENT")
+        if (e instanceof Error && "code" in e && e.code == "ENOENT")
             return false;
         throw e;
     }
@@ -49,6 +63,11 @@ function kvsFlush() {
     return true;
 }
 
+/**
+ * @param {*} obj
+ * @param {string} index
+ * @returns {boolean}
+ */
 function kvsFlushIndex(obj, index) {
     var pathname = getSystemFileOfIndex('store.json', index);
     fs.writeFileSync(pathname, JSON.stringify(obj, null, 2));
@@ -56,6 +75,13 @@ function kvsFlushIndex(obj, index) {
     return true;
 }
 
+const defFDBMsg = "TODO(fnrir): defFDBMsg was unset. added value to appease tsc";
+
+/**
+ * @param {string} name
+ * @param {boolean} val
+ * @returns {boolean}
+ */
 function writeUniqueFlag(name, val) {
     try {
         var database = getSystemFile('flagDB.config', true);
@@ -74,6 +100,10 @@ function writeUniqueFlag(name, val) {
     }
 }
 
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
 function existsUniqueFlag(name) {
     try {
         var database = getSystemFile('flagDB.config', true);
@@ -89,6 +119,10 @@ function existsUniqueFlag(name) {
         return false;
     }
 }
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
 function readUniqueFlag(name) {
     try {
         var database = getSystemFile('flagDB.config', true);
@@ -120,6 +154,10 @@ function kvsWipe() {
     return true;
 }
 
+/**
+ * @param {string} name
+ * @param {*} value
+ */
 function setKVS(name, value) {
     kvs[name] = value;
     kvsFlush();
@@ -135,17 +173,46 @@ function loadUniqueDefaults() {
     }
 }
 
+/**
+ * @param {string} name
+ * @param {*} value
+ * @param {string} index
+ */
 function setKVSOfIndex(name, value, index) {
     try {
         var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
     }
     catch (e) {
+        /**
+         * @type any
+         */
         var odb = {};
     }
     odb[name] = value;
     kvsFlushIndex(odb, index);
 }
 
+/**
+ * @overload
+ * @param {string} name
+ * @param {string} index
+ * @param {null} [defaultTo=null]
+ * @returns {any}
+ */
+/**
+ * @template T
+ * @overload
+ * @param {string} name
+ * @param {string} index
+ * @param {T} defaultTo
+ * @returns {any | T}
+ */
+/**
+ * @param {string} name
+ * @param {string} index
+ * @param {any} [defaultTo=null]
+ * @returns {any}
+ */
 function readKVSOfIndex(name, index, defaultTo = null) {
     var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
     return odb[name] ?? defaultTo;
@@ -177,6 +244,9 @@ function upgradeStores() {
                 return;
             }
 
+            /**
+             * @param {string} folder
+             */
             function scanFolderRecursively(folder) {
                 fs.readdirSync(folder).forEach(file => {
                     var fullPath = path.join(folder, file);
@@ -203,6 +273,24 @@ function upgradeStores() {
     }
 }
 
+/**
+ * @overload
+ * @param {string} name
+ * @param {null} [defaultTo=null]
+ * @returns {any}
+ */
+/**
+ * @template T
+ * @overload
+ * @param {string} name
+ * @param {T} defaultTo
+ * @returns {any | T}
+ */
+/**
+ * @param {string} name
+ * @param {any} [defaultTo=null]
+ * @returns {any}
+ */
 function readKVS(name, defaultTo = null) {
     return kvs[name] ?? defaultTo;
 }
