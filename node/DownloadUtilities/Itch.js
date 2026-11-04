@@ -1,7 +1,14 @@
+// @ts-check
+
 const cheerio = require('cheerio');
 const fs = require('fs');
 const axios = require('axios');
 
+/**
+ * @param {string} id
+ * @param {import("../GameDB.js").AutodownloadItch} data
+ * @returns {Promise<string>}
+ */
 async function run(id, data) {
     var itchIOPage = await axios.get(data.homepage).then(r => r.data);
             
