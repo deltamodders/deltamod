@@ -1,3 +1,5 @@
+// @ts-check
+
 const { PACKAGE_JSON } = require("./Paths");
 
 /** @type {{ featureFlags: string[] }} */
