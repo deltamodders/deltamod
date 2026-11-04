@@ -9,8 +9,9 @@
     "GB-OneClick"
   ],
   "scripts": {
-    "test": "electron . --developer",
-    "test:unit": "node --test --test-concurrency=1 node/Proton*.test.js",
+    "check": "tsc --noEmit",
+    "test": "tsc && electron . --developer",
+    "test:unit": "tsc && node --test --test-concurrency=1 node/Proton*.test.js",
     "build-windows": "electron-builder --win --publish never",
     "build-win32": "electron-builder --win --ia32 --publish never",
     "build-linux": "electron-builder --linux --publish never "
@@ -69,7 +70,8 @@
   "license": "EUPL-1.2",
   "devDependencies": {
     "electron": "^44.4.5",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",
