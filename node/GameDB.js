@@ -1,8 +1,32 @@
+// @ts-check
+
 const fs = require('fs');
 const path = require('path');
 const console = require('./Console.js');
 
+/**
+ * @typedef FeatureData
+ * @property {string} pluginName
+ * @property {string} buildId
+ * @property {string} gameId
+ *
+ * @typedef FeatureInfo
+ * @property {string} feat
+ * @property {FeatureData} data
+ *
+ * @typedef GameInfo
+ * @property {string} name
+ * @property {string} author
+ * @property {string} id
+ * @property {{ id: string }} gamebanana
+ * @property {string} exeName
+ * @property {FeatureInfo[]} availableFeatures
+ */
+
 const GAMES_BASE = path.join(__dirname, '../', 'games');
+/**
+ * @type {GameInfo[]?}
+ */
 let cached = null;
 
 function getGames() {
@@ -14,11 +38,20 @@ function getGames() {
     return cached;
 }
 
+/**
+ * @param {string} id
+ * @returns {GameInfo | undefined}
+ */
 function getGameById(id) {
     const games = getGames();
     return games.find(g => g.id == id);
 }
 
+/**
+ * @param {string} id 
+ * @param {string} feat 
+ * @returns {FeatureInfo | boolean | undefined}
+ */
 function getFeatInfo(id, feat) {
     const game = getGameById(id);
     if (!game || !game.availableFeatures) return false;
