@@ -6,14 +6,28 @@ const console = require('./Console.js');
 const { DELTAMOD_DIR } = require('./Paths');
 
 /**
- * @typedef FeatureData
- * @property {string} pluginName
- * @property {string} buildId
- * @property {string} gameId
+ * @template Ident
+ * @template Data
+ * @typedef MkFeat
+ * @property {Ident} feat
+ * @property {Data} data
+ */
+
+/**
+ * @typedef {import("./DownloadUtilities/GameJolt").AutodownloadGameJolt} AutodownloadGameJolt
+ * @typedef {import("./DownloadUtilities/Itch").AutodownloadItch} AutodownloadItch
  *
- * @typedef FeatureInfo
- * @property {string} feat
- * @property {FeatureData} data
+ * @typedef {AutodownloadGameJolt | AutodownloadItch} FeatureAutodownload
+ *
+ * @typedef FeatureSteam
+ * @property {string} folder
+ * @property {string} appid
+ * @property {boolean} downloadable
+ *
+ * @typedef {MkFeat<"autodownload", FeatureAutodownload> | MkFeat<"steam", FeatureSteam>} TypedFeature
+ * @typedef {{ feat: string, data: any }} UntypedFeature
+ *
+ * @typedef {TypedFeature | UntypedFeature} FeatureInfo
  *
  * @typedef GameInfo
  * @property {string} name

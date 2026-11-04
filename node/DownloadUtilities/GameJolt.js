@@ -1,6 +1,21 @@
+// @ts-check
+
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+
+/**
+ * @typedef AutodownloadGameJolt
+ * @property {"GameJolt"} pluginName
+ * @property {string} buildId
+ * @property {string} gameId
+ */
+
+/**
+ * @param {string} id
+ * @param {AutodownloadGameJolt} data
+ * @returns {Promise<string>}
+ */
 async function run(id, data) {
     return new Promise (async (resolve, reject) => {
         var api = `https://gamejolt.com/site-api/web/discover/games/builds/get-download-url/${data.buildId}`;
