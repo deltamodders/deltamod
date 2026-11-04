@@ -1,3 +1,4 @@
+// @ts-check
 // collecton of utility functions
 
 const crypto = require("crypto");
@@ -7,8 +8,15 @@ const path = require("path");
 const os = require("os");
 const { BrowserWindow, app } = require("electron");
 
+/**
+ * @type {BrowserWindow | null}
+ */
 var win = null;
 
+/**
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
 function timeoutPromise(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
@@ -23,9 +31,19 @@ const { pipeline } = require('stream');
 const { promisify } = require('util');
 const pipelineAsync = promisify(pipeline);
 
+/**
+ * @param {string} url
+ * @param {string} dest
+ * @param {(downloadedFrac: number) => void} onProgress
+ * @returns {Promise<void>}
+ */
 async function downloadFile(url, dest, onProgress) {
     return new Promise((resolve, reject) => {
         const req = https.get(url, async (res) => {
+            if (res.statusCode === undefined) {
+                reject(new Error("statusCode is undefined"));
+                return;
+            }
             try {
                 // Handle redirects
                 if (
@@ -79,6 +97,10 @@ async function downloadFile(url, dest, onProgress) {
     });
 }
 
+/**
+ * @param {string} filePath
+ * @returns {string}
+ */
 function getFileVersion(filePath) {
     var basecmd = `powershell -command "(Get-Item '${filePath}').VersionInfo.FileVersion"`;
     var execSync = require('child_process').execSync;
@@ -87,27 +109,46 @@ function getFileVersion(filePath) {
     return c;
 }
 
+/**
+ * @param {number} length
+ * @returns {string}
+ */
 function randomString(length) {
     return crypto.randomBytes(length).toString('hex').slice(0, length);
 }
 
+/**
+ * @template T
+ * @param {T[]} arr
+ * @returns {T?}
+ */
 function lastOfArray(arr) {
     return arr.length > 0 ? arr[arr.length - 1] : null;
 }
 
+/**
+ * @param {string} filePath
+ * @returns {string}
+ */
 function hashFile(filePath) {
     return crypto.createHash('sha256')
         .update(fs.readFileSync(filePath))
         .digest('hex');
 }
 
+/**
+ * TODO(fnrir): what's the type of this???
+ * @template T
+ * @param {T} version
+ * @returns {T}
+ */
 function validateVersioning(version) {
     return version;
 }
 
 /**
  * sets the current window to newwin.
- * @param {BrowserWindow} newwin 
+ * @param {BrowserWindow} newwin
  */
 function setWindow(newwin) {
     win = newwin;
@@ -118,37 +159,70 @@ function setWindow(newwin) {
  * @returns {BrowserWindow}
  */
 function getWindow() {
+    if (win === null) throw new Error("getWindow called before win initialized");
     return win;
 }
 
+/**
+ * @param {string} newPage
+ */
 function page(newPage) {
-    win.webContents.send("page", [newPage]);
+    getWindow().webContents.send("page", [newPage]);
 }
 
 function shopClang() {
     // deprecated
 }
 
+/**
+ * @type {Object<string, any>}
+ */
 let sharedVariables = {}; // shared vars with renderer
+
+/**
+ * @param {string} name
+ * @param {any} value
+ * @returns {true}
+ */
 function setSharedVar(name, value) {
     sharedVariables[name] = value;
     return true;
 }
 
+/**
+ * @param {string} name
+ * @returns {any}
+ */
 function getSharedVar(name) {
     return sharedVariables[name];
 }
 
+/**
+ * @param {string[]} otherArgs
+ * @returns {{ args: string[] }}
+ */
 function properRelaunch(otherArgs = []) {
     const a = process.argv.slice(1);
     return { args: [...a.filter(x => !x.toLowerCase().startsWith("deltamod://")), ...otherArgs] }
 }
 
+/**
+ * @template T
+ * @param {T} obj
+ * @param {any} logMsg
+ * @returns {T}
+ */
 function logOnAccess(obj, logMsg) {
     console.log(logMsg);
     return obj;
 }
 
+/**
+ * @param {string} string
+ * @param {string} start
+ * @param {string} end
+ * @returns {string}
+ */
 function between(string, start, end) {
     return string.split(start)[1].split(end)[0];
 }
@@ -202,14 +276,17 @@ function getSteamDirectory(dialog) {
             break;
     }
 
-    if (!fs.existsSync(steamdir)) {
+    if (steamdir == undefined || !fs.existsSync(steamdir)) {
         if (showSteamPathMessageBox(dialog) === 0) {
-            steamdir = dialog.showOpenDialogSync(win, {
+            const dialog_res = dialog.showOpenDialogSync(getWindow(), {
                 properties: ['openDirectory'],
                 message: 'Select the Steam "common" folder (e.g., C:/Program Files (x86)/Steam/steamapps/common/)',
-            })[0];
+            });
+            if (dialog_res !== undefined) steamdir = dialog_res[0];
         }
     }
+
+    if (steamdir === undefined) throw new Error("No Steam common folder chosen");
 
     return steamdir;
 }
@@ -229,6 +306,7 @@ module.exports = {
     properRelaunch,
     getSteamDirectory,
     downloadFile,
+    generateUUID,
 
     getWindow,
     setWindow,
