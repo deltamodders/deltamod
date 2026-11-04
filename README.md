@@ -49,9 +49,15 @@ Run `npm run build-windows` or `npm run build-linux` to package Deltamod as an i
 | Officially released | ✅ | ✅ | ❌ | ❌ | ✅ |
 | Tested by devs | ✅ | ✅ | ❌ | ❌ | ⚠️ Should work |
 | Devs provide support | ✅ | ✅ | ❌ | ❌ | ✅ _(Specify if you are using emulation when reporting issues)_ |
-| Usable | ✅ | ✅ via Wine | ❌ | ✅ | ✅ |
-| DELTARUNE supports | ✅ | ✅ via Wine | ✅ | ✅ | ✅ |
+| Usable | ✅ | ✅ [^1] | ❌ | ✅ | ✅ |
+| DELTARUNE supports | ✅ | ✅ [^1] | ✅ | ✅ | ✅ |
 | Autoupdating | ✅ | ❌ | ❌ | ✅ | ✅ |
+
+[^1]: Most supported games run through Wine/Proton, a compatibility layer.
+Even when an official Linux version doesn't exist, the Windows version running
+through Wine is considered officially supported. For more compatibility info,
+see [ProtonDB](https://www.protondb.com/), or for an short but interesting
+read, see <https://blog.hiler.eu/win32-the-only-stable-abi/>.
 
 ## Licensing
 The software is licensed under the EUPL 1.2. You can read the license [here](./LICENSE.txt).<br /><br />
