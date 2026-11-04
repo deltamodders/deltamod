@@ -1,3 +1,5 @@
+// @ts-check
+
 const path = require("path");
 const { BrowserWindow } = require("electron");
 const { getWindow } = require("./Utils");
