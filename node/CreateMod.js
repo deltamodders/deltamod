@@ -1,3 +1,5 @@
+// @ts-check
+
 const crypto = require("crypto");
 const fs = require("fs");
 const os = require("os");
@@ -180,7 +182,13 @@ function modding_xml_ser(modding_data) {
 }
 
 /**
- * @param {Object} meta
+ * @typedef MetadataPartial
+ * @property {{ packageID: string }} metadata
+ * @property {{ file: string, checksum: string | undefined }[]} neededFiles
+ */
+
+/**
+ * @param {MetadataPartial} meta
  * @param {ModdingXmlEntry[]} modding_data
  */
 function meta_init_needed_files(meta, modding_data) {
@@ -197,7 +205,7 @@ function meta_init_needed_files(meta, modding_data) {
  *
  * TODO: make this atomic to avoid any issues with half-added mods
  *
- * @param {Object} meta
+ * @param {MetadataPartial} meta
  * @param {ModdingXmlEarlyEntry[]} modding_data_early
  * @throws {Error}
  */
