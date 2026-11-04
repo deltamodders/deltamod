@@ -1,3 +1,5 @@
+// @ts-check
+
 const { screen } = require('electron');
 const console = require('./Console.js');
 
@@ -26,7 +28,7 @@ const conditions = [
             const fsp = require("fs");
             const os = require("os");
             const { bfree, bsize } = fsp.statfsSync(os.homedir());
-            free = bfree * bsize;
+            const free = bfree * bsize;
             return free >= 32 * 1024 * 1024;
         }
     }
