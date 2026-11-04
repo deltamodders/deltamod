@@ -1,7 +1,13 @@
+// @ts-check
+
 const https = require('https');
 const console = require('./Console.js');
 const { version } = require('os');
 
+/**
+ * @param {string | URL | https.RequestOptions} params
+ * @returns {Promise<string>}
+ */
 function httpsPromisify(params) {
     return new Promise((resolve, reject) => {
         https.get(params, (res) => {
