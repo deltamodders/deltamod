@@ -5,14 +5,35 @@ const path = require('path');
 const console = require('./Console.js');
 
 /**
- * @typedef FeatureData
- * @property {string} pluginName
+ * @template Ident
+ * @template Data
+ * @typedef MkFeat
+ * @property {Ident} feat
+ * @property {Data} data
+ */
+
+/**
+ * @typedef AutodownloadGameJolt
+ * @property {"GameJolt"} pluginName
  * @property {string} buildId
  * @property {string} gameId
  *
- * @typedef FeatureInfo
- * @property {string} feat
- * @property {FeatureData} data
+ * @typedef AutodownloadItch
+ * @property {"Itch"} pluginName
+ * @property {string} homepage
+ * @property {string} fileID
+ *
+ * @typedef {AutodownloadGameJolt | AutodownloadItch} FeatureAutodownload
+ *
+ * @typedef FeatureSteam
+ * @property {string} folder
+ * @property {string} appid
+ * @property {boolean} downloadable
+ *
+ * @typedef {MkFeat<"autodownload", FeatureAutodownload> | MkFeat<"steam", FeatureSteam>} TypedFeature
+ * @typedef {{ feat: string, data: any }} UntypedFeature
+ *
+ * @typedef {TypedFeature | UntypedFeature} FeatureInfo
  *
  * @typedef GameInfo
  * @property {string} name
