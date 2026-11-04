@@ -1,3 +1,6 @@
+// @ts-nocheck
+
+// TODO(fnrir): 'package' is a reserved word in strict mode.
 const package = require("../package.json");
 
 function isFeatureEnabled(feature) {

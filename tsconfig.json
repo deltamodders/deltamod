@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    //"checkJs": true,
+    "lib": ["ES2022", "DOM"],
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "noEmit": true,
+    "noImplicitAny": true,
+    "target": "es2015",
+  },
+  "include": ["./node/**/*"],
+}
