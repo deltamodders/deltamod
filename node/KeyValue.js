@@ -1,12 +1,20 @@
+// @ts-check
+// TODO(fnrir): fixup readKVS(OfIndex) overloads
+
 const path = require('path');
 const app = require('electron').app;
 const fs = require('fs');
-let kvs = {};
 const { getSystemFile, getSystemFolder, healthCheck, getSystemFileOfIndex, getSystemFolderOfIndex } = require('./System.js');
 const { get } = require('http');
 const crypto = require('crypto');
 const console = require('./Console.js');
 
+/**
+ * @typedef {number | string} IndexLike
+ * TODO: decide if install index should be a string or an int
+ */
+
+/** @type {Record<string, boolean>} */
 const KVS_DATABASE_DEFAULTS = {
     'setup': true,
     'audio': true,
@@ -15,6 +23,13 @@ const KVS_DATABASE_DEFAULTS = {
     'aidisclaimers': true
 };
 
+/** @type {Record<string, any>} */
+let kvs = {};
+
+/**
+ * @param {string} str
+ * @returns {string}
+ */
 function hash(str) {
     return crypto.createHash('sha256').update(str).digest('hex');
 }
@@ -22,15 +37,15 @@ function hash(str) {
 /**
  * Loads `store.json` of current installation into global `kvs`.
  * Returns whether `store.json` exists.
- * @returns bool
+ * @returns {boolean}
  */
 function retrieve() {
     healthCheck();
     var pathname = getSystemFile('store.json', false);
     try {
         var raw = fs.readFileSync(pathname, 'utf8');
-    } catch (e) {
-        if (e.code == "ENOENT")
+    } catch (/** @type {any} */ e) {
+        if ("code" in e && e.code == "ENOENT")
             return false;
         throw e;
     }
@@ -39,6 +54,7 @@ function retrieve() {
     return true;
 }
 
+/** @returns {true} */
 function kvsFlush() {
     var pathname = getSystemFile('store.json', false);
     var exportedKVS = kvs;
@@ -49,6 +65,11 @@ function kvsFlush() {
     return true;
 }
 
+/**
+ * @param {any} obj
+ * @param {IndexLike} index
+ * @returns {boolean}
+ */
 function kvsFlushIndex(obj, index) {
     var pathname = getSystemFileOfIndex('store.json', index);
     fs.writeFileSync(pathname, JSON.stringify(obj, null, 2));
@@ -56,6 +77,13 @@ function kvsFlushIndex(obj, index) {
     return true;
 }
 
+const defFDBMsg = "TODO(fnrir): defFDBMsg was unset. added value to appease tsc";
+
+/**
+ * @param {string} name
+ * @param {boolean} val
+ * @returns {boolean}
+ */
 function writeUniqueFlag(name, val) {
     try {
         var database = getSystemFile('flagDB.config', true);
@@ -74,6 +102,10 @@ function writeUniqueFlag(name, val) {
     }
 }
 
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
 function existsUniqueFlag(name) {
     try {
         var database = getSystemFile('flagDB.config', true);
@@ -89,6 +121,10 @@ function existsUniqueFlag(name) {
         return false;
     }
 }
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
 function readUniqueFlag(name) {
     try {
         var database = getSystemFile('flagDB.config', true);
@@ -112,6 +148,7 @@ function readUniqueFlag(name) {
     }
 }
 
+/** @returns {true} */
 function kvsWipe() {
     kvs = {};
     var pathname = getSystemFile('store.json', false);
@@ -120,6 +157,10 @@ function kvsWipe() {
     return true;
 }
 
+/**
+ * @param {string} name
+ * @param {any} value
+ */
 function setKVS(name, value) {
     kvs[name] = value;
     kvsFlush();
@@ -135,17 +176,42 @@ function loadUniqueDefaults() {
     }
 }
 
+/**
+ * @param {string} name
+ * @param {any} value
+ * @param {IndexLike} index
+ */
 function setKVSOfIndex(name, value, index) {
+    /** @type {any} */
+    var odb = {};
     try {
         var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
-    }
-    catch (e) {
-        var odb = {};
-    }
+    } catch (e) {}
     odb[name] = value;
     kvsFlushIndex(odb, index);
 }
 
+/**
+ * @template T
+ * @overload
+ * @param {string} name
+ * @param {IndexLike} index
+ * @returns {T | null}
+ */
+/**
+ * @template T
+ * @overload
+ * @param {string} name
+ * @param {IndexLike} index
+ * @param {T} defaultTo
+ * @returns {T}
+ */
+/**
+ * @param {string} name
+ * @param {IndexLike} index
+ * @param {any} [defaultTo=null]
+ * @returns {any}
+ */
 function readKVSOfIndex(name, index, defaultTo = null) {
     var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
     return odb[name] ?? defaultTo;
@@ -168,7 +234,7 @@ function upgradeStores() {
             if (edi != "rem") {
                 console.log('Upgrading index ' + indx);
                 var pid = "toby.deltarune.demo";
-                if (readKVSOfIndex('deltaruneEdition', indx, "n") == "full") {
+                if (readKVSOfIndex('deltaruneEdition', indx, /** @type {string} */ ("n")) == "full") {
                     pid = "toby.deltarune";
                 }
                 setKVSOfIndex('gamePid', pid, indx);
@@ -177,6 +243,9 @@ function upgradeStores() {
                 return;
             }
 
+            /**
+             * @param {string} folder
+             */
             function scanFolderRecursively(folder) {
                 fs.readdirSync(folder).forEach(file => {
                     var fullPath = path.join(folder, file);
@@ -203,6 +272,24 @@ function upgradeStores() {
     }
 }
 
+/**
+ * @template T
+ * @overload
+ * @param {string} name
+ * @returns {T | null}
+ */
+/**
+ * @template T
+ * @overload
+ * @param {string} name
+ * @param {T} defaultTo
+ * @returns {T}
+ */
+/**
+ * @param {string} name
+ * @param {any} [defaultTo=null]
+ * @returns {any}
+ */
 function readKVS(name, defaultTo = null) {
     return kvs[name] ?? defaultTo;
 }
