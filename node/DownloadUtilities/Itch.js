@@ -1,7 +1,21 @@
+// @ts-check
+
 const cheerio = require('cheerio');
 const fs = require('fs');
 const axios = require('axios');
 
+/**
+ * @typedef AutodownloadItch
+ * @property {"Itch"} pluginName
+ * @property {string} homepage
+ * @property {string} fileID
+ */
+
+/**
+ * @param {string} id
+ * @param {AutodownloadItch} data
+ * @returns {Promise<string>}
+ */
 async function run(id, data) {
     var itchIOPage = await axios.get(data.homepage).then(r => r.data);
             
