@@ -25,7 +25,7 @@ function createJunction(target, path) {
         fs.symlinkSync(target, path, "junction");
         return `Successfully created junction from ${path} to ${target}`
     } catch (err) {
-        return err.toString();
+        return /** @type {any} */ (err).toString();
     }
 }
 
@@ -39,7 +39,7 @@ function deleteJunction(path) {
         fs.unlinkSync(path)
         return `Successfully deleted junction at ${path}`
     } catch (err) {
-        return err.toString();
+        return /** @type {any} */ (err).toString();
     }
 }
 
