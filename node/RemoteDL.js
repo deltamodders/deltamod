@@ -1,3 +1,5 @@
+// @ts-check
+
 const axios = require('axios');
 const fs = require('fs');
 const Modstore = require('./Modstore.js');
@@ -9,6 +11,12 @@ let CHECKS_PER_MINUTE = 5;
 
 let lock = false;
 
+/**
+ * @typedef RemoteDLCreds
+ * @property {string} memberID
+ * @property {string} secretKey
+ */
+
 async function check() {
     if (lock) {
         return;
@@ -16,7 +24,8 @@ async function check() {
     lock = true;
     console.log('Checking for remote downloads...');
     try {
-        var rdlCredentials = {};
+        /** @type {RemoteDLCreds} */
+        var rdlCredentials;
 
         if (fs.existsSync(System.getSystemFile('remotedl', true))) {
             rdlCredentials = JSON.parse(fs.readFileSync(System.getSystemFile('remotedl', true), 'utf-8'));
