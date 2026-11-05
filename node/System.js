@@ -61,7 +61,7 @@ function getSystemFileOfIndex(fileid, index) {
 
 /**
  * @param {string} folderid
- * @param {boolean} unique
+ * @param {boolean} [unique]
  * @returns {string}
  */
 function getSystemFolder(folderid, unique) {
