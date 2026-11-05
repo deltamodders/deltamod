@@ -1,9 +1,23 @@
+// @ts-check
+// FIXME(fnrir): this is currently broken. hook function names use uppercase
+// letters
+
 const fs = require('fs');
 const { app } = require('electron');
 const path = require('path');
 
+/**
+ * @typedef PluginInfo
+ * @property {string} name
+ * @property {string} version
+ * @property {string} description
+ * @property {string} author
+ */
+
 const PLUGINS_BASE = path.join(app.getPath('userData'), 'plugins.db');
+/** @type {Record<string, string[]>} */
 let FUNCTION_CACHE = {};
+/** @type {PluginInfo[]} */
 let loadedPlugins = [];
 
 if (!fs.existsSync(PLUGINS_BASE)) {
@@ -44,6 +58,10 @@ function loadPlugins() {
     console.log('Loaded functions: ', Object.keys(FUNCTION_CACHE));
 }
 
+/**
+ * @param {string} functionName
+ * @param  {...any[]} args
+ */
 function call(functionName, ...args) {
     if (!FUNCTION_CACHE[functionName]) {
         console.log(`function ${functionName} not defined in any plugins.`);
@@ -52,7 +70,7 @@ function call(functionName, ...args) {
 
     FUNCTION_CACHE[functionName].forEach(file => {
         try {
-            const func = require(file)(...args);
+            require(file)(...args);
         } catch (e) {
             console.error(`Error calling function ${functionName} in plugin ${file}:`, e);
         }
@@ -61,4 +79,4 @@ function call(functionName, ...args) {
 
 loadPlugins();
 
-module.exports = {call};
+module.exports = { call };
