@@ -11,6 +11,7 @@ const Paths = require('./Paths');
 const KeyValue = require('./KeyValue');
 const { getSystemFile, setSystemIndex } = require('./System');
 const System = require('./System');
+const { profileIndex, resolveSelection } = require('./ProtonLauncher');
 const { setWindow, page, between } = require('./Utils');
 const CMode = require('./ControllerMode');
 const GamePatching = require('./GamePatching');
@@ -198,26 +199,16 @@ function createWindow() {
     config({ ...getConfig(), binaryPath: path7za });
     try { System.clearTemporary(); } catch (e) { console.error(e); }
 
-    const sysArg = process.argv.find(a => a.startsWith('---system_index='));
-    if (sysArg) {
-        try {
-            const val = sysArg.split('=')[1];
-            if (/^-?\d+$/.test(val)) fs.writeFileSync(getSystemFile('_sysindex', true), val, 'utf8');
-        } catch {}
-    }
-
     const partOverride = getSystemFile('_sysindex', true);
-    if (fs.existsSync(partOverride)) {
-        let overrideData = fs.readFileSync(partOverride, 'utf8');
-        if (!fs.existsSync(path.join(app.getPath('userData'), 'deltamod_system-' + overrideData))) {
-            console.error('The specified installation (' + overrideData + ') is invalid.');
-            overrideData = '0';
-            fs.writeFileSync(partOverride, overrideData, 'utf8');
-        }
-        setSystemIndex(overrideData);
-    } else {
-        setSystemIndex('0');
+    const savedIndex = fs.existsSync(partOverride) ? fs.readFileSync(partOverride, 'utf8') : null;
+    const sysArg = process.argv.find(a => a.startsWith('---system_index='));
+    let requestedIndex = savedIndex;
+    if (sysArg) {
+        try { requestedIndex = profileIndex(sysArg.slice('---system_index='.length)); } catch {}
     }
+    const selectedIndex = resolveSelection(app.getPath('userData'), requestedIndex);
+    if (savedIndex !== selectedIndex) fs.writeFileSync(partOverride, selectedIndex, 'utf8');
+    setSystemIndex(selectedIndex);
 
     registerProtocolHandlers(session.fromPartition(PARTITION));
 
