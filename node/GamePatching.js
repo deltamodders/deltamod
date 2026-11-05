@@ -8,6 +8,9 @@ const pty = require('node-pty');
 
 const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'g3mtool', 'G3MTool.exe') : path.join(__dirname, '../', 'tools', 'g3mtool', 'G3MTool');
 const UTMT_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'utmt', 'win', 'UndertaleModCli.exe') : path.join(__dirname, '../', 'tools', 'utmt', 'linux', 'UndertaleModCli');
+// --properties lets G3MTool combine conflicting asset properties instead of keeping only the highest-priority
+// mod's copy. The global script list also needs a G3MTool built on the fixed G3MLib list merge (see PROTON.md).
+const MERGE_FLAGS = ['--properties'];
 
 async function g3mtool(callback, args, gamePath) {
     console.log('Running G3MTool with args: G3MTool', args.join(' '));
@@ -232,7 +235,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
         try {
             if (patches.length > 1) {
-                var output = await g3mtool(log, ['patch', 'merge', newp, ...patches.map(p => p.patch), '-a', path.join(gamePath, targetFile)], gamePath).catch(e =>  {
+                var output = await g3mtool(log, ['patch', 'merge', newp, ...patches.map(p => p.patch), ...MERGE_FLAGS, '-a', path.join(gamePath, targetFile)], gamePath).catch(e =>  {
                     throw new Error(`Error merging patches for ${targetFile}: ${e.message}`);
                 });
             }
@@ -319,7 +322,47 @@ async function restore(gamePath) {
 
 }
 
+async function applyStagedDelta({ game, target, payloads, scratch, log }) {
+    const input = path.join(scratch, 'delta-input');
+    const output = path.join(scratch, 'delta-output');
+    fs.copyFileSync(path.join(game, target), input, fs.constants.COPYFILE_EXCL);
+    const args = payloads.length > 1
+        ? ['patch', 'merge', input, ...payloads, ...MERGE_FLAGS, '-a', output]
+        : ['patch', 'apply', input, payloads[0], output];
+    try {
+        await new Promise((resolve, reject) => {
+            execFile(PATCHER_PATH, args, { cwd: game, timeout: 600000, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+                try {
+                    log(stdout);
+                    log(stderr);
+                    if (error) reject(new Error(`Delta apply/merge failed; check the mod's source version. ${error.message}\n${stderr}`));
+                    else resolve();
+                } catch (callbackError) {
+                    reject(callbackError);
+                }
+            });
+        });
+        const stat = fs.lstatSync(output);
+        if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) throw new Error('Unsafe delta helper output.');
+        fs.renameSync(output, path.join(game, target));
+    } finally {
+        fs.rmSync(input, { force: true });
+        fs.rmSync(output, { force: true });
+    }
+}
+
+function getStagedDeltaHelper() {
+    try {
+        fs.accessSync(PATCHER_PATH, fs.constants.R_OK | fs.constants.X_OK);
+        if (!fs.statSync(PATCHER_PATH).isFile()) return undefined;
+        return applyStagedDelta;
+    } catch {
+        return undefined;
+    }
+}
+
 module.exports = {
     startGamePatch,
-    restore
+    restore,
+    getStagedDeltaHelper
 };
