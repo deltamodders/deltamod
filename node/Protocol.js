@@ -1,3 +1,5 @@
+// @ts-check
+
 const { writeFileSync, mkdirSync, rmSync } = require("original-fs");
 const { log } = require("./Console");
 const { isFeatureEnabled } = require("./FeatureFlags");
@@ -15,6 +17,11 @@ const mime = require("mime-types");
 const { ASSETS_DIR, DELTAMOD_DIR, THEMES_DIR } = require("./Paths");
 
 // https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
+/**
+ * @param {string} str
+ * @param {string} ch
+ * @returns {string}
+ */
 function trim(str, ch) {
     var start = 0, 
         end = str.length;
@@ -167,6 +174,10 @@ function registerProtocolHandlers(ses) {
     });
 }
 
+/**
+ * @param {string} url
+ * @returns {Promise<void>}
+ */
 async function handleProtocolLaunch(url) {
     if (!url || !url.startsWith("deltamod://")) return;
     
@@ -175,7 +186,9 @@ async function handleProtocolLaunch(url) {
     url = trim(url.substring("deltamod://".length), '/');
     
     var args = url.split("/");
-    var command = args.shift().toLowerCase();
+    var command = args.shift();
+    if (command === undefined) throw new Error("command not passed");
+    command = command.toLowerCase();
 
     switch (command) {
         case "gb": {
@@ -273,6 +286,7 @@ async function handleProtocolLaunch(url) {
             if (args.length < 1) break;
 
             var installationIdx = args.shift();
+            if (installationIdx === undefined) throw new Error("installationIdx not passed");
             const { getSystemFile } = require('./System');
             const { app } = require('electron');
 
