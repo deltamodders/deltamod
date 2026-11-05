@@ -1,13 +1,3 @@
-# HEY!
-
-This is a dev branch of Deltamod. Don't run this. or do. It should run fine.
-
-NOTE TO SELF: Unused files found so far:
-
-```txt
-node/Junction.js
-```
-
 <p><img width="100" alt="Deltamod" src="./build/icon-big.png" /></p>
 <h1>Deltamod</h1>
 <p><img alt="Windows build status" src="https://github.com/deltamodders/deltamod/actions/workflows/build-windows.yml/badge.svg" /> <img alt="Linux build status" src="https://github.com/deltamodders/deltamod/actions/workflows/build-linux.yml/badge.svg" /></p>
