@@ -6,7 +6,6 @@ NOTE TO SELF: Unused files found so far:
 
 ```txt
 node/Junction.js
-node/Protocol.js
 ```
 
 <p><img width="100" alt="Deltamod" src="./build/icon-big.png" /></p>
