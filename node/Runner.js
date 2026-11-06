@@ -26,6 +26,9 @@ const Plugin = require('./Plugins');
 require('./RemoteDL.js'); // Start GameBanana remote download check loop
 
 // --- Global Setup & State ---
+/**
+ * @type {BrowserWindow}
+ */
 let win;
 
 const isControllerMode = process.argv.includes('-controller');
@@ -136,6 +139,8 @@ function killConflictProcesses() {
             }
         }
     } catch (e) {
+        // TODO(fnrir): "e.message | e" log stuff
+        // @ts-ignore
         console.warn('Process-check wrapper failed:', e?.message || e);
     }
 }
@@ -223,6 +228,8 @@ function createWindow() {
         KeyValue.retrieve();
     }
     catch (e) {
+        // TODO(fnrir): "e.message || e" log stuff
+        // @ts-ignore
         dialog.showMessageBoxSync({ type: 'error', title: 'Failed to load storage', message: `Deltamod failed to load your installation storage. This may be due to a corrupted file.\n\nError details:\n${e.message || e}` });
     }
     win = new BrowserWindow({
@@ -341,7 +348,8 @@ app.whenReady().then(() => {
 
     try {
         const p = KeyValue.readKVS('deltarunePath');
-        if (p) GamePatching.restoreOriginalsIfAny(p);
+        // FIXME(fnrir): this function does not exist
+        //if (p) GamePatching.restoreOriginalsIfAny(p);
     } catch {}
 
     createWindow();

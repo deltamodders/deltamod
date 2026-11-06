@@ -1,3 +1,5 @@
+// @ts-check
+
 const { BrowserWindow, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -92,6 +94,12 @@ async function isLoggedIn() {
     }
 }
 
+/**
+ * @param {"get" | "post" | "put" | "delete"} method
+ * @param {*} url
+ * @param {*} data
+ * @returns {Promise<{ success: boolean, message: string }>}
+ */
 async function authenticatedAPICall(method, url, data = {}) {
     var token = AccountManager.loadAccountInfo('gamebanana')?.cookie;
     if (!token) {
@@ -100,9 +108,13 @@ async function authenticatedAPICall(method, url, data = {}) {
 
     console.log(`Making authenticated API call to ${url} with method ${method} and data:`, data);
 
+    /**
+     * @type {axios.AxiosResponse}
+     */
+    var response;
     switch (method.toLowerCase()) {
         case 'get':
-            var response = await axios.get(url, {
+            response = await axios.get(url, {
                 headers: {
                     'Cookie': token,
                     'User-Agent': require('electron').app.userAgentFallback,
@@ -111,7 +123,7 @@ async function authenticatedAPICall(method, url, data = {}) {
             });
             break;
         case 'post':
-            var response = await axios.post(url, data, {
+            response = await axios.post(url, data, {
                 headers: {
                     'Cookie': token,
                     'User-Agent': require('electron').app.userAgentFallback,
@@ -121,7 +133,7 @@ async function authenticatedAPICall(method, url, data = {}) {
             });
             break;
         case 'put':
-            var response = await axios.put(url, data, {
+            response = await axios.put(url, data, {
                 headers: {
                     'Cookie': token,
                     'User-Agent': require('electron').app.userAgentFallback,
@@ -131,7 +143,7 @@ async function authenticatedAPICall(method, url, data = {}) {
             });
             break;
         case 'delete':
-            var response = await axios.delete(url, {
+            response = await axios.delete(url, {
                 headers: {
                     'Cookie': token,
                     'User-Agent': require('electron').app.userAgentFallback,

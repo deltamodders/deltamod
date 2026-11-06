@@ -10,6 +10,10 @@ const crypto = require('crypto');
 const console = require('./Console.js');
 
 /**
+ * @typedef {import("./System.js").IndexLike} IndexLike
+ */
+
+/**
  * @type {Object<string, boolean>}
  */
 const KVS_DATABASE_DEFAULTS = {
@@ -65,7 +69,7 @@ function kvsFlush() {
 
 /**
  * @param {*} obj
- * @param {string} index
+ * @param {IndexLike} index
  * @returns {boolean}
  */
 function kvsFlushIndex(obj, index) {
@@ -176,7 +180,7 @@ function loadUniqueDefaults() {
 /**
  * @param {string} name
  * @param {*} value
- * @param {string} index
+ * @param {IndexLike} index
  */
 function setKVSOfIndex(name, value, index) {
     try {
@@ -195,7 +199,7 @@ function setKVSOfIndex(name, value, index) {
 /**
  * @overload
  * @param {string} name
- * @param {string} index
+ * @param {IndexLike} index
  * @param {null} [defaultTo=null]
  * @returns {any}
  */
@@ -203,13 +207,13 @@ function setKVSOfIndex(name, value, index) {
  * @template T
  * @overload
  * @param {string} name
- * @param {string} index
+ * @param {IndexLike} index
  * @param {T} defaultTo
  * @returns {any | T}
  */
 /**
  * @param {string} name
- * @param {string} index
+ * @param {IndexLike} index
  * @param {any} [defaultTo=null]
  * @returns {any}
  */

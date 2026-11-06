@@ -35,7 +35,40 @@ const { processExists } = require('process-exists');
 const { createCanvas, loadImage } = require('canvas');
 const Plugin = require('./Plugins');
 
-// Using this fixes a vulnerability where attackers could freely download code
+/**
+ * @typedef {import("./GameDB")} GameDB
+ */
+
+/**
+ * @typedef AppState
+ * @property {boolean} updateAvailable
+ * @property {boolean} ignoreUpdate
+ * @property {(() => boolean)?} callbackNPS
+ * @property {any[]?} callbackNPSPassWith
+ * @property {*?} elecTracer
+ * @property {*?} STEAM_BASE
+ */
+
+/**
+ * @typedef IPCHandlersContext
+ * @property {() => BrowserWindow} getWindow
+ * @property {boolean} isControllerMode
+ * @property {boolean} isDevToolsEnabled
+ * @property {(error: Error | string) => void} errorWin
+ * @property {AppState} state
+ */
+
+/**
+ * @typedef UpdateInfo
+ * @property {string} update
+ * @property {string} newVersionLink
+ * @property {string} version
+ */
+
+/**
+ * Using this fixes a vulnerability where attackers could freely download code
+ * @type {UpdateInfo?}
+ */
 let updateStackInfo = null;
 
 const ACCOUNT_PROVIDERS = [{
@@ -45,6 +78,10 @@ const ACCOUNT_PROVIDERS = [{
 
 // --- IPC Helper Functions ---
 
+/**
+ * @param {string} imagePath
+ * @returns {Promise<string>}
+ */
 async function dominantColor(imagePath) {
     try {
         const img = await loadImage(imagePath);
@@ -112,6 +149,10 @@ function obtainThemes() {
     return [...builtInThemes, ...customThemes];
 }
 
+/**
+ * @param {string} deltapath
+ * @returns {string | null}
+ */
 function validateDeltarune(deltapath) {
     const keyItems = ['data.win'];
     const isValid = keyItems.every(item => {
@@ -122,6 +163,10 @@ function validateDeltarune(deltapath) {
     return isValid ? deltapath : null;
 }
 
+/**
+ * @param {boolean} [suppressWarnings]
+ * @returns
+ */
 async function getInstallations(suppressWarnings = false) {
     const userDataPath = app.getPath('userData');
     const systemFiles = profileIndices(userDataPath).map(index => `deltamod_system-${index}`);
@@ -182,10 +227,20 @@ async function getInstallations(suppressWarnings = false) {
     return installations;
 }
 
+/**
+ * @param {string} root
+ * @returns {Promise<void>}
+ */
 async function precalculateHashes(root) {
     if (!fs.existsSync(root) || fs.lstatSync(root).isFile()) return;
 
+    /**
+     * @type {string[]}
+     */
     const allFiles = [];
+    /**
+     * @param {string} dir
+     */
     function walkDir(dir) {
         for (const file of fs.readdirSync(dir)) {
             const fullPath = path.join(dir, file);
@@ -205,6 +260,10 @@ async function precalculateHashes(root) {
     });
 }
 
+/**
+ * @param {string} src
+ * @param {string} dest
+ */
 function copyRecursiveSync(src, dest) {
     if (fs.statSync(src).isDirectory()) {
         if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
@@ -224,7 +283,7 @@ function intoIM() {
 
 /**
  * Registers all IPC Handlers utilizing Dependency Injection to access required state safely.
- * @param {Object} context - The shared state and references from Runner.js
+ * @param {IPCHandlersContext} context - The shared state and references from Runner.js
  */
 module.exports = function registerIPCHandlers(context) {
     const { getWindow, isControllerMode, isDevToolsEnabled, errorWin, state } = context;
@@ -649,6 +708,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('pickPatchFile', (_event, [patch_type]) => pick_src_patch_file(getWindow(), patch_type));
     ipcMain.handle('pickPatchDestFile', (_event, [patch_type]) => pick_patch_dest_file(getWindow(), patch_type));
     ipcMain.handle('calculateFileHash', (_event, [patch_dest_file]) => calculate_file_hash(patch_dest_file));
+    // @ts-ignore
     ipcMain.handle('modCreate', (_event, args) => mod_create(...args));
     ipcMain.handle('howManyMods', () => Modstore.howmany());
     ipcMain.handle('dlmodURL', async (event, args) => {
@@ -743,6 +803,10 @@ module.exports = function registerIPCHandlers(context) {
                     }
                 }*/);
         }
+        /**
+         * @param {number} ms
+         * @returns {Promise<void>}
+         */
         function sleep(ms) {
             return new Promise((resolve) => {
                 setTimeout(resolve, ms);
@@ -805,7 +869,8 @@ module.exports = function registerIPCHandlers(context) {
                 { label: 'Cancel', click: () => resolve({ success: false }) }
             ]);
 
-            menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
+            const window = BrowserWindow.fromWebContents(event.sender);
+            menu.popup({ window: window ? window : undefined });
         });
     });
 
@@ -963,7 +1028,10 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('downloadGame', async (event, args) => {
         const win = getWindow();
-        const dataFeat = GameDB.getFeatInfo(args[0], 'autodownload').data;
+        /**
+         * @type {GameDB.FeatureAutodownload}
+         */
+        const dataFeat = GameDB.getFeatInfoUnchecked(args[0], 'autodownload').data;
         const deltaruneUrl = await require(`./DownloadUtilities/${dataFeat.pluginName}`).run(args[0], dataFeat);
         const modal = createProgressModal();
         const destPath = path.join(System.getTemporary(), "deltaruneGAME.zip");
@@ -971,12 +1039,13 @@ module.exports = function registerIPCHandlers(context) {
 
         try {
             const response = await axios({ method: 'get', url: deltaruneUrl, responseType: 'stream' });
-            const totalLength = parseInt(response.headers['content-length'] || '0', 10);
+            const content_len_val = response.headers['content-length'];
+            const totalLength = content_len_val ? parseInt(content_len_val.toString()) : null;
             let downloaded = 0;
 
-            response.data.on('data', chunk => {
+            response.data.on('data', /** @param {Buffer} chunk */ chunk => {
                 downloaded += chunk.length;
-                if (totalLength) updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded');
+                if (totalLength !== null) updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded');
             });
 
             response.data.pipe(writer);
@@ -1040,6 +1109,7 @@ module.exports = function registerIPCHandlers(context) {
         if (readRemoval(app.getPath('userData'), i)) i = Math.max(0, ...existingIndices) + 1;
         
         let sourcePath = specifiedLocatePath;
+        /** @type {{ appid: string } | undefined} */
         let chosenEdition;
 
         if (!selectedGame) {
@@ -1050,13 +1120,21 @@ module.exports = function registerIPCHandlers(context) {
 
         const gameInfo = GameDB.getGameById(selectedGame);
 
-        if (steam) {
-            var steamdata = gameInfo.availableFeatures.find(e => e.feat == 'steam').data;
-
+        let steamdata_maybe;
+        if (steam)
+            steamdata_maybe = gameInfo.availableFeatures.find(e => e.feat == 'steam');
+        if (steamdata_maybe !== undefined) {
+            /** @type {GameDB.FeatureSteam} */
+            const steamdata = steamdata_maybe.data;
+        
             sourcePath = findGame(state, steamdata, dialog);
             chosenEdition = { appid: steamdata.appid };
-
-            var el = (await getInstallations(true)).find(inst => inst.appid == chosenEdition.appid);
+        
+            var el = (await getInstallations(true)).find(inst => inst.appid == steamdata.appid);
+            if (el) {
+                dialog.showErrorBox('Duplicate Steam install', 'You can\'t import the same Steam installation twice. Looks like you already have this game imported as "' + el.name + '".');
+                return false;
+            }
         }
 
         if (!validateDeltarune(sourcePath)) {
@@ -1107,6 +1185,10 @@ module.exports = function registerIPCHandlers(context) {
             console.log(`Copying files from ${sourcePath} to Deltamod storage (${destPath})...`);
             fs.mkdirSync((destPath), { recursive: true });
             try {
+                /**
+                 * @param {string} src
+                 * @param {string} dest
+                 */
                 const copyDir = (src, dest) => {
                     const stats = fs.statSync(src);
                     if (stats.isDirectory()) {
@@ -1140,7 +1222,7 @@ module.exports = function registerIPCHandlers(context) {
             KeyValue.setKVSOfIndex('deltaruneEdition', 'rem', i); // stub to signal it has been upgraded
             KeyValue.setKVSOfIndex('enabledMods', [], i);
             KeyValue.setKVSOfIndex('isSteam', steam, i);
-            KeyValue.setKVSOfIndex('steamAppId', steam ? chosenEdition.appid : "", i);
+            KeyValue.setKVSOfIndex('steamAppId', chosenEdition ? chosenEdition.appid : "", i);
 
             const currentIndex = String(System.getCurrentSystemIndex());
             const selectedIndex = resolveSelection(app.getPath('userData'), fromIM ? currentIndex : i);
@@ -1333,17 +1415,18 @@ module.exports = function registerIPCHandlers(context) {
             const downloadsDir = app.getPath('downloads');
             const cliZipPath = path.join(downloadsDir, 'cli.zip');
             const response = await axios.get(asset, { responseType: 'stream', maxRedirects: 10 });
+            const content_len_val = response.headers['content-length'];
+            const totalLength = content_len_val ? parseInt(content_len_val.toString()) : null;
 
             let receivedBytes = 0;
             await new Promise((resolve, reject) => {
                 const writer = fs.createWriteStream(cliZipPath);
                 response.data.pipe(writer);
-                response.data.on('data', chunk => {
-                    const totalLength = parseInt(response.headers['content-length'] || '0', 10);
+                response.data.on('data', /** @param {Buffer} chunk */ chunk => {
                     receivedBytes += chunk.length;
-                    if (totalLength) updateProgressModal(modal, getWindow(), receivedBytes / totalLength, 'Downloading CLI');
+                    if (totalLength !== null) updateProgressModal(modal, getWindow(), receivedBytes / totalLength, 'Downloading CLI');
                 });
-                writer.on('finish', resolve);
+                writer.on('finish', /** @type {() => void} */ (resolve));
                 writer.on('error', reject);
                 response.data.on('error', reject);
             });
@@ -1360,6 +1443,8 @@ module.exports = function registerIPCHandlers(context) {
             dialog.showMessageBox(getWindow(), { type: 'info', title: 'Installation complete', message: 'DeltamodCLI has been installed successfully!' });
 
         } catch (e) {
+            // TODO(fnrir): "e.message || e" log stuff
+            // @ts-ignore
             dialog.showErrorBox('Error', `Failed to download CLI: ${e.message || e}`);
         }
     });

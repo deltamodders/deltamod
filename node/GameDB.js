@@ -61,26 +61,39 @@ function getGames() {
 
 /**
  * @param {string} id
- * @returns {GameInfo | undefined}
+ * @returns {GameInfo}
  */
 function getGameById(id) {
-    const games = getGames();
-    return games.find(g => g.id == id);
+    const res = getGames().find(g => g.id == id);
+    if (res === undefined) throw new Error(`Unknown game: ${id}`);
+    return res;
 }
 
 /**
  * @param {string} id 
  * @param {string} feat 
- * @returns {FeatureInfo | boolean | undefined}
+ * @returns {FeatureInfo | false | undefined}
  */
 function getFeatInfo(id, feat) {
     const game = getGameById(id);
-    if (!game || !game.availableFeatures) return false;
-    return game.availableFeatures.filter(f => f.feat == feat)[0];
+    if (!game.availableFeatures) return false;
+    return game.availableFeatures.find(f => f.feat == feat);
+}
+
+/**
+ * @param {string} id 
+ * @param {string} feat 
+ * @returns {FeatureInfo}
+ */
+function getFeatInfoUnchecked(id, feat) {
+    const res = getFeatInfo(id, feat);
+    if (!res) throw new Error(`game ${id} doesn't have feature `);
+    return res;
 }
 
 module.exports = {
     getGames,
     getGameById,
-    getFeatInfo
+    getFeatInfo,
+    getFeatInfoUnchecked
 };
