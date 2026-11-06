@@ -6,6 +6,14 @@ const path = require('path');
 const { randomString } = require('./Utils');
 const console = require('./Console.js');
 
+/**
+ * @typedef {number | string} IndexLike
+ * TODO: decide if install index should be a string or an int
+ */
+
+/**
+ * @type {IndexLike}
+ */
 let systemIndex = "0";
 
 
@@ -26,7 +34,7 @@ function healthCheck() {
 }
 
 /**
- * @param {string} index
+ * @param {IndexLike} index
  */
 function setSystemIndex(index) {
     systemIndex = index;
@@ -34,7 +42,7 @@ function setSystemIndex(index) {
 }
 
 function getCurrentSystemIndex() {
-    return systemIndex;
+    return systemIndex.toString();
 }
 
 /**
@@ -48,7 +56,7 @@ function getSystemFile(fileid, unique = false) {
 
 /**
  * @param {string} fileid
- * @param {string} index
+ * @param {IndexLike} index
  * @returns {string}
  */
 function getSystemFileOfIndex(fileid, index) {
