@@ -70,6 +70,7 @@
   },
   "license": "EUPL-1.2",
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/mime-types": "^3.0.1",
     "@types/windows-elevate": "^1.0.4",
     "electron": "^44.4.5",
