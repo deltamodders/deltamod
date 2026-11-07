@@ -35,10 +35,7 @@ const { processExists } = require('process-exists');
 const { createCanvas, loadImage } = require('canvas');
 const Plugin = require('./Plugins');
 const { DELTAMOD_DIR, PACKAGE_JSON, THEMES_DIR, VIEWS_DIR } = require('./Paths');
-
-/**
- * @typedef {import("./GameDB")} GameDB
- */
+const { getSteamSized } = require("./Wrappers/Axios");
 
 /**
  * @typedef AppState
@@ -81,6 +78,18 @@ const ACCOUNT_PROVIDERS = [{
 const G3MP_DIR = path.join(DELTAMOD_DIR, 'gm3p');
 
 // --- IPC Helper Functions ---
+
+/**
+ * Cast `resolve` function to one that resolves to `void`
+ *
+ * AFAIK the value arg is optional, so this is intentional.
+ *
+ * @param {(value: any) => void} f
+ * @returns {() => void}
+ */
+function rvoid(f) {
+    return /** @type {() => void} */ (f);
+}
 
 /**
  * @param {string} imagePath
@@ -1041,18 +1050,17 @@ module.exports = function registerIPCHandlers(context) {
         const writer = fs.createWriteStream(destPath);
 
         try {
-            const response = await axios({ method: 'get', url: deltaruneUrl, responseType: 'stream' });
-            const content_len_val = response.headers['content-length'];
-            const totalLength = content_len_val ? parseInt(content_len_val.toString()) : null;
+            const response = await getSteamSized(deltaruneUrl);
+            const totalLength = response.content_length;
             let downloaded = 0;
 
-            response.data.on('data', /** @param {Buffer} chunk */ chunk => {
+            response.on_data(chunk => {
                 downloaded += chunk.length;
                 if (totalLength !== null) updateProgressModal(modal, win, downloaded / totalLength, 'Downloaded');
             });
 
             response.data.pipe(writer);
-            await new Promise((resolve, reject) => { writer.on('finish', resolve); writer.on('error', reject); });
+            await new Promise((resolve, reject) => { writer.on('finish', rvoid(resolve)); writer.on('error', reject); });
 
             if (win) win.setProgressBar(0);
             let extractPath = path.join(System.getTemporary(), `game_ext_${Date.now()}`);
@@ -1450,19 +1458,18 @@ module.exports = function registerIPCHandlers(context) {
             // download zip
             const downloadsDir = app.getPath('downloads');
             const cliZipPath = path.join(downloadsDir, 'cli.zip');
-            const response = await axios.get(asset, { responseType: 'stream', maxRedirects: 10 });
-            const content_len_val = response.headers['content-length'];
-            const totalLength = content_len_val ? parseInt(content_len_val.toString()) : null;
+            const response = await getSteamSized(asset);
+            const totalLength = response.content_length;
 
             let receivedBytes = 0;
             await new Promise((resolve, reject) => {
                 const writer = fs.createWriteStream(cliZipPath);
                 response.data.pipe(writer);
-                response.data.on('data', /** @param {Buffer} chunk */ chunk => {
+                response.on_data(chunk => {
                     receivedBytes += chunk.length;
                     if (totalLength !== null) updateProgressModal(modal, getWindow(), receivedBytes / totalLength, 'Downloading CLI');
                 });
-                writer.on('finish', /** @type {() => void} */ (resolve));
+                writer.on('finish', rvoid(resolve));
                 writer.on('error', reject);
                 response.data.on('error', reject);
             });
