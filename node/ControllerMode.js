@@ -1,3 +1,5 @@
+// @ts-check
+
 const { exec } = require('child_process');
 
 var proc;
