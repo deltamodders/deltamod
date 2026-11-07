@@ -94,17 +94,25 @@ async function isLoggedIn() {
     }
 }
 
+const NO_AUTH_MSG = "User not logged in";
 /**
+ * FIXME(fnrir): this is a dirty hack
+ * @type {axios.AxiosResponse}
+ */
+// @ts-ignore
+const NO_AUTH_RES = { success: false, message: "User not logged in" };
+
+/**
+ * @template T
+ * @template D
  * @param {"get" | "post" | "put" | "delete"} method
  * @param {*} url
  * @param {*} data
- * @returns {Promise<{ success: boolean, message: string }>}
+ * @returns {Promise<axios.AxiosResponse<T, D, {}, any>>}
  */
 async function authenticatedAPICall(method, url, data = {}) {
     var token = AccountManager.loadAccountInfo('gamebanana')?.cookie;
-    if (!token) {
-        return { success: false, message: "User not logged in" };
-    }
+    if (!token) return NO_AUTH_RES;
 
     console.log(`Making authenticated API call to ${url} with method ${method} and data:`, data);
 
@@ -152,11 +160,14 @@ async function authenticatedAPICall(method, url, data = {}) {
                 data: data
             });
             break;
+        default:
+            throw new Error(`unsupported method: ${method}`);
     }
 
     return response;
 }
 
+/** @type {any} */
 let uiConfCache = null;
 
 async function getGBUIConf(skipCache = false) {
@@ -185,6 +196,12 @@ function getAccountInfo() {
 function clearCache() {
     uiConfCache = null;
 }
+/**
+ * @param {string} id
+ * @param {string} comment
+ * @param {string} model
+ * @returns {Promise<boolean>}
+ */
 async function leaveComment(id, comment, model) {
     var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/${model}/${id}/Post/Add`, {
         _aImageFiles: [],
@@ -196,11 +213,20 @@ async function leaveComment(id, comment, model) {
     return response.status === 200;
 }
 
+/**
+ * @param {string} model
+ * @param {string} id
+ * @returns {Promise<{ status: number, data: any }>}
+ */
 async function likeMod(model, id) {
     var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/${model}/${id}/Like`, {});
     return { status: response.status, data: response.data };
 }
 
+/**
+ * @param {string} name
+ * @returns {Promise<true>}
+ */
 async function createDeltamodBackup(name) {
     var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/Collection/Add`, {
         _bIsPrivate: true,
@@ -210,6 +236,12 @@ async function createDeltamodBackup(name) {
     return true;
 }
 
+/**
+ * @param {string} collectionId
+ * @param {string} itemId
+ * @param {string} itemType
+ * @returns {Promise<boolean>}
+ */
 async function addModToBackup(collectionId, itemId, itemType) {
     try {
         var file = getSystemFile('bananapwd', true);
@@ -244,7 +276,12 @@ async function getCollections() {
     return collections;
 }
 
+/**
+ * @param {string} collectionId
+ * @returns {Promise<any[]>}
+ */
 async function getCollectionMods(collectionId) {
+    /** @type {any[]} */
     var allMods = [];
     var page = 0;
     while (true) {
@@ -278,6 +315,10 @@ async function getCollectionMods(collectionId) {
     return allDownloads;
 }
 
+/**
+ * @param {string} collectionId
+ * @returns {Promise<{ success: boolean, error: string? }>}
+ */
 async function deleteCollection(collectionId) {
     var response = await authenticatedAPICall('delete', `https://gamebanana.com/apiv13/Collection/${collectionId}`, {
         _idReasonRow: 1,
@@ -287,6 +328,11 @@ async function deleteCollection(collectionId) {
     return { success: response.status == 200, error: response.status == 200 ? null : response.data };
 }
 
+/**
+ * @param {string} commentId
+ * @param {string} commentText
+ * @returns {Promise<{ success: boolean, error: any?, id: string }>}
+ */
 async function replyToComment(commentId, commentText) {
     var response = await authenticatedAPICall('post', `https://gamebanana.com/apiv13/Post/${commentId}`, {
         _sText: commentText
