@@ -104,8 +104,8 @@ const NO_AUTH_RES = { success: false, message: "User not logged in" };
  * @template T
  * @template D
  * @param {"get" | "post" | "put" | "delete"} method
- * @param {*} url
- * @param {*} data
+ * @param {string} url
+ * @param {any} [data]
  * @returns {Promise<axios.AxiosResponse<T, D, {}, any>>}
  */
 async function authenticatedAPICall(method, url, data = {}) {
@@ -264,7 +264,7 @@ async function getCollections() {
         return [];
     }
 
-    var collections = response.data._aAllCollections.map(x => {
+    var collections = response.data._aAllCollections.map(/** @param {any} x */ x => {
         return {
             id: x._idRow,
             name: x._sName
@@ -297,7 +297,9 @@ async function getCollectionMods(collectionId) {
     for (const mod of allMods) {
         var profilepage = await authenticatedAPICall('get', `https://gamebanana.com/apiv13/${mod._sModelName}/${mod._idRow}/ProfilePage`, {});
         var files = profilepage.data._aFiles
+            // @ts-ignore
             .filter(x => x._aModManagerIntegrations.map(y => y._idToolRow).includes(20575))
+            // @ts-ignore
             .map((x) => {
                 return {
                     url: x._sDownloadUrl.replace('https://gamebanana.com/dl/', 'https://gamebanana.com/mmdl/'),
@@ -345,6 +347,7 @@ async function pairRemoteDownload() {
     return { 
         success: response.status == 200 && response.data._sStatus == "SUCCESS", 
         pair: response.data._sPairingCommand, 
+        // @ts-ignore
         error: response._sStatus == "SUCCESS" ? null : response.data 
     };
 }
