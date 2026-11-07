@@ -16,9 +16,9 @@ const UTMT_PATH = path.join(BUILTIN_TOOLS_DIR, "utmt", PLATFORM_SUBDIR, "Underta
 /**
  * @typedef {(..._a: any) => void} LogFn
  * @callback ToolRunErrHandle
- * @param {number} exit_code
+ * @param {number?} exit_code
  * @param {string} output
- * @returns {void | Error?}
+ * @returns {void | undefined | Error}
  */
 
 /**
@@ -33,7 +33,7 @@ const UTMT_PATH = path.join(BUILTIN_TOOLS_DIR, "utmt", PLATFORM_SUBDIR, "Underta
  */
 async function tool_run(command, args, options, tool_name_upper, tool_name_mixed, log_fn, error_fn = (_a, _b) => {}) {
     /**
-     * @param {number} exit_code
+     * @param {number?} exit_code
      * @param {string} output
      * @returns {Error}
      */
@@ -41,7 +41,7 @@ async function tool_run(command, args, options, tool_name_upper, tool_name_mixed
         return new Error(`${tool_name_mixed} exited with code ${exit_code}\n\nCOMMAND: ${command} ${args.join(" ")}\nOUTPUT:\n${output}`);
     }
     /**
-     * @param {number} exit_code
+     * @param {number?} exit_code
      * @param {string} output
      * @returns {Error}
      */
@@ -81,8 +81,8 @@ async function tool_run(command, args, options, tool_name_upper, tool_name_mixed
     console.log(`Running ${tool_name_mixed} with args: ${command} ${args.join(" ")}`);
     return new Promise((resolve, reject) => {
         const p = spawn(command, args, options);
-        p.stdout.on('data', on_stdout);
-        p.stderr.on('data', on_stderr);
+        if (p.stdout) p.stdout.on('data', on_stdout);
+        if (p.stderr) p.stderr.on('data', on_stderr);
         p.on('close', (exit_code) => {
             if (exit_code === 0) resolve();
             else reject(mkerror(exit_code, outputref.s));
@@ -129,16 +129,16 @@ function utmt(args, log_fn) {
 /**
  * @param {LogFn} callback
  * @param {string} newp
- * @param {string[]} patches
+ * @param {{ patch: string }[]} patches
  * @param {string} gamePath
  * @param {string} targetFile
  * @returns {Promise<void>}
  */
 function apply_prebuilt_merge(callback, newp, patches, gamePath, targetFile) {
     /**
-     * @param {number} _exit_code
+     * @param {number?} _exit_code
      * @param {string} output
-     * @returns {Error}
+     * @returns {undefined | Error}
      */
     function merge_error(_exit_code, output) {
         if (output.includes('normally this indicates that the source file is incorrect'))
@@ -156,7 +156,7 @@ function apply_prebuilt_merge(callback, newp, patches, gamePath, targetFile) {
  * @param {LogFn} callback
  * @param {string} relativeBackupFile
  * @param {string} relativeTargetFile
- * @param {string[]} patches
+ * @param {{ patch: string }[]} patches
  * @param {string} gamePath
  * @returns {Promise<void>}
  */
@@ -182,6 +182,11 @@ function apply_script(callback, backupPath, targetPath, patchPath) {
     );
 }
 
+/**
+ * @param {string} filePath
+ * @param {BufferEncoding} encoding
+ * @returns {string?}
+ */
 function safeReadFileSync(filePath, encoding) {
     try {
         return fs.readFileSync(filePath, encoding);
@@ -204,8 +209,42 @@ function maybeChmodExec(path) {
     fs.chmodSync(path, mode | MODE_USER_EXEC);
 }
 
+/**
+ * @typedef PatchInfo
+ * @property {string} type
+ * @property {string} patch
+ * @property {string} to
+ * @property {string} modName
+ */
+
+/**
+ * @typedef ModInfo
+ * @property {any} meta
+ * @property {string} xml
+ * @property {string} folder
+ * @property {PatchInfo[]} patches
+ * @property {string} uuid
+ */
+
+/**
+ * @typedef GamePatchStatus
+ * @property {boolean} patched
+ * @property {string} log
+ * @property {string} fullLog
+ */
+
+/**
+ * @param {string} gamePath
+ * @param {string} modFolder
+ * @param {string[]} mods
+ * @param {(log: string) => void} logCallback
+ * @returns {Promise<GamePatchStatus>}
+ */
 async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     let fullLog = '';
+    /**
+     * @param  {...any} args
+     */
     function log(...args) {
         console.log_internal("LOG", args, new Error().stack, 2);
         fullLog += args.join(' ') + '\n';
@@ -219,8 +258,8 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     // ensure the G3MTool-linux file is executable
     maybeChmodExec(G3MT_PATH);
     maybeChmodExec(UTMT_PATH);
-    
-    var moddingInfo = fs.readdirSync(modFolder).map(folder => {
+
+    var moddingInfo = /** @type {ModInfo[]} */ (fs.readdirSync(modFolder).map(folder => {
         var moddingXML = path.join(modFolder, folder, 'modding.xml');
         if (fs.existsSync(path.join(modFolder, folder, '__variant'))) {
             var filename = fs.readFileSync(path.join(modFolder, folder, '__variant'), 'utf-8').trim();
@@ -233,8 +272,27 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
             return null;
         }
 
+        const meta_path = path.join(modFolder, folder, 'meta.toml');
+        const deltaid_path = path.join(modFolder, folder, '__deltaID.json');
+
         const xml = safeReadFileSync(moddingXML, 'utf-8');
-        const meta = TOML.parse(safeReadFileSync(path.join(modFolder, folder, 'meta.toml'), 'utf-8'));
+        if (xml === null) {
+            console.error(`"${moddingXML}" is empty`);
+            return null;
+        }
+        const meta_txt = safeReadFileSync(meta_path, 'utf-8');
+        if (meta_txt === null) {
+            console.error(`"${meta_path}" is empty`);
+            return null;
+        }
+        const deltaid_txt = safeReadFileSync(deltaid_path, 'utf-8');
+        if (deltaid_txt === null) {
+            console.error(`"${deltaid_path}" is empty`);
+            return null;
+        }
+
+        /** @type {any} */
+        const meta = TOML.parse(meta_txt);
 
         return {
             meta,
@@ -246,9 +304,9 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
                 to: match[3],
                 modName: meta.metadata.name
             })),
-            uuid: JSON.parse(safeReadFileSync(path.join(modFolder, folder, '__deltaID.json'), 'utf-8')).uniqueId
+            uuid: JSON.parse(deltaid_txt).uniqueId
         }
-    }).filter(mod => mod != null && mods.includes(mod.uuid));
+    }).filter(mod => mod != null && mods.includes(mod.uuid)));
 
     var totalPatches = moddingInfo.length;
     var performedPatches = 0;
@@ -258,6 +316,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     // Step 1: override patches
     log('Step 1: Applying override patches...');
 
+    /** @type {string[]} */
     let patchedFiles = [];
     var performedOverridePatches = 0;
 
@@ -303,6 +362,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
     log('Step 1 completed.');
 
+    /** @type {Object<string, { patch: string }[]>} */
     let xdeltaMap = {};
 
     for (const mod of moddingInfo) {
@@ -349,6 +409,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
         catch (err) {
             console.error(err);
             hasFailed = true;
+            // @ts-ignore
             hasFailedReason = err.message;
         }
 
@@ -398,16 +459,21 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     return { patched: true, log: '', fullLog: fullLog };
 }
 
-async function restore(gamePath) {
+/**
+ * @param {string} gamePath
+ * @param {boolean} [reentrant]
+ * @returns {Promise<void>}
+ */
+async function restore(gamePath, reentrant = false) {
     if (!gamePath || !fs.existsSync(gamePath)) {
         console.log('Game path does not exist: ' + gamePath);
         return;
     }
     const files = fs.readdirSync(gamePath);
-    console.log('Restoring original game files...');
+    if (!reentrant) console.log('Restoring original game files...');
     for (const file of files) {
         if (fs.statSync(path.join(gamePath, file)).isDirectory()) {
-            restore(path.join(gamePath, file));
+            restore(path.join(gamePath, file), true);
         }
         if (file.endsWith('.bak')) {
             console.log('Restoring file: ' + file);

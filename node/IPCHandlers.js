@@ -71,15 +71,19 @@ const ACCOUNT_PROVIDERS = [{
 // --- IPC Helper Functions ---
 
 /**
- * Cast `resolve` function to one that resolves to `void`
- *
- * AFAIK the value arg is optional, so this is intentional.
- *
- * @param {(value: any) => void} f
- * @returns {() => void}
+ * @callback VPromise
+ * @param {() => void} resolve
+ * @param {(reason?: any) => void} reject
+ * @returns {void}
  */
-function rvoid(f) {
-    return /** @type {() => void} */ (f);
+
+
+/**
+ * @param {VPromise} f
+ * @returns {Promise<void>}
+ */
+function vpromise(f) {
+    return new Promise(f);
 }
 
 /**
@@ -356,7 +360,7 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('sampleError', () => errorWin('This is a sample error triggered from the renderer process.'));
     ipcMain.handle('log', (event, args) => console.rendererLog(args[1], args[2], args[0]));
-    ipcMain.handle('showWindow', (event) => BrowserWindow.fromWebContents(event.sender).show());
+    ipcMain.handle('showWindow', (event) => BrowserWindow.fromWebContents(event.sender)?.show());
     ipcMain.handle('minimizeMe', (event) => BrowserWindow.fromWebContents(event.sender)?.minimize());
     ipcMain.handle('toggleFullscreen', (event) => {
         const senderWin = BrowserWindow.fromWebContents(event.sender);
@@ -582,7 +586,7 @@ module.exports = function registerIPCHandlers(context) {
         const patcherPath = path.join(__dirname, '..', 'gm3p');
         const tempPath = path.join(app.getPath('temp'), `deltamod_patcher_${Date.now()}`);
 
-        await new Promise((resolve, reject) => _7z.unpack(zip, tempPath, err => err ? reject(err) : resolve()));
+        await vpromise((resolve, reject) => _7z.unpack(zip, tempPath, err => err ? reject(err) : resolve()));
 
         const possibleExecutables = ['GM3P.exe', 'GamemakerModMerger.exe', 'G3MTool.exe'];
         const found = possibleExecutables.some(exe => fs.existsSync(path.join(tempPath, exe)));
@@ -629,7 +633,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('removeMod', async (event, args) => Modstore.removeModSafe(args[0]));
     ipcMain.handle('toggleModState', (event, args) => {
         const enabled = KeyValue.readKVS("enabledMods", []);
-        KeyValue.setKVS("enabledMods", args[1] ? [...enabled, args[0]] : enabled.filter(x => x !== args[0]));
+        KeyValue.setKVS("enabledMods", args[1] ? [...enabled, args[0]] : enabled.filter(/** @param {string} x */ x => x !== args[0]));
     });
     ipcMain.handle('getModState', (event, args) => KeyValue.readKVS("enabledMods", []).includes(args[0]));
     ipcMain.handle('getModList', () => {
@@ -784,6 +788,7 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('gamebanana_getCollections', async () => {
         var collections = [
+            // @ts-ignore
             ...(await require('./Accounts/GameBanana.js').collections.list()).map(c => ({ ...c, provider: 'GameBanana', providerTechnical: 'GameBanana' }))
         ];
 
@@ -851,6 +856,7 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('gamebanana_downloadAllInCollection', async (event, args) => {
+        /** @type {{ mod: string, model: string, files: { filename: string, url: string }[] }[]} */
         var mods = await require('./Accounts/' + args[1] + '.js').collections.inspect(args[0]);
 
         var pwin = createProgressModal();
@@ -950,8 +956,9 @@ module.exports = function registerIPCHandlers(context) {
                 app.exit();
             }*/
         } catch (err) {
-            if (err.message && err.message.includes('Restarting')) return false;
-            errorWin(`Couldn't patch and run game: ${err.message}`);
+            const err2 = /** @type {Error} */ (err);
+            if (err2.message && err2.message.includes('Restarting')) return false;
+            errorWin(`Couldn't patch and run game: ${err2.message}`);
             return false;
         }
     });
@@ -983,7 +990,7 @@ module.exports = function registerIPCHandlers(context) {
             });
 
             response.data.pipe(writer);
-            await new Promise((resolve, reject) => { writer.on('finish', rvoid(resolve)); writer.on('error', reject); });
+            await vpromise((resolve, reject) => { writer.on('finish', resolve); writer.on('error', reject); });
 
             if (win) win.setProgressBar(0);
             let extractPath = path.join(System.getTemporary(), `game_ext_${Date.now()}`);
@@ -1122,8 +1129,9 @@ module.exports = function registerIPCHandlers(context) {
                 copyDir(sourcePath, destPath);
             }
             catch (err) {
-                dialog.showErrorBox('Copy failed', `Failed to copy files: ${err.message}`);
-                console.error('Error during copy:', err);
+                const err2 = /** @type {Error} */ (err);
+                dialog.showErrorBox('Copy failed', `Failed to copy files: ${err2.message}`);
+                console.error('Error during copy:', err2);
                 return false;
             }
 
@@ -1149,7 +1157,8 @@ module.exports = function registerIPCHandlers(context) {
             page(fromIM ? "installmanager" : "main");
             return true;
         } catch (err) {
-            dialog.showErrorBox('Import failed', `Failed: ${err.message}\n\n${err.stack}`);
+            const err2 = /** @type {Error} */ (err);
+            dialog.showErrorBox('Import failed', `Failed: ${err2.message}\n\n${err2.stack}`);
             return false;
         }
     });
@@ -1229,6 +1238,8 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('existsUniqueFlag', (event, args) => KeyValue.existsUniqueFlag(args[0].toUpperCase()));
     ipcMain.handle('fetchSharedVariable', (event, args) => getSharedVar(args[0]));
     ipcMain.handle('isBaked', () => KeyValue.readKVS('baked'));
+    // TODO(fnrir): better typing for this callback
+    // @ts-ignore
     ipcMain.handle('npsCallback', () => { if (state.callbackNPS) { state.callbackNPS(...state.callbackNPSPassWith); state.callbackNPS = null; } });
     ipcMain.handle('executeArgumentCmd', () => {}); // No-op
     ipcMain.handle('openFlagDatabase', () => shell.openPath(path.join(app.getPath('userData'), 'deltamod_system-unique', 'flagDB.config')));
@@ -1339,14 +1350,14 @@ module.exports = function registerIPCHandlers(context) {
             const totalLength = response.content_length;
 
             let receivedBytes = 0;
-            await new Promise((resolve, reject) => {
+            await vpromise((resolve, reject) => {
                 const writer = fs.createWriteStream(cliZipPath);
                 response.data.pipe(writer);
                 response.on_data(chunk => {
                     receivedBytes += chunk.length;
                     if (totalLength !== null) updateProgressModal(modal, getWindow(), receivedBytes / totalLength, 'Downloading CLI');
                 });
-                writer.on('finish', rvoid(resolve));
+                writer.on('finish', resolve);
                 writer.on('error', reject);
                 response.data.on('error', reject);
             });
