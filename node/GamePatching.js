@@ -412,6 +412,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
         catch (/** @type {any} */ err) {
             console.error(err);
             hasFailed = true;
+            // @ts-ignore
             hasFailedReason = err.message;
         }
 
