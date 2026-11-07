@@ -1,3 +1,5 @@
+// @ts-check
+
 const { Tray, Menu } = require('electron');
 const path = require('path');
 async function makeTray() {
