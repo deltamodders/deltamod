@@ -146,7 +146,7 @@ function apply_prebuilt_merge(callback, newp, patches, gamePath, targetFile) {
     }
     return g3mtool(
         gamePath,
-        ['patch', 'merge', newp, ...patches.map(p => p.patch), '-a', path.join(gamePath, targetFile)],
+        ['patch', 'merge', newp, ...patches.map(p => p.patch), '--properties', '-a', path.join(gamePath, targetFile)],
         callback,
         merge_error
     );
@@ -204,6 +204,12 @@ function maybeChmodExec(path) {
     fs.chmodSync(path, mode | MODE_USER_EXEC);
 }
 
+/**
+ * @param {string} gamePath
+ * @param {string} modFolder
+ * @param {string[]} mods
+ * @param {LogFn} [logCallback]
+ */
 async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     let fullLog = '';
     function log(...args) {
@@ -423,6 +429,10 @@ async function restore(gamePath) {
 
 }
 
+// NOTE(fnrir): this was missing. inferred from unit tests
+const MERGE_FLAGS = ["--properties"];
+
+// TODO(fnrir): merge duplicate functionality with `apply_*` functions
 async function applyStagedDelta({ game, target, payloads, scratch, log }) {
     const input = path.join(scratch, 'delta-input');
     const output = path.join(scratch, 'delta-output');
@@ -432,7 +442,7 @@ async function applyStagedDelta({ game, target, payloads, scratch, log }) {
         : ['patch', 'apply', input, payloads[0], output];
     try {
         await new Promise((resolve, reject) => {
-            execFile(PATCHER_PATH, args, { cwd: game, timeout: 600000, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+            execFile(G3MT_PATH, args, { cwd: game, timeout: 600000, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
                 try {
                     log(stdout);
                     log(stderr);
@@ -454,8 +464,8 @@ async function applyStagedDelta({ game, target, payloads, scratch, log }) {
 
 function getStagedDeltaHelper() {
     try {
-        fs.accessSync(PATCHER_PATH, fs.constants.R_OK | fs.constants.X_OK);
-        if (!fs.statSync(PATCHER_PATH).isFile()) return undefined;
+        fs.accessSync(G3MT_PATH, fs.constants.R_OK | fs.constants.X_OK);
+        if (!fs.statSync(G3MT_PATH).isFile()) return undefined;
         return applyStagedDelta;
     } catch {
         return undefined;

@@ -496,7 +496,7 @@ test('native multi-mod patching deep-merges property files so every mod keeps it
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'GamePatching.js'), 'utf8'), {
         require: name => ({
             fs: { ...fs, existsSync: file => file.endsWith('G3MTool.exe') || fs.existsSync(file) },
-            path, './Console': { log() {}, error() {} },
+            path, './Console': { log_internal() {}, log() {}, error() {} },
             'smol-toml': { parse: () => ({ metadata: { name: 'fixture' } }) },
             child_process: { spawn: (file, args) => {
                 commands.push(Array.from(args));
