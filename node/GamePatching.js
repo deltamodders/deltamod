@@ -4,81 +4,182 @@ const path = require('path');
 const { spawn, execFile } = require('child_process');
 const { dialog } = require('electron');
 const TOML = require('smol-toml');
-const pty = require('node-pty');
 
-const PATCHER_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'g3mtool', 'G3MTool.exe') : path.join(__dirname, '../', 'tools', 'g3mtool', 'G3MTool');
-const UTMT_PATH = process.platform == 'win32' ? path.join(__dirname, '../', 'tools', 'utmt', 'win', 'UndertaleModCli.exe') : path.join(__dirname, '../', 'tools', 'utmt', 'linux', 'UndertaleModCli');
-// --properties lets G3MTool combine conflicting asset properties instead of keeping only the highest-priority
-// mod's copy. The global script list also needs a G3MTool built on the fixed G3MLib list merge (see PROTON.md).
-const MERGE_FLAGS = ['--properties'];
+const BUILTIN_TOOLS_DIR = path.join(path.dirname(__dirname), "tools");
 
-async function g3mtool(callback, args, gamePath) {
-    console.log('Running G3MTool with args: G3MTool', args.join(' '));
+const EXEC_SUFFIX = process.platform === "win32" ? ".exe" : "";
+const PLATFORM_SUBDIR = process.platform === "win32" ? "win" : "linux";
+
+const G3MT_PATH = path.join(BUILTIN_TOOLS_DIR, "g3mtool", "G3MTool" + EXEC_SUFFIX);
+const UTMT_PATH = path.join(BUILTIN_TOOLS_DIR, "utmt", PLATFORM_SUBDIR, "UndertaleModCli" + EXEC_SUFFIX);
+
+/**
+ * @typedef {(..._a: any) => void} LogFn
+ * @callback ToolRunErrHandle
+ * @param {number} exit_code
+ * @param {string} output
+ * @returns {void | Error?}
+ */
+
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {import('child_process').SpawnOptions} options
+ * @param {string} tool_name_upper
+ * @param {string} tool_name_mixed
+ * @param {LogFn} log_fn
+ * @param {ToolRunErrHandle} error_fn
+ * @returns {Promise<void>}
+ */
+async function tool_run(command, args, options, tool_name_upper, tool_name_mixed, log_fn, error_fn = (_a, _b) => {}) {
+    /**
+     * @param {number} exit_code
+     * @param {string} output
+     * @returns {Error}
+     */
+    function default_error(exit_code, output) {
+        return new Error(`${tool_name_mixed} exited with code ${exit_code}\n\nCOMMAND: ${command} ${args.join(" ")}\nOUTPUT:\n${output}`);
+    }
+    /**
+     * @param {number} exit_code
+     * @param {string} output
+     * @returns {Error}
+     */
+    function mkerror(exit_code, output) {
+        return error_fn(exit_code, output) || default_error(exit_code, output);
+    }
+    /**
+     * @param {Buffer} chunk
+     * @param {{ s: string }} outputref
+     * @param {NodeJS.WriteStream} out
+     * @param {string} out_type
+     */
+    function iohandle(chunk, outputref, out, out_type) {
+        // and pray to YHVH that this is valid UTF-8
+        // TODO(fnrir): maybe decode only until the last valid UTF-8 char?
+        let txt = chunk.toString();
+        // commented out due to personal preference. we're already printing this
+        //out.write(txt);
+        // FIXME(fnrir): this might split lines longer than the IO buffer
+        for (const line of txt.trimEnd().split("\n"))
+            log_fn(`[${tool_name_upper}/${out_type}] ${line}`);
+        outputref.s += txt;
+    }
+    /**
+     * @param {{ s: string }} outputref
+     * @param {NodeJS.WriteStream} out
+     * @param {string} out_type
+     * @returns {(chunk: Buffer) => void}
+     */
+    function mkiohandle(outputref, out, out_type) {
+        return (chunk) => { iohandle(chunk, outputref, out, out_type) };
+    }
+    const outputref = { s: "" };
+    const on_stdout = mkiohandle(outputref, process.stdout, "STDOUT");
+    const on_stderr = mkiohandle(outputref, process.stderr, "STDERR");
+    if (!options.stdio) options.stdio = ["ignore", "pipe", "pipe"];
+    console.log(`Running ${tool_name_mixed} with args: ${command} ${args.join(" ")}`);
     return new Promise((resolve, reject) => {
-        const g3mtoolProcess = spawn(PATCHER_PATH, args, { stdio: 'pipe', cwd: gamePath });
-        var output = '';
-        g3mtoolProcess.stdout.on('data', (data) => {
-            output += data.toString();
-            process.stdout.write(data.toString());
-            callback("[G3MTOOL] " + data.toString());
-        });
-        g3mtoolProcess.stderr.on('data', (data) => {
-            output += data.toString();
-            process.stderr.write(data.toString());
-            callback("[G3MTOOL/STDERR] " + data.toString());
-        });
-        g3mtoolProcess.on('close', (code) => {
-            if (code === 0) {
-                resolve();
-            } else {
-                if (output.includes('normally this indicates that the source file is incorrect')) {
-                    reject(new Error('This mod can\'t be merged due to an xdelta being applied to the wrong source file. Please make sure your mods are compatible with your install.'));
-                    return;
-                }
-                reject(new Error(`G3MTool exited with code ${code}\n\nCOMMAND: ${PATCHER_PATH} ${args.join(' ')}\nOUTPUT:\n${output}`));
-            }
+        const p = spawn(command, args, options);
+        p.stdout.on('data', on_stdout);
+        p.stderr.on('data', on_stderr);
+        p.on('close', (exit_code) => {
+            if (exit_code === 0) resolve();
+            else reject(mkerror(exit_code, outputref.s));
         });
     });
 }
 
-async function utmt(callback, args) {
-    console.log('Running UndertaleModCli with args: UndertaleModCli', args.map(x => '"' + x + '"').join(' '));
-    return new Promise((resolve, reject) => {
-        const ptyProcess = pty.spawn(UTMT_PATH, args, { cwd: path.dirname(UTMT_PATH) });
-        let output = '';
-        let closed = false;
-        
-        ptyProcess.on('data', (data) => {
-            var dataStr = data.toString();
-            dataStr = dataStr.replace(/\x1B\[[0-9;]*m/g, '').trim();
-            if (dataStr.length == 0) return;
-            output += dataStr;
-            process.stdout.write(dataStr);
-            callback("[UTMT] " + dataStr);
-        });
+/**
+ * @param {string} gamePath
+ * @param {string[]} args
+ * @param {LogFn} log_fn
+ * @param {ToolRunErrHandle} error_fn
+ * @returns {Promise<void>}
+ */
+function g3mtool(gamePath, args, log_fn, error_fn = (_a, _b) => {}) {
+    return tool_run(
+        G3MT_PATH,
+        args,
+        { cwd: gamePath },
+        "G3MTOOL",
+        "G3MTool",
+        log_fn,
+        error_fn
+    );
+}
 
-        ptyProcess.on('close', (code) => {
-            closed = true;
-        });
-        
-        ptyProcess.on('exit', (code) => {
-            if (code === 0) {
-                resolve();
-            } else {
-                reject(new Error(`UndertaleModCli exited with code ${code}\n\nCOMMAND: ${UTMT_PATH} ${args.join(' ')}\nOUTPUT:\n${output}`));
-            }
-        });
-        
-        // "node-pty" has a race condition that can cause
-        // EIO errors on Unix systems when a process exits; 
-        // this is normal behaviour and does not imply a 
-        // state of failure.
-        // see: https://github.com/microsoft/node-pty/issues/178
-        ptyProcess.on('error', (error) => {
-            if (closed && error.code == "EIO") return;
-            reject(error);
-        });
-    });
+/**
+ * @param {string[]} args
+ * @param {LogFn} log_fn
+ * @returns {Promise<void>}
+ */
+function utmt(args, log_fn) {
+    const tool_bin = UTMT_PATH;
+    return tool_run(
+        tool_bin,
+        args,
+        { cwd: path.dirname(tool_bin) },
+        "UTMT",
+        "UndertaleModCli",
+        log_fn
+    );
+}
+
+/**
+ * @param {LogFn} callback
+ * @param {string} newp
+ * @param {string[]} patches
+ * @param {string} gamePath
+ * @param {string} targetFile
+ * @returns {Promise<void>}
+ */
+function apply_prebuilt_merge(callback, newp, patches, gamePath, targetFile) {
+    /**
+     * @param {number} _exit_code
+     * @param {string} output
+     * @returns {Error}
+     */
+    function merge_error(_exit_code, output) {
+        if (output.includes('normally this indicates that the source file is incorrect'))
+            return new Error('This mod can\'t be merged due to an xdelta being applied to the wrong source file. Please make sure your mods are compatible with your install.');
+    }
+    return g3mtool(
+        gamePath,
+        ['patch', 'merge', newp, ...patches.map(p => p.patch), '-a', path.join(gamePath, targetFile)],
+        callback,
+        merge_error
+    );
+}
+
+/**
+ * @param {LogFn} callback
+ * @param {string} relativeBackupFile
+ * @param {string} relativeTargetFile
+ * @param {string[]} patches
+ * @param {string} gamePath
+ * @returns {Promise<void>}
+ */
+function apply_prebuilt_as_is(callback, relativeBackupFile, relativeTargetFile, patches, gamePath) {
+    return g3mtool(
+        gamePath,
+        ['patch', 'apply', relativeBackupFile, patches[0].patch, relativeTargetFile],
+        callback
+    );
+}
+
+/**
+ * @param {LogFn} callback
+ * @param {string} backupPath
+ * @param {string} targetPath
+ * @param {string} patchPath
+ * @returns {Promise<void>}
+ */
+function apply_script(callback, backupPath, targetPath, patchPath) {
+    return utmt(
+        ['load', backupPath, '--output', targetPath, '--scripts', patchPath, '--overwrite'],
+        callback
+    );
 }
 
 function safeReadFileSync(filePath, encoding) {
@@ -106,17 +207,17 @@ function maybeChmodExec(path) {
 async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     let fullLog = '';
     function log(...args) {
-        console.log(...args);
+        console.log_internal("LOG", args, new Error().stack, 2);
         fullLog += args.join(' ') + '\n';
         if (logCallback) logCallback(args.join(' '));
     }
 
-    if (!fs.existsSync(PATCHER_PATH)) {
+    if (!fs.existsSync(G3MT_PATH)) {
         throw new Error('G3MTool not found in tools folder.');
     }
 
     // ensure the G3MTool-linux file is executable
-    maybeChmodExec(PATCHER_PATH);
+    maybeChmodExec(G3MT_PATH);
     maybeChmodExec(UTMT_PATH);
     
     var moddingInfo = fs.readdirSync(modFolder).map(folder => {
@@ -235,12 +336,12 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
         try {
             if (patches.length > 1) {
-                var output = await g3mtool(log, ['patch', 'merge', newp, ...patches.map(p => p.patch), ...MERGE_FLAGS, '-a', path.join(gamePath, targetFile)], gamePath).catch(e =>  {
+                var output = await apply_prebuilt_merge(log, newp, patches, gamePath, targetFile).catch(e =>  {
                     throw new Error(`Error merging patches for ${targetFile}: ${e.message}`);
                 });
             }
             else {
-                var output = await g3mtool(log, ['patch', 'apply', relativeBackupFile, patches[0].patch, relativeTargetFile], gamePath).catch(e =>  {
+                var output = await apply_prebuilt_as_is(log, relativeBackupFile, relativeTargetFile, patches, gamePath).catch(e =>  {
                     throw new Error(`Error applying patch for ${targetFile}: ${e.message}`);
                 });
             }
@@ -287,7 +388,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
             log(`Applying CSX ${patch.patch} to ${patch.to}...`);
 
-            var output = await utmt(log, ['load', backupPath, '--output', targetPath, '--scripts', patchPath, '--overwrite']).catch(e =>  {
+            var output = await apply_script(log, backupPath, targetPath, patchPath).catch(e =>  {
                 throw new Error(`Error applying CSX patch for ${targetPath}: ${e.message}`);
             });
             performedCsxPatches++;
