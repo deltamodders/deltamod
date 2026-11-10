@@ -32,7 +32,7 @@ Deltamod 1.X was Windows only from 1.2 onwards, and Linux-compatible before 1.2.
 # Running Deltamod from source
 - Download Node.js [here](https://nodejs.org/en).
 - Download the latest G3MTool release.
-- Create a `tools` folder and add a `g3mtool` subfolder with G3MTool executables.
+- Create a `tools` folder and add a `g3mtool` subfolder with G3MTool executables: `tools/g3mtool/G3MTool.exe` on Windows or `tools/g3mtool/G3MTool` on Linux. The Linux helper must be executable. Staged Proton overrides and copies do not require it.
 - Also create the appropriate `utmt/win` and `utmt/linux` subfolders with a release of UTMT CLI, depending on your OS.
 - Run `npm i`.
 - Now you can open your preferred command prompt and run `npm test` to run Deltamod.
@@ -43,7 +43,7 @@ Deltamod 1.X was Windows only from 1.2 onwards, and Linux-compatible before 1.2.
 Run `npm run build-windows` or `npm run build-linux` to package Deltamod as an installer and as unpacked files.
 
 ## OS support
-(Note: while Deltamod and G3MTool run natively on Linux, the games don't - to boot up, Deltamod will need Wine so it can open .exe files)
+(Note: while Deltamod and G3MTool run natively on Linux, the games don't - to boot up, Deltamod will need Wine, or the experimental Proton/UMU backend, so it can open .exe files)
 |               | Windows       | Native Linux  | Native macOS | _macOS/Linux_ (w/ CrossOver or Wine) | _All OSes_ (w/ Windows emulation) |
 | ------------- |:-------------:|:-----:|:--------:|:--------------:|:-----------------:|
 | Officially released | ✅ | ✅ | ❌ | ❌ | ✅ |

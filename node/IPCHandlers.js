@@ -20,6 +20,11 @@ const Updates = require('./Updates');
 const GameDB = require('./GameDB');
 const { createProgressModal, updateProgressModal } = require('./ProgressModal');
 const GamePatching = require('./GamePatching');
+const ProtonStaging = require('./ProtonStaging');
+const ProtonLauncher = require('./ProtonLauncher');
+const { profileIndex, profileIndices, readRemoval, removeInstallation, resolveSelection } = ProtonLauncher;
+const SteamBridge = require('./ProtonSteamBridge');
+const ProtonDialogs = require('./ProtonDialogs');
 const Junction = require('./Junction');
 const console = require('./Console');
 const { PARTITION } = require('./Config');
@@ -119,11 +124,17 @@ function validateDeltarune(deltapath) {
 
 async function getInstallations(suppressWarnings = false) {
     const userDataPath = app.getPath('userData');
-    const systemFiles = fs.readdirSync(userDataPath).filter(file => file.startsWith('deltamod_system-'));
+    const systemFiles = profileIndices(userDataPath).map(index => `deltamod_system-${index}`);
     const installations = [];
 
     for (const file of systemFiles) {
-        if (file.endsWith('unique')) continue;
+        if (!/^deltamod_system-(0|[1-9][0-9]*)$/.test(file)) continue;
+        const removal = readRemoval(userDataPath, file.slice('deltamod_system-'.length));
+        if (removal?.phase === 'done') continue;
+        if (removal) {
+            installations.push({ index: Number(removal.index), name: `Removal incomplete — Install #${Number(removal.index) + 1}`, steam: false, pid: removal.pid, appid: '' });
+            continue;
+        }
 
         const installPath = path.join(userDataPath, file);
         const index = parseInt(file.split('-')[1], 10);
@@ -135,7 +146,7 @@ async function getInstallations(suppressWarnings = false) {
 
         const cnamePath = path.join(installPath, '_cname');
 
-        if (!deltaruneInstall || !fs.existsSync(deltaruneInstall)) {
+        if ((!deltaruneInstall || !fs.existsSync(deltaruneInstall)) && !fs.existsSync(path.join(installPath, 'proton'))) {
             const defaultCName = `Install #${index + 1}`;
             const cname = fs.existsSync(cnamePath) ? fs.readFileSync(cnamePath, 'utf8') : defaultCName;
 
@@ -218,6 +229,57 @@ function intoIM() {
 module.exports = function registerIPCHandlers(context) {
     const { getWindow, isControllerMode, isDevToolsEnabled, errorWin, state } = context;
     const { getGBUIConf, collections } = require('./Accounts/GameBanana.js');
+
+    const protonRoot = () => {
+        const profile = System.getSystemFolderOfIndex('', System.getCurrentSystemIndex());
+        return path.join(fs.existsSync(profile) ? fs.realpathSync(profile) : path.resolve(profile), 'proton');
+    };
+    const steamSettings = {
+        userData: app.getPath('userData'),
+        confirmAccount: ProtonDialogs.confirmSteamAccount
+    };
+    const removalSettings = {
+        userData: app.getPath('userData'),
+        removeProton: (root, dispose) => ProtonLauncher.removeProtonProfile(root, dispose),
+        removeSteam: (root, options) => SteamBridge.removeSteamProfile(root, options, steamSettings)
+    };
+    const hasProton = () => fs.existsSync(protonRoot());
+    const protectProtonProfiles = () => {
+        const profiles = fs.readdirSync(app.getPath('userData')).filter(name => /^deltamod_system-\d+$/.test(name));
+        if (!profiles.some(name => fs.existsSync(path.join(app.getPath('userData'), name, 'proton')))) return false;
+        dialog.showErrorBox('Proton profiles protected', 'This operation deletes or renumbers profiles. Proton prefixes can contain modded progress and cannot be removed or moved automatically. Close games and back up/review these profiles manually first.');
+        return true;
+    };
+
+    async function runProton(selected = [], args = []) {
+        const root = protonRoot();
+        const win = getWindow();
+        try {
+            if (win) win.webContents.send('audio', false);
+            if (isControllerMode) CMode.stop();
+            const steam = ProtonStaging.readDescriptor(root).backend === 'steam';
+            const options = {
+                database: getPacketDatabase(), selected, args,
+                openSteam: uri => shell.openExternal(uri),
+                applyDelta: GamePatching.getStagedDeltaHelper(),
+                log: message => { if (win && !win.isDestroyed()) win.webContents.send('gplog', message); },
+                acknowledgeRuntime: ProtonDialogs.acknowledgeRuntime,
+                confirmUnverified: ProtonDialogs.confirmUnverifiedMod
+            };
+            return await (steam ? SteamBridge.runSteamProfile(root, options, steamSettings) : ProtonLauncher.runProtonProfile(root, options));
+        } catch (error) {
+            console.error('Staged Proton launch failed:', error);
+            if (SteamBridge.isLeftoverSession(error)) ProtonDialogs.offerSteamRecovery(root, error.message, steamSettings);
+            else dialog.showErrorBox('Proton launch failed', error.message);
+            return false;
+        } finally {
+            if (isControllerMode) CMode.start();
+            if (win && !win.isDestroyed()) {
+                win.webContents.send('audio', true);
+                win.webContents.send('page', 'main');
+            }
+        }
+    }
 
     ipcMain.handle('startModDrag', async (e, args) => {
         const iconPath = path.join(System.getPacketDatabase(), args[0], 'icon.png');
@@ -532,6 +594,7 @@ module.exports = function registerIPCHandlers(context) {
         app.exit(0);
     });
     ipcMain.handle('hasPatchingCore', () => {
+        if (hasProton()) return true;
         return fs.existsSync(path.join(__dirname, '..', 'gm3p'));
     });
     ipcMain.handle('myCommitInfo', () => {
@@ -598,7 +661,10 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('getModImage', (event, args) => Modstore.getModImage(args[0]));
 
     // Game Operations
-    ipcMain.handle('precalcGameHashes', () => precalculateHashes(getSystemFolder('deltaruneInstall')));
+    ipcMain.handle('precalcGameHashes', () => {
+        if (hasProton()) return dialog.showErrorBox('Clean base protected', 'This profile already has a base hash manifest. Adjacent hash files cannot be written into its clean base.');
+        return precalculateHashes(getSystemFolder('deltaruneInstall'));
+    });
     ipcMain.handle('getCurrentGameInfo', () => GameDB.getGameById(KeyValue.readKVS('gamePid')));
     ipcMain.handle('getGameInfo', (event, args) => GameDB.getGameById(args[0]));
     ipcMain.handle('getAvailableGames', () => GameDB.getGames());
@@ -614,6 +680,7 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('startGame', (event, args) => ipcMain.emit('startGame', event, args));
     ipcMain.on('startGame', async () => {
+        if (hasProton()) return runProton();
         const win = getWindow();
         const installPath = KeyValue.readKVS('gamePath');
 
@@ -821,6 +888,13 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('patchAndRun', async (event, args) => {
         const win = getWindow();
         try {
+            if (hasProton()) {
+                if (args[1] === 'baker') {
+                    dialog.showErrorBox('Unsupported operation', 'Baking is not supported by the staged Proton backend.');
+                    return false;
+                }
+                return await runProton(args[0]);
+            }
             const baking = args[1] === 'baker';
             const pathname = KeyValue.readKVS('gamePath');
             if (!pathname) return dialog.showErrorBox('Error', 'Please import a game install first.');
@@ -930,28 +1004,16 @@ module.exports = function registerIPCHandlers(context) {
         return fs.existsSync(overridePath) ? fs.readFileSync(overridePath, 'utf8') : 0;
     });
     ipcMain.handle('getMaxExistingIndex', () => {
-        try {
-            const systemFiles = fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-'));
-            let maxIndex = 0;
-            const invalidInstalls = [];
-            for (const file of systemFiles) {
-                const index = file.split('-')[1];
-                if (index === 'unique') continue;
-                var store = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), file, 'store.json'), 'utf8'));
-
-                if (!fs.existsSync(store.gamePath)) {
-                    fs.rmSync(path.join(app.getPath('userData'), file), { recursive: true, force: true });
-                    invalidInstalls.push(index);
-                    continue;
-                }
-                maxIndex = Math.max(maxIndex, parseInt(index, 10));
-            }
-            return [maxIndex, invalidInstalls];
-        } catch (err) { return [0, []]; }
+        const indices = profileIndices(app.getPath('userData'));
+        return [Math.max(0, ...indices), []];
     });
     ipcMain.handle('getInstallations', async () => await getInstallations());
     ipcMain.handle('setInstallationCName', (event, args) => fs.writeFileSync(path.join(app.getPath('userData'), `deltamod_system-${args[0]}`, '_cname'), args[1]));
     ipcMain.handle('changeSystemIndex', (event, args) => {
+        if (readRemoval(app.getPath('userData'), profileIndex(args?.[0]))) {
+            dialog.showErrorBox('Installation disabled', 'Finish deleting this installation before using another profile.');
+            return false;
+        }
         fs.writeFileSync(getSystemFile('_sysindex', true), args[0]);
         app.relaunch(intoIM());
         app.exit();
@@ -968,12 +1030,14 @@ module.exports = function registerIPCHandlers(context) {
         let selectedGame = args[4];
         let copyToDMod = args[5] == 'copy';
 
-        let i = 0;
-        fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-')).forEach(file => {
-            const idx = file.split('-')[1];
-            if (idx !== 'unique') i = Math.max(i, parseInt(idx, 10));
-        });
-        i = !fromIM ? parseInt(System.getCurrentSystemIndex()) : i + 1;
+        if (hasProton() && !fromIM) {
+            dialog.showErrorBox('Proton profile protected', 'Import into a new profile instead of overwriting an existing Proton base or prefix.');
+            return false;
+        }
+
+        const existingIndices = profileIndices(app.getPath('userData'));
+        let i = !fromIM ? Number(profileIndex(System.getCurrentSystemIndex())) : Math.max(0, ...existingIndices) + 1;
+        if (readRemoval(app.getPath('userData'), i)) i = Math.max(0, ...existingIndices) + 1;
         
         let sourcePath = specifiedLocatePath;
         let chosenEdition;
@@ -993,10 +1057,6 @@ module.exports = function registerIPCHandlers(context) {
             chosenEdition = { appid: steamdata.appid };
 
             var el = (await getInstallations(true)).find(inst => inst.appid == chosenEdition.appid);
-            if (el) {
-                dialog.showErrorBox('Duplicate Steam install', 'You can\'t import the same Steam installation twice. Looks like you already have this game imported as "' + el.name + '".');
-                return false;
-            }
         }
 
         if (!validateDeltarune(sourcePath)) {
@@ -1009,6 +1069,21 @@ module.exports = function registerIPCHandlers(context) {
             return false;
         }
 
+        let protonSettings;
+        let steamSetup;
+        if (process.platform === 'linux') {
+            const runtime = await ProtonDialogs.chooseLinuxRuntime({
+                win, steam, state, gameInfo, selectedGame, sourcePath,
+                appid: chosenEdition?.appid
+            });
+            if (!runtime) return false;
+            ({ protonSettings, steamSetup } = runtime);
+        }
+        if (steam && el && !protonSettings) {
+            dialog.showErrorBox('Duplicate Steam install', 'You can\'t import the same Steam installation twice. Looks like you already have this game imported as "' + el.name + '".');
+            return false;
+        }
+
         if (!fs.existsSync(path.join(app.getPath('userData'), `deltamod_system-${i}`))) {
             console.log('Initialized sysdir for new installation at index', i);
             fs.mkdirSync(path.join(app.getPath('userData'), `deltamod_system-${i}`), { recursive: true });
@@ -1016,7 +1091,18 @@ module.exports = function registerIPCHandlers(context) {
 
         let destPath;
 
-        if (copyToDMod) {
+        if (protonSettings) {
+            const root = path.join(fs.realpathSync(path.join(app.getPath('userData'), `deltamod_system-${i}`)), 'proton');
+            try {
+                ProtonStaging.importBase(root, sourcePath, protonSettings);
+                if (steamSetup) await SteamBridge.installSteamHook({ ...steamSetup, profile: root, manual: true, confirmManual: ProtonDialogs.confirmManualSteam }, steamSettings);
+                destPath = path.join(root, 'base');
+            } catch (error) {
+                dialog.showErrorBox('Proton import failed', `${error.message}\n\nAny created base or Steam transaction evidence is retained at ${root}. No game was launched. For complex Launch Options, use the manual setup instructions in PROTON.md rather than overwriting your command.`);
+                return false;
+            }
+        }
+        else if (copyToDMod) {
             destPath = path.join(app.getPath('userData'), `deltamod_system-${i}`, 'deltaruneInstall');
             console.log(`Copying files from ${sourcePath} to Deltamod storage (${destPath})...`);
             fs.mkdirSync((destPath), { recursive: true });
@@ -1056,7 +1142,11 @@ module.exports = function registerIPCHandlers(context) {
             KeyValue.setKVSOfIndex('isSteam', steam, i);
             KeyValue.setKVSOfIndex('steamAppId', steam ? chosenEdition.appid : "", i);
 
-            if (!fromIM) {
+            const currentIndex = String(System.getCurrentSystemIndex());
+            const selectedIndex = resolveSelection(app.getPath('userData'), fromIM ? currentIndex : i);
+            if (!fromIM || selectedIndex !== currentIndex) {
+                fs.writeFileSync(getSystemFile('_sysindex', true), selectedIndex, 'utf8');
+                System.setSystemIndex(selectedIndex);
                 KeyValue.retrieve();
             }
 
@@ -1071,6 +1161,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('isCurrentIndexSteam', () => KeyValue.readKVSOfIndex('isSteam', parseInt(System.getCurrentSystemIndex())));
     ipcMain.handle('removeSteamIntegration', () => {
         const index = parseInt(System.getCurrentSystemIndex());
+        if (hasProton()) return ProtonDialogs.manageProtonProfile(protonRoot(), getWindow, steamSettings);
         
         if (KeyValue.readKVSOfIndex('gamePath', index).endsWith('deltaruneInstall')) {
             Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', index));
@@ -1083,42 +1174,33 @@ module.exports = function registerIPCHandlers(context) {
         app.exit();
     });
 
-    ipcMain.handle('deleteSystemIndex', (event, args) => {
-        const index = args[0];
-        if (KeyValue.readKVSOfIndex('isSteam', parseInt(index)) && KeyValue.readKVSOfIndex('gamePath', parseInt(index)).endsWith('deltaruneInstall')) {
-            Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', parseInt(index)));
-        }
-
-        const pathToDelete = path.join(app.getPath('userData'), `deltamod_system-${index}`);
-        if (fs.existsSync(pathToDelete)) fs.rmSync(pathToDelete, { recursive: true, force: true });
-
-        const systemFiles = fs.readdirSync(app.getPath('userData')).filter(f => f.startsWith('deltamod_system-') && !f.endsWith('unique'));
-        let cNum = -1;
-        
-        systemFiles.sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1])).forEach(file => {
-            cNum++;
-            const oldPath = path.join(app.getPath('userData'), file);
-            const newPath = path.join(app.getPath('userData'), `deltamod_system-${cNum}`);
-            if (oldPath !== newPath) {
-                fs.renameSync(oldPath, newPath);
-                const cnamePath = path.join(newPath, '_cname');
-                if (fs.existsSync(cnamePath) && fs.readFileSync(cnamePath, 'utf8').startsWith('Install #')) {
-                    fs.writeFileSync(cnamePath, `Install #${cNum + 1}`);
+    ipcMain.handle('deleteSystemIndex', async (event, args) => {
+        let removalRequest;
+        try {
+            const index = profileIndex(args?.[0]);
+            const removed = await removeInstallation(index, {
+                confirm: request => {
+                    removalRequest = request;
+                    return ProtonDialogs.confirmRemoval(index, request);
+                },
+                removeLegacy: selected => {
+                    if (KeyValue.readKVSOfIndex('isSteam', selected) && KeyValue.readKVSOfIndex('gamePath', selected)?.endsWith('deltaruneInstall')) {
+                        Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', selected));
+                    }
                 }
-            }
-
-            var store = JSON.parse(fs.readFileSync(path.join(newPath, 'store.json'), 'utf8'));
-            if (store.gamePath.endsWith('deltaruneInstall')) {
-                console.log(`Updating game path for system index ${cNum} to reflect new index after deletion.`);
-                store.gamePath = path.join(app.getPath('userData'), `deltamod_system-${cNum}`, 'deltaruneInstall');
-                fs.writeFileSync(path.join(newPath, 'store.json'), JSON.stringify(store, null, 4), 'utf8');
-            }
-        });
-
-        fs.writeFileSync(getSystemFile('_sysindex', true), "0");
-        app.relaunch(intoIM());
-        app.exit();
-        return true;
+            }, removalSettings);
+            if (!removed) return false;
+            const remaining = profileIndices(app.getPath('userData')).filter(other => !readRemoval(app.getPath('userData'), other) && fs.existsSync(path.join(app.getPath('userData'), `deltamod_system-${other}`)));
+            const current = Number(System.getCurrentSystemIndex());
+            const next = remaining.includes(current) ? current : remaining[0] ?? Math.max(0, ...profileIndices(app.getPath('userData'))) + 1;
+            fs.writeFileSync(getSystemFile('_sysindex', true), String(next));
+            app.relaunch(intoIM());
+            app.exit();
+            return true;
+        } catch (error) {
+            ProtonDialogs.showRemovalFailure(error, removalRequest);
+            return false;
+        }
     });
 
     ipcMain.handle('createInstallLink', (event, args) => {
@@ -1199,6 +1281,7 @@ module.exports = function registerIPCHandlers(context) {
     });
     ipcMain.handle('ignore-update', () => { state.ignoreUpdate = true; page("main"); });
     ipcMain.handle('initialize', () => {
+        if (protectProtonProfiles()) return false;
         const appdata = path.join(app.getPath('appData'), 'deltamod');
         fs.readdirSync(appdata).filter(f => f.startsWith('deltamod_system')).forEach(f => {
             try { fs.rmSync(path.join(appdata, f), { recursive: true, force: true }); } catch {}

@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "test": "electron . --developer",
+    "test:unit": "node --test --test-concurrency=1 node/Proton*.test.js",
     "build-windows": "electron-builder --win --publish never",
     "build-win32": "electron-builder --win --ia32 --publish never",
     "build-linux": "electron-builder --linux --publish never "
