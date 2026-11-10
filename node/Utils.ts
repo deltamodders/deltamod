@@ -1,42 +1,31 @@
-// @ts-check
 // collecton of utility functions
 
-const crypto = require("crypto");
-const https = require("https");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
-const { BrowserWindow, app } = require("electron");
+import crypto from "crypto";
+import https from "https";
+import fs from "fs";
+import path from "path";
+import os from "os";
+import { BrowserWindow } from "electron";
 
-/** @type {BrowserWindow | null} */
-var win = null;
+let win: BrowserWindow | null = null;
 
-/**
- * @param {number} ms
- * @returns {Promise<void>}
- */
-function timeoutPromise(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
+export function timeoutPromise(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** @returns {string} */
-function generateUUID() {
+export function generateUUID(): string {
     return crypto.randomUUID();
 }
 
-const { pipeline } = require('stream');
-const { promisify } = require('util');
+import { pipeline } from 'stream';
+import { promisify } from 'util';
 const pipelineAsync = promisify(pipeline);
 
-/**
- * @param {string} url
- * @param {string} dest
- * @param {(downloadedFrac: number) => void} onProgress
- * @returns {Promise<void>}
- */
-async function downloadFile(url, dest, onProgress) {
+export async function downloadFile(
+    url: string,
+    dest: string,
+    onProgress: (downloadedFrac: number) => void,
+): Promise<void> {
     return new Promise((resolve, reject) => {
         const req = https.get(url, async (res) => {
             if (res.statusCode === undefined) {
@@ -64,7 +53,7 @@ async function downloadFile(url, dest, onProgress) {
                 let downloaded = 0;
 
                 if (onProgress) {
-                    res.on('data', (chunk) => {
+                    res.on('data', (chunk: Buffer) => {
                         downloaded += chunk.length;
 
                         if (total > 0) {
@@ -96,11 +85,7 @@ async function downloadFile(url, dest, onProgress) {
     });
 }
 
-/**
- * @param {string} filePath
- * @returns {string}
- */
-function getFileVersion(filePath) {
+export function getFileVersion(filePath: string): string {
     var basecmd = `powershell -command "(Get-Item '${filePath}').VersionInfo.FileVersion"`;
     var execSync = require('child_process').execSync;
     var c = execSync(basecmd).toString().trim();
@@ -108,28 +93,15 @@ function getFileVersion(filePath) {
     return c;
 }
 
-/**
- * @param {number} length
- * @returns {string}
- */
-function randomString(length) {
+export function randomString(length: number): string {
     return crypto.randomBytes(length).toString('hex').slice(0, length);
 }
 
-/**
- * @template T
- * @param {T[]} arr
- * @returns {T?}
- */
-function lastOfArray(arr) {
+export function lastOfArray<T>(arr: T[]): T | null {
     return arr.length > 0 ? arr[arr.length - 1] : null;
 }
 
-/**
- * @param {string} filePath
- * @returns {string}
- */
-function hashFile(filePath) {
+function hashFile(filePath: string): string {
     return crypto.createHash('sha256')
         .update(fs.readFileSync(filePath))
         .digest('hex');
@@ -137,98 +109,60 @@ function hashFile(filePath) {
 
 /**
  * TODO(fnrir): what's the type of this???
- * @template T
- * @param {T} version
- * @returns {T}
  */
-function validateVersioning(version) {
+export function validateVersioning<T>(version: T): T {
     return version;
 }
 
 /**
  * sets the current window to newwin.
- * @param {BrowserWindow} newwin
  */
-function setWindow(newwin) {
+export function setWindow(newwin: BrowserWindow) {
     win = newwin;
 }
 
 /**
  * returns the current window.
- * @returns {BrowserWindow}
  */
-function getWindow() {
+export function getWindow(): BrowserWindow {
     if (win === null) throw new Error("getWindow called before win initialized");
     return win;
 }
 
-/**
- * @param {string} newPage
- */
-function page(newPage) {
+export function page(newPage: string) {
     getWindow().webContents.send("page", [newPage]);
 }
 
-function shopClang() {
+export function shopClang() {
     // deprecated
 }
 
-/** @type {Record<string, any>} */
-let sharedVariables = {}; // shared vars with renderer
+let sharedVariables: Record<string, any> = {}; // shared vars with renderer
 
-/**
- * @param {string} name
- * @param {any} value
- * @returns {true}
- */
-function setSharedVar(name, value) {
+export function setSharedVar(name: string, value: any): true {
     sharedVariables[name] = value;
     return true;
 }
 
-/**
- * @param {string} name
- * @returns {any}
- */
-function getSharedVar(name) {
+export function getSharedVar(name: string): any {
     return sharedVariables[name];
 }
 
-/**
- * @param {string[]} otherArgs
- * @returns {{ args: string[] }}
- */
-function properRelaunch(otherArgs = []) {
+export function properRelaunch(otherArgs: string[] = []): { args: string[] } {
     const a = process.argv.slice(1);
     return { args: [...a.filter(x => !x.toLowerCase().startsWith("deltamod://")), ...otherArgs] }
 }
 
-/**
- * @template T
- * @param {T} obj
- * @param {any} logMsg
- * @returns {T}
- */
-function logOnAccess(obj, logMsg) {
+function logOnAccess<T>(obj: T, logMsg: any): T {
     console.log(logMsg);
     return obj;
 }
 
-/**
- * @param {string} string
- * @param {string} start
- * @param {string} end
- * @returns {string}
- */
-function between(string, start, end) {
+export function between(string: string, start: string, end: string): string {
     return string.split(start)[1].split(end)[0];
 }
 
-/**
- * @param {Electron.Dialog} dialog
- * @returns {number}
- */
-function showSteamPathMessageBox(dialog) {
+function showSteamPathMessageBox(dialog: Electron.Dialog): number {
     return dialog.showMessageBoxSync({
         type: 'question',
         title: 'Provide Steam path',
@@ -237,11 +171,7 @@ function showSteamPathMessageBox(dialog) {
     })
 }
 
-/**
- * @param {Electron.Dialog} dialog
- * @returns {string}
- */
-function getSteamDirectory(dialog) {
+export function getSteamDirectory(dialog: Electron.Dialog): string {
     let steamdir;
     switch (process.platform) {
         case "win32":
@@ -287,26 +217,3 @@ function getSteamDirectory(dialog) {
 
     return steamdir;
 }
-
-module.exports = {
-    timeoutPromise,
-    between,
-    logOnAccess,
-    getFileVersion,
-    randomString,
-    hashFile,
-    lastOfArray,
-    page,
-    validateVersioning,
-    setSharedVar,
-    getSharedVar,
-    properRelaunch,
-    getSteamDirectory,
-    downloadFile,
-    generateUUID,
-
-    getWindow,
-    setWindow,
-    shopClang
-    // errorWin,
-};
