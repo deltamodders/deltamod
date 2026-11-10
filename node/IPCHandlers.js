@@ -1251,7 +1251,8 @@ module.exports = function registerIPCHandlers(context) {
         if (hasProton()) return ProtonDialogs.manageProtonProfile(protonRoot(), getWindow, steamSettings);
         
         if (KeyValue.readKVSOfIndex('gamePath', index).endsWith('deltaruneInstall')) {
-            Junction.deleteJunction(KeyValue.readKVSOfIndex('originalSteamPath', index));
+            const origSteamPath = KeyValue.readKVSOfIndex('originalSteamPath', index);
+            if (origSteamPath !== null) Junction.deleteJunction(origSteamPath);
         }
 
         KeyValue.setKVSOfIndex('isSteam', false, index);

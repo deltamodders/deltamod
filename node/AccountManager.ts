@@ -1,15 +1,11 @@
 // @ts-check
 
-const fs = require('fs');
-const { safeStorage, app } = require('electron');
+import fs from 'fs';
+import { safeStorage, app } from 'electron';
 
-/** @typedef {any} BaseAccountInfo */
+type BaseAccountInfo = any;
 
-/**
- * @param {string} name
- * @param {BaseAccountInfo} info
- */
-function saveAccountInfo(name, info) {
+export function saveAccountInfo(name: string, info: BaseAccountInfo) {
     var info_txt = JSON.stringify(info);
     var encryptedInfo = safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(info_txt) : info_txt;
     var filePath = app.getPath('userData') + '/accounts/' + name.toLowerCase() + '.json';
@@ -19,11 +15,7 @@ function saveAccountInfo(name, info) {
     fs.writeFileSync(filePath, encryptedInfo);
 }
 
-/**
- * @param {string} name
- * @returns {BaseAccountInfo}
- */
-function getAccountInfo(name) {
+export function getAccountInfo(name: string): BaseAccountInfo {
     var filePath = app.getPath('userData') + '/accounts/' + name.toLowerCase() + '.json';
     if (!fs.existsSync(filePath)) {
         return null;
@@ -33,19 +25,11 @@ function getAccountInfo(name) {
     return JSON.parse(info);
 }
 
-/**
- * @param {string} name
- */
-function deleteAccountInfo(name) {
+export function deleteAccountInfo(name: string) {
     var filePath = app.getPath('userData') + '/accounts/' + name.toLowerCase() + '.json';
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
     }
 }
 
-module.exports = {
-    saveAccountInfo,
-    getAccountInfo,
-    loadAccountInfo: getAccountInfo, // alias
-    deleteAccountInfo
-};
+export const loadAccountInfo = getAccountInfo; // alias

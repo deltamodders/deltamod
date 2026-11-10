@@ -1,14 +1,12 @@
-// @ts-check
+import { exec } from 'child_process';
+import path from 'path';
 
-const { exec } = require('child_process');
-const path = require('path');
-
-const { TOOLS_DIR } = require('./Paths');
+import { TOOLS_DIR } from './Paths';
 
 var proc;
 var running = false;
 
-function start() {
+export function start() {
     if (running) return;
 
     running = true;
@@ -16,7 +14,7 @@ function start() {
     proc = require('child_process').exec('cmd /c "' + exepath + '"');
 }
 
-function stop() {
+export function stop() {
     if (!running) return;
     
     running = false;
@@ -25,8 +23,3 @@ function stop() {
     }
     catch (e) {}
 }
-
-module.exports = {
-    start: start,
-    stop: stop
-};
