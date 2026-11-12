@@ -7,7 +7,7 @@ const { getConfig, config } = require('7zip-min');
 const { path7za } = require('7zip-bin');
 
 // Local modules
-const Paths = require('./Paths');
+const { DELTAMOD_DIR, WEB_DIR } = require('./Paths');
 const KeyValue = require('./KeyValue');
 const { getSystemFile, setSystemIndex } = require('./System');
 const System = require('./System');
@@ -100,7 +100,7 @@ function asyncTimeout(amount) {
 function writeTopPart() {
     process.stdout.write('\x1b]0;Deltamod\x07');
     console.clear();
-    process.stdout.write(`${fs.readFileSync(path.join(__dirname, '..', 'ascii.txt'), 'utf8')}\r\n\r\n`);
+    process.stdout.write(`${fs.readFileSync(path.join(DELTAMOD_DIR, 'ascii.txt'), 'utf8')}\r\n\r\n`);
     process.stdout.write(`[ version ${app.getVersion()} ]\r\n\r\n`);
 }
 
@@ -223,6 +223,7 @@ function createWindow() {
         KeyValue.retrieve();
     }
     catch (e) {
+        // TODO(fnrir): debugging unit tests is a pain in the ass because of this
         dialog.showMessageBoxSync({ type: 'error', title: 'Failed to load storage', message: `Deltamod failed to load your installation storage. This may be due to a corrupted file.\n\nError details:\n${e.message || e}` });
     }
     win = new BrowserWindow({
@@ -231,7 +232,7 @@ function createWindow() {
         resizable: true,
         frame: false,
         fullscreen: isControllerMode,
-        webPreferences: { nodeIntegration: true, partition: PARTITION, preload: Paths.file('web', 'preload.js') }
+        webPreferences: { nodeIntegration: true, partition: PARTITION, preload: path.join(WEB_DIR, 'preload.js') }
     });
 
     setWindow(win);

@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const console = require('./Console.js');
+const { DELTAMOD_DIR } = require('./Paths');
 
-const GAMES_BASE = path.join(__dirname, '../', 'games');
+const GAMES_BASE = path.join(DELTAMOD_DIR, 'games');
 let cached = null;
 
 function getGames() {

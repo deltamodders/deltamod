@@ -1,13 +1,12 @@
+const path = require("path");
 const { BrowserWindow } = require("electron");
 const { getWindow } = require("./Utils");
-const Paths = require("./Paths");
+const { VIEWS_DIR } = require("./Paths");
 const { PARTITION } = require("./Config");
 
 const progressModals = new Set();
 
-/**
- * @returns {BrowserWindow}
- */
+/** @returns {BrowserWindow} */
 function createProgressModal() {
     const modal = new BrowserWindow({
         width: 450,
@@ -23,7 +22,7 @@ function createProgressModal() {
         webPreferences: {
             devTools: process.env.DELTAMOD_ENV === 'dev',
             nodeIntegration: true,
-            preload: Paths.file('web', 'views', 'dlmodal', 'preload.js'),
+            preload: path.join(VIEWS_DIR, 'dlmodal', 'preload.js'),
             partition: PARTITION
         }
     });

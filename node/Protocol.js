@@ -12,6 +12,7 @@ const { dialog, app, Notification } = require("electron");
 const { page, setSharedVar } = require("./Utils");
 const { errorWin } = require("./ErrorWin");
 const mime = require("mime-types");
+const { ASSETS_DIR, DELTAMOD_DIR, THEMES_DIR } = require("./Paths");
 
 // https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
 function trim(str, ch) {
@@ -70,7 +71,7 @@ function registerProtocolHandlers(ses) {
             errorWin(new Error('Unsecure request made to deltapack.'));
             return new Response("bad");
         }
-        const filePath = path.resolve(__dirname, '..', url.hostname + url.pathname);
+        const filePath = path.resolve(DELTAMOD_DIR, url.hostname + url.pathname);
 
         const data = await fs.promises.readFile(filePath);
         return new Response(data, {
@@ -96,7 +97,7 @@ function registerProtocolHandlers(ses) {
             fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'img'), { recursive: true });
             fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'mus'), { recursive: true });
         }
-        let pospath1 = path.join(__dirname, '..', 'web/themes', url.hostname + url.pathname);
+        let pospath1 = path.join(THEMES_DIR, url.hostname + url.pathname);
         let pospath2 = path.join(app.getPath('userData'), 'customThemes', url.hostname + url.pathname);
         let finalPath = null;
         if (fs.existsSync(pospath2)) {
@@ -262,7 +263,7 @@ async function handleProtocolLaunch(url) {
             new Notification({
                 title: "Deltamod",
                 body: "Remote download pairing was completed successfully.",
-                icon: join(__dirname, "..", "assets", "icon_rdl.png")
+                icon: join(ASSETS_DIR, "icon_rdl.png")
             }).show();
 
             break;
