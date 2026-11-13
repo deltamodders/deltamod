@@ -1,7 +1,9 @@
-// @ts-check
+import fs from "fs";
+import os from "os";
 
-const { screen } = require('electron');
-const console = require('./Console.js');
+import { screen } from 'electron';
+
+import console from './Console.js';
 
 const conditions = [
     {
@@ -25,16 +27,14 @@ const conditions = [
         name: 'At least 32MB of storage available',
         required: true,
         checker: () => {
-            const fsp = require("fs");
-            const os = require("os");
-            const { bfree, bsize } = fsp.statfsSync(os.homedir());
+            const { bfree, bsize } = fs.statfsSync(os.homedir());
             const free = bfree * bsize;
             return free >= 32 * 1024 * 1024;
         }
     }
 ];
 
-function checkConditions() {
+export function checkConditions() {
     let checkers = [];
     for (var condition of conditions) {
         if (condition.checker() == false) {
@@ -47,7 +47,3 @@ function checkConditions() {
     };
     return checkers;
 }
-
-module.exports = {
-    checkConditions
-};
