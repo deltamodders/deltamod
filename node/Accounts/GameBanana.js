@@ -1,3 +1,5 @@
+// @ts-check
+
 const { BrowserWindow, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
