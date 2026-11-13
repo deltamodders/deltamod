@@ -5,7 +5,7 @@
 import fs from "fs";
 import path from "path";
 
-import { DELTAMOD_DIR, TOOLS_DIR } from "../node/Paths";
+import { DELTAMOD_DIR, TOOLS_DIR } from "../dist/node/Paths.js";
 
 /**
  * @param {AfterPackContext} ctx
