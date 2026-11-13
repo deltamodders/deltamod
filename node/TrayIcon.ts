@@ -1,10 +1,10 @@
-// @ts-check
+import path from 'path';
 
-const { Tray, Menu } = require('electron');
-const path = require('path');
-const { ASSETS_DIR } = require('./Paths');
+import { Tray, Menu } from 'electron';
 
-async function makeTray() {
+import { ASSETS_DIR } from './Paths';
+
+export async function makeTray() {
     const tray = new Tray(path.join(ASSETS_DIR, 'tray.png'));
 
     tray.on('click', () => {
@@ -31,5 +31,3 @@ async function makeTray() {
 
     tray.setToolTip('Deltamod');
 }
-
-module.exports = { makeTray };
