@@ -1,93 +1,74 @@
-// @ts-check
+import crypto from "crypto";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
-const crypto = require("crypto");
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
+import { dialog } from "electron";
+import type { BrowserWindow, FileFilter, OpenDialogOptions } from "electron";
+import * as TOML from "smol-toml";
 
-const { dialog } = require("electron");
-const TOML = require("smol-toml");
+import { readKVS } from "./KeyValue";
+import { generateUniqueId, getPacketDatabase } from "./System";
+import { randomString } from "./Utils";
 
-const { readKVS } = require("./KeyValue");
-const { generateUniqueId, getPacketDatabase } = require("./System");
-const { randomString } = require("./Utils");
+type PatchType = "csx" | "g3mpatch" | "xdelta" | "override";
 
-/**
- * @typedef {"csx" | "g3mpatch" | "xdelta" | "override"} PatchType
- * @typedef ModdingXmlEarlyEntry
- * @property {PatchType} type
- * @property {string} from
- * @property {string} to
- * @property {string | undefined} csum
- * @typedef {ModdingXmlEarlyEntry & { src_name: string }} ModdingXmlEntry
- */
+interface ModdingXmlEarlyEntry {
+    type: PatchType;
+    from: string;
+    to: string;
+    csum: string | undefined;
+}
 
-/**
- * @type {Electron.FileFilter}
- */
-const CSX_SCRIPT_FILE = { name: "C# script file", extensions: ["csx"] };
-/**
- * @type {Electron.FileFilter}
- */
-const G3M_PATCH_FILE = { name: "G3M patch file", extensions: ["xdelta"] };
-/**
- * @type {Electron.FileFilter}
- */
-const XDELTA_PATCH_FILE = { name: "XDelta patch file", extensions: ["xdelta"] };
-/**
- * @type {Electron.FileFilter}
- */
-const GM_DATA_FILE = {
+type ModdingXmlEntry = ModdingXmlEarlyEntry & { src_name: string };
+
+const CSX_SCRIPT_FILE: FileFilter = {
+    name: "C# script file",
+    extensions: ["csx"],
+};
+const G3M_PATCH_FILE: FileFilter = {
+    name: "G3M patch file",
+    extensions: ["xdelta"],
+};
+const XDELTA_PATCH_FILE: FileFilter = {
+    name: "XDelta patch file",
+    extensions: ["xdelta"],
+};
+const GM_DATA_FILE: FileFilter = {
     name: "GameMaker data file",
     extensions: ["unx", "win"],
 };
 
-/**
- * @param {string} path
- * @returns {string}
- */
-function prepend_dotslash(path) {
+function prepend_dotslash(path: string): string {
     // patchers don't seem to normalize the path, so we have to add a ./
     // since most mods use that
     return path.startsWith("./") ? path : `./${path}`;
 }
 
-/**
- * @param {string} path
- * @returns {string}
- */
-function strip_dotslash(path) {
+function strip_dotslash(path: string): string {
     return path.startsWith("./") ? path.slice(2, path.length) : path;
 }
 
-/**
- * @param {Electron.BrowserWindow} win
- * @param {Electron.FileFilter[]?} filters
- * @param {Electron.OpenDialogOptions?} extra_options
- * @returns {string?}
- */
-function openFileDialog(win, filters, extra_options = {}) {
+function openFileDialog(
+    win: BrowserWindow,
+    filters: FileFilter[] | null,
+    extra_options: OpenDialogOptions | null = {},
+): string | null {
     /**
      * Why tf does electron always default to ~/Downloads instead of
      * letting the file picker remember the last path?
-     * @type {Electron.OpenDialogOptions}
      */
-    let options = { properties: ["openFile"] };
+    let options: OpenDialogOptions = { properties: ["openFile"] };
     if (filters) options.filters = filters;
     if (extra_options) Object.assign(options, extra_options);
     const res = dialog.showOpenDialogSync(win, options);
     return res ? res[0] : null;
 }
 
-/**
- * @param {Electron.BrowserWindow} win
- * @param {PatchType} patch_type
- * @returns {string?}
- */
-function pick_src_patch_file(win, patch_type) {
-    /**
-     * @type {Electron.FileFilter[]}
-     */
+export function pick_src_patch_file(
+    win: BrowserWindow,
+    patch_type: PatchType,
+): string | null {
     const filters = [];
     switch (patch_type) {
         case "csx":
@@ -103,15 +84,10 @@ function pick_src_patch_file(win, patch_type) {
     return openFileDialog(win, filters);
 }
 
-/**
- * @param {Electron.BrowserWindow} win
- * @param {PatchType} patch_type
- * @returns {string?}
- */
-function pick_patch_dest_file(win, patch_type) {
-    /**
-     * @type {Electron.FileFilter[]}
-     */
+export function pick_patch_dest_file(
+    win: BrowserWindow,
+    patch_type: PatchType,
+): string | null {
     const filters = [];
     switch (patch_type) {
         case "csx":
@@ -121,7 +97,7 @@ function pick_patch_dest_file(win, patch_type) {
             filters.push(GM_DATA_FILE);
             break;
     }
-    const installPath = readKVS("gamePath");
+    const installPath = readKVS<string>("gamePath")!;
     const game_file_path = openFileDialog(win, filters, {
         defaultPath: installPath,
     });
@@ -129,22 +105,14 @@ function pick_patch_dest_file(win, patch_type) {
     return prepend_dotslash(path.relative(installPath, game_file_path));
 }
 
-/**
- * @param {string} file_path
- * @returns {string}
- */
-function calculate_file_hash(file_path) {
-    const installPath = readKVS("gamePath");
+export function calculate_file_hash(file_path: string): string {
+    const installPath = readKVS<string>("gamePath")!;
     const abs_file_path = path.join(installPath, strip_dotslash(file_path));
     const fileBuffer = fs.readFileSync(abs_file_path);
     return crypto.createHash("sha256").update(fileBuffer).digest("hex");
 }
 
-/**
- * @returns {string}
- * @throws {Error}
- */
-function randomModId() {
+function randomModId(): string {
     const pkg_db_path = getPacketDatabase();
     for (let i = 0; i < 100; i++) {
         const mod_id = `local.deltamod.${randomString(16)}`;
@@ -153,45 +121,33 @@ function randomModId() {
     throw new Error("Failed to create a new mod id too many times");
 }
 
-/**
- * @param {PatchType} patch_type
- * @param {string} patch_src_name
- * @param {string} patch_dst
- * @returns {string}
- */
-function modding_xml_entry_to_str(patch_type, patch_src_name, patch_dst) {
+function modding_xml_entry_to_str(
+    patch_type: PatchType,
+    patch_src_name: string,
+    patch_dst: string,
+): string {
     // TODO: properly excape dest path. it shouldn't contain any quotation
     // marks, but it's better to be safe than sorry
     return `<patch type="${patch_type}" patch="./${patch_src_name}" to="${patch_dst}" />`;
 }
 
-/**
- * @param {ModdingXmlEntry} patch
- * @returns {string}
- */
-function modding_xml_entry_ser(patch) {
+function modding_xml_entry_ser(patch: ModdingXmlEntry): string {
     return modding_xml_entry_to_str(patch.type, patch.src_name, patch.to);
 }
 
-/**
- * @param {ModdingXmlEntry[]} modding_data
- * @returns {string}
- */
-function modding_xml_ser(modding_data) {
+function modding_xml_ser(modding_data: ModdingXmlEntry[]): string {
     return modding_data.map(modding_xml_entry_ser).join("\n") + "\n";
 }
 
-/**
- * @typedef MetadataPartial
- * @property {{ packageID: string }} metadata
- * @property {{ file: string, checksum: string | undefined }[]} neededFiles
- */
+interface MetadataPartial {
+    metadata: { packageID: string };
+    neededFiles: { file: string; checksum: string | undefined }[];
+}
 
-/**
- * @param {MetadataPartial} meta
- * @param {ModdingXmlEntry[]} modding_data
- */
-function meta_init_needed_files(meta, modding_data) {
+function meta_init_needed_files(
+    meta: MetadataPartial,
+    modding_data: ModdingXmlEntry[],
+) {
     const needed_files = modding_data
         .filter((item) => item.csum)
         .map((item) => ({ file: item.to, checksum: item.csum }));
@@ -204,12 +160,11 @@ function meta_init_needed_files(meta, modding_data) {
  * Implicitly transfers ownership of `meta`.
  *
  * TODO: make this atomic to avoid any issues with half-added mods
- *
- * @param {MetadataPartial} meta
- * @param {ModdingXmlEarlyEntry[]} modding_data_early
- * @throws {Error}
  */
-function mod_create(meta, modding_data_early) {
+export function mod_create(
+    meta: MetadataPartial,
+    modding_data_early: ModdingXmlEarlyEntry[],
+) {
     for (const entry of modding_data_early)
         if (!fs.existsSync(entry.from))
             throw Error(`Specified patch file doesn't exist: ${entry.from}`);
@@ -240,10 +195,3 @@ function mod_create(meta, modding_data_early) {
     for (const item of modding_data)
         fs.copyFileSync(item.from, path.join(mod_dir, item.src_name));
 }
-
-module.exports = {
-    pick_src_patch_file,
-    pick_patch_dest_file,
-    calculate_file_hash,
-    mod_create,
-};
