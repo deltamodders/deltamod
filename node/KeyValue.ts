@@ -1,21 +1,18 @@
-// @ts-check
-// TODO(fnrir): fixup readKVS(OfIndex) overloads
-
-const path = require('path');
+import path from 'path';
 const app = require('electron').app;
-const fs = require('fs');
-const { getSystemFile, getSystemFolder, healthCheck, getSystemFileOfIndex, getSystemFolderOfIndex } = require('./System.js');
-const { get } = require('http');
-const crypto = require('crypto');
-const console = require('./Console.js');
+import fs from 'fs';
+import { getSystemFile, getSystemFolder, healthCheck, getSystemFileOfIndex, getSystemFolderOfIndex } from './System.js';
+import { get } from 'http';
+import crypto from 'crypto';
+import console from './Console.js';
 
-/**
- * @typedef {number | string} IndexLike
- * TODO: decide if install index should be a string or an int
- */
+/** TODO: decide if install index should be a string or an int */
+export type IndexLike = number | string;
 
-/** @type {Record<string, boolean>} */
-const KVS_DATABASE_DEFAULTS = {
+type KeyValueStore = Record<string, boolean>;
+type KeyValueStoreODF = Record<string, any>;
+
+const KVS_DATABASE_DEFAULTS: KeyValueStore = {
     'setup': true,
     'audio': true,
     'sfx': true,
@@ -23,28 +20,22 @@ const KVS_DATABASE_DEFAULTS = {
     'aidisclaimers': true
 };
 
-/** @type {Record<string, any>} */
-let kvs = {};
+let kvs: KeyValueStore = {};
 
-/**
- * @param {string} str
- * @returns {string}
- */
-function hash(str) {
+function hash(str: string): string {
     return crypto.createHash('sha256').update(str).digest('hex');
 }
 
 /**
  * Loads `store.json` of current installation into global `kvs`.
  * Returns whether `store.json` exists.
- * @returns {boolean}
  */
-function retrieve() {
+export function retrieve(): boolean {
     healthCheck();
     var pathname = getSystemFile('store.json', false);
     try {
         var raw = fs.readFileSync(pathname, 'utf8');
-    } catch (/** @type {any} */ e) {
+    } catch (e: any) {
         if ("code" in e && e.code == "ENOENT")
             return false;
         throw e;
@@ -54,10 +45,9 @@ function retrieve() {
     return true;
 }
 
-/** @returns {true} */
-function kvsFlush() {
+function kvsFlush(): true {
     var pathname = getSystemFile('store.json', false);
-    var exportedKVS = kvs;
+    var exportedKVS: KeyValueStoreODF = kvs;
     
     exportedKVS.version = 'DELTAMOD_DATA_'+require('../package.json').version;
     fs.writeFileSync(pathname, JSON.stringify(exportedKVS, null, 2));
@@ -65,12 +55,7 @@ function kvsFlush() {
     return true;
 }
 
-/**
- * @param {any} obj
- * @param {IndexLike} index
- * @returns {boolean}
- */
-function kvsFlushIndex(obj, index) {
+function kvsFlushIndex(obj: any, index: IndexLike): true {
     var pathname = getSystemFileOfIndex('store.json', index);
     fs.writeFileSync(pathname, JSON.stringify(obj, null, 2));
     console.log('Store flushed for index ' + index);
@@ -79,12 +64,7 @@ function kvsFlushIndex(obj, index) {
 
 const defFDBMsg = "TODO(fnrir): defFDBMsg was unset. added value to appease tsc";
 
-/**
- * @param {string} name
- * @param {boolean} val
- * @returns {boolean}
- */
-function writeUniqueFlag(name, val) {
+export function writeUniqueFlag(name: string, val: boolean): boolean {
     try {
         var database = getSystemFile('flagDB.config', true);
         if (!fs.existsSync(database)) {
@@ -102,11 +82,7 @@ function writeUniqueFlag(name, val) {
     }
 }
 
-/**
- * @param {string} name
- * @returns {boolean}
- */
-function existsUniqueFlag(name) {
+export function existsUniqueFlag(name: string): boolean {
     try {
         var database = getSystemFile('flagDB.config', true);
         if (!fs.existsSync(database)) {
@@ -121,11 +97,7 @@ function existsUniqueFlag(name) {
         return false;
     }
 }
-/**
- * @param {string} name
- * @returns {boolean}
- */
-function readUniqueFlag(name) {
+export function readUniqueFlag(name: string): boolean {
     try {
         var database = getSystemFile('flagDB.config', true);
         if (!fs.existsSync(database)) {
@@ -148,8 +120,7 @@ function readUniqueFlag(name) {
     }
 }
 
-/** @returns {true} */
-function kvsWipe() {
+function kvsWipe(): true {
     kvs = {};
     var pathname = getSystemFile('store.json', false);
     fs.writeFileSync(pathname, '{}##' + hash('{}'));
@@ -157,16 +128,12 @@ function kvsWipe() {
     return true;
 }
 
-/**
- * @param {string} name
- * @param {any} value
- */
-function setKVS(name, value) {
+function setKVS(name: string, value: any) {
     kvs[name] = value;
     kvsFlush();
 }
 
-function loadUniqueDefaults() {
+export function loadUniqueDefaults() {
     for (var key in KVS_DATABASE_DEFAULTS) {
         if (!existsUniqueFlag(key)) {
             console.log('Setting flag default for ' + key + ' to ' + KVS_DATABASE_DEFAULTS[key]);
@@ -176,48 +143,25 @@ function loadUniqueDefaults() {
     }
 }
 
-/**
- * @param {string} name
- * @param {any} value
- * @param {IndexLike} index
- */
-function setKVSOfIndex(name, value, index) {
-    /** @type {any} */
-    var odb = {};
+export function setKVSOfIndex(name: string, value: any, index: IndexLike) {
     try {
         var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
-    } catch (e) {}
+    }
+    catch (e) {
+        var odb: any = {};
+    }
     odb[name] = value;
     kvsFlushIndex(odb, index);
 }
 
-/**
- * @template T
- * @overload
- * @param {string} name
- * @param {IndexLike} index
- * @returns {T | null}
- */
-/**
- * @template T
- * @overload
- * @param {string} name
- * @param {IndexLike} index
- * @param {T} defaultTo
- * @returns {T}
- */
-/**
- * @param {string} name
- * @param {IndexLike} index
- * @param {any} [defaultTo=null]
- * @returns {any}
- */
-function readKVSOfIndex(name, index, defaultTo = null) {
+export function readKVSOfIndex<T>(name: string, index: IndexLike): T | null;
+export function readKVSOfIndex<T>(name: string, index: IndexLike, defaultTo: T): T;
+export function readKVSOfIndex(name: string, index: IndexLike, defaultTo: any = null): any {
     var odb = JSON.parse(fs.readFileSync(getSystemFileOfIndex("store.json", index), 'utf8').split('##')[0]);
     return odb[name] ?? defaultTo;
 }
 
-function upgradeStores() {
+export function upgradeStores() {
     try {
         var oldStorePath = app.getPath('userData');
 
@@ -234,7 +178,7 @@ function upgradeStores() {
             if (edi != "rem") {
                 console.log('Upgrading index ' + indx);
                 var pid = "toby.deltarune.demo";
-                if (readKVSOfIndex('deltaruneEdition', indx, /** @type {string} */ ("n")) == "full") {
+                if (readKVSOfIndex<string>('deltaruneEdition', indx, "n") == "full") {
                     pid = "toby.deltarune";
                 }
                 setKVSOfIndex('gamePid', pid, indx);
@@ -243,10 +187,7 @@ function upgradeStores() {
                 return;
             }
 
-            /**
-             * @param {string} folder
-             */
-            function scanFolderRecursively(folder) {
+            function scanFolderRecursively(folder: string) {
                 fs.readdirSync(folder).forEach(file => {
                     var fullPath = path.join(folder, file);
                     if (fs.statSync(fullPath).isDirectory()) {
@@ -272,40 +213,8 @@ function upgradeStores() {
     }
 }
 
-/**
- * @template T
- * @overload
- * @param {string} name
- * @returns {T | null}
- */
-/**
- * @template T
- * @overload
- * @param {string} name
- * @param {T} defaultTo
- * @returns {T}
- */
-/**
- * @param {string} name
- * @param {any} [defaultTo=null]
- * @returns {any}
- */
-function readKVS(name, defaultTo = null) {
+export function readKVS<T>(name: string): T | null;
+export function readKVS<T>(name: string, defaultTo: T): T;
+export function readKVS(name: string, defaultTo: any = null): any {
     return kvs[name] ?? defaultTo;
 }
-
-module.exports = {
-    hash,
-    retrieve,
-    kvsFlush,
-    writeUniqueFlag,
-    existsUniqueFlag,
-    readUniqueFlag,
-    kvsWipe,
-    setKVS,
-    setKVSOfIndex,
-    readKVSOfIndex,
-    readKVS,
-    loadUniqueDefaults,
-    upgradeStores
-};
