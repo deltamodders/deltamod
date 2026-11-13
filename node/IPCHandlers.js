@@ -34,7 +34,7 @@ const { locateSteamDir } = require('@unlomtrois/steampath');
 const { processExists } = require('process-exists');
 const { createCanvas, loadImage } = require('canvas');
 const Plugin = require('./Plugins');
-const { DELTAMOD_DIR, PACKAGE_JSON, THEMES_DIR, VIEWS_DIR } = require('./Paths');
+const { DELTAMOD_DIR, PACKAGE_JSON, THEMES_DIR, VIEWS_DIR, ASSETS_DIR } = require('./Paths');
 
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;
@@ -287,22 +287,10 @@ module.exports = function registerIPCHandlers(context) {
 
     ipcMain.handle('startModDrag', async (e, args) => {
         const iconPath = path.join(System.getPacketDatabase(), args[0], 'icon.png');
-        let dragIcon = iconPath;
-        try {
-            const image = await loadImage(iconPath);
-            const canvas = createCanvas(32, 32);
-            canvas.getContext('2d').drawImage(image, 0, 0, 32, 32);
-            const dragIconDir = path.join(app.getPath('temp'), 'deltamod');
-            fs.mkdirSync(dragIconDir, { recursive: true });
-            dragIcon = path.join(dragIconDir, 'drag-icon.png');
-            fs.writeFileSync(dragIcon, canvas.toBuffer('image/png'));
-        } catch (error) {
-            console.log('Unable to resize drag icon:', error);
-        }
 
         e.sender.startDrag({
             file: path.join(System.getPacketDatabase(), args[0]),
-            icon: dragIcon
+            icon: nativeImage.createFromPath(iconPath).resize({ width: 32, height: 32 })
         });
     });
     ipcMain.handle('isCMode', () => isControllerMode);
@@ -1224,7 +1212,11 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('installSwitcher', (event, args) => {
+        function resize16(path) {
+            return nativeImage.createFromPath(path).resize({ width: 16, height: 16 });
+        }
         const installOptions = [];
+        const currentIndex = Number(System.getCurrentSystemIndex());
         for (const i of profileIndices(app.getPath('userData'))) {
             const name = fs.existsSync(System.getSystemFileOfIndex('_cname', i)) ? fs.readFileSync(System.getSystemFileOfIndex('_cname', i), 'utf8') : `Install #${i + 1}`;
             installOptions.push({
@@ -1237,13 +1229,17 @@ module.exports = function registerIPCHandlers(context) {
                     app.relaunch(properRelaunch());
                     app.exit();
                 },
-                icon: nativeImage.createFromPath(path.join(VIEWS_DIR, '../', 'gamesIco', `${KeyValue.readKVSOfIndex('gamePid', i) || 'unknown'}.png`)).resize({ width: 32, height: 32 })
+                enabled: (currentIndex != i),
+                icon: resize16(path.join(VIEWS_DIR, '../', 'gamesIco', `${KeyValue.readKVSOfIndex('gamePid', i) || 'unknown'}.png`))
             });
         }
         var menu = Menu.buildFromTemplate(installOptions.concat([
             { type: 'separator' },
-            { label: 'Create new installation...', click: () => page('locate') },
-            { label: 'Advanced installation manager...', click: () => page('installmanager') }, 
+            { label: 'Create new installation...', click: () => page('locate'), icon: resize16(path.join(ASSETS_DIR, `plus.png`)) },
+            { label: 'Show more options...', click: () => {
+                const win = getWindow();
+                win.webContents.executeJavaScript(`window.fromIM = true; page('installmanager');`);
+            }, icon: resize16(path.join(VIEWS_DIR, '../', 'sbar', `installmanager.png`)) }, 
             { type: 'separator' }, 
             { label: 'Cancel', subtitle: 'Cancel the operation', role: 'cancel' }
         ]));

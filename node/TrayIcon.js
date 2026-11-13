@@ -8,7 +8,7 @@ async function makeTray() {
     tray.on('click', () => {
         const contextMenu = Menu.buildFromTemplate([
             {
-                label: 'Show',
+                label: 'Show Deltamod',
                 click: () => {
                     const win = require('./Utils.js').getWindow();
                     if (win) {
@@ -17,7 +17,7 @@ async function makeTray() {
                 }
             },
             {
-                label: 'Quit',
+                label: 'Quit Deltamod',
                 click: () => {
                     process.exit(0);
                 }

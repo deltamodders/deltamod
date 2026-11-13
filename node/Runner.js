@@ -252,7 +252,7 @@ function createWindow() {
 
     win.on('close', (e) => {
         var background = KeyValue.readUniqueFlag('background');
-        if (background) {
+        if (background && !isControllerMode) {
             e.preventDefault();
             win.hide();
         }

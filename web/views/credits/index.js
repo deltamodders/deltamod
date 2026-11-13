@@ -66,7 +66,7 @@ const CREDITS = [
         socials: [
             {
                 name: "YouTube",
-                url: "https://youtube.com/@zatmaggotDR"
+                url: "https://youtube.com/@zatmaggotYT"
             }
         ]
     },

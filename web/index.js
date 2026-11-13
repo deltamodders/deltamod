@@ -746,6 +746,12 @@ if (!window.electronAPI) {
     }
 })();
 
+(async function() {
+    var ribbons = document.querySelectorAll('.sidebar-ribbon');
+    ribbons.forEach(ribbon => {
+        tippy(ribbon, { content: ribbon.getAttribute('data-desc'), placement: 'right' });
+    });
+})();
 (async () => {
     var gameInfo = await window.electronAPI.invoke('getCurrentGameInfo', []);
     console.log(JSON.stringify(gameInfo));
@@ -754,6 +760,10 @@ if (!window.electronAPI) {
 
     div.addEventListener('click', async () => {
         invoke('installSwitcher', []);
+    });
+
+    tippy(div, {
+        content: 'Click to switch install'
     });
 
     var img = document.createElement('img');
