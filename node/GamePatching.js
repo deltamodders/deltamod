@@ -5,13 +5,13 @@ const { spawn, execFile } = require('child_process');
 const { dialog } = require('electron');
 const TOML = require('smol-toml');
 
-const BUILTIN_TOOLS_DIR = path.join(path.dirname(__dirname), "tools");
+const { TOOLS_DIR } = require('./Paths');
 
 const EXEC_SUFFIX = process.platform === "win32" ? ".exe" : "";
 const PLATFORM_SUBDIR = process.platform === "win32" ? "win" : "linux";
 
-const G3MT_PATH = path.join(BUILTIN_TOOLS_DIR, "g3mtool", "G3MTool" + EXEC_SUFFIX);
-const UTMT_PATH = path.join(BUILTIN_TOOLS_DIR, "utmt", PLATFORM_SUBDIR, "UndertaleModCli" + EXEC_SUFFIX);
+const G3MT_PATH = path.join(TOOLS_DIR, "g3mtool", "G3MTool" + EXEC_SUFFIX);
+const UTMT_PATH = path.join(TOOLS_DIR, "utmt", PLATFORM_SUBDIR, "UndertaleModCli" + EXEC_SUFFIX);
 
 /**
  * @typedef {(..._a: any) => void} LogFn

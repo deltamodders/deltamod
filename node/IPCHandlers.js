@@ -34,6 +34,7 @@ const { locateSteamDir } = require('@unlomtrois/steampath');
 const { processExists } = require('process-exists');
 const { createCanvas, loadImage } = require('canvas');
 const Plugin = require('./Plugins');
+const { DELTAMOD_DIR, PACKAGE_JSON, THEMES_DIR, VIEWS_DIR } = require('./Paths');
 
 // Using this fixes a vulnerability where attackers could freely download code
 let updateStackInfo = null;
@@ -42,6 +43,9 @@ const ACCOUNT_PROVIDERS = [{
     name: 'GameBanana',
     file: './Accounts/GameBanana.js'
 }];
+
+// NOTE(fnrir): may have issues with AppImage builds
+const G3MP_DIR = path.join(DELTAMOD_DIR, 'gm3p');
 
 // --- IPC Helper Functions ---
 
@@ -90,13 +94,13 @@ function obtainThemes() {
         fs.mkdirSync(path.join(customThemeDir, 'mus'), { recursive: true });
     }
 
-    const available = fs.readdirSync(path.join(__dirname, '..', 'web', 'themes', 'data'))
+    const available = fs.readdirSync(path.join(THEMES_DIR, 'data'))
         .filter(f => f.endsWith('.theme.json'));
     const available2 = fs.readdirSync(path.join(customThemeDir, 'data'))
         .filter(f => f.endsWith('.theme.json'));
 
     const builtInThemes = available.map(f => ({
-        ...JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'web', 'themes', 'data', f), 'utf8')),
+        ...JSON.parse(fs.readFileSync(path.join(THEMES_DIR, 'data', f), 'utf8')),
         builtIn: true
     }));
 
@@ -309,7 +313,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('shouldGoIM', () => process.argv.includes('---im'));
     ipcMain.handle('diagnosticInfo', () => `Deltamod ${app.getVersion()} - Running on ${os.platform()} ${os.release()} - cmode ${isControllerMode ? 'on' : 'off'} - devtools ${isDevToolsEnabled ? 'enabled' : 'disabled'} - ${state.updateAvailable ? 'update available' : 'no update'}`);
     ipcMain.handle('isPackaged', () => app.isPackaged);
-    ipcMain.handle('version', () => require('../package.json').version);
+    ipcMain.handle('version', () => require(PACKAGE_JSON).version);
     ipcMain.handle('getOS', () => ({ platform: process.platform, release: os.release(), version: os.version() }));
     ipcMain.handle('isDevMode', () => process.argv.includes('--developer'));
     ipcMain.handle('rdlPair', async () => {
@@ -377,10 +381,9 @@ module.exports = function registerIPCHandlers(context) {
     // Themes
     ipcMain.handle('chooseTheme', async () => {
         const win = getWindow();
-        const themesDir = path.join(__dirname, '..', 'web', 'themes');
-        const themeObjects = fs.readdirSync(themesDir)
+        const themeObjects = fs.readdirSync(THEMES_DIR)
             .filter(f => f.endsWith('.theme.json'))
-            .map(f => JSON.parse(fs.readFileSync(path.join(themesDir, f), 'utf8')));
+            .map(f => JSON.parse(fs.readFileSync(path.join(THEMES_DIR, f), 'utf8')));
 
         const choice = dialog.showMessageBoxSync(win, {
             type: 'question',
@@ -464,7 +467,7 @@ module.exports = function registerIPCHandlers(context) {
     // Sponsors
     ipcMain.handle('setSponsor', async () => {
         const win = getWindow();
-        const base = path.join(__dirname, '..', 'web', 'views', 'patching', 'sponsors');
+        const base = path.join(VIEWS_DIR, 'patching', 'sponsors');
         let sponsors = fs.readdirSync(base);
         if (Math.random() >= 0.08) sponsors = sponsors.filter(s => s !== 'musical');
 
@@ -573,7 +576,7 @@ module.exports = function registerIPCHandlers(context) {
         const zip = (await dialog.showOpenDialog(win, { title: 'Select a mod patcher ZIP file', filters: [{ name: 'ZIP files', extensions: ['zip'] }] })).filePaths[0];
         if (!zip) return;
 
-        const patcherPath = path.join(__dirname, '..', 'gm3p');
+        const patcherPath = G3MP_DIR;
         const tempPath = path.join(app.getPath('temp'), `deltamod_patcher_${Date.now()}`);
 
         await new Promise((resolve, reject) => _7z.unpack(zip, tempPath, err => err ? reject(err) : resolve()));
@@ -595,12 +598,12 @@ module.exports = function registerIPCHandlers(context) {
     });
     ipcMain.handle('hasPatchingCore', () => {
         if (hasProton()) return true;
-        return fs.existsSync(path.join(__dirname, '..', 'gm3p'));
+        return fs.existsSync(G3MP_DIR);
     });
     ipcMain.handle('myCommitInfo', () => {
         const exes = ['GM3P.exe', 'GamemakerModMerger.exe', 'G3MTool.exe'];
         for (const exe of exes) {
-            const exepath = path.join(__dirname, '..', 'gm3p', exe);
+            const exepath = path.join(G3MP_DIR, exe);
             if (fs.existsSync(exepath)) {
                 try {
                     return `<br>${exe.replace('.exe', '')}, version ${getFileVersion(exepath)}`;
@@ -1228,7 +1231,7 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('npsCallback', () => { if (state.callbackNPS) { state.callbackNPS(...state.callbackNPSPassWith); state.callbackNPS = null; } });
     ipcMain.handle('executeArgumentCmd', () => {}); // No-op
     ipcMain.handle('openFlagDatabase', () => shell.openPath(path.join(app.getPath('userData'), 'deltamod_system-unique', 'flagDB.config')));
-    ipcMain.handle('deltamoddersDiscord', async () => shell.openExternal((await axios.get(require('../package.json').discordAPI)).data.instant_invite));
+    ipcMain.handle('deltamoddersDiscord', async () => shell.openExternal((await axios.get(require(PACKAGE_JSON).discordAPI)).data.instant_invite));
     ipcMain.handle('browseFile', async (event, args) => {
         const win = getWindow();
         const pathdial = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: args[0], extensions: [args[1]] }] });
@@ -1306,7 +1309,7 @@ module.exports = function registerIPCHandlers(context) {
     });
     ipcMain.handle('openElectronTracer', () => {
         if (state.elecTracer) return;
-        state.elecTracer = new BrowserWindow({ width: 500, height: 300, webPreferences: { nodeIntegration: true, contextIsolation: true, partition: PARTITION, preload: path.join(__dirname, '..', 'web', 'views', 'electron-tracer', 'preload.js') } });
+        state.elecTracer = new BrowserWindow({ width: 500, height: 300, webPreferences: { nodeIntegration: true, contextIsolation: true, partition: PARTITION, preload: path.join(VIEWS_DIR, 'electron-tracer', 'preload.js') } });
         state.elecTracer.setAlwaysOnTop(true);
         state.elecTracer.setMenuBarVisibility(false);
         state.elecTracer.loadURL('deltapack://web/views/electron-tracer/index.html');

@@ -627,7 +627,7 @@ function selectionFixture(t) {
             './System': system, './Console': silent,
             './KeyValue': { ...keyValue, loadUniqueDefaults() {}, upgradeStores() {} },
             './ProtonLauncher': { profileIndex, resolveSelection },
-            './Paths': { file: (...parts) => path.join(dir, ...parts) },
+            './Paths': require("./Paths"),
             './Protocol': { registerProtocolSchemesAsPrivileged() {}, registerProtocolHandlers() {} },
             './FeatureFlags': { isFeatureEnabled: () => false }, './Plugins': { call() {} },
             './RunConditions.js': { checkConditions: () => [] },

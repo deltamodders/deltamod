@@ -1,4 +1,7 @@
 const { exec } = require('child_process');
+const path = require('path');
+
+const { TOOLS_DIR } = require('./Paths');
 
 var proc;
 var running = false;
@@ -7,7 +10,7 @@ function start() {
     if (running) return;
 
     running = true;
-    var exepath = require('path').join(__dirname, '../', 'tools', 'cmodeutil.exe');
+    var exepath = path.join(TOOLS_DIR, 'cmodeutil.exe');
     proc = require('child_process').exec('cmd /c "' + exepath + '"');
 }
 
