@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Notification, safeStorage, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Notification, safeStorage, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -1216,6 +1216,39 @@ module.exports = function registerIPCHandlers(context) {
             windows: { filePath: process.execPath.replace(/\\/g, '\\\\'), name: `Deltamod (${iName})`, arguments: `---system_index=${args[0]}` }
         });
         if (shortcutsCreated) dialog.showMessageBox(win, { type: 'info', title: 'Shortcut Created', message: 'Shortcut created on desktop.' });
+    });
+
+    ipcMain.handle('currentInstallName', (event, args) => {
+        var index = System.getCurrentSystemIndex();
+        return fs.existsSync(System.getSystemFileOfIndex('_cname', index)) ? fs.readFileSync(System.getSystemFileOfIndex('_cname', index), 'utf8') : `Install #${index + 1}`;
+    });
+
+    ipcMain.handle('installSwitcher', (event, args) => {
+        const installOptions = [];
+        for (const i of profileIndices(app.getPath('userData'))) {
+            const name = fs.existsSync(System.getSystemFileOfIndex('_cname', i)) ? fs.readFileSync(System.getSystemFileOfIndex('_cname', i), 'utf8') : `Install #${i + 1}`;
+            installOptions.push({
+                label: `${name}\n(${GameDB.getGameById(KeyValue.readKVSOfIndex('gamePid', i))?.name || 'Unknown'})`,
+                click: () => {
+                    var index = String(i);
+                    fs.writeFileSync(getSystemFile('_sysindex', true), index, 'utf8');
+                    System.setSystemIndex(index);
+                    KeyValue.retrieve();
+                    app.relaunch(properRelaunch());
+                    app.exit();
+                },
+                icon: nativeImage.createFromPath(path.join(VIEWS_DIR, '../', 'gamesIco', `${KeyValue.readKVSOfIndex('gamePid', i) || 'unknown'}.png`)).resize({ width: 32, height: 32 })
+            });
+        }
+        var menu = Menu.buildFromTemplate(installOptions.concat([
+            { type: 'separator' },
+            { label: 'Create new installation...', click: () => page('locate') },
+            { label: 'Advanced installation manager...', click: () => page('installmanager') }, 
+            { type: 'separator' }, 
+            { label: 'Cancel', subtitle: 'Cancel the operation', role: 'cancel' }
+        ]));
+
+        menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
     });
 
     ipcMain.handle('openInstallationFolder', (event, args) => shell.openExternal(getSystemFolderOfIndex('deltaruneInstall', args[0])));

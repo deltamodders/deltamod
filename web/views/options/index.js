@@ -421,7 +421,7 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
                 await window.electronAPI.invoke('removeSteamIntegration', []);
             }, "Disconnect", isSteam, "Only available for games imported from Steam.");
 
-            await addButton("Open the Install Manager", "Opens the install manager menu, which allows you to delete/create installations and create shortcuts for them.", async () => {
+            await addButton("Open the advanced Install Manager", "Opens the advanced install manager menu, which allows you to delete/create installations and create shortcuts for them. These actions can't be done via the dropdown menu.", async () => {
                 page('installmanager');
             }, "Open");
 

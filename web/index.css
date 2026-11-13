@@ -292,6 +292,10 @@ body {
     z-index: 2;
     -webkit-app-region: drag;
     user-select: none;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 .sidebar-buttons {
     -webkit-app-region: no-drag;
@@ -300,6 +304,29 @@ body {
     justify-content: center;
     align-items: baseline;
     flex-direction: column;
+}
+
+.installSmall {
+    margin-bottom: 50px;
+}
+
+.installDiv {
+    display: inline-flex;
+    justify-content: left;
+    align-items: center;
+    -webkit-app-region: no-drag;
+    gap: 10px;
+    width: calc(var(--sidebar-size) * 1);
+    padding-left: 20px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background-color: rgba(0, 0, 0, 0);
+    transition: 0.2s all cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.installDiv:hover {
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.23);
 }
 
 @keyframes sidebarBtnFadeIn {

@@ -746,6 +746,49 @@ if (!window.electronAPI) {
     }
 })();
 
+(async () => {
+    var gameInfo = await window.electronAPI.invoke('getCurrentGameInfo', []);
+    console.log(JSON.stringify(gameInfo));
+    var installName = await window.electronAPI.invoke('currentInstallName', []);
+    var div = document.querySelector('.installDiv');
+
+    div.addEventListener('click', async () => {
+        invoke('installSwitcher', []);
+    });
+
+    var img = document.createElement('img');
+    img.src = "./gamesIco/" + gameInfo.id + ".png";
+    img.style.width = '32px';
+    img.style.height = '32px';
+    img.style.marginRight = '8px';
+    div.appendChild(img);
+
+    var nameInfo = document.createElement('div');
+    nameInfo.style.display = 'flex';
+    nameInfo.style.width = '60px';
+    nameInfo.style.flexDirection = 'column';
+    nameInfo.style.justifyContent = 'baseline';
+    var installSpan = document.createElement('span');
+    installSpan.style.fontSize = '14px';
+    installSpan.style.fontWeight = 'bold';
+    installSpan.textContent = installName;
+
+    var gameSpan = document.createElement('span');
+    gameSpan.style.fontSize = '12px';
+    gameSpan.style.color = '#aaa';
+    gameSpan.textContent = gameInfo.name;
+
+    nameInfo.appendChild(installSpan);
+    nameInfo.appendChild(gameSpan);
+    div.appendChild(nameInfo);
+
+    var arrow = document.createElement('span');
+    arrow.classList.add('material-symbols-outlined');
+    arrow.textContent = 'arrow_drop_down';
+    arrow.style.fontSize = '16px';
+    div.appendChild(arrow);
+})();
+
 function closeAudio() {
     if (audio) {
         audio.pause();
