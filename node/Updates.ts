@@ -1,26 +1,24 @@
-// @ts-check
+import https from 'https';
+import { version } from 'os';
 
-const https = require('https');
-const console = require('./Console.js');
-const { version } = require('os');
+import console from './Console';
+import { PACKAGE_JSON } from './Paths';
 
-/**
- * @typedef SomeUpdateInfo
- * @property {true} update
- * @property {string} newVersionLink
- * @property {string} version
- * @typedef NoneUpdateInfo
- * @property {false} update
- * @property {null} newVersionLink
- * @property {null} version
- * @typedef {SomeUpdateInfo | NoneUpdateInfo} UpdateInfo
- */
+interface SomeUpdateInfo {
+    update: true;
+    newVersionLink: string;
+    version: string;
+}
 
-/**
- * @param {string | URL | https.RequestOptions} params
- * @returns {Promise<string>}
- */
-function httpsPromisify(params) {
+interface NoneUpdateInfo {
+    update: false;
+    newVersionLink: null;
+    version: null;
+}
+
+type UpdateInfo = SomeUpdateInfo | NoneUpdateInfo;
+
+function httpsPromisify(params: string | URL | https.RequestOptions): Promise<string> {
     return new Promise((resolve, reject) => {
         https.get(params, (res) => {
             let data = '';
@@ -36,10 +34,9 @@ function httpsPromisify(params) {
     });
 }
 
-/** @returns {Promise<UpdateInfo>} */
-async function checkUpdates() {
+export async function checkUpdates(): Promise<UpdateInfo> {
     try {
-        var VERSION = require('../package.json').version;
+        var VERSION = require(PACKAGE_JSON).version;
         var URL = "https://deltamodders.com/apiv1/deltamod/latest?v=" + encodeURIComponent(VERSION);
         var DATA = await JSON.parse(await httpsPromisify(URL));
     }
@@ -59,7 +56,3 @@ async function checkUpdates() {
         version: DATA.version
     };
 }
-
-module.exports = {
-    checkUpdates
-};
