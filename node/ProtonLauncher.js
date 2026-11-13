@@ -604,7 +604,7 @@ function resolveSelection(userData, value) {
     const known = profileIndices(userData);
     const preferred = optionalIndex(value);
     const selectable = known.filter(index => hasGame(profilePaths(userData, index))).map(String);
-    if (selectable.includes(preferred)) return preferred;
+    if (preferred !== undefined && selectable.includes(preferred)) return preferred;
     return selectable[0] ?? profileIndex(Math.max(-1, ...known) + 1);
 }
 

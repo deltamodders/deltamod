@@ -1,3 +1,5 @@
+// @ts-check
+
 const { app, BrowserWindow, dialog, protocol, session, shell, screen, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
