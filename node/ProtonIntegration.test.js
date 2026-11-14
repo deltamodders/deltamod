@@ -92,6 +92,7 @@ function harness(t, platform = 'linux', realStorage = false) {
     }
     const modList = [];
     const modules = {
+        './Paths': require('./Paths'),
         './Modstore': { modList: () => ({ modList, errors: [] }) },
         electron, fs, path, os, crypto: require('node:crypto'), './System': system, './KeyValue': keyValue,
         './GameDB': { getGames: () => [game], getGameById: id => id === game.id ? game : null },
@@ -455,6 +456,7 @@ test('staged delta helper preserves ordered single-apply and multi-merge CLI con
     const module = { exports: {} };
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'GamePatching.js'), 'utf8'), {
         require: name => ({ fs: { ...fs, accessSync: () => {}, statSync: () => ({ isFile: () => true }) }, path, './Console': console,
+            './Paths': require('./Paths'),
             child_process: { execFile: (file, args, options, callback) => {
                 commands.push(Array.from(args));
                 fs.writeFileSync(args.at(-1), 'patched');
@@ -497,6 +499,7 @@ test('native multi-mod patching deep-merges property files so every mod keeps it
         require: name => ({
             fs: { ...fs, existsSync: file => file.endsWith('G3MTool.exe') || fs.existsSync(file) },
             path, './Console': { log_internal() {}, log() {}, error() {} },
+            './Paths': require('./Paths'),
             'smol-toml': { parse: () => ({ metadata: { name: 'fixture' } }) },
             child_process: { spawn: (file, args) => {
                 commands.push(Array.from(args));
