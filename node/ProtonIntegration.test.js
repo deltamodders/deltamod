@@ -248,7 +248,7 @@ test('native Steam management can repair, unregister or recover without activati
         h.switchIndex('1');
         h.calls.length = 0;
         h.choices.push(action);
-        assert.equal(h.handlers.get('removeSteamIntegration')(), true);
+        assert.equal(h.handlers.get('removeSteamIntegration')(null, [h.currentIndex()]), true);
         assert.ok(h.calls.some(call => call[property]));
         assert.equal(h.calls.some(call => call.steamHelperUpdate), action === 2);
         assert.equal(h.stores[1].isSteam, true);
@@ -524,7 +524,7 @@ test('UMU Steam-disconnect action offers installation removal navigation instead
         Staging.importBase(root, h.source, { gameId: 'fixture', exeName: 'DELTARUNE.exe', umu: process.execPath, proton: h.runner });
         const descriptor = fs.readFileSync(path.join(root, 'backend.json'));
         h.choices.push(choice);
-        assert.equal(h.handlers.get('removeSteamIntegration')(), choice === 0);
+        assert.equal(h.handlers.get('removeSteamIntegration')(null, [h.currentIndex()]), choice === 0);
         assert.equal(h.errors.length, 0);
         assert.equal(h.messages.some(args => args[0] === 'page' && args[1] === 'installmanager'), choice === 0);
         assert.deepEqual(fs.readFileSync(path.join(root, 'backend.json')), descriptor);
