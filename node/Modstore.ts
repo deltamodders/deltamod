@@ -1,50 +1,44 @@
 // @ts-check
 
-const path = require('path');
-const system = require('./System');
-const fs = require('fs');
-const os = require('os');
-const console = require('./Console');
-const _7z = require('7zip-min');
-const { randomString, page, shopClang } = require('./Utils');
-const crypto = require('crypto');
-const { dialog } = require('electron');
-const {Downloader} = require("nodejs-file-downloader");
-const { url } = require('inspector');
-const TOML = require('smol-toml');
+import crypto from 'crypto';
+import fs from 'fs';
+import type { IncomingMessage } from 'http';
+import { url } from 'inspector';
+import os from 'os';
+import path from 'path';
+
+import _7z from '7zip-min';
+import { dialog } from 'electron';
+import { Downloader } from "nodejs-file-downloader";
+import * as TOML from 'smol-toml';
+
+import console from './Console';
+import { getGames } from './GameDB';
+import { readUniqueFlag } from './KeyValue';
+import { PACKAGE_JSON } from './Paths';
+import * as system from './System';
+import { randomString, page, shopClang, validateVersioning } from './Utils';
 
 const computerName = os.hostname();
 
-/**
- * @callback ProgressFn
- * @param {string} percentage
- * @param {string} downloadedMB
- * @param {string} totalMB
- * @returns {void}
- */
+type ProgressFn = (
+    percentage: string,
+    downloadedMB: string,
+    totalMB: string,
+) => void;
 
-/**
- * @param {string} url
- * @param {ProgressFn} onProgress
- * @param {any} mID
- * @param {any} mModel
- * @returns {Promise<true>}
- */
-function downloadModFromURL(url, onProgress, mID, mModel) {
+export function downloadModFromURL(url: string, onProgress: ProgressFn, mID: any, mModel: any): Promise<true> {
     return new Promise(async (resolve, reject) => {
         try {
             var totalSize = 0;
-            /**
-             * @param {import('http').IncomingMessage} response
-             */
-            function onResponse(response) {
+            function onResponse(response: IncomingMessage) {
                 const content_length_txt = response.headers['content-length'];
                 // TODO(fnrir): make sure response without length is handled correctly
                 totalSize = content_length_txt ? parseInt(content_length_txt, 10) : 0;
             }
             const downloader = new Downloader({
                 url: url,
-                directory: require('os').tmpdir(),
+                directory: os.tmpdir(),
                 onResponse: onResponse,
                 onProgress: (percentage, _, remaining) => {
                     var downloadedMB = (totalSize - remaining) / (1024 * 1024);
@@ -64,19 +58,9 @@ function downloadModFromURL(url, onProgress, mID, mModel) {
     });
 }
 
-/**
- * @typedef ModInfoPart
- * @property {any} metadata
- */
+type ModInfoPart = { metadata: any };
 
-/**
- * @param {string} filePath
- * @param {string} [nextPage]
- * @param {string?} [mID]
- * @param {string?} [mModel]
- * @returns {Promise<void>}
- */
-async function importMod(filePath, nextPage = "main", mID = null, mModel = null) {
+export async function importMod(filePath: string, nextPage: string = "main", mID: string | null = null, mModel: string | null = null): Promise<void> {
     var clangit = true;
 
     console.log("Importing mod (gb info)", mID, mModel, "from file:", filePath);
@@ -136,7 +120,7 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
             throw new Error('Mod TOML manifest not found. Please ensure the mod is properly packaged.');
         }
 
-        var modInfo = /** @type {ModInfoPart?} */ (safeReadTOML(manifestPath));
+        var modInfo: ModInfoPart | null = safeReadTOML(manifestPath);
         if (!modInfo || !modInfo.metadata) {
             fs.rmSync(modPath, { recursive: true, force: true });
             throw new Error('Invalid mod manifest. Please ensure meta.toml is correctly formatted.');
@@ -232,11 +216,7 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
     }
 }
 
-/**
- * @param {string} modid
- * @returns {boolean}
- */
-function removeModSafe(modid) {
+export function removeModSafe(modid: string): boolean {
     var modPath = path.join(system.getPacketDatabase(), modid);
 
     // make sure that what we're deleting is actually a mod and not a random folder
@@ -253,12 +233,8 @@ function removeModSafe(modid) {
 
 /**
  * [ADDED] depth-first search for a file by name anywhere under root
- *
- * @param {string} root
- * @param {string} fileName
- * @returns {string?}
  */
-function findFirstByName(root, fileName) {
+function findFirstByName(root: string, fileName: string): string | null {
     const needle = String(fileName).toLowerCase();
     const stack = [root];
     while (stack.length) {
@@ -275,29 +251,17 @@ function findFirstByName(root, fileName) {
     return null;
 }
 
-/**
- * @param {string} p
- * @returns {any}
- */
-function safeReadJSON(p) {
+function safeReadJSON(p: string): any {
     if (!p) return null;
     try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
 }
 
-/**
- * @param {string} p
- * @returns {any}
- */
-function safeReadTOML(p) {
+function safeReadTOML(p: string): any {
     if (!p) return null;
     try { return TOML.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
 }
 
-/**
- * @param {string} pid
- * @returns {string}
- */
-function validatePID(pid) {
+function validatePID(pid: string): string {
     console.log("Validating packageID:", pid);
 
     if (pid.includes('..') || pid.includes('/') || pid.includes('\\')) {
@@ -315,17 +279,16 @@ function validatePID(pid) {
     return pid.toLowerCase();
 }
 
-function howmany() {
+export function howmany(): number {
     return fs.readdirSync(system.getPacketDatabase()).length;
 }
 
-/**
- * @typedef NeededFiles
- * @property {string} file
- * @property {string} checksum
- */
+interface NeededFiles {
+    file: string,
+    checksum: string,
+}
 
-function modList() {
+export function modList() {
     var mods = fs.readdirSync(system.getPacketDatabase());
     var modList = [];
     var errors = [];
@@ -426,8 +389,8 @@ function modList() {
             }
             const pid = meta.packageID;
 
-            if (require('./KeyValue').readUniqueFlag('HASHCHECKS')) {
-                modInfo.neededFiles?.forEach(/** @param {NeededFiles} file */ file => {
+            if (readUniqueFlag('HASHCHECKS')) {
+                modInfo.neededFiles?.forEach((file: NeededFiles) => {
                     try {
                         var fileContents = (path.join(system.getSystemFolder('deltaruneInstall'), file.file));
                         var fileContentsHashCPATH = (path.join(system.getSystemFolder('deltaruneInstall'), file.file + '.hash'));
@@ -502,7 +465,7 @@ function modList() {
                     fs.writeFileSync(idPath, JSON.stringify(deltamodExclusive, null, 2), 'utf8');
                 }
 
-                if (deltamodExclusive.uniqueId.split('_')[3] !== require('../package.json').version) {
+                if (deltamodExclusive.uniqueId.split('_')[3] !== require(PACKAGE_JSON).version) {
                     // if the version is different, regenerate the uniqueId
                     console.log('mod version mismatch, regenerating uniqueId for mod:', mod);
                     deltamodExclusive = null; // force regeneration below
@@ -566,10 +529,7 @@ function modList() {
             });
 
             var modSize = 0;
-            /**
-             * @param {string} folderPath
-             */
-            function calculateFolderSize(folderPath) {
+            function calculateFolderSize(folderPath: string) {
                 const items = fs.readdirSync(folderPath);
                 for (const item of items) {
                     const itemPath = path.join(folderPath, item);
@@ -585,7 +545,7 @@ function modList() {
             // convert bytes to megabytes, round to 2 decimals; non-zero values are at least 0.01 MB
             modSize = modSize === 0 ? 0 : Math.max(0.01, Math.round((modSize / (1024 * 1024)) * 100) / 100);
 
-            var games = require('./GameDB').getGames();
+            var games = getGames();
             if (!games.some(g => g.id === meta.game)) {
                 failureReason = `Mod targets unknown game: ${meta.game}`;
                 throw new Error(`Mod targets unknown game: ${meta.game}`);
@@ -598,15 +558,14 @@ function modList() {
                 throw new Error(`Mod has invalid AI disclosure value: ${ai}`);
             }
 
-            /** @type {string?} */
-            var variant = null;
+            var variant: string | null = null;
             try {
                 variant = fs.readFileSync(path.join(modPath, '__variant'), 'utf8').trim();
             } catch {}
             // keep your return shape; just add ids (non-breaking)
             modList.push({
                 name:         meta.name || mod,
-                version:      require('./Utils').validateVersioning(meta.version) || "Unknown",
+                version:      validateVersioning(meta.version) || "Unknown",
                 author:       meta.author || computerName,
                 description:  meta.description || '',
                 folder:       mod,
@@ -667,11 +626,7 @@ function modList() {
     return { modList, errors };
 }
 
-/**
- * @param {string} moduid
- * @returns {{ exists: boolean, path: string? }}
- */
-function getModImage(moduid) {
+export function getModImage(moduid: string): { exists: boolean; path: string | null; } {
     var modPackets = fs.readdirSync(system.getPacketDatabase());
     for (var mod of modPackets) {
         var deltaID = safeReadJSON(path.join(system.getPacketDatabase(), mod, '__deltaID.json'));
@@ -693,12 +648,3 @@ function getModImage(moduid) {
 if (!fs.existsSync(system.getPacketDatabase())) {
     fs.mkdirSync(system.getPacketDatabase(), { recursive: true });
 }
-
-module.exports = {
-    modList,
-    importMod,
-    howmany,
-    downloadModFromURL,
-    removeModSafe,
-    getModImage
-};
