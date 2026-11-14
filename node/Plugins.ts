@@ -1,24 +1,21 @@
-// @ts-check
 // FIXME(fnrir): this is currently broken. hook function names use uppercase
 // letters
 
-const fs = require('fs');
-const { app } = require('electron');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-/**
- * @typedef PluginInfo
- * @property {string} name
- * @property {string} version
- * @property {string} description
- * @property {string} author
- */
+import { app } from 'electron';
+
+interface PluginInfo {
+    name: string;
+    version: string;
+    description: string;
+    author: string;
+}
 
 const PLUGINS_BASE = path.join(app.getPath('userData'), 'plugins.db');
-/** @type {Record<string, string[]>} */
-let FUNCTION_CACHE = {};
-/** @type {PluginInfo[]} */
-let loadedPlugins = [];
+let FUNCTION_CACHE: Record<string, string[]> = {};
+let loadedPlugins: PluginInfo[] = [];
 
 if (!fs.existsSync(PLUGINS_BASE)) {
     fs.mkdirSync(PLUGINS_BASE, { recursive: true });
@@ -58,11 +55,7 @@ function loadPlugins() {
     console.log('Loaded functions: ', Object.keys(FUNCTION_CACHE));
 }
 
-/**
- * @param {string} functionName
- * @param  {...any} args
- */
-function call(functionName, ...args) {
+export function call(functionName: string, ...args: any[]) {
     if (!FUNCTION_CACHE[functionName]) {
         console.log(`function ${functionName} not defined in any plugins.`);
         return;
@@ -78,5 +71,3 @@ function call(functionName, ...args) {
 }
 
 loadPlugins();
-
-module.exports = { call };
