@@ -19,15 +19,28 @@
     margin-bottom: 10px;
     position: relative;
 }
+.commentStylingBtns {
+    margin-bottom: 8px;
+}
+.commentStylingBtns > button {
+    padding: 3px 6px;
+}
 .commentArea {
     width: calc(100% - 55px);
 }
+.comment {
+    width: calc(100% - 10px); 
+    height: 150px; 
+    background-color: rgba(0,0,0,0.5); 
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--theme-color);
+    font-family: Calibri, sans-serif;
+}
 .pinIcon {
-    position: fixed;
-    top: -5px;
-    left: -5px;
-    width: 20px;
-    height: 20px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     color: white;
     display: flex;
@@ -42,4 +55,14 @@
     border-radius: 3px;
     font-size: 0.8em;
     margin-left: 5px;
+}
+
+.comment:empty::before {
+  content: attr(data-placeholder);
+  color: #999;
+  pointer-events: none;
+}
+
+.comment:focus:empty::before {
+  content: "";
 }

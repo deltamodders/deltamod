@@ -414,29 +414,12 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             }, "Open");
 
             break;
-        case 'inst':
-            var isSteam = await window.electronAPI.invoke('isCurrentIndexSteam', []);
-
-            await addButton("Disconnect Steam from Deltamod", "Disconnects Steam from the current install. This install will no longer be launched via Steam. In some cases, this may require deleting and reinstalling the game from Steam.", async () => {
-                await window.electronAPI.invoke('removeSteamIntegration', []);
-            }, "Disconnect", isSteam, "Only available for games imported from Steam.");
-
-            await addButton("Open the advanced Install Manager", "Opens the advanced install manager menu, which allows you to delete/create installations and create shortcuts for them. These actions can't be done via the dropdown menu.", async () => {
-                page('installmanager');
-            }, "Open");
-
-            break;
         case 'adv':
             await addRowHeader(icon('warning', '20px') + ' ' + "Please only change these settings if you know what they do.");
 
-            await addButton("Reboot in Developer Mode", "Reboots in developer mode, a mode which allows you to use the DevTools.", async () => {
-                var goOn = await htmlAlert(
-                        'Warning', 
-                        "Warning: this is only for users who know what they're doing. Are you sure you want to reboot in developer mode?", 
-                        [{text:"Yes",resolveWith:'ok'}, {text:"No",rejectWith:'cancel'}]
-                    );
-                await window.electronAPI.invoke('rebootDev', [])
-            }, "Open", !await window.electronAPI.invoke('isDevMode', []), "You are already in developer mode.");
+            await addButton("Toggle Developer Mode", "Toggles developer mode on or off. Developer mode lets you use the DevTools and other development features.\n\nCurrent state: " + (await window.electronAPI.invoke('isDevMode', []) ? 'On' : 'Off'), async () => {
+                await window.electronAPI.invoke('toggleDev', [])
+            }, "Toggle");
 
             await addButton("Precalculate game hashes", "If you are using advanced mod checks, doing this operation may save you time when opening Deltamod, but it can be pretty lengthy.", async () => {
                 await window.electronAPI.invoke('precalcGameHashes', []);
@@ -453,13 +436,9 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             break;
         // dev isnt keyed and is always in english
         case "dev":
-            await addRowHeader(icon('warning', '20px') + ' ' + "These options are for developers only.");
+            await addRowHeader(icon('warning', '20px') + ' ' + "These options are intended for developers only and are not supported for general users.");
             await addButton('Open flag database (DEV-ONLY)', 'Opens the database holding flags.', async () => {
                 await window.electronAPI.invoke('openFlagDatabase', []);
-            }, "Open");
-            await addButton('Decrypt GameBanana account token (DEV-ONLY)', 'Decrypts your GameBanana account token from the default encryption and saves it to your desktop.', async () => {
-                await window.electronAPI.invoke('dev_getGBToken', []);
-                await htmlAlert("Done","Operation successful!",[{text: "Ok", resolveWith:''}]);
             }, "Open");
             await addButton('Force controller mode (DEV-ONLY)', 'Forces Controller Mode on, regardless of controller detection status', async () => {
                 await window.electronAPI.invoke('cmode-on', []);

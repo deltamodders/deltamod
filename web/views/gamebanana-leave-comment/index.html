@@ -5,7 +5,12 @@
     <div class="commentBox" style="display: none;" id="myCommentBox">
         <img src="" alt="" width="50" height="50" id="gbPic">
         <div class="commentArea">
-            <textarea name="comment" id="comment" style="width: calc(100% - 10px); height: 150px; background-color: rgba(0,0,0,0.5); color: white;" placeholder="Type your comment here..."></textarea>
+            <div class="commentStylingBtns">
+                <button onclick="window.currentPageStack.commentStyling('b')"><b>B</b></button>
+                <button onclick="window.currentPageStack.commentStyling('i')"><i>I</i></button>
+                <button onclick="window.currentPageStack.commentStyling('u')"><u>U</u></button>
+            </div>
+            <div class="comment fontStyles" id="comment" contenteditable="true" data-placeholder="Write a comment..."></div>
             <br><br>
             <button onclick="window.currentPageStack.send()" id="sendBtn">Send</button>
         </div>

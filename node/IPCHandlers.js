@@ -359,10 +359,15 @@ module.exports = function registerIPCHandlers(context) {
         app.relaunch({ args: process.argv.slice(1).filter(arg => arg !== '-controller' && !arg.startsWith('deltamod://')) });
         app.exit(0);
     });
-    ipcMain.handle('rebootDev', async () => {
-        if (process.argv.includes('--developer')) return false;
-        const existingArgs = process.argv.slice(1).filter(a => !a.startsWith('---system_index=') || a === '---initialize_deltamod' || a.startsWith('deltamod:'));
-        app.relaunch({ args: [...existingArgs, '--developer'] });
+    ipcMain.handle('toggleDev', async () => {
+        var existingArgs;
+        if (process.argv.includes('--developer')) {
+            existingArgs = process.argv.slice(1).filter(a => (!a.startsWith('---system_index=') || a === '---initialize_deltamod' || a.startsWith('deltamod:')) && a != '--developer');
+        }
+        else {
+            existingArgs = [...process.argv.slice(1).filter(a => !a.startsWith('---system_index=') || a === '---initialize_deltamod' || a.startsWith('deltamod:')), '--developer'];
+        }
+        app.relaunch({ args: [...existingArgs] });
         app.exit(0);
     });
 
@@ -1150,8 +1155,8 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     ipcMain.handle('isCurrentIndexSteam', () => KeyValue.readKVSOfIndex('isSteam', parseInt(System.getCurrentSystemIndex())));
-    ipcMain.handle('removeSteamIntegration', () => {
-        const index = parseInt(System.getCurrentSystemIndex());
+    ipcMain.handle('removeSteamIntegration', (event, args) => {
+        const index = args[0];
         if (hasProton()) return ProtonDialogs.manageProtonProfile(protonRoot(), getWindow, steamSettings);
         
         if (KeyValue.readKVSOfIndex('gamePath', index).endsWith('deltaruneInstall')) {
@@ -1217,7 +1222,7 @@ module.exports = function registerIPCHandlers(context) {
         }
         const installOptions = [];
         const currentIndex = Number(System.getCurrentSystemIndex());
-        for (const i of profileIndices(app.getPath('userData'))) {
+        for (const i of fs.readdirSync(app.getPath('userData')).map(f => parseInt(f.replace('deltamod_system-', ''))).filter(i => !isNaN(i)).sort((a, b) => a - b)) {
             const name = fs.existsSync(System.getSystemFileOfIndex('_cname', i)) ? fs.readFileSync(System.getSystemFileOfIndex('_cname', i), 'utf8') : `Install #${i + 1}`;
             installOptions.push({
                 label: `${name}\n(${GameDB.getGameById(KeyValue.readKVSOfIndex('gamePid', i))?.name || 'Unknown'})`,
@@ -1230,13 +1235,14 @@ module.exports = function registerIPCHandlers(context) {
                     app.exit();
                 },
                 enabled: (currentIndex != i),
-                icon: resize16(path.join(VIEWS_DIR, '../', 'gamesIco', `${KeyValue.readKVSOfIndex('gamePid', i) || 'unknown'}.png`))
+                icon: (
+                    currentIndex == i ? resize16(path.join(ASSETS_DIR, `loaded.png`)) : resize16(path.join(VIEWS_DIR, '../', 'gamesIco', `${KeyValue.readKVSOfIndex('gamePid', i) || 'unknown'}.png`))
+                )
             });
         }
         var menu = Menu.buildFromTemplate(installOptions.concat([
             { type: 'separator' },
-            { label: 'Create new installation...', click: () => page('locate'), icon: resize16(path.join(ASSETS_DIR, `plus.png`)) },
-            { label: 'Show more options...', click: () => {
+            { label: 'Open installation manager', click: () => {
                 const win = getWindow();
                 win.webContents.executeJavaScript(`window.fromIM = true; page('installmanager');`);
             }, icon: resize16(path.join(VIEWS_DIR, '../', 'sbar', `installmanager.png`)) }, 

@@ -163,3 +163,22 @@ async function crawlComment(comment, div, depth = 0) {
         document.querySelector('.comments').innerHTML += '<p style="text-align: center;">No more comments to load.</p>';
     }
 })();
+
+window.currentPageStack.commentStyling = function (style) {
+    var commentDiv = document.getElementById('comment');
+    if (style == 'b') {
+        document.execCommand('bold');
+    }
+    else if (style == 'i') {
+        document.execCommand('italic');
+    }
+    else if (style == 'u') {
+        document.execCommand('underline');
+    }
+};
+
+document.querySelector('.comment').addEventListener('input', function () {
+    if (this.textContent.trim() === '') {
+        this.innerHTML = '';
+    }
+}); // fix stray <br>

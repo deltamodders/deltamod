@@ -47,3 +47,15 @@ Remove branches from GitHub when they've been merged.
 - Keep documentation up to date when introducing new features or changing existing behavior.
 
 Thank you for helping improve the project!
+
+## 4. AI assistance during coding
+
+We do not welcome "vibe-coded" pull requests. Most AI usage for Deltamod contributions is prohibitied.
+
+The following uses of AI are acceptable:
+- Using AI to proofread and verify existing HUMAN-WRITTEN code;
+- Using in-line AI utilities (those who suggest code based on the context) such as Copilot which aid, not replace, HUMAN-WRITTEN code.
+
+Any AI usage (even if minor) must be declared in the PR.
+
+_None of these utilities are used by the main programmers._

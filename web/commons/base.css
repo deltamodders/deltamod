@@ -12,7 +12,6 @@
     text-rendering: geometricPrecision;
 
     font-weight: normal !important;
-    /* bold fucks shit up the entire font */
 }
 
 /* I did everything to use Calibri but I realized I actually want a font from my library.... */
@@ -38,14 +37,16 @@ brand-icon {
     /* IE and Edge */
 }
 
-* {
-    font-weight: normal !important;
-    /* bold fucks shit up the entire font */
-}
-
 *::-webkit-scrollbar {
     display: none;
     /* Chrome, Safari, Opera */
+}
+
+* {
+    font-weight: normal !important;
+}
+b {
+    font-weight: bold !important;
 }
 
 .btnarray>button {
