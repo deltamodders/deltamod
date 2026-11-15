@@ -376,9 +376,9 @@ function loadInst(index) {
         // sort by name ascending by default
         modList = modList.sort((a, b) => a.name.localeCompare(b.name));
     }
-    if (localStorage.getItem('aiFilter') == 'true') {
-        modList = modList.filter(x => x.ai == 'no' || x.ai == 'na');
-        document.getElementById('aiMods').checked = true;
+    if (localStorage.getItem('nomergeFilter') == 'true') {
+        modList = modList.filter(x => x.mergeSupport);
+        document.getElementById('nomergeMods').checked = true;
     }
     if (window._pageArguments && window._pageArguments.searchTerm) {
         document.getElementById('searchMods').value = window._pageArguments.searchTerm;
@@ -451,11 +451,12 @@ function loadInst(index) {
         }
     };
 
-    document.getElementById('aiMods').onclick = async (e) => {
+    document.getElementById('nomergeMods').oninput = async (e) => {
         var value = e.target.checked;
 
-        localStorage.setItem('aiFilter', value ? 'true' : 'false');
+        localStorage.setItem('nomergeFilter', value ? 'true' : 'false');
 
+        window._pageArguments = window._pageArguments || {};
         window._pageArguments.searchTerm = document.getElementById('searchMods').value;
 
         page('');

@@ -1,6 +1,6 @@
-const { Tray, Menu } = require('electron');
+const { Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
-const { ASSETS_DIR } = require('./Paths');
+const { ASSETS_DIR, PACKAGE_JSON } = require('./Paths');
 
 async function makeTray() {
     const tray = new Tray(path.join(ASSETS_DIR, 'tray.png'));
@@ -8,7 +8,12 @@ async function makeTray() {
     tray.on('click', () => {
         const contextMenu = Menu.buildFromTemplate([
             {
-                label: 'Show Deltamod',
+                label: 'Deltamod ' + require(PACKAGE_JSON).version,
+                icon: nativeImage.createFromPath(path.join(ASSETS_DIR, 'tray.png')).resize({ width: 16, height: 16 }),
+                enabled: false
+            },
+            {
+                label: 'Show',
                 click: () => {
                     const win = require('./Utils.js').getWindow();
                     if (win) {
@@ -17,7 +22,7 @@ async function makeTray() {
                 }
             },
             {
-                label: 'Quit Deltamod',
+                label: 'Quit',
                 click: () => {
                     process.exit(0);
                 }

@@ -317,7 +317,7 @@ async function createErroringMods(errors) {
     for (const game of enumerateGames) {
         const option = document.createElement('option');
         option.value = game.id;
-        option.innerText = game.name;
+        option.innerHTML = "<img src=\"./gamesIco/" + game.id + ".png\" alt=\"" + game.name + "\"> " + game.name;
         gamesShowSelect.appendChild(option);
     }
 

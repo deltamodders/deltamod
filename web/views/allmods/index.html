@@ -63,6 +63,54 @@
         </dialog>
 </div>
 <style>
+    #gamesShow,
+        #gamesShow::picker(select) {
+        appearance: base-select;
+    }
+
+    #gamesShow {
+        min-width: 200px;
+        padding: 8px 12px;
+        border: 1px solid var(--theme-color);
+        border-radius: 8px;
+        background: rgb(15, 15, 15);
+    }
+
+    #gamesShow::picker(select) {
+        border-radius: 8px;
+        padding: 4px;
+        border: 1px solid var(--theme-color);
+        background: rgb(15, 15, 15);
+    }
+
+    #gamesShow option {
+        display: flex;
+        align-items: center;
+        color: white;
+        font-size: 14px;
+        gap: 10px;
+        padding: 8px;
+        cursor: pointer;
+        background: rgb(15, 15, 15);
+    }
+
+    #gamesShow option img {
+        width: 24px;
+        height: 24px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    #gamesShow option:hover {
+        background: #333333;
+    }
+
+    #gamesShow selectedcontent {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
     @keyframes fadeOut {
         0% {
             opacity: 1;
