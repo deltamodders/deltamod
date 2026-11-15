@@ -66,3 +66,7 @@
 .comment:focus:empty::before {
   content: "";
 }
+.commentText > p {
+    margin: 0;
+    white-space: pre-wrap;
+}

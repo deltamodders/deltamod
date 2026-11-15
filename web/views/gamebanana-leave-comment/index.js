@@ -16,6 +16,21 @@ async function send() {
 
 window.currentPageStack.send = send;
 
+function removeHtmlEventHandlers(html) {
+    var template = document.createElement('template');
+    template.innerHTML = html || '';
+
+    template.content.querySelectorAll('*').forEach(element => {
+        Array.from(element.attributes).forEach(attribute => {
+            if (attribute.name.toLowerCase().startsWith('on')) {
+                element.removeAttribute(attribute.name);
+            }
+        });
+    });
+
+    return template.innerHTML;
+}
+
 async function crawlComment(comment, div, depth = 0) {
     var commentDiv = document.createElement('div');
     if (depth == 0) commentDiv.style.marginTop = '35px';
@@ -69,7 +84,10 @@ async function crawlComment(comment, div, depth = 0) {
     contentDiv.appendChild(document.createElement('br'));
 
     var commentText = document.createElement('span');
-    commentText.innerHTML = comment._sText.replaceAll(/<[^>]+>/g, '');;
+    commentText.innerHTML = removeHtmlEventHandlers(comment._sText.replace(/<script.*?>.*?<\/script>/gi, ''));
+    commentText.style.whiteSpace = 'pre-wrap';
+    commentText.style.fontFamily = 'Calibri, sans-serif';
+    commentText.classList.add('commentText');
     contentDiv.appendChild(commentText);
 
     var stampsDiv = document.createElement('div');
@@ -164,7 +182,7 @@ async function crawlComment(comment, div, depth = 0) {
     }
 })();
 
-window.currentPageStack.commentStyling = function (style) {
+window.currentPageStack.commentStyling = async function (style) {
     var commentDiv = document.getElementById('comment');
     if (style == 'b') {
         document.execCommand('bold');
@@ -174,6 +192,31 @@ window.currentPageStack.commentStyling = function (style) {
     }
     else if (style == 'u') {
         document.execCommand('underline');
+    }
+    else if (style == 's') {
+        document.execCommand('strikeThrough');
+    }
+    else if (style == 'src') {
+        window.currentPageStack.commentMode = window.currentPageStack.commentMode == 'source' ? 'text' : 'source';
+
+        if (window.currentPageStack.commentMode == 'source') {
+            commentDiv.textContent = commentDiv.innerHTML;
+            commentDiv.style.fontFamily = 'monospace';
+            document.querySelectorAll('.stylingButtons').forEach(btn => btn.disabled = true);
+            document.querySelector('.srcIcon').innerHTML = 'code_off';
+        }
+        else {
+            var text = commentDiv.textContent;
+            text = text.replace(/<script.*?>.*?<\/script>/gi, '');
+            text = removeHtmlEventHandlers(text);
+            
+            commentDiv.textContent = text;
+
+            commentDiv.innerHTML = commentDiv.textContent;
+            commentDiv.style.fontFamily = 'Calibri, sans-serif';
+            document.querySelectorAll('.stylingButtons').forEach(btn => btn.disabled = false);
+            document.querySelector('.srcIcon').innerHTML = 'code';
+        }
     }
 };
 

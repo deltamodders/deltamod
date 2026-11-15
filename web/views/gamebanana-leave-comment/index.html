@@ -6,9 +6,13 @@
         <img src="" alt="" width="50" height="50" id="gbPic">
         <div class="commentArea">
             <div class="commentStylingBtns">
-                <button onclick="window.currentPageStack.commentStyling('b')"><b>B</b></button>
-                <button onclick="window.currentPageStack.commentStyling('i')"><i>I</i></button>
-                <button onclick="window.currentPageStack.commentStyling('u')"><u>U</u></button>
+                <button onclick="window.currentPageStack.commentStyling('b')" class="stylingButtons"><b>B</b></button>
+                <button onclick="window.currentPageStack.commentStyling('i')" class="stylingButtons"><i>I</i></button>
+                <button onclick="window.currentPageStack.commentStyling('u')" class="stylingButtons"><u>U</u></button>
+                <button onclick="window.currentPageStack.commentStyling('s')" class="stylingButtons"><s>S</s></button>
+                <button onclick="window.currentPageStack.commentStyling('src')">
+                    <span class="material-symbols-outlined srcIcon" style="font-size: 11px;">code</span>
+                </button>
             </div>
             <div class="comment fontStyles" id="comment" contenteditable="true" data-placeholder="Write a comment..."></div>
             <br><br>

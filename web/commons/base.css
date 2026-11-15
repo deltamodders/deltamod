@@ -186,3 +186,7 @@ th {
     border: 2px solid var(--theme-color);
     animation: 0.5s spawn ease-in-out;
 }
+
+a {
+    color: var(--theme-color);
+}

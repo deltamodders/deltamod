@@ -38,6 +38,7 @@ async function createMod(mod, compatible) {
     titleSpan.style.alignItems = 'center';
     titleSpan.style.gap = '8px';
     titleSpan.style.marginBottom = '4px';
+    titleSpan.style.verticalAlign = 'middle';
     titleSpan.id = `modtitle-${mod.uid}`;
     titleSpan.addEventListener('mousedown', async (e) => {
         invoke('startModDrag', [mod.folder]);
@@ -70,6 +71,7 @@ async function createMod(mod, compatible) {
     authorSpan.style.fontSize = 'smaller';
     authorSpan.style.color = '#888';
     authorSpan.innerHTML = `${icon('attribution', 'small')} ${purify(mod.author.join(', '))}`;
+    authorSpan.style.verticalAlign = 'middle';
     authorSpan.id = `modauthor-${mod.uid}`;
     modNameContainer.appendChild(document.createElement('br'));
     modNameContainer.appendChild(authorSpan);

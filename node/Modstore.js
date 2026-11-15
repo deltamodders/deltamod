@@ -199,15 +199,11 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
 
 function removeModSafe(modid) {
     var modPath = path.join(system.getPacketDatabase(), modid);
-
-    // make sure that what we're deleting is actually a mod and not a random folder
-    if (fs.existsSync(path.join(modPath, "__deltaID.json")) && fs.existsSync(modPath)) {
-        console.log("Deleting mod", modPath);
-        fs.rmSync(modPath, { recursive: true });
-    } else {
-        console.warn("Error: Mod", modPath, "doesn't seem to be a valid mod with a __deltaID.json.");
+    if (!modPath.includes(system.getPacketDatabase())) {
+        console.error('Attempted to remove outside of packet database:', modPath);
         return false;
     }
+    fs.rmSync(modPath, { recursive: true });
 
     return true;
 }

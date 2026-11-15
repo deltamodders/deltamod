@@ -141,11 +141,6 @@ function registerProtocolHandlers(ses) {
     });
     */
 
-    ses.protocol.handle("http", async (request) => {
-        errorWin(new Error("HTTP protocol is not supported. Please use HTTPS for secure connections."));
-        return new Response("bad");
-    });
-
     ses.protocol.handle('packet', async (request) => {
         const url = new URL(request.url);
         // security

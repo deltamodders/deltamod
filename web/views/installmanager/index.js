@@ -2,6 +2,7 @@
     const installs = await window.electronAPI.invoke('getInstallations', []).catch(e => {
         return {error: e.message}
     });
+    window.currentPageStack.installs = installs;
     const index = await window.electronAPI.invoke('getSystemIndex', []).catch(e => {
         return {error: e.message}
     });
@@ -107,14 +108,45 @@
                         isThereDeprecated = true;
                     }
 
-                    details.innerHTML = `
-                        ${icon('stadia_controller', '14px')} ${gname}<br>
-                        ${icon('gite', '14px')} ${install.steam ? 'Steam' : 'Manual'}
-                    `;
+                    const gameIcon = document.createElement('span');
+                    gameIcon.className = 'material-symbols-outlined';
+                    gameIcon.style.fontSize = '14px';
+                    gameIcon.textContent = 'stadia_controller';
+                    details.appendChild(gameIcon);
+                    details.appendChild(document.createTextNode(` ${gname}`));
+                    details.appendChild(document.createElement('br'));
+
+                    const sourceIcon = document.createElement('span');
+                    sourceIcon.className = 'material-symbols-outlined';
+                    sourceIcon.style.fontSize = '14px';
+                    sourceIcon.textContent = 'gite';
+                    details.appendChild(sourceIcon);
+
+                    if (install.steam) {
+                        details.appendChild(document.createTextNode(' Steam ('));
+                        const disconnectLink = document.createElement('a');
+                        disconnectLink.href = '#';
+                        disconnectLink.textContent = 'Disconnect';
+                        disconnectLink.style.color = '#888';
+                        disconnectLink.onclick = event => {
+                            event.preventDefault();
+                            void window.currentPageStack.disconnectSteam(install.index);
+                        };
+                        details.appendChild(disconnectLink);
+                        details.appendChild(document.createTextNode(')'));
+                    } else {
+                        details.appendChild(document.createTextNode(' Manual'));
+                    }
                     if (ginfo.deprecated) {
                         var deprecatedSpan = document.createElement('span');
                         deprecatedSpan.style.color = 'orange';
-                        deprecatedSpan.innerHTML = `<br>${icon('warning', '14px')} Out of support`;
+                        const warningIcon = document.createElement('span');
+                        warningIcon.className = 'material-symbols-outlined';
+                        warningIcon.style.fontSize = '14px';
+                        warningIcon.textContent = 'warning';
+                        deprecatedSpan.appendChild(document.createElement('br'));
+                        deprecatedSpan.appendChild(warningIcon);
+                        deprecatedSpan.appendChild(document.createTextNode(' Out of support'));
                         details.appendChild(deprecatedSpan);
                     }
                 }
@@ -304,3 +336,21 @@ elisten(document, 'keyup', e => {
     var ctrlDown = e.ctrlKey || e.metaKey;
     window.ctrlDown = ctrlDown;
 });
+
+window.currentPageStack.disconnectSteam = async (index) => {
+    let installs = window.currentPageStack.installs;
+    const resp = await htmlAlert(
+        'Warning',
+        `Are you sure you want to disconnect Steam from the installation? This action cannot be undone.`,
+        [
+            { text: 'Yes', resolveWith: 'Y' },
+            { text: 'No', resolveWith: 'N' },
+        ]
+    );
+
+    if (resp == 'Y') {
+        window.electronAPI.invoke('removeSteamIntegration', [
+            index.toString(),
+        ]);
+    }
+};
