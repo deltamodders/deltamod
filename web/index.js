@@ -429,6 +429,10 @@ async function page(name) {
         name = pageN;
     }
 
+    if (window.pageCodeContext) {
+        delete window.pageCodeContext;
+    }
+
     // Viewport animation reset
     document.querySelector('.viewport').style.animation = 'none';
     document.querySelector('.viewport').style.pointerEvents = 'none';
@@ -604,7 +608,8 @@ async function page(name) {
     // Execute Page JS
     if (runScripts) {
         try {
-            eval(await fetch(`./views/${name}/index.js`).then(response => response.text()));
+            var code = await fetch(`./views/${name}/index.js`).then(response => response.text());
+            window.pageCodeContext = new Function(code)();
         } catch (error) {
             console.error('Error occurred while evaluating script for page:', name, error);
         }

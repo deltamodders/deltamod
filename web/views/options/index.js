@@ -234,6 +234,7 @@ async function renderAccount(backendName, displayName, cat, tbody = document.que
 
     var loadingContainer = document.createElement('div');
     loadingContainer.style.display = 'block';
+    loadingContainer.style.verticalAlign = 'middle';
 
     var loadingBar = document.createElement('div');
     loadingBar.className = 'loadingBar';
