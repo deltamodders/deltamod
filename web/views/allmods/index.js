@@ -28,6 +28,7 @@ async function createMod(mod, compatible) {
     }
 
     // Column 1 (Mod)
+    startProfiling('column 1 render (' + mod.uid + ')');
     const modNameContainer = document.createElement('td');
     const titleSpan = document.createElement('div');
     titleSpan.innerHTML = `
@@ -102,9 +103,7 @@ async function createMod(mod, compatible) {
     gameSpan.className = 'calibri';
     gameSpan.style.fontSize = 'smaller';
     gameSpan.style.color = '#888';
-    startProfiling(`getGameInfo: ${mod.game}`);
-    gameSpan.innerHTML = `${icon('stadia_controller', 'small')} ${await window.electronAPI.invoke('getGameInfo', [mod.game]).then(g => g.name)}`;
-    endProfiling(`getGameInfo: ${mod.game}`);
+    gameSpan.innerHTML = `${icon('stadia_controller', 'small')} ${mod.gameName}`;
     gameSpan.id = `modgame-${mod.uid}`;
     modNameContainer.appendChild(gameSpan);
 
@@ -179,6 +178,9 @@ async function createMod(mod, compatible) {
         aiSpan.id = `modai-${mod.uid}`;
         modNameContainer.appendChild(aiSpan);
     }
+    endProfiling('column 1 render (' + mod.uid + ')');
+
+    startProfiling('column 2 render (' + mod.uid + ')');
 
     // Column 2 (Actions)
     const actionContainer = document.createElement('td');
@@ -215,10 +217,15 @@ async function createMod(mod, compatible) {
         bdiv.appendChild(openInGBButton);
     }
 
+    endProfiling('column 2 render (' + mod.uid + ')');
+    startProfiling('appendChild (' + mod.uid + ')');
+
     modRow.appendChild(modNameContainer);
     modRow.appendChild(actionContainer);
 
     document.getElementById('modlist').appendChild(modRow);
+
+    endProfiling('appendChild (' + mod.uid + ')');
     return modRow;
 }
 

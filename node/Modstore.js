@@ -550,6 +550,7 @@ function modList() {
                 customRGB:    meta.color || null,
                 variants:     modInfo.variants || null,
                 game:         meta.game || "toby.deltarune",
+                gameName:     require('./GameDB').getGameName(meta.game) || "Unknown Game",
                 dependencies: modInfo.dependencies || [],
                 ai:           ai,
                 packageID: pid,

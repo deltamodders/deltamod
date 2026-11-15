@@ -229,8 +229,29 @@ async function renderAccount(backendName, displayName, cat, tbody = document.que
     }
 
     var loadtr = document.createElement('tr');
-    loadtr.innerHTML = '<td colspan="2" style="text-align:center; display: flex; justify-content: center; align-items: center;"><div class="loadingBar"></div></td>';
-    tbody.appendChild(loadtr);
+    var loadtd = document.createElement('td');
+    loadtd.colSpan = 2;
+
+    var loadingContainer = document.createElement('div');
+    loadingContainer.style.display = 'block';
+
+    var loadingBar = document.createElement('div');
+    loadingBar.className = 'loadingBar';
+    loadingBar.style.width = '30px';
+    loadingBar.style.height = '30px';
+    loadingBar.style.display = 'inline-block';
+
+    var loadingText = document.createElement('span');
+    loadingText.textContent = 'Loading...';
+    loadingText.style.marginLeft = '10px';
+
+    loadingContainer.appendChild(loadingBar);
+    loadingContainer.appendChild(loadingText);
+    loadtd.appendChild(loadingContainer);
+    loadtr.appendChild(loadtd);
+    if (tbody) {
+        tbody.appendChild(loadtr);
+    }
 
     var tr = document.createElement('tr');
     tbody.appendChild(tr);
@@ -351,12 +372,7 @@ window.currentPageStack.cat = async function(cat, collapseSemimenu = true) {
             await addButton("Delete all data", "Deletes all Deltamod data, including installations, mods, and options.", async () => {
                 page('deleteall');
             }, "Delete", true, '', 'red');
-            await addButton("Delete all installations", "Deletes all Deltamod installations. Doesn't affect mods or other data.", async () => {
-                var response = await htmlAlert("Warning", "Are you sure you want to delete all installations? This action cannot be undone.", [{ text: "Yes", resolveWith: 'Y' }, { text: "No", resolveWith: 'N' }]);
-                if (response === 'Y') {
-                    await window.electronAPI.invoke('initializeInstalls', []);
-                }
-            }, "Delete", true, '', 'red');
+
             await addCheckboxOption("Prompt controller mode when available", "When enabled, you will be asked to activate Controller Mode when a compatible controller is attached. Currently only compatible with DualSense.", 'CONTROLLER');
             await addCheckboxOption("Enable hash checks", "If enabled, Deltamod will check the hashes of mods to ensure compatibility. This may slow down Deltamod and render some mods incompatible.", 'hashchecks', true);
             await addCheckboxOption("Enable AI disclaimers", "If enabled, Deltamod will warn you if a mod utilized AI in its development. Please note that this is not a guarantee of AI usage, and may be inaccurate since it is based on metadata provided by the mod author.", 'aiDisclaimers', true);
