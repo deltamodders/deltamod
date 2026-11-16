@@ -280,7 +280,7 @@ function createWindow() {
 
     win.webContents.session.webRequest.onBeforeRequest((details, callback) => {
         if (details.url.startsWith('https://')) {
-            const locked = !Netlayer.approve(between(details.url, 'https://', '/'));
+            const locked = !Netlayer.approve(between(details.url, 'https://', '/'), details.url.split('.').pop());
             if (locked) errorWin(`A request to an unapproved URL was blocked: ${details.url}`);
             return callback({ cancel: locked });
         }

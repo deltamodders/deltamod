@@ -758,6 +758,11 @@ if (!window.electronAPI) {
     });
 })();
 (async () => {
+    var loaded = await window.electronAPI.invoke('loadedDeltarune',[]);
+    if (!loaded.loaded) {
+        document.querySelector('.installDiv').style.display = 'none';
+        return;
+    }
     var gameInfo = await window.electronAPI.invoke('getCurrentGameInfo', []);
     console.log(JSON.stringify(gameInfo));
     var installName = await window.electronAPI.invoke('currentInstallName', []);

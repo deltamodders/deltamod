@@ -1,6 +1,10 @@
 let PAGE = (window._pageArguments?.lp) ? parseInt(window._pageArguments.lp) : 1;
 
 const BLACKLIST_MODS = [];
+const staffFavouriteMods = [
+    94758 // REMOTERune
+];
+
 
 window.PAGE = PAGE;
 
@@ -390,6 +394,21 @@ function buildModDetails(mod, featuredIDs, img) {
         }
         otherInfoSpan.appendChild(featSpan);
     }
+
+    if (staffFavouriteMods.includes(mod._idRow)) {
+        biggerSpan.style.color = 'gold';
+        img.style.borderColor = 'gold';
+
+        const staffFeatSpan = document.createElement('span');
+        staffFeatSpan.className = 'modFeaturedSpan iptspan';
+        staffFeatSpan.style.display = 'inline-block';
+        staffFeatSpan.style.color = 'gold';
+        staffFeatSpan.style.marginRight = '12px';
+        staffFeatSpan.innerHTML = `${icon("crown", '1.1em')} Staff Favourite`;
+
+        otherInfoSpan.appendChild(staffFeatSpan);
+    }
+    // remoterune is a staff pick 
 
     const date = new Date(Math.max(mod._tsDateAdded || 0, mod._tsDateModified || 0) * 1000);
     const desc = document.createElement('span');

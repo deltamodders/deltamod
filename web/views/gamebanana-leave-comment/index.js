@@ -4,7 +4,7 @@ var commentPage = window._pageArguments.commentPage || 1;
 window._pageArguments = {};
 
 async function send() {
-    var comment = document.getElementById('comment').value;
+    var comment = document.getElementById('comment').innerHTML.trim();
     await window.electronAPI.invoke('leaveCommentGamebanana',[gbModID, comment, gbModel]);
     window._pageArguments = {
         'id': gbModID,

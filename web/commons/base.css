@@ -45,7 +45,7 @@ brand-icon {
 * {
     font-weight: normal !important;
 }
-b {
+b, strong {
     font-weight: bold !important;
 }
 
