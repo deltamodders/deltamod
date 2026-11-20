@@ -9,11 +9,13 @@
     "GB-OneClick"
   ],
   "scripts": {
-    "test": "electron . --developer",
-    "test:unit": "node --test --test-concurrency=1 node/Proton*.test.js",
-    "build-windows": "electron-builder --win --publish never",
-    "build-win32": "electron-builder --win --ia32 --publish never",
-    "build-linux": "electron-builder --linux --publish never "
+    "check": "tsc --noEmit",
+    "check:strict": "tsc --checkJs --noEmit",
+    "test": "tsc && electron . --developer",
+    "test:unit": "tsc && node --test --test-concurrency=1 node/Proton*.test.js",
+    "build-windows": "tsc && electron-builder --win --publish never",
+    "build-win32": "tsc && electron-builder --win --ia32 --publish never",
+    "build-linux": "tsc && electron-builder --linux --publish never "
   },
   "build": {
     "appId": "com.deltamod.app",
@@ -68,8 +70,12 @@
   },
   "license": "EUPL-1.2",
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/mime-types": "^3.0.1",
+    "@types/windows-elevate": "^1.0.4",
     "electron": "^44.4.5",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@chainsafe/xdelta3-node": "^1.0.2",

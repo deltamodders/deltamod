@@ -1,3 +1,5 @@
+// @ts-check
+
 const { Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const { ASSETS_DIR, PACKAGE_JSON } = require('./Paths');

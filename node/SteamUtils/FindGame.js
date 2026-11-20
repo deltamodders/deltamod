@@ -1,18 +1,19 @@
+// @ts-check
+
 const { readFileSync, existsSync } = require('fs');
 const path = require('path');
 
 const kvparser = require('kvparser');
 const { getSteamDirectory } = require('../Utils');
-const GameDB = require('../GameDB');
 
 /**
- * @typedef {Object} SteamLibrary
+ * @typedef SteamLibrary
  * @property {string} path
- * @property {Object<string, string>} apps
+ * @property {Record<string, string>} apps
  */
 
  /**
-  * @typedef {Object} ChosenEdition
+  * @typedef ChosenEdition
   * @property {string} folder
   * @property {string} appid
   */
@@ -31,7 +32,7 @@ function tryGameDir(libfolder, chosenEdition) {
 }
 
 /**
- * @param {*} state
+ * @param {{ STEAM_BASE: string | null }} state
  * @param {ChosenEdition} chosenEdition
  * @param {Electron.Dialog} dialog
  * @returns {string | null}
@@ -39,11 +40,10 @@ function tryGameDir(libfolder, chosenEdition) {
 function findGame(state, chosenEdition, dialog) {
     state.STEAM_BASE = getSteamDirectory(dialog);
     let libfolders = readFileSync(path.join(state.STEAM_BASE, "/../libraryfolders.vdf"), { encoding: "utf-8" });
-    /**
-     * @type Object<string, SteamLibrary>
-     */
+    /** @type Record<string, SteamLibrary> */
     let vvv = kvparser.parse(libfolders).libraryfolders;
-    return Object.values(vvv).map(libfolder => tryGameDir(libfolder, chosenEdition)).find(x => !!x);
+    const libfolder = Object.values(vvv).map(libfolder => tryGameDir(libfolder, chosenEdition)).find(x => !!x);
+    return libfolder ? libfolder : null;
 }
 
 module.exports = {

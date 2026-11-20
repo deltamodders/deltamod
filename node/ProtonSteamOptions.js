@@ -278,7 +278,10 @@ function isProtectedService(proc, fields, argv, comm) {
     const binaries = {
         '/usr/lib/systemd/systemd': 'systemd',
         '/usr/bin/kwin_wayland': 'kwin_wayland',
-        '/usr/lib/polkit-kde-authentication-agent-1': 'polkit-kde-auth'
+        '/usr/lib/polkit-kde-authentication-agent-1': 'polkit-kde-auth',
+        // TODO(fnrir): i'm sure there's a better way to do this
+        '/usr/bin/keepassxc': 'keepassxc',
+        '/usr/bin/ssh-agent': 'ssh-agent',
     };
     function trustedBinary(executable, name) {
         if (!binaries[executable] || binaries[executable] !== name) return false;

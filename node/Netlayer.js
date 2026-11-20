@@ -1,5 +1,12 @@
+// @ts-check
+
 const console = require("./Console");
 
+/**
+ * @param {string} domain
+ * @param {string} ext
+ * @returns {boolean}
+ */
 function approve(domain, ext) {
     // List of approved domains for Deltamod external resources
     // Techy: Added Google Sheets for future dyamically data we want Deltamod to pull without directly updating Deltamod (e.g. a mod blocklist or a manifest ID to an updated game)
