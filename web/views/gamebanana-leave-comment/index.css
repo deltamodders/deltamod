@@ -8,10 +8,10 @@
     border-radius: 5px;
 }
 .commentBox {
-    background-color: rgba(0,0,0,0.1);
+    background-color: rgba(0,0,0,0.2);
     border: 1px solid var(--theme-color);
     border-radius: 5px;
-    padding: 10px;
+    padding: 18px;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
@@ -51,9 +51,9 @@
 .label {
     background-color: var(--theme-color);
     color: white;
-    padding: 2px 6px;
+    padding: 2px 7px;
     border-radius: 3px;
-    font-size: 0.8em;
+    font-size: 0.95em;
     margin-left: 5px;
 }
 

@@ -62,6 +62,7 @@ async function crawlComment(comment, div, depth = 0) {
     }
     img.style.width = "50px";
     img.style.height = "50px";
+    img.style.border = "1px solid var(--theme-color)";
     img.style.borderRadius = "20px";
     commentDiv.appendChild(img);
 
