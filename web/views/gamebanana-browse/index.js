@@ -57,7 +57,7 @@ function istantiateOpBox(name) {
     box.appendChild(opbox);
 
     operations++;
-    ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account')), ...Array.from(document.querySelectorAll('button:not(.dlactionButton)'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
+    ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
 
     if (operations > 0) {
         document.querySelector('.dlactionButton').style.opacity = '1';
@@ -81,7 +81,7 @@ function istantiateOpBox(name) {
             btn.style.opacity = operations <= 0 ? '0.5' : '1';
             if (operations <= 0) {
                 document.querySelector('#nothingHere').style.display = 'unset';
-                ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account')), ...Array.from(document.querySelectorAll('button:not(.dlactionButton)'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
+                ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
             }
         }
     };
@@ -229,7 +229,7 @@ async function dlmod(dlurl, buttonElem=null, modid, modmodel, modname) {
     window.currentPageStack.qms[queryme] = function(info) {
         if (info.error) {
             lockUs = false;
-            document.querySelectorAll('button:not(.dlactionButton)').forEach(e => e.disabled = false);
+            document.querySelectorAll('.sidebar-button').forEach(e => e.disabled = false);
             buttonElem.innerHTML = icon('cancel', '0.9em');
             return;
         }
@@ -475,7 +475,7 @@ function buildModActions(mod, table, tr) {
 
         if (eligibleDownloads.length === 0) {
             dlBtn.innerHTML = icon('cancel', '0.9em');
-            const open = await htmlAlert("Direct download not available", "This mod cannot be downloaded via Deltamod directly because the owner did not render their mod compatible with it.", [{text:"Ok", resolveWith:'no'}, {text:"Open mod page on GameBanana", resolveWith:'yes'}], 'ads_click');
+            const open = await htmlAlert("Direct download not available", "This mod cannot be downloaded via Deltamod directly because the owner did not render their mod compatible with the Deltamod Modding Standard.", [{text:"Ok", resolveWith:'no'}, {text:"Open mod page on GameBanana", resolveWith:'yes'}], 'ads_click');
             if (open == 'yes') window.open(mod._sProfileUrl, '_blank');
             return;
         }
