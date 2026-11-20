@@ -1,9 +1,7 @@
 let PAGE = (window._pageArguments?.lp) ? parseInt(window._pageArguments.lp) : 1;
 
 const BLACKLIST_MODS = [];
-const staffFavouriteMods = [
-    94758 // REMOTERune
-];
+let staffFavouriteMods = [];
 
 
 window.PAGE = PAGE;
@@ -59,7 +57,7 @@ function istantiateOpBox(name) {
     box.appendChild(opbox);
 
     operations++;
-    ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
+    ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account')), ...Array.from(document.querySelectorAll('button:not(.dlactionButton)'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
 
     if (operations > 0) {
         document.querySelector('.dlactionButton').style.opacity = '1';
@@ -83,7 +81,7 @@ function istantiateOpBox(name) {
             btn.style.opacity = operations <= 0 ? '0.5' : '1';
             if (operations <= 0) {
                 document.querySelector('#nothingHere').style.display = 'unset';
-                ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
+                ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account')), ...Array.from(document.querySelectorAll('button:not(.dlactionButton)'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
             }
         }
     };
@@ -231,7 +229,7 @@ async function dlmod(dlurl, buttonElem=null, modid, modmodel, modname) {
     window.currentPageStack.qms[queryme] = function(info) {
         if (info.error) {
             lockUs = false;
-            document.querySelectorAll('.sidebar-button').forEach(e => e.disabled = false);
+            document.querySelectorAll('button:not(.dlactionButton)').forEach(e => e.disabled = false);
             buttonElem.innerHTML = icon('cancel', '0.9em');
             return;
         }
@@ -365,6 +363,7 @@ function buildModDetails(mod, featuredIDs, img) {
     const authorSpan = document.createElement('span');
     authorSpan.className = 'modAuthorSpan iptspan';
     authorSpan.style.marginRight = '12px';
+    authorSpan.style.marginBottom = '2px';
     authorSpan.style.cursor = 'pointer';
     authorSpan.innerHTML = `<img src="${mod._aSubmitter._sAvatarUrl}" alt="${nameauthor}" class="modAvatarImg"> ${nameauthor}`;
     authorSpan.onclick = () => window.open(mod._aSubmitter._sProfileUrl, '_blank');
@@ -382,7 +381,6 @@ function buildModDetails(mod, featuredIDs, img) {
         
         const featSpan = document.createElement('span');
         featSpan.className = 'modFeaturedSpan iptspan';
-        featSpan.style.display = 'inline-block';
         featSpan.style.color = 'gold';
         featSpan.style.marginRight = '12px';
 
@@ -396,19 +394,17 @@ function buildModDetails(mod, featuredIDs, img) {
     }
 
     if (staffFavouriteMods.includes(mod._idRow)) {
-        biggerSpan.style.color = 'gold';
-        img.style.borderColor = 'gold';
+        biggerSpan.style.color = 'darkorange';
+        img.style.borderColor = 'darkorange';
 
         const staffFeatSpan = document.createElement('span');
         staffFeatSpan.className = 'modFeaturedSpan iptspan';
-        staffFeatSpan.style.display = 'inline-block';
-        staffFeatSpan.style.color = 'gold';
+        staffFeatSpan.style.color = 'darkorange';
         staffFeatSpan.style.marginRight = '12px';
-        staffFeatSpan.innerHTML = `${icon("crown", '1.1em')} Staff Favourite`;
+        staffFeatSpan.innerHTML = `${icon("crown", '1.1em')} Deltamod Staff's Favourite`;
 
         otherInfoSpan.appendChild(staffFeatSpan);
     }
-    // remoterune is a staff pick 
 
     const date = new Date(Math.max(mod._tsDateAdded || 0, mod._tsDateModified || 0) * 1000);
     const desc = document.createElement('span');
@@ -430,7 +426,10 @@ function buildModDetails(mod, featuredIDs, img) {
         }
     }
 
-    desc.innerHTML = `${icon('acute', '1.1em')} ${relativeDate}`;
+    desc.innerHTML = `${icon('calendar_month', '1.1em')} ${relativeDate}`;
+    tippy(desc, {
+        content: `Added on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`,
+    });
     otherInfoSpan.appendChild(desc);
     div1.appendChild(otherInfoSpan);
 
@@ -459,7 +458,14 @@ function buildModActions(mod, table, tr) {
         let dlpage = await fetch(`https://gamebanana.com/apiv11/${mod._sModelName}/${mod._idRow}/ProfilePage`);
         dlpage = await dlpage.json();
 
-        const eligibleDownloads = dlpage._aFiles.filter(file => {
+        if ((dlpage._aFiles || []).length === 0) {
+            dlBtn.innerHTML = icon('cancel', '0.9em');
+            const open = await htmlAlert("Download not available", "This mod cannot be downloaded via Deltamod because it doesn't have any files available for download.", [{text:"Ok", resolveWith:'no'}], 'web_traffic');
+            if (open === 'yes') window.open(mod._sProfileUrl, '_blank');
+            return;
+        }
+
+        const eligibleDownloads = (dlpage._aFiles || []).filter(file => {
             try {
                 return file._aModManagerIntegrations.map(x => x._idToolRow).includes(20575);
             } catch {
@@ -469,8 +475,8 @@ function buildModActions(mod, table, tr) {
 
         if (eligibleDownloads.length === 0) {
             dlBtn.innerHTML = icon('cancel', '0.9em');
-            const open = await htmlAlert("One-click download not available", "This mod cannot be downloaded via Deltamod because the owner did not package it for usage with the tool.", [{text:"Ok", resolveWith:'no'}, {text:"Open mod page on GameBanana", resolveWith:'yes'}], 'web_traffic');
-            if (open === 'yes') window.open(mod._sProfileUrl, '_blank');
+            const open = await htmlAlert("Direct download not available", "This mod cannot be downloaded via Deltamod directly because the owner did not render their mod compatible with it.", [{text:"Ok", resolveWith:'no'}, {text:"Open mod page on GameBanana", resolveWith:'yes'}], 'ads_click');
+            if (open == 'yes') window.open(mod._sProfileUrl, '_blank');
             return;
         }
 
@@ -644,6 +650,16 @@ async function plusPage(amt) {
     window.PAGE += amt;
     await renderMods(window.currentPageStack.table, window.currentPageStack.GB_API, window.currentPageStack.filter, window.currentPageStack.gameID);
 }
+
+(async () => {
+    try {
+        var staffFavs = await fetch('https://raw.githubusercontent.com/deltamodders/deltamod-msgrepo/refs/heads/main/staffFavourites.json?' + new Date().getTime());
+        staffFavs = await staffFavs.json();
+        staffFavouriteMods = staffFavs.mods;
+    } catch (e) {
+        console.error(e);
+    }
+})();
 
 (async () => {
     if (navigator.onLine === false) {

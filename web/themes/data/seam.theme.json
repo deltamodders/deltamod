@@ -1,9 +1,0 @@
-{
-    "name": "Seam's Shop",
-    "background": "shop.png",
-    "description": "A theme based on Seam's Shop.",
-    "mainSong": "seam.mp3",
-    "musicTrack": "Lantern - Toby Fox",
-    "id": "seam",
-    "color": "rgb(159, 94, 24)"
-}

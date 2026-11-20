@@ -36,7 +36,7 @@
 .iptspan {
 	display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 .scrollBottomDetector {
@@ -52,8 +52,8 @@
 }
 
 .modAvatarImg {
-    width: 1.1em;
-    height: 1.1em;
+    width: 1.4em;
+    height: 1.4em;
     border-radius: 50%;
     border: 1px solid var(--theme-color);
     background-color: var(--theme-color);
@@ -261,4 +261,14 @@ input:focus {
 
 .dlOPInfo > * {
     flex: 1;
+}
+
+#modsTable {
+    min-width: none;
+}
+
+.modOtherInfoSpan {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
 }

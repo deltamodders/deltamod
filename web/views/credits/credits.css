@@ -3,12 +3,6 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
-
-    padding: 40px;
-    background: url('./img/battle.gif') no-repeat center center;
-    background-size: cover;
-
-    border: 3px solid white;
 }
 
 .credits-socials {

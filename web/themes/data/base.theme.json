@@ -1,9 +1,9 @@
 {
-    "name": "Base Theme (Chapter 5)",
-    "background": "ch5.png",
-    "description": "A theme based on Chapter 5.",
-    "mainSong": "ch5.mp3",
+    "name": "Base Theme",
+    "background": "base.png",
+    "description": "Deltamod's default theme. What if there were more?",
+    "mainSong": "base.mp3",
     "id": "base",
-    "musicTrack": "Garden of Hopes and Dreams - Toby Fox & insaneintherainmusic",
-    "color": "rgb(205, 68, 81)"
+    "musicTrack": "Untitled Track - Monume Pixabay",
+    "color": "rgb(53, 53, 53)"
 }

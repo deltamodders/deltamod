@@ -402,7 +402,9 @@ module.exports = function registerIPCHandlers(context) {
         if (fs.existsSync(themeHost)) {
             themeId = fs.readFileSync(themeHost, 'utf8');
             const validThemes = obtainThemes();
-            if (!validThemes.find(t => t.id === themeId)) themeId = 'base';
+            if (!validThemes.find(t => t.id === themeId)) {
+                themeId = 'base';
+            }
         }
         
         fs.writeFileSync(themeHost, themeId);
@@ -450,37 +452,19 @@ module.exports = function registerIPCHandlers(context) {
     ipcMain.handle('deleteCustomTheme', async (event, args) => {
         const themeId = args[0];
 
-        const customJSON = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', `${themeId}.theme.json`);
-        var themeConfig = JSON.parse(fs.readFileSync(customJSON, 'utf8'));
+        const customJSON = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', `${themeId}.theme.json`)
+        var themeConfig = JSON.parse(fs.readFileSync(customJSON, 'utf8'));;
+        var customMusic = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'mus', `${themeConfig.mainSong}.mp3`);
+        var customBG = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'img', `${themeConfig.background}.png`);
         if (fs.existsSync(customJSON)) {
             fs.unlinkSync(customJSON);
         }
-    });
-
-    // Sponsors
-    ipcMain.handle('setSponsor', async () => {
-        const win = getWindow();
-        const base = path.join(VIEWS_DIR, 'patching', 'sponsors');
-        let sponsors = fs.readdirSync(base);
-        if (Math.random() >= 0.08) sponsors = sponsors.filter(s => s !== 'musical');
-
-        const buttons = sponsors.map(s => JSON.parse(fs.readFileSync(path.join(base, s, 'config.sponsor.json'), 'utf8')).name);
-
-        const choice = dialog.showMessageBoxSync(win, {
-            type: 'question',
-            title: 'Select a patching character',
-            message: 'Select a patching character from the list below:',
-            buttons: [...buttons, 'Cancel'],
-        });
-
-        if (choice === buttons.length) return;
-        fs.writeFileSync(System.getSystemFile('_sponsor', true), sponsors[choice]);
-    });
-    ipcMain.handle('getSponsor', () => {
-        const sponsorHost = System.getSystemFile('_sponsor', true);
-        if (fs.existsSync(sponsorHost)) return fs.readFileSync(sponsorHost, 'utf8');
-        fs.writeFileSync(sponsorHost, 'cd');
-        return 'cd';
+        if (fs.existsSync(customMusic)) {
+            fs.unlinkSync(customMusic);
+        }
+        if (fs.existsSync(customBG)) {
+            fs.unlinkSync(customBG);
+        }
     });
 
     // Accounts
