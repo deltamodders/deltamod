@@ -1,3 +1,5 @@
+// @ts-check
+
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -5,6 +7,10 @@ const { TextDecoder } = require('util');
 
 const LIMIT = 8 * 1024 * 1024;
 
+/**
+ * @param {string} text
+ * @returns {any}
+ */
 function parseVdf(text) {
     if (typeof text !== 'string' || Buffer.byteLength(text) > LIMIT || text.includes('\0')) {
         throw new Error('Unsupported Steam configuration encoding or size.');
@@ -148,6 +154,12 @@ function withoutOwnHook(options, hook) {
     return options;
 }
 
+/** @typedef {{ raw: string, start: number, end: number }} Token */
+
+/**
+ * @param {Token} token
+ * @returns {boolean}
+ */
 function isEnvironmentAssignment(token) {
     return /^[A-Za-z_][A-Za-z0-9_]*=.+$/.test(token.raw);
 }

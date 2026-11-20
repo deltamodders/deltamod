@@ -1,3 +1,5 @@
+// @ts-check
+
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -7,6 +9,20 @@ const OPEN_READ = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0);
 const DELTA_TYPES = ['xdelta', 'g3mpatch'];
 const FILE_TYPES = ['override', 'copy'];
 
+/**
+ * @overload
+ * @param {string} part
+ * @returns {boolean}
+ */
+/**
+ * @overload
+ * @param {null} part
+ * @returns {false}
+ */
+/**
+ * @param {string?} part
+ * @returns {boolean}
+ */
 function isUnsafePathPart(part) {
     return !part || part === '.' || part === '..' ||
         /[\x00-\x1f<>:"|?*]/.test(part) ||
@@ -14,6 +30,10 @@ function isUnsafePathPart(part) {
         /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(part);
 }
 
+/**
+ * @param {string} value
+ * @returns {string}
+ */
 function normalizePath(value) {
     if (typeof value !== 'string' || !value || value.length > 1024) throw new Error('Invalid mod path.');
     const normalized = value.replaceAll('\\', '/').replace(/^\.\//, '');
@@ -21,25 +41,62 @@ function normalizePath(value) {
     return normalized;
 }
 
+/**
+ * @param {string} filename
+ * @returns {boolean}
+ */
 function isRealDirectory(filename) {
     const stat = fs.lstatSync(filename);
     return stat.isDirectory() && !stat.isSymbolicLink();
 }
 
+/**
+ * @param {string} filename
+ * @returns {fs.Stats}
+ */
 function regularFile(filename) {
     const stat = fs.lstatSync(filename);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) throw new Error(`Unsafe file or link: ${filename}`);
     return stat;
 }
 
+/**
+ * @param {fs.Stats} a
+ * @param {fs.Stats} b
+ * @returns {boolean}
+ */
 function sameFile(a, b) {
     return a.ino === b.ino && a.dev === b.dev;
 }
 
+/**
+ * @param {fs.Stats} before
+ * @param {fs.Stats} after
+ * @returns {boolean}
+ */
 function unchangedSince(before, after) {
     return after.size === before.size && after.mtimeMs === before.mtimeMs && after.ctimeMs === before.ctimeMs;
 }
 
+/**
+ * @overload
+ * @param {string} filename
+ * @returns {Buffer<ArrayBuffer>}
+ */
+/**
+ * @overload
+ * @param {string} filename
+ * @param {BufferEncoding} encoding
+ * @param {number} [limit]
+ * @returns {string}
+ */
+/**
+ * 
+ * @param {string} filename
+ * @param {BufferEncoding} [encoding]
+ * @param {number} [limit]
+ * @returns {any}
+ */
 function readFile(filename, encoding, limit = 8 * 1024 * 1024) {
     const stat = regularFile(filename);
     if (stat.size > limit) throw new Error(`Metadata file too large: ${filename}`);
@@ -65,10 +122,19 @@ function readFile(filename, encoding, limit = 8 * 1024 * 1024) {
     }
 }
 
+/**
+ * 
+ * @param {string} filename
+ * @returns {any}
+ */
 function readJSON(filename) {
     return JSON.parse(readFile(filename, 'utf8'));
 }
 
+/**
+ * @param {string} filename
+ * @returns {string}
+ */
 function hashFile(filename) {
     const stat = regularFile(filename);
     const key = `${filename}:${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`;
@@ -94,14 +160,24 @@ function hashFile(filename) {
 }
 
 /**
+ * @typedef {import("./ProtonTypes").Snapshot } Snapshot
+ */
+
+/**
  * Describes every file and folder under `root` by relative path.
  * Links and case-colliding names are refused so the manifest maps one-to-one onto Windows paths.
+ * @param {string} root
+ * @returns {Snapshot}
  */
 function snapshot(root) {
     if (!isRealDirectory(root)) throw new Error(`Unsafe directory or link: ${root}`);
     const result = Object.create(null);
     const seen = new Set();
 
+    /**
+     * @param {string} dir
+     * @param {string} prefix
+     */
     function walk(dir, prefix) {
         for (const name of fs.readdirSync(dir).sort()) {
             const relative = normalizePath(prefix + name);
@@ -124,16 +200,31 @@ function snapshot(root) {
     return result;
 }
 
+/**
+ * @param {Snapshot} expected
+ * @param {Snapshot} actual
+ * @returns {boolean}
+ */
 function sameSnapshot(expected, actual) {
     return JSON.stringify(expected) === JSON.stringify(actual);
 }
 
+/**
+ * @param {string} filename
+ * @param {any} value
+ */
 function writeJSON(filename, value) {
     const temporary = filename + '.' + crypto.randomUUID() + '.tmp';
     fs.writeFileSync(temporary, JSON.stringify(value, null, 4), { flag: 'wx', mode: 0o600, flush: true });
     fs.renameSync(temporary, filename);
 }
 
+/**
+ * @param {string} source
+ * @param {string} target
+ * @param {string} expectedHash
+ * @param {boolean} [replace]
+ */
 function copyVerifiedFile(source, target, expectedHash, replace = false) {
     const stat = regularFile(source);
     const input = fs.openSync(source, OPEN_READ);
@@ -163,6 +254,11 @@ function copyVerifiedFile(source, target, expectedHash, replace = false) {
     }
 }
 
+/**
+ * @param {string} source
+ * @param {string} destination
+ * @param {Snapshot} manifest
+ */
 function copyTree(source, destination, manifest) {
     fs.mkdirSync(destination);
     const bytes = Object.values(manifest).reduce((sum, entry) => sum + (entry.size || 0), 0);
@@ -171,17 +267,24 @@ function copyTree(source, destination, manifest) {
 
     for (const [relative, entry] of Object.entries(manifest)) {
         const target = path.join(destination, relative);
-        if (entry.directory) fs.mkdirSync(target);
+        if ("directory" in entry) fs.mkdirSync(target);
         else copyVerifiedFile(path.join(source, relative), target, entry.sha256);
     }
     if (!sameSnapshot(manifest, snapshot(source))) throw new Error('Source changed while copying.');
 }
 
 /**
+ * @typedef {import("./ProtonTypes").Owner} Owner
+ */
+
+/**
  * Checks that `root` is the Proton folder Deltamod created and returns its owner record.
+ * @param {string} root
+ * @returns {Owner}
  */
 function ownedRoot(root) {
     if (fs.realpathSync(root) !== path.resolve(root) || fs.lstatSync(root).isSymbolicLink()) throw new Error('Unsafe Proton storage path.');
+    /** @type {Owner} */
     const owner = readJSON(path.join(root, 'owner.json'));
     if (owner.version !== 1 || typeof owner.id !== 'string' || !/^[a-f0-9-]{36}$/.test(owner.id)) {
         throw new Error('Invalid Proton storage owner.');
@@ -235,6 +338,10 @@ function importBase(root, source, settings) {
     }
 }
 
+/**
+ * @param {string} value
+ * @returns {boolean}
+ */
 function isAbsoluteString(value) {
     return typeof value === 'string' && path.isAbsolute(value);
 }
