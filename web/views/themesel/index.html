@@ -1,11 +1,17 @@
 <button onclick="page('options')">Back</button>
 <br><br>
 <h1>Select a theme</h1>
+<div id="notice" style="display: none">
+    <p>The old DELTARUNE themes that were in previous versions of Deltamod have been removed due to copyright issues regarding the songs by Toby Fox.</p>
+    <p>The new included themes are based on uncopyrighted / original assets.</p>
+    <p>Themes similar to the originals may be found online.</p>
+    <p><i>This notice will not be shown again.</i></p>
+</div>
 <table>
     <colgroup>
-        <col style="width: 50px;">
-        <col style="width: calc(90% - 50px);">
-        <col style="width: 10%;">
+        <col style="width: 30px;">
+        <col style="width: calc(80% - 30px);">
+        <col style="width: 20%;">
     </colgroup>
     <tr>
         <th>Preview</th>
@@ -15,6 +21,9 @@
     <tbody id="themes"></tbody>
 </table>
 <br>
-<button onclick="invoke('importTheme',[])">Import your own theme</button>
+<button onclick="invoke('openThemesFolder',[])">Open themes directory</button>
+<br>
+<p class="calibri" style="font-size: 14px; color: #666;">You can import a Deltamod theme as a folder by dragging it into the themes directory.</p>
 JSL
 TITLE[Select a theme]
+STYLESHEET[index]

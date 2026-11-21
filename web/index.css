@@ -306,15 +306,15 @@ body {
     flex-direction: column;
 }
 
-.installSmall {
+.bottomSidebar {
     margin-bottom: 30px;
+    -webkit-app-region: no-drag;
 }
 
 .installDiv {
     display: inline-flex;
     justify-content: left;
     align-items: center;
-    -webkit-app-region: no-drag;
     gap: 10px;
     width: calc(var(--sidebar-size) * 1);
     padding-left: 20px;

@@ -6,9 +6,10 @@ const { isFeatureEnabled } = require("./FeatureFlags");
 const { join, dirname } = require("path");
 const System = require("./System");
 const _7z = require("7zip-min");
-const { error } = require("console");
+const { error } = require("./Console");
 const { importMod } = require("./Modstore");
 const fs = require("fs");
+const console = require("./Console");
 const path = require("path");
 const { dialog, app, Notification } = require("electron");
 const { page, setSharedVar } = require("./Utils");
@@ -98,32 +99,44 @@ function registerProtocolHandlers(ses) {
             errorWin(new Error('Unsecure request made to themes protocol.'));
             return new Response("bad");
         }
-        if (!fs.existsSync(path.join(app.getPath('userData'), 'customThemes'))) {
-            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes'), { recursive: true });
-            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'data'), { recursive: true });
-            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'img'), { recursive: true });
-            fs.mkdirSync(path.join(app.getPath('userData'), 'customThemes', 'mus'), { recursive: true });
+        if (!fs.existsSync(path.join(app.getPath('userData'), 'themes'))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), 'themes'), { recursive: true });
         }
+        let src = "";
         let pospath1 = path.join(THEMES_DIR, url.hostname + url.pathname);
-        let pospath2 = path.join(app.getPath('userData'), 'customThemes', url.hostname + url.pathname);
+        let pospath2 = path.join(app.getPath('userData'), 'themes', url.hostname + url.pathname);
+        console.log("pospath1", pospath1);
+        console.log("pospath2", pospath2);
         let finalPath = null;
+
         if (fs.existsSync(pospath2)) {
             finalPath = pospath2;
+            src = "user";
         }
         else {
             finalPath = pospath1;
+            src = "builtin";
         }
 
         if (fs.existsSync(pospath1) && fs.existsSync(pospath2)) {
-            finalPath = pospath1; // prefer built-in theme files
+            finalPath = pospath1; // priority to builtin
+            src = "builtin";
         }
+
+        if (!fs.existsSync(finalPath)) {
+            errorWin(new Error('Theme file not found: ' + finalPath));
+            return new Response("bad");
+        }
+
+        console.log("finalPath", finalPath);
 
         const data = await fs.promises.readFile(finalPath);
         return new Response(data, {
             headers: {
                 'Content-Type': mime.lookup(finalPath.split('.')[finalPath.split('.').length - 1]) || 'application/octet-stream',
                 'Content-Length': String(data.length),
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache',
+                'X-Source': src
             }
         });
     });

@@ -1,0 +1,13 @@
+#notice {
+    padding: 5px 12px;
+    background-color: #a39800;
+    color: #ffffff;
+    border-radius: 5px;
+    font-family: Calibri, sans-serif;
+    width: calc(100% - 24px);
+    margin-bottom: 10px;
+}
+
+#notice p {
+    margin: 5px 0;
+}

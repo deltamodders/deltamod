@@ -53,7 +53,7 @@ async function check() {
             var gbID = code.shift();
             var gbURL = code.join('/');
 
-            await Modstore.downloadModFromURL(gbURL, () => {}, gbID, gbModel);
+            await Modstore.downloadModFromURL(gbURL, () => {}, gbID, gbModel, true);
 
             var ppage = await axios.get('https://gamebanana.com/apiv11/' + gbModel + '/' + gbID + '/ProfilePage');
 

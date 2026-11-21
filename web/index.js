@@ -380,15 +380,17 @@ function icon(name, fontSize) {
  * @param {boolean} refreshAudio - Whether to also reload and play the main theme song.
  */
 async function themeRefresh(refreshAudio = true) {
-    theme = await fetch('themeprot://data/' + (await window.electronAPI.invoke('getTheme', [])) + '.theme.json').then(response => response.json());
-    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://img/' + theme.background + ')';
+    var themename = await window.electronAPI.invoke('getTheme', []);
+
+    theme = await fetch('themeprot://' + themename + '/meta.json').then(res => res.json());
+    document.getElementsByClassName('bg')[0].style.backgroundImage = 'url(themeprot://' + themename + '/bg.png)';
     
     if (refreshAudio) {
         audio.pause();
         audio.currentTime = 0;
         audio.loop = true;
         audio.volume = TARGET_MUSIC_VOLUME;
-        audio.src = 'themeprot://mus/' + theme.mainSong;
+        audio.src = 'themeprot://' + themename + '/mus.mp3';
         audio.play();
         page(pageN);
     }
@@ -516,7 +518,7 @@ async function page(name) {
             audio.currentTime = 0;
             
             if (audioSrc[1] == 'mainTheme.mp3') {
-                audio.src = 'themeprot://mus/' + theme.mainSong;
+                audio.src = 'themeprot://' + theme.id + '/mus.mp3';
             } else {
                 audio.src = './' + audioSrc[1];
             }
@@ -593,7 +595,7 @@ async function page(name) {
         border-color: ${theme.color};
     }
 
-    ${theme.specialCSS || ''}
+    ${theme.custom?.css || ''}
     `;
 
     // Execute Cleanup Functions

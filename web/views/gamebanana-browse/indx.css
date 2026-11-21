@@ -52,8 +52,8 @@
 }
 
 .modAvatarImg {
-    width: 1.4em;
-    height: 1.4em;
+    width: 1.6em;
+    height: 1.6em;
     border-radius: 50%;
     border: 1px solid var(--theme-color);
     background-color: var(--theme-color);

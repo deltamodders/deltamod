@@ -28,9 +28,10 @@ const computerName = os.hostname();
  * @param {ProgressFn} onProgress
  * @param {any} mID
  * @param {any} mModel
+ * @param {boolean} silent
  * @returns {Promise<true>}
  */
-function downloadModFromURL(url, onProgress, mID, mModel) {
+function downloadModFromURL(url, onProgress, mID, mModel, silent = false) {
     return new Promise(async (resolve, reject) => {
         try {
             var totalSize = 0;
@@ -55,7 +56,7 @@ function downloadModFromURL(url, onProgress, mID, mModel) {
             });
             const { filePath } = await downloader.download();
             if (filePath === null) throw new Error("Download aborted???");
-            await importMod(filePath, "donothing", mID, mModel);
+            await importMod(filePath, "donothing", mID, mModel, silent);
             await new Promise(resolve => setTimeout(resolve, 1000));
             resolve(true);
         } catch (err) {
@@ -74,9 +75,10 @@ function downloadModFromURL(url, onProgress, mID, mModel) {
  * @param {string} [nextPage]
  * @param {string?} [mID]
  * @param {string?} [mModel]
+ * @param {boolean} [silent]
  * @returns {Promise<void>}
  */
-async function importMod(filePath, nextPage = "main", mID = null, mModel = null) {
+async function importMod(filePath, nextPage = "main", mID = null, mModel = null, silent = false) {
     var clangit = true;
 
     console.log("Importing mod (gb info)", mID, mModel, "from file:", filePath);
@@ -178,14 +180,19 @@ async function importMod(filePath, nextPage = "main", mID = null, mModel = null)
                 var oldVersion = existingModInfo?.metadata?.version || "Unknown";
                 var newVersion = modInfo.metadata.version || "Unknown";
                 
-                var response = dialog.showMessageBoxSync({
-                    type: 'error',
-                    title: 'Import Failed',
-                    message: `The mod "${modInfo.metadata.name}" is already present in your mods.\n\nPresent version: ${oldVersion}\nTo be imported version: ${newVersion}\n\nHow would you like to proceed?`,
-                    buttons: ['Delete old version', 'Keep old version', 'Cancel import'],
-                    defaultId: 0,
-                    cancelId: 2,
-                });
+                if (!silent) {
+                    var response = dialog.showMessageBoxSync({
+                        type: 'error',
+                        title: 'Import Failed',
+                        message: `The mod "${modInfo.metadata.name}" is already present in your mods.\n\nPresent version: ${oldVersion}\nTo be imported version: ${newVersion}\n\nHow would you like to proceed?`,
+                        buttons: ['Delete old version', 'Keep old version', 'Cancel import'],
+                        defaultId: 0,
+                        cancelId: 2,
+                    });
+                }
+                else {
+                    var response = 0; // default to delete old version if silent
+                }
 
                 if (response == 0) {
                     fs.rmSync(path.join(system.getPacketDatabase(), modInfo.metadata.packageID), { recursive: true, force: true });

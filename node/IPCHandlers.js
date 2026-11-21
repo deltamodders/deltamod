@@ -87,28 +87,24 @@ async function dominantColor(imagePath) {
 }
 
 function obtainThemes() {
-    const customThemeDir = path.join(app.getPath('appData'), 'deltamod', 'customThemes');
+    const customThemeDir = path.join(app.getPath('appData'), 'deltamod', 'themes');
     if (!fs.existsSync(customThemeDir)) {
-        fs.mkdirSync(path.join(customThemeDir, 'data'), { recursive: true });
-        fs.mkdirSync(path.join(customThemeDir, 'img'), { recursive: true });
-        fs.mkdirSync(path.join(customThemeDir, 'mus'), { recursive: true });
+        fs.mkdirSync(customThemeDir, { recursive: true });
     }
 
-    const available = fs.readdirSync(path.join(THEMES_DIR, 'data'))
-        .filter(f => f.endsWith('.theme.json'));
-    const available2 = fs.readdirSync(path.join(customThemeDir, 'data'))
-        .filter(f => f.endsWith('.theme.json'));
+    const available = fs.readdirSync(THEMES_DIR);
+    const available2 = fs.readdirSync(customThemeDir).filter(f => fs.existsSync(path.join(customThemeDir, f, 'meta.json')));
 
     const builtInThemes = available.map(f => ({
-        ...JSON.parse(fs.readFileSync(path.join(THEMES_DIR, 'data', f), 'utf8')),
+        ...JSON.parse(fs.readFileSync(path.join(THEMES_DIR, f, 'meta.json'), 'utf8')),
         builtIn: true
     }));
 
     const customThemes = available2.map(f => ({
-        ...JSON.parse(fs.readFileSync(path.join(customThemeDir, 'data', f), 'utf8')),
+        ...JSON.parse(fs.readFileSync(path.join(customThemeDir, f, 'meta.json'), 'utf8')),
         builtIn: false
     })).filter(x => {
-        const include = !available.map(n => n.replace('.theme.json', '')).includes(x.id);
+        const include = !available.includes(x.id);
         if (!include) console.log(`Custom theme "${x.id}" ignored because a built-in theme with the same ID exists.`);
         return include;
     });
@@ -372,27 +368,6 @@ module.exports = function registerIPCHandlers(context) {
     });
 
     // Themes
-    ipcMain.handle('chooseTheme', async () => {
-        const win = getWindow();
-        const themeObjects = fs.readdirSync(THEMES_DIR)
-            .filter(f => f.endsWith('.theme.json'))
-            .map(f => JSON.parse(fs.readFileSync(path.join(THEMES_DIR, f), 'utf8')));
-
-        const choice = dialog.showMessageBoxSync(win, {
-            type: 'question',
-            title: 'Select a theme',
-            message: 'Select a theme from the list below:',
-            buttons: [...themeObjects.map(t => t.name), 'Cancel'],
-            cancelId: themeObjects.length
-        });
-        
-        if (choice === themeObjects.length) return;
-        
-        const themeId = themeObjects[choice].id;
-        fs.writeFileSync(System.getSystemFile('_theme', true), themeId);
-        if(win) win.webContents.send('themeChange');
-    });
-
     ipcMain.handle('setTheme', (event, args) => fs.writeFileSync(System.getSystemFile('_theme', true), args[0]));
     ipcMain.handle('getThemes', () => obtainThemes());
     ipcMain.handle('getTheme', async () => {
@@ -411,60 +386,22 @@ module.exports = function registerIPCHandlers(context) {
         return themeId;
     });
 
-    ipcMain.handle('importTheme', async () => {
-        const win = getWindow();
-        const musicPath = (await dialog.showOpenDialog(win, { title: 'Select your music file', filters: [{ name: 'Song files', extensions: ['mp3', 'ogg'] }] })).filePaths[0];
-        const bgPath = (await dialog.showOpenDialog(win, { title: 'Select your background image', filters: [{ name: 'Image files', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif' ] }] })).filePaths[0];
-        if (!musicPath || !bgPath) return;
-
-        const randomSeed = Math.random().toString(36).substring(2, 15);
-        const themeId = `custom_${randomSeed}`;
-        const themeName = `Custom Theme #${randomSeed.substring(0, 5).toUpperCase()}`;
-        const customThemesDir = path.join(app.getPath('appData'), 'deltamod', 'customThemes');
-
-        fs.copyFileSync(musicPath, path.join(customThemesDir, 'mus', `${themeId}.${path.extname(musicPath).slice(1)}`));
-        fs.copyFileSync(bgPath, path.join(customThemesDir, 'img', `${themeId}.${path.extname(bgPath).slice(1)}`));
-
-        const config = {
-            name: themeName,
-            background: `${themeId}.${path.extname(bgPath).slice(1)}`,
-            description: `This is a custom theme by the user.`,
-            mainSong: `${themeId}.${path.extname(musicPath).slice(1)}`,
-            id: themeId,
-            musicTrack: "Custom music",
-            color: await dominantColor(bgPath)
-        };
-
-        fs.writeFileSync(path.join(customThemesDir, 'data', `${themeId}.theme.json`), JSON.stringify(config, null, 4), 'utf8');
-        page('themesel');
-    });
-
-    ipcMain.handle('renameCustomTheme', async (event, args) => {
-        const [themeId, newName, newDesc] = args;
-
-        const customJSON = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', `${themeId}.theme.json`);
-        var themeConfig = JSON.parse(fs.readFileSync(customJSON, 'utf8'));
-        themeConfig.name = newName;
-        themeConfig.description = newDesc;
-        fs.writeFileSync(customJSON, JSON.stringify(themeConfig, null, 4), 'utf8');
-    });
-
     ipcMain.handle('deleteCustomTheme', async (event, args) => {
-        const themeId = args[0];
+        const themeDir = path.join(app.getPath('appData'), 'deltamod', 'themes', args[0]);
+        if (fs.existsSync(themeDir)) {
+            fs.rmSync(themeDir, { recursive: true, force: true });
+            return true;
+        }
+        return false;
+    });
 
-        const customJSON = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'data', `${themeId}.theme.json`)
-        var themeConfig = JSON.parse(fs.readFileSync(customJSON, 'utf8'));;
-        var customMusic = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'mus', `${themeConfig.mainSong}.mp3`);
-        var customBG = path.join(app.getPath('appData'), 'deltamod', 'customThemes', 'img', `${themeConfig.background}.png`);
-        if (fs.existsSync(customJSON)) {
-            fs.unlinkSync(customJSON);
+    ipcMain.handle('openThemesFolder', async (event, args) => {
+        const themeDir = path.join(app.getPath('appData'), 'deltamod', 'themes');
+        if (!fs.existsSync(themeDir)) {
+            fs.mkdirSync(themeDir, { recursive: true });
         }
-        if (fs.existsSync(customMusic)) {
-            fs.unlinkSync(customMusic);
-        }
-        if (fs.existsSync(customBG)) {
-            fs.unlinkSync(customBG);
-        }
+
+        shell.openPath(themeDir);
     });
 
     // Accounts

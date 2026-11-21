@@ -3,6 +3,10 @@ let PAGE = (window._pageArguments?.lp) ? parseInt(window._pageArguments.lp) : 1;
 const BLACKLIST_MODS = [];
 let staffFavouriteMods = [];
 
+function disableAll(disable) {
+    Array.from(document.querySelectorAll('.sidebar-ribbon')).forEach(button => button.setAttribute('data-disabled', String(disable)));
+    Array.from(document.querySelectorAll('button:not(.dlactionButton)')).forEach(button => button.disabled = disable);
+}
 
 window.PAGE = PAGE;
 
@@ -57,7 +61,7 @@ function istantiateOpBox(name) {
     box.appendChild(opbox);
 
     operations++;
-    ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'true'));
+    disableAll(true);
 
     if (operations > 0) {
         document.querySelector('.dlactionButton').style.opacity = '1';
@@ -81,7 +85,7 @@ function istantiateOpBox(name) {
             btn.style.opacity = operations <= 0 ? '0.5' : '1';
             if (operations <= 0) {
                 document.querySelector('#nothingHere').style.display = 'unset';
-                ([...Array.from(document.getElementsByClassName('sidebar-ribbon')), ...Array.from(document.getElementsByClassName('gamebanana-account'))]).forEach(button => button.setAttribute('data-disabled', 'false'));
+                disableAll(false);
             }
         }
     };
@@ -229,7 +233,7 @@ async function dlmod(dlurl, buttonElem=null, modid, modmodel, modname) {
     window.currentPageStack.qms[queryme] = function(info) {
         if (info.error) {
             lockUs = false;
-            document.querySelectorAll('.sidebar-button').forEach(e => e.disabled = false);
+            disableAll(false);
             buttonElem.innerHTML = icon('cancel', '0.9em');
             return;
         }
@@ -273,8 +277,8 @@ function buildModThumbnail(mod) {
     const div0 = document.createElement('div');
     div0.className = 'modThumbDiv';
     div0.style.display = 'flex';
-    div0.style.alignItems = 'center';
-    div0.style.gap = '8px';
+    div0.style.flexDirection = 'column';
+    div0.style.gap = '4px';
 
     const thumbs = getAllThumbs(mod);
     const img = document.createElement('img');
@@ -303,11 +307,11 @@ function buildModThumbnail(mod) {
 
     const gridSmallImages = document.createElement('div');
     Object.assign(gridSmallImages.style, {
-        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', 
-        gridTemplateRows: 'repeat(3, auto)', gap: '4px', marginTop: '4px', width: '100%'
+        display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: '4px', width: width + 'px', gap: '4px'
     });
 
-    thumbs.slice(0, 12).forEach((thumb) => {
+
+    thumbs.slice(0, 4).forEach((thumb) => {
         const smallImg = document.createElement('img');
         smallImg.src = thumb.urlB;
         Object.assign(smallImg.style, {
@@ -325,7 +329,7 @@ function buildModThumbnail(mod) {
         gridSmallImages.appendChild(smallImg);
     });
 
-    const emptySpaces = 12 - thumbs.slice(0, 12).length;
+    const emptySpaces = 4 - thumbs.slice(0, 4).length;
     for (let j = 0; j < emptySpaces; j++) {
         const emptyDiv = document.createElement('div');
         Object.assign(emptyDiv.style, {
@@ -334,18 +338,18 @@ function buildModThumbnail(mod) {
         gridSmallImages.appendChild(emptyDiv);
     }
 
-    div0.appendChild(gridSmallImages);
     div0.appendChild(img);
+    div0.appendChild(gridSmallImages);
     return { div0, img };
 }
 
 function buildModDetails(mod, featuredIDs, img) {
     const div1 = document.createElement('div');
-    Object.assign(div1.style, { marginLeft: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px' });
+    Object.assign(div1.style, { marginLeft: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' });
 
     const biggerSpan = document.createElement('span');
     biggerSpan.className = 'modTitleSpan';
-    Object.assign(biggerSpan.style, { fontSize: '1.2em', marginBottom: '0px', cursor: 'pointer' });
+    Object.assign(biggerSpan.style, { fontSize: '1.4em', marginBottom: '0px', cursor: 'pointer' });
     biggerSpan.innerText = mod._sName;
     biggerSpan.onclick = () => window.open(mod._sProfileUrl, '_blank');
     

@@ -22,7 +22,7 @@
 
         var td0 = document.createElement('td');
         td0.classList.add('theme-entry');
-        td0.style.backgroundImage = `url('themeprot://img/${theme.background}')`;
+        td0.style.backgroundImage = `url('themeprot://${theme.id}/bg.png')`;
         td0.style.backgroundSize = 'cover';
         td0.style.backgroundRepeat = 'no-repeat';
         tr.appendChild(td0);
@@ -46,7 +46,7 @@
         var mfxTag = document.createElement('span');
         mfxTag.style.display = 'block';
         mfxTag.style.marginTop = '0.5em';
-        mfxTag.innerHTML = icon('audio_file', '0.8em') + ` ${theme.musicTrack}`;
+        mfxTag.innerHTML = icon('audio_file', '0.9em') + ` ${theme.musicTrack}`;
         mfxTag.classList.add('calibri');
         mfxTag.style.fontSize = '0.8em';
         td1.appendChild(mfxTag);
@@ -54,23 +54,52 @@
         var ogTag = document.createElement('span');
         ogTag.style.display = 'block';
         ogTag.style.marginTop = '0.5em';
-        ogTag.innerHTML = icon('where_to_vote', '0.8em') + ` ${theme.builtIn ? "Built-in theme" : "Custom theme"}`;
+        ogTag.innerHTML = icon('source_environment', '0.9em') + ` ${theme.builtIn ? "Default theme" : "Custom theme"}`;
         ogTag.classList.add('calibri');
         ogTag.style.fontSize = '0.8em';
         td1.appendChild(ogTag);
+
+        if (theme.custom && !theme.builtIn) {
+            var securityTag = document.createElement('span');
+            securityTag.style.display = 'block';
+            securityTag.style.color = 'yellow';
+            securityTag.style.marginTop = '0.5em';
+            securityTag.innerHTML = icon('security', '0.9em') + ` Contains custom stylesheet`;
+            securityTag.classList.add('calibri');
+            securityTag.style.fontSize = '0.8em';
+            td1.appendChild(securityTag);
+        }
 
         var td2 = document.createElement('td');
         td2.classList.add('theme-entry');
 
         var selectbtn = document.createElement('button');
-        selectbtn.innerHTML = icon('check_box_outline_blank', '25px');
+        selectbtn.innerHTML = icon('check_box_outline_blank', '15px');
         if (theme.id == currentTheme) {
             selectbtn.disabled = true;
             selectbtn.style.opacity = 0.5;
-            selectbtn.innerHTML = icon('check_box', '25px');
+            selectbtn.innerHTML = icon('check_box', '15px');
             selectbtn.style.cursor = 'not-allowed';
         }
         selectbtn.addEventListener('click', async () => {
+            if (theme.custom && !theme.builtIn) {
+                var shownSecNotice = localStorage.getItem('themeSecurityNoticeShown');
+
+                if (!shownSecNotice) {
+                    var res = await htmlAlert(
+                        'Security',
+                        'This theme contains a custom stylesheet. Custom stylesheets may be used to obtain some info such as your IP. Are you sure you want to use this theme?',
+                        [{ text: 'Yes', resolveWith: "Y"}, {text: 'No', resolveWith: "N"}, {text: 'Yes, and don\'t show this again', resolveWith: "YA"}],
+                    );
+
+                    if (res == "N") {
+                        return;
+                    }
+                    if (res == "YA") {
+                        localStorage.setItem('themeSecurityNoticeShown', 'true');
+                    }
+                }
+            }
             await window.electronAPI.invoke('setTheme', [theme.id]);
 
             themeRefresh(true);
@@ -82,7 +111,7 @@
 
         if (!theme.builtIn) {
             var deletebtn = document.createElement('button');
-            deletebtn.innerHTML = icon('delete', '25px');
+            deletebtn.innerHTML = icon('delete', '15px');
             deletebtn.style.marginLeft = '0.5em';
             deletebtn.addEventListener('click', async () => {
                 if (theme.id == currentTheme) { 
@@ -95,19 +124,6 @@
                 page('themesel');
             });
             td2.appendChild(deletebtn);
-
-            name.contentEditable = true;
-            desc.contentEditable = true;
-
-            name.addEventListener('blur', async () => {
-                if (name.innerText.trim() === "") name.innerText = theme.name;
-                await window.electronAPI.invoke('renameCustomTheme', [theme.id, name.innerText.trim(), desc.innerText.trim()]);
-            });
-
-            desc.addEventListener('blur', async () => {
-                if (desc.innerText.trim() === "") desc.innerText = theme.description;
-                await window.electronAPI.invoke('renameCustomTheme', [theme.id, name.innerText.trim(), desc.innerText.trim()]);
-            });
         }
 
         tr.appendChild(td1);
@@ -116,24 +132,11 @@
 
     genbtnstyles();
 })();
-let spamtennaBuffer = '';
-    let spamtennaDetected = false;
 
-    const handleSpamtennaKeydown = (event) => {
-        if (spamtennaDetected) return;
-
-        if (event.key.length === 1) {
-            spamtennaBuffer = (spamtennaBuffer + event.key.toLowerCase()).slice(-9);
-            if (spamtennaBuffer === 'spamtenna') {
-                spamtennaDetected = true;
-                invoke('setTheme', ['spamtenna']);
-                themeRefresh(true);
-                page('main');
-
-            }
-        } else if (event.key === 'Backspace' || event.key === 'Delete' || event.key === 'Escape') {
-            spamtennaBuffer = '';
-        }
-    };
-
-elisten(document, 'keydown', handleSpamtennaKeydown);
+(async() => {
+    var notice = localStorage.getItem('themeNoticeShown');
+    if (!notice) {
+        document.getElementById('notice').style.display = 'block';
+        localStorage.setItem('themeNoticeShown', 'true');
+    }
+})();

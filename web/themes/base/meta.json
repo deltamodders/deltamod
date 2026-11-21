@@ -1,8 +1,6 @@
 {
     "name": "Base Theme",
-    "background": "base.png",
     "description": "Deltamod's default theme. What if there were more?",
-    "mainSong": "base.mp3",
     "id": "base",
     "musicTrack": "Untitled Track - Monume Pixabay",
     "color": "rgb(53, 53, 53)"
