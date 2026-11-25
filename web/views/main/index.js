@@ -503,7 +503,6 @@ function loadInst(index) {
 })();
 
 async function startGame() {
-    page('gameopen');
     window.electronAPI.invoke('startGame', []);
 }
 
@@ -572,7 +571,6 @@ window.currentPageStack.fp = async function () {
     document.getElementById("par").style.opacity = '1';
     document.getElementById("par").innerHTML = "Launch " + (await invoke('getCurrentGameInfo', [])).name;
     document.getElementById("par").onclick = async () => {
-        page('gameopen');
         window.electronAPI.invoke('npsCallback', []);
     };
 }

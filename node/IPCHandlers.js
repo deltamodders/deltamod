@@ -601,8 +601,11 @@ module.exports = function registerIPCHandlers(context) {
         const win = getWindow();
         const installPath = KeyValue.readKVS('gamePath');
 
+        console.log('window', win);
         if (win) {
             win.webContents.send('audio', false);
+            win.hide();
+            require('./TrayIcon.js').showButton(false);
         }
         //const steamDir = locateSteamDir();
 
@@ -613,6 +616,7 @@ module.exports = function registerIPCHandlers(context) {
             if (win) {
                 win.show();
                 win.webContents.send('audio', true);
+                require('./TrayIcon.js').showButton(true);
             }
             return false;
         }
@@ -685,6 +689,8 @@ module.exports = function registerIPCHandlers(context) {
             try { GamePatching.restore(installPath); } catch (e) { console.error('Failed to restore originals:', e); }
             if (isControllerMode) CMode.start();
             if (win) {
+                require('./TrayIcon.js').showButton(true);
+                win.show();
                 win.webContents.send('audio', true);
                 win.webContents.send('page', 'main');
             }
