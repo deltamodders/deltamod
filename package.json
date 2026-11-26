@@ -5,6 +5,7 @@
   "main": "node/Runner.js",
   "homepage": "https://deltamodders.com",
   "discordAPI": "https://discord.com/api/guilds/1390331292993982484/widget.json",
+  "desktopName": "com.deltamod.app.desktop",
   "featureFlags": [
     "GB-OneClick"
   ],
@@ -53,6 +54,7 @@
       ],
       "category": "Utility",
       "icon": "build/icon-big.png",
+      "syncDesktopName": true,
       "artifactName": "Deltamod-${version}-AppImage.${ext}"
     },
     "protocols": [
