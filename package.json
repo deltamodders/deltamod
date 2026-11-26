@@ -31,10 +31,15 @@
       "gm3p/**"
     ],
     "files": [
-      "!**/output/**",
-      "!**/installbuilder/**",
-      "!G3MToolCLI/**"
+      "assets",
+      "games",
+      "node",
+      "web",
+      "ascii.txt",
+      "README.md",
+      "LICENSE.txt"
     ],
+    "afterPack": "./build/afterPack.js",
     "win": {
       "target": [
         "portable",
