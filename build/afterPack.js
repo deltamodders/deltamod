@@ -11,7 +11,7 @@ import { DELTAMOD_DIR, TOOLS_DIR } from "../dist/node/Paths.js";
  * @param {AfterPackContext} ctx
  */
 export default function (ctx) {
-    if (!fs.existsSync(TOOLS_DIR)) {
+    if (!fs.existsSync(path.join(TOOLS_DIR, "g3mtool"))) {
         process.stderr.write("CI WORKAROUND: building a non-functional version of Deltamod.");
         return;
     }
