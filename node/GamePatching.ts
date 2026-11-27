@@ -1,14 +1,13 @@
-// @ts-check
+import { spawn, execFile } from 'child_process';
+import type { SpawnOptions } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
-const console = require('./Console');
-const fs = require('fs');
-const path = require('path');
-const { spawn, execFile } = require('child_process');
-const { dialog } = require('electron');
-const TOML = require('smol-toml');
+import * as TOML from 'smol-toml';
 
-const { TOOLS_DIR } = require('./Paths');
-const { vpromise } = require("./UtilsT/VPromise");
+import console from './Console';
+import { TOOLS_DIR } from './Paths';
+import { vpromise } from "./UtilsT/VPromise";
 
 const EXEC_SUFFIX = process.platform === "win32" ? ".exe" : "";
 const PLATFORM_SUBDIR = process.platform === "win32" ? "win" : "linux";
@@ -16,48 +15,25 @@ const PLATFORM_SUBDIR = process.platform === "win32" ? "win" : "linux";
 const G3MT_PATH = path.join(TOOLS_DIR, "g3mtool", "G3MTool" + EXEC_SUFFIX);
 const UTMT_PATH = path.join(TOOLS_DIR, "utmt", PLATFORM_SUBDIR, "UndertaleModCli" + EXEC_SUFFIX);
 
-/**
- * @typedef {(..._a: any) => void} LogFn
- * @callback ToolRunErrHandle
- * @param {number?} exit_code
- * @param {string} output
- * @returns {void | undefined | Error}
- */
+type LogFn = (..._: any) => void;
+type ToolRunErrHandle = (exit_code: number | null, output: string) => void | undefined | Error;
 
-/**
- * @param {string} command
- * @param {string[]} args
- * @param {import('child_process').SpawnOptions} options
- * @param {string} tool_name_upper
- * @param {string} tool_name_mixed
- * @param {LogFn} log_fn
- * @param {ToolRunErrHandle} error_fn
- * @returns {Promise<void>}
- */
-async function tool_run(command, args, options, tool_name_upper, tool_name_mixed, log_fn, error_fn = (_a, _b) => {}) {
-    /**
-     * @param {number?} exit_code
-     * @param {string} output
-     * @returns {Error}
-     */
-    function default_error(exit_code, output) {
+async function tool_run(
+    command: string,
+    args: string[],
+    options: SpawnOptions,
+    tool_name_upper: string,
+    tool_name_mixed: string,
+    log_fn: LogFn,
+    error_fn: ToolRunErrHandle = (_a, _b) => { },
+): Promise<void> {
+    function default_error(exit_code: number | null, output: string): Error {
         return new Error(`${tool_name_mixed} exited with code ${exit_code}\n\nCOMMAND: ${command} ${args.join(" ")}\nOUTPUT:\n${output}`);
     }
-    /**
-     * @param {number?} exit_code
-     * @param {string} output
-     * @returns {Error}
-     */
-    function mkerror(exit_code, output) {
+    function mkerror(exit_code: number | null, output: string): Error {
         return error_fn(exit_code, output) || default_error(exit_code, output);
     }
-    /**
-     * @param {Buffer} chunk
-     * @param {{ s: string }} outputref
-     * @param {NodeJS.WriteStream} out
-     * @param {string} out_type
-     */
-    function iohandle(chunk, outputref, out, out_type) {
+    function iohandle(chunk: Buffer, outputref: { s: string; }, out: NodeJS.WriteStream, out_type: string) {
         // and pray to YHVH that this is valid UTF-8
         // TODO(fnrir): maybe decode only until the last valid UTF-8 char?
         let txt = chunk.toString();
@@ -68,13 +44,7 @@ async function tool_run(command, args, options, tool_name_upper, tool_name_mixed
             log_fn(`[${tool_name_upper}/${out_type}] ${line}`);
         outputref.s += txt;
     }
-    /**
-     * @param {{ s: string }} outputref
-     * @param {NodeJS.WriteStream} out
-     * @param {string} out_type
-     * @returns {(chunk: Buffer) => void}
-     */
-    function mkiohandle(outputref, out, out_type) {
+    function mkiohandle(outputref: { s: string; }, out: NodeJS.WriteStream, out_type: string): (chunk: Buffer) => void {
         return (chunk) => { iohandle(chunk, outputref, out, out_type) };
     }
     const outputref = { s: "" };
@@ -93,14 +63,12 @@ async function tool_run(command, args, options, tool_name_upper, tool_name_mixed
     });
 }
 
-/**
- * @param {string} gamePath
- * @param {string[]} args
- * @param {LogFn} log_fn
- * @param {ToolRunErrHandle} error_fn
- * @returns {Promise<void>}
- */
-function g3mtool(gamePath, args, log_fn, error_fn = (_a, _b) => {}) {
+function g3mtool(
+    gamePath: string,
+    args: string[],
+    log_fn: LogFn,
+    error_fn: ToolRunErrHandle = (_a, _b) => { },
+): Promise<void> {
     return tool_run(
         G3MT_PATH,
         args,
@@ -112,12 +80,7 @@ function g3mtool(gamePath, args, log_fn, error_fn = (_a, _b) => {}) {
     );
 }
 
-/**
- * @param {string[]} args
- * @param {LogFn} log_fn
- * @returns {Promise<void>}
- */
-function utmt(args, log_fn) {
+function utmt(args: string[], log_fn: LogFn): Promise<void> {
     const tool_bin = UTMT_PATH;
     return tool_run(
         tool_bin,
@@ -129,21 +92,8 @@ function utmt(args, log_fn) {
     );
 }
 
-/**
- * @param {LogFn} callback
- * @param {string} newp
- * @param {{ patch: string }[]} patches
- * @param {string} gamePath
- * @param {string} targetFile
- * @returns {Promise<void>}
- */
-function apply_prebuilt_merge(callback, newp, patches, gamePath, targetFile) {
-    /**
-     * @param {number?} _exit_code
-     * @param {string} output
-     * @returns {undefined | Error}
-     */
-    function merge_error(_exit_code, output) {
+function apply_prebuilt_merge(callback: LogFn, newp: string, patches: { patch: string; }[], gamePath: string, targetFile: string): Promise<void> {
+    function merge_error(_exit_code: number | null, output: string): undefined | Error {
         if (output.includes('normally this indicates that the source file is incorrect'))
             return new Error('This mod can\'t be merged due to an xdelta being applied to the wrong source file. Please make sure your mods are compatible with your install.');
     }
@@ -155,15 +105,7 @@ function apply_prebuilt_merge(callback, newp, patches, gamePath, targetFile) {
     );
 }
 
-/**
- * @param {LogFn} callback
- * @param {string} relativeBackupFile
- * @param {string} relativeTargetFile
- * @param {{ patch: string }[]} patches
- * @param {string} gamePath
- * @returns {Promise<void>}
- */
-function apply_prebuilt_as_is(callback, relativeBackupFile, relativeTargetFile, patches, gamePath) {
+function apply_prebuilt_as_is(callback: LogFn, relativeBackupFile: string, relativeTargetFile: string, patches: { patch: string; }[], gamePath: string): Promise<void> {
     return g3mtool(
         gamePath,
         ['patch', 'apply', relativeBackupFile, patches[0].patch, relativeTargetFile],
@@ -171,26 +113,14 @@ function apply_prebuilt_as_is(callback, relativeBackupFile, relativeTargetFile, 
     );
 }
 
-/**
- * @param {LogFn} callback
- * @param {string} backupPath
- * @param {string} targetPath
- * @param {string} patchPath
- * @returns {Promise<void>}
- */
-function apply_script(callback, backupPath, targetPath, patchPath) {
+function apply_script(callback: LogFn, backupPath: string, targetPath: string, patchPath: string): Promise<void> {
     return utmt(
         ['load', backupPath, '--output', targetPath, '--scripts', patchPath, '--overwrite'],
         callback
     );
 }
 
-/**
- * @param {string} filePath
- * @param {BufferEncoding} encoding
- * @returns {string?}
- */
-function safeReadFileSync(filePath, encoding) {
+function safeReadFileSync(filePath: string, encoding: BufferEncoding): string | null {
     try {
         return fs.readFileSync(filePath, encoding);
     } catch (err) {
@@ -203,52 +133,43 @@ const MODE_USER_EXEC = 0o100;
 
 /**
  * Make a file executable by the user, if not already exec
- * @param {string} path
  */
-function maybeChmodExec(path) {
+function maybeChmodExec(path: string) {
     if (process.platform !== 'linux') return;
     const mode = fs.statSync(path).mode;
     if (mode & MODE_USER_EXEC) return;
     fs.chmodSync(path, mode | MODE_USER_EXEC);
 }
 
-/**
- * @typedef PatchInfo
- * @property {string} type
- * @property {string} patch
- * @property {string} to
- * @property {string} modName
- */
+interface PatchInfo {
+    type: string;
+    patch: string;
+    to: string;
+    modName: string;
+}
 
-/**
- * @typedef ModInfo
- * @property {any} meta
- * @property {string} xml
- * @property {string} folder
- * @property {PatchInfo[]} patches
- * @property {string} uuid
- */
+interface ModInfo {
+    meta: any;
+    xml: string;
+    folder: string;
+    patches: PatchInfo[];
+    uuid: string;
+}
 
-/**
- * @typedef GamePatchStatus
- * @property {boolean} patched
- * @property {string} log
- * @property {string} fullLog
- */
+interface GamePatchStatus {
+    patched: boolean;
+    log: string;
+    fullLog: string;
+}
 
-/**
- * @param {string} gamePath
- * @param {string} modFolder
- * @param {string[]} mods
- * @param {LogFn} [logCallback]
- * @returns {Promise<GamePatchStatus>}
- */
-async function startGamePatch(gamePath, modFolder, mods, logCallback) {
+export async function startGamePatch(
+    gamePath: string,
+    modFolder: string,
+    mods: string[],
+    logCallback: LogFn,
+): Promise<GamePatchStatus> {
     let fullLog = '';
-    /**
-     * @param  {...any} args
-     */
-    function log(...args) {
+    function log(...args: any[]) {
         console.log_internal("LOG", args, new Error().stack, 2);
         fullLog += args.join(' ') + '\n';
         if (logCallback) logCallback(args.join(' '));
@@ -262,7 +183,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     maybeChmodExec(G3MT_PATH);
     maybeChmodExec(UTMT_PATH);
 
-    var moddingInfo = /** @type {ModInfo[]} */ (fs.readdirSync(modFolder).map(folder => {
+    var moddingInfo = (fs.readdirSync(modFolder).map(folder => {
         var moddingXML = path.join(modFolder, folder, 'modding.xml');
         if (fs.existsSync(path.join(modFolder, folder, '__variant'))) {
             var filename = fs.readFileSync(path.join(modFolder, folder, '__variant'), 'utf-8').trim();
@@ -294,8 +215,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
             return null;
         }
 
-        /** @type {any} */
-        const meta = TOML.parse(meta_txt);
+        const meta: any = TOML.parse(meta_txt);
 
         return {
             meta,
@@ -309,7 +229,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
             })),
             uuid: JSON.parse(deltaid_txt).uniqueId
         }
-    }).filter(mod => mod != null && mods.includes(mod.uuid)));
+    }).filter(mod => mod != null && mods.includes(mod.uuid))) as ModInfo[];
 
     var totalPatches = moddingInfo.length;
     var performedPatches = 0;
@@ -319,8 +239,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     // Step 1: override patches
     log('Step 1: Applying override patches...');
 
-    /** @type {string[]} */
-    let patchedFiles = [];
+    let patchedFiles: string[] = [];
     var performedOverridePatches = 0;
 
     for (const mod of moddingInfo) {
@@ -365,8 +284,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
 
     log('Step 1 completed.');
 
-    /** @type {Object<string, { patch: string }[]>} */
-    let xdeltaMap = {};
+    let xdeltaMap: Record<string, { patch: string }[]> = {};
 
     for (const mod of moddingInfo) {
         for (const patch of mod.patches.filter(p => p.type === 'xdelta' || p.type === 'g3mpatch')) {
@@ -409,7 +327,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
                 });
             }
         }
-        catch (/** @type {any} */ err) {
+        catch (err: any) {
             console.error(err);
             hasFailed = true;
             hasFailedReason = err.message;
@@ -461,12 +379,7 @@ async function startGamePatch(gamePath, modFolder, mods, logCallback) {
     return { patched: true, log: '', fullLog: fullLog };
 }
 
-/**
- * @param {string} gamePath
- * @param {boolean} [reentrant]
- * @returns {Promise<void>}
- */
-async function restore(gamePath, reentrant = false) {
+export async function restore(gamePath: string, reentrant: boolean = false): Promise<void> {
     if (!gamePath || !fs.existsSync(gamePath)) {
         console.log('Game path does not exist: ' + gamePath);
         return;
@@ -494,21 +407,18 @@ async function restore(gamePath, reentrant = false) {
 // NOTE(fnrir): this was missing. inferred from unit tests
 const MERGE_FLAGS = ["--properties"];
 
-/**
- * @typedef ApplyStagedDeltaArgs
- * @property {string} game
- * @property {string} target
- * @property {any} payloads
- * @property {any} scratch
- * @property {any} log
- */
+interface ApplyStagedDeltaArgs {
+    game: string;
+    target: string;
+    payloads: any;
+    scratch: any;
+    log: any;
+}
 
 /**
  * TODO(fnrir): merge duplicate functionality with `apply_*` functions
- * @param {ApplyStagedDeltaArgs} _a
- * @returns {Promise<void>}
  */
-async function applyStagedDelta({ game, target, payloads, scratch, log }) {
+async function applyStagedDelta({ game, target, payloads, scratch, log }: ApplyStagedDeltaArgs): Promise<void> {
     const input = path.join(scratch, 'delta-input');
     const output = path.join(scratch, 'delta-output');
     fs.copyFileSync(path.join(game, target), input, fs.constants.COPYFILE_EXCL);
@@ -537,7 +447,7 @@ async function applyStagedDelta({ game, target, payloads, scratch, log }) {
     }
 }
 
-function getStagedDeltaHelper() {
+export function getStagedDeltaHelper() {
     try {
         fs.accessSync(G3MT_PATH, fs.constants.R_OK | fs.constants.X_OK);
         if (!fs.statSync(G3MT_PATH).isFile()) return undefined;
@@ -546,9 +456,3 @@ function getStagedDeltaHelper() {
         return undefined;
     }
 }
-
-module.exports = {
-    startGamePatch,
-    restore,
-    getStagedDeltaHelper
-};
