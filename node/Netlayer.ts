@@ -1,13 +1,6 @@
-// @ts-check
+import console from "./Console";
 
-const console = require("./Console");
-
-/**
- * @param {string} domain
- * @param {string} ext
- * @returns {boolean}
- */
-function approve(domain, ext) {
+export function approve(domain: string, ext: string): boolean {
     // List of approved domains for Deltamod external resources
     // Techy: Added Google Sheets for future dyamically data we want Deltamod to pull without directly updating Deltamod (e.g. a mod blocklist or a manifest ID to an updated game)
     var approvedDomains = ["sheets.googleapis.com", "img.itch.zone", "fonts.googleapis.com", "deltamodders.github.io", "api.github.com", "images.gamebanana.com", "avatars.githubusercontent.com", "fonts.googleapis.com", "fonts.gstatic.com", "gamebanana.com", "unpkg.com"];
@@ -17,7 +10,3 @@ function approve(domain, ext) {
     }
     return true;
 }
-
-module.exports = {
-    approve
-};
