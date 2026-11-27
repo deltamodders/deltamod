@@ -1,15 +1,14 @@
-// @ts-check
+import path from "path";
 
-const path = require("path");
-const { BrowserWindow } = require("electron");
-const { getWindow } = require("./Utils");
-const { VIEWS_DIR } = require("./Paths");
-const { PARTITION } = require("./Config");
+import { BrowserWindow } from "electron";
 
-const progressModals = new Set();
+import { PARTITION } from "./Config";
+import { VIEWS_DIR } from "./Paths";
+import { getWindow } from "./Utils";
 
-/** @returns {BrowserWindow} */
-function createProgressModal() {
+const progressModals = new Set<BrowserWindow>();
+
+export function createProgressModal(): BrowserWindow {
     const modal = new BrowserWindow({
         width: 450,
         height: 210,
@@ -44,14 +43,12 @@ function createProgressModal() {
     return modal;
 }
 
-/**
- * 
- * @param {BrowserWindow} modal 
- * @param {BrowserWindow?} mainWindow
- * @param {number} frac
- * @param {string?} logPrefix
- */
-function updateProgressModal(modal, mainWindow, frac, logPrefix) {
+export function updateProgressModal(
+    modal: BrowserWindow,
+    mainWindow: BrowserWindow | null,
+    frac: number,
+    logPrefix: string | null,
+) {
     const percent = Math.round(frac * 100 * 100) / 100;
 
     if (logPrefix == null) {
@@ -71,15 +68,9 @@ function updateProgressModal(modal, mainWindow, frac, logPrefix) {
     // The workaround above is TERRIBLE.
 }
 
-function closeAllProgressModals() {
+export function closeAllProgressModals() {
     for (const modal of progressModals) {
         try { modal.close(); } catch {}
     }
     progressModals.clear();
 }
-
-module.exports = {
-    createProgressModal,
-    updateProgressModal,
-    closeAllProgressModals
-};
