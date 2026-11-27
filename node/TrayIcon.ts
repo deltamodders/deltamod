@@ -1,18 +1,15 @@
-// @ts-check
+import path from 'path';
 
-const { Tray, Menu, nativeImage, dialog } = require('electron');
-const path = require('path');
-const { ASSETS_DIR, PACKAGE_JSON } = require('./Paths');
+import { Tray, Menu, nativeImage, dialog } from 'electron';
+
+import { ASSETS_DIR, PACKAGE_JSON } from './Paths';
 
 let canShowButton = true;
-/**
- * @param {boolean} show
- */
-function showButton(show) {
+export function showButton(show: boolean) {
     canShowButton = show;
 }
 
-async function makeTray() {
+export async function makeTray() {
     const tray = new Tray(path.join(ASSETS_DIR, 'tray.png'));
 
     tray.on('click', () => {
@@ -58,5 +55,3 @@ async function makeTray() {
 
     tray.setToolTip('Deltamod');
 }
-
-module.exports = { makeTray, showButton };

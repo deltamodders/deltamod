@@ -1,16 +1,16 @@
-// @ts-check
+import fs from "fs";
+import path from "path";
 
-const fs = require("fs");
-const path = require("path");
-const { app } = require("electron");
-const { setSharedVar, getWindow } = require("./Utils");
-const { closeAllProgressModals } = require("./ProgressModal");
+import { app } from "electron";
+
+import { closeAllProgressModals } from "./ProgressModal";
+import { setSharedVar, getWindow } from "./Utils";
 
 /**
  * Show the dogcheck error screen
- * @param {Error | string} err The error to show
+ * @param err The error to show
  */
-function errorWin(err) {
+export function errorWin(err: Error | string) {
     closeAllProgressModals();
 
     if (typeof(err) === 'string') {
@@ -32,8 +32,4 @@ function errorWin(err) {
     const win = getWindow();
     win.show();
     win.loadURL('deltapack://web/error/index.html');
-}
-
-module.exports = {
-    errorWin,
 }

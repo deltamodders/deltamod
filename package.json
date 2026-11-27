@@ -2,7 +2,7 @@
   "name": "deltamod",
   "version": "2.2.0",
   "description": "Deltarune mod manager",
-  "main": "node/Runner.js",
+  "main": "dist/node/Runner.js",
   "homepage": "https://deltamodders.com",
   "discordAPI": "https://discord.com/api/guilds/1390331292993982484/widget.json",
   "desktopName": "com.deltamod.app.desktop",
@@ -31,10 +31,15 @@
       "gm3p/**"
     ],
     "files": [
-      "!**/output/**",
-      "!**/installbuilder/**",
-      "!G3MToolCLI/**"
+      "assets",
+      "dist/node",
+      "games",
+      "web",
+      "ascii.txt",
+      "README.md",
+      "LICENSE.txt"
     ],
+    "afterPack": "./build/afterPack.js",
     "win": {
       "target": [
         "portable",
