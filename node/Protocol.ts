@@ -1,29 +1,25 @@
-// @ts-check
+import fs from "fs";
+import path from "path";
+import { join, dirname } from "path";
 
-const { writeFileSync, mkdirSync, rmSync } = require("original-fs");
-const { log } = require("./Console");
-const { isFeatureEnabled } = require("./FeatureFlags");
-const { join, dirname } = require("path");
-const System = require("./System");
-const _7z = require("7zip-min");
-const { error } = require("./Console");
-const { importMod } = require("./Modstore");
-const fs = require("fs");
-const console = require("./Console");
-const path = require("path");
-const { dialog, app, Notification } = require("electron");
-const { page, setSharedVar } = require("./Utils");
-const { errorWin } = require("./ErrorWin");
-const mime = require("mime-types");
-const { ASSETS_DIR, DELTAMOD_DIR, THEMES_DIR } = require("./Paths");
+import _7z from "7zip-min";
+import { dialog, app, Notification } from "electron";
+import type { Protocol, Session } from "electron";
+import mime from "mime-types";
+import { writeFileSync, mkdirSync, rmSync } from "original-fs";
+
+import console from "./Console";
+import { error } from "./Console";
+import { log } from "./Console";
+import { errorWin } from "./ErrorWin";
+import { isFeatureEnabled } from "./FeatureFlags";
+import { importMod } from "./Modstore";
+import { ASSETS_DIR, DELTAMOD_DIR, THEMES_DIR } from "./Paths";
+import * as System from "./System";
+import { page, setSharedVar } from "./Utils";
 
 // https://stackoverflow.com/questions/26156292/trim-specific-character-from-a-string
-/**
- * @param {string} str
- * @param {string} ch
- * @returns {string}
- */
-function trim(str, ch) {
+function trim(str: string, ch: string): string {
     var start = 0, 
         end = str.length;
 
@@ -36,11 +32,7 @@ function trim(str, ch) {
     return (start > 0 || end < str.length) ? str.substring(start, end) : str;
 }
 
-/**
- * 
- * @param {Electron.Protocol} protocol 
- */
-function registerProtocolSchemesAsPrivileged(protocol) {
+export function registerProtocolSchemesAsPrivileged(protocol: Protocol) {
     const privileges = {
         standard: true,
         secure: true,
@@ -66,11 +58,7 @@ function registerProtocolSchemesAsPrivileged(protocol) {
     ])
 }
 
-/**
- * 
- * @param {Electron.Session} ses 
- */
-function registerProtocolHandlers(ses) {
+export function registerProtocolHandlers(ses: Session) {
     ses.protocol.handle('deltapack', async (request) => {
         const url = new URL(request.url);
         // security
@@ -182,11 +170,7 @@ function registerProtocolHandlers(ses) {
     });
 }
 
-/**
- * @param {string} url
- * @returns {Promise<void>}
- */
-async function handleProtocolLaunch(url) {
+export async function handleProtocolLaunch(url: string): Promise<void> {
     if (!url || !url.startsWith("deltamod://")) return;
     
     log("Protocol launch detected using", url);
@@ -306,9 +290,3 @@ async function handleProtocolLaunch(url) {
         }
     }
 }
-
-module.exports = {
-    handleProtocolLaunch,
-    registerProtocolHandlers,
-    registerProtocolSchemesAsPrivileged
-};
