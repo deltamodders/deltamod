@@ -1,21 +1,20 @@
-// @ts-check
+import fs from 'fs';
 
-const axios = require('axios');
-const fs = require('fs');
-const Modstore = require('./Modstore.js');
-const System = require('./System.js');
-const { Notification } = require('electron');
-const console = require('./Console.js');
+import axios from 'axios';
+import { Notification } from 'electron';
+
+import console from './Console';
+import * as Modstore from './Modstore';
+import * as System from './System';
 
 let CHECKS_PER_MINUTE = 5;
 
 let lock = false;
 
-/**
- * @typedef RemoteDLCreds
- * @property {string} memberID
- * @property {string} secretKey
- */
+interface RemoteDLCreds {
+    memberID: string;
+    secretKey: string;
+}
 
 async function check() {
     if (lock) {
@@ -24,8 +23,7 @@ async function check() {
     lock = true;
     console.log('Checking for remote downloads...');
     try {
-        /** @type {RemoteDLCreds} */
-        var rdlCredentials;
+        var rdlCredentials: RemoteDLCreds;
 
         if (fs.existsSync(System.getSystemFile('remotedl', true))) {
             rdlCredentials = JSON.parse(fs.readFileSync(System.getSystemFile('remotedl', true), 'utf-8'));
