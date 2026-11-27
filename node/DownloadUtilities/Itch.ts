@@ -1,22 +1,13 @@
-// @ts-check
+import axios from 'axios';
+import cheerio from 'cheerio';
 
-const cheerio = require('cheerio');
-const fs = require('fs');
-const axios = require('axios');
+export interface AutodownloadItch {
+    pluginName: "Itch";
+    homepage: string;
+    fileID: string;
+}
 
-/**
- * @typedef AutodownloadItch
- * @property {"Itch"} pluginName
- * @property {string} homepage
- * @property {string} fileID
- */
-
-/**
- * @param {string} id
- * @param {AutodownloadItch} data
- * @returns {Promise<string>}
- */
-async function run(id, data) {
+export async function run(id: string, data: AutodownloadItch): Promise<string> {
     var itchIOPage = await axios.get(data.homepage).then(r => r.data);
             
     const $ = cheerio.load(itchIOPage);
@@ -27,7 +18,3 @@ async function run(id, data) {
 
     return api.data.url;
 }
-
-module.exports = {
-    run
-};
